@@ -1,0 +1,1 @@
+- [pdf-parse v1 bundling quirk](pdf-parse-bundling.md) — must be externalized from esbuild AND its index.js patched to remove the debug test-file block.
