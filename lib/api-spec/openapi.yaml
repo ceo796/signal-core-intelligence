@@ -3,20 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Signal87 Core API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: documents
+    description: Document management
+  - name: chat
+    description: Document chat and Q&A
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +28,319 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [documents]
+      summary: List all documents
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+  /documents/{id}:
+    get:
+      operationId: getDocument
+      tags: [documents]
+      summary: Get a document by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      summary: Delete a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Document deleted
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents/{id}/chunks:
+    get:
+      operationId: getDocumentChunks
+      tags: [documents]
+      summary: Get all chunks for a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document chunks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chunk"
+
+  /documents/{id}/chat:
+    post:
+      operationId: chatWithDocument
+      tags: [chat]
+      summary: Ask a question about a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatInput"
+      responses:
+        "200":
+          description: Answer with citations and debug info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents/{id}/history:
+    get:
+      operationId: getChatHistory
+      tags: [chat]
+      summary: Get chat history for a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chat history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    delete:
+      operationId: clearChatHistory
+      tags: [chat]
+      summary: Clear chat history for a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: History cleared
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [documents]
+      summary: Get admin statistics
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Document:
+      type: object
+      required: [id, fileName, fileType, uploadedAt, chunkCount]
+      properties:
+        id:
+          type: integer
+        fileName:
+          type: string
+        fileType:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+        chunkCount:
+          type: integer
+        extractedTextPreview:
+          type: ["string", "null"]
+
+    Chunk:
+      type: object
+      required: [id, documentId, chunkIndex, content]
+      properties:
+        id:
+          type: integer
+        documentId:
+          type: integer
+        chunkIndex:
+          type: integer
+        content:
+          type: string
+
+    ChatInput:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+
+    Citation:
+      type: object
+      required: [chunkIndex, content, relevanceScore]
+      properties:
+        chunkIndex:
+          type: integer
+        content:
+          type: string
+        relevanceScore:
+          type: number
+
+    DebugInfo:
+      type: object
+      required:
+        - route
+        - provider
+        - model
+        - fallbackUsed
+        - documentId
+        - chunksSearched
+        - chunksRetrieved
+        - retrievalLatencyMs
+        - llmLatencyMs
+        - totalLatencyMs
+      properties:
+        route:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        fallbackUsed:
+          type: boolean
+        documentId:
+          type: integer
+        chunksSearched:
+          type: integer
+        chunksRetrieved:
+          type: integer
+        retrievalLatencyMs:
+          type: number
+        llmLatencyMs:
+          type: number
+        totalLatencyMs:
+          type: number
+        errors:
+          type: ["string", "null"]
+
+    ChatResponse:
+      type: object
+      required: [answer, citations, debug]
+      properties:
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        debug:
+          $ref: "#/components/schemas/DebugInfo"
+
+    ChatMessage:
+      type: object
+      required: [id, documentId, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        documentId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        debug:
+          type: ["string", "null"]
+
+    AdminStats:
+      type: object
+      required: [totalDocuments, totalChunks, totalMessages, documentsByType]
+      properties:
+        totalDocuments:
+          type: integer
+        totalChunks:
+          type: integer
+        totalMessages:
+          type: integer
+        documentsByType:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocTypeCount"
+
+    DocTypeCount:
+      type: object
+      required: [fileType, count]
+      properties:
+        fileType:
+          type: string
+        count:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

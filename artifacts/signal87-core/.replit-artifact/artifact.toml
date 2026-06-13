@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Signal87 Core"
+version = "1.0.0"
+id = "artifacts/signal87-core"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23156
+
+[services.development]
+run = "pnpm --filter @workspace/signal87-core run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/signal87-core", "run", "build" ]
+publicDir = "artifacts/signal87-core/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23156"
+BASE_PATH = "/"
