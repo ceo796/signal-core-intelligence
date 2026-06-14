@@ -8,9 +8,6 @@ import Home from "@/pages/home";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
-import MultiDocumentChat from "@/pages/multi-document-chat";
-import ExecutiveBrief from "@/pages/executive-brief";
-import AdminStats from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -20,11 +17,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/documents" component={DocumentsList} />
-      <Route path="/compare" component={MultiDocumentChat} />
-      <Route path="/brief" component={ExecutiveBrief} />
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />
-      <Route path="/admin" component={AdminStats} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -121,7 +121,7 @@ export default function DocumentsList() {
                       <Link href={`/documents/${doc.id}/chat`} className="flex-1">
                         <Button variant="secondary" className="w-full text-xs gap-2">
                           <MessageSquare className="w-3 h-3" />
-                          Analyze
+                          Ask a Question
                         </Button>
                       </Link>
                       

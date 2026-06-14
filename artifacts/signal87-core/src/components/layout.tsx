@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { FileText, Activity, GitCompare, ScrollText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,9 +11,6 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
-    { href: "/compare", label: "Compare Docs", icon: GitCompare },
-    { href: "/brief", label: "Exec Brief", icon: ScrollText },
-    { href: "/admin", label: "Admin Stats", icon: Activity },
   ];
 
   return (

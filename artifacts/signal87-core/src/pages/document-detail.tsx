@@ -37,8 +37,6 @@ import { format } from "date-fns";
 import {
   ArrowLeft,
   MessageSquare,
-  GitCompare,
-  ScrollText,
   Download,
   RefreshCw,
   Trash2,
@@ -288,19 +286,7 @@ export default function DocumentDetail() {
             <Link href={`/documents/${doc.id}/chat`}>
               <Button variant="default" className="text-sm gap-2">
                 <MessageSquare className="w-3 h-3" />
-                Analyze Document
-              </Button>
-            </Link>
-            <Link href={`/compare?preselect=${doc.id}`}>
-              <Button variant="secondary" className="text-sm gap-2">
-                <GitCompare className="w-3 h-3" />
-                Compare
-              </Button>
-            </Link>
-            <Link href={`/brief?preselect=${doc.id}`}>
-              <Button variant="secondary" className="text-sm gap-2">
-                <ScrollText className="w-3 h-3" />
-                Generate Brief
+                Ask a Question
               </Button>
             </Link>
             {doc.originalFileAvailable ? (
