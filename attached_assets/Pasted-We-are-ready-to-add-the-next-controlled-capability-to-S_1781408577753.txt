@@ -1,0 +1,150 @@
+We are ready to add the next controlled capability to Signal87 Core:
+
+Signal87_Core_Document_Detail_Page_v1
+
+Use Option 3: Tabbed Document Record Page.
+
+Important:
+The current stable checkpoint is Signal87_Core_Multi_Document_Comparison_v1.
+Do not disturb the stable backend architecture.
+Do not add global search.
+Do not add Gemini.
+Do not add billing.
+Do not add agents.
+Do not redesign the app.
+Do not change upload/download/delete/reindex behavior.
+Do not break single-document chat or multi-document comparison.
+
+Goal:
+Create a dedicated document detail page for each uploaded document.
+
+New route:
+GET /documents/:id
+
+When a user clicks a document card from the Documents page, it should open the document detail page instead of only sending the user directly to Analyze.
+
+Document Detail Page layout:
+Use a tabbed document record layout.
+
+Header:
+- Back to Documents
+- Document name
+- File type badge
+- File size
+- Upload date
+- Chunk count
+- Primary action buttons:
+  - Analyze Document
+  - Compare
+  - Download Original
+  - Re-index
+  - Delete
+
+Tabs:
+1. Preview
+2. Extracted Text
+3. Citations
+4. History
+5. System
+
+Phase 1 — Preview tab
+Show the original document if possible.
+
+For PDFs:
+- Render the original PDF using the existing original file endpoint:
+  GET /api/documents/:id/original
+- Use a clean embedded viewer.
+- Include Download Original button.
+
+For non-PDF files:
+- Show a readable preview using extracted text.
+- Include Download Original button.
+
+Do not build a full PDF editor.
+Do not add annotation tools.
+Do not add complex page controls unless easy.
+
+Phase 2 — Extracted Text tab
+Show:
+- extracted text
+- copy text button if easy
+- chunk count
+- extraction status
+- last indexed/re-indexed timestamp if available
+
+Phase 3 — Citations tab
+Show the document’s chunks as source blocks:
+- chunk number
+- excerpt/content
+- character length if available
+- chunk metadata if available
+
+This is not a new AI feature. It is a source/chunk inspection view.
+
+Phase 4 — History tab
+Show prior chat messages for that document if already available:
+- user question
+- assistant answer preview
+- timestamp if available
+- citations count if available
+
+Do not change chat persistence behavior.
+
+Phase 5 — System tab
+Show technical document status:
+- document ID
+- original file stored: yes/no
+- storage provider
+- storage key/path if appropriate
+- file size
+- file type
+- extraction status
+- extraction error if any
+- chunks created
+- re-index available: yes/no
+- original download available: yes/no
+
+Primary actions behavior:
+- Analyze Document should route to the existing single-document chat page.
+- Compare should route to the existing Compare page and, if easy, preselect this document.
+- Download Original should use the existing original file endpoint.
+- Re-index should use the existing re-index endpoint.
+- Delete should use the existing delete behavior and return to Documents after success.
+
+Hard constraints:
+- Do not change backend storage.
+- Do not change OpenAI routing.
+- Do not change citation payloads.
+- Do not change Verification Trace.
+- Do not add global search.
+- Do not add Executive Briefs yet.
+- Do not add migration logic.
+- Do not bring anything over from the old platform.
+
+Testing:
+After implementation, verify:
+1. Documents page still loads.
+2. Clicking a document opens /documents/:id.
+3. Preview tab works for PDF or text.
+4. Download Original works.
+5. Analyze button routes to existing chat.
+6. Compare button routes to Compare page.
+7. Re-index works.
+8. Delete works and returns to Documents.
+9. Single-document chat still works.
+10. Multi-document comparison still works.
+11. Upload/download/re-index still works.
+12. Frontend typecheck passes.
+13. Backend typecheck passes if backend was touched.
+
+Documentation:
+Update:
+- CHANGELOG.md
+- BACKEND_MAP.md
+- QA_TEST_PLAN.md
+
+Create checkpoint:
+Signal87_Core_Document_Detail_Page_v1
+
+Goal:
+Turn each uploaded file into a durable document record with preview, extracted text, chunks, history, system status, and clear actions — without changing the stable intelligence backend.

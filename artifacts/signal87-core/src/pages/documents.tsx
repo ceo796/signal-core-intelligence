@@ -84,36 +84,38 @@ export default function DocumentsList() {
               {documents?.map((doc) => (
                 <Card key={doc.id} className="bg-card border-border/50 hover:border-primary/50 transition-colors group flex flex-col">
                   <CardContent className="p-5 flex-1 flex flex-col">
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-start gap-3 overflow-hidden">
-                        <div className="p-2 bg-secondary rounded text-primary shrink-0">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-medium text-base truncate" title={doc.fileName}>
-                            {doc.fileName}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-mono px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded">
-                              {doc.fileType.toUpperCase()}
-                            </span>
+                    <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col cursor-pointer">
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex items-start gap-3 overflow-hidden">
+                          <div className="p-2 bg-secondary rounded text-primary shrink-0">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-medium text-base truncate group-hover:text-primary transition-colors" title={doc.fileName}>
+                              {doc.fileName}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs font-mono px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded">
+                                {doc.fileType.toUpperCase()}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="mt-auto space-y-2 text-xs font-mono text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>CHUNKS:</span>
-                        <span className="text-foreground">{doc.chunkCount}</span>
+
+                      <div className="mt-auto space-y-2 text-xs font-mono text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>CHUNKS:</span>
+                          <span className="text-foreground">{doc.chunkCount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>UPLOADED:</span>
+                          <span className="text-foreground">
+                            {format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>UPLOADED:</span>
-                        <span className="text-foreground">
-                          {format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}
-                        </span>
-                      </div>
-                    </div>
+                    </Link>
 
                     <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border/50">
                       <Link href={`/documents/${doc.id}/chat`} className="flex-1">

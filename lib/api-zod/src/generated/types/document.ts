@@ -16,6 +16,8 @@ export interface Document {
   chunkCount: number;
   /** @nullable */
   extractedTextPreview?: string | null;
+  /** @nullable */
+  extractedText?: string | null;
   extractionStatus: string;
   /** @nullable */
   extractionError?: string | null;

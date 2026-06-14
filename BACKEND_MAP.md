@@ -280,9 +280,9 @@ A Replit reverse proxy routes `/api/*` → API server and `/*` → frontend.
 
 ```
 GET    /api/healthz
-GET    /api/documents
+GET    /api/documents                  ← list (extractedText omitted/null; light payload)
 POST   /api/documents/upload
-GET    /api/documents/:id
+GET    /api/documents/:id               ← single (adds full extractedText — additive, read-only)
 DELETE /api/documents/:id
 GET    /api/documents/:id/chunks
 GET    /api/documents/:id/original     ← NEW v2

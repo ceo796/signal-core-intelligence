@@ -17,7 +17,11 @@ import * as fileStore from "../../lib/file-store";
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-function docToResponse(doc: typeof documentsTable.$inferSelect, chunkCount: number) {
+function docToResponse(
+  doc: typeof documentsTable.$inferSelect,
+  chunkCount: number,
+  includeFullText = false,
+) {
   return {
     id: doc.id,
     fileName: doc.fileName,
@@ -26,6 +30,7 @@ function docToResponse(doc: typeof documentsTable.$inferSelect, chunkCount: numb
     uploadedAt: doc.uploadedAt.toISOString(),
     chunkCount,
     extractedTextPreview: doc.extractedText?.slice(0, 200) ?? null,
+    extractedText: includeFullText ? (doc.extractedText ?? null) : null,
     extractionStatus: doc.extractionStatus,
     extractionError: doc.extractionError ?? null,
     storageProvider: doc.storageProvider ?? null,
@@ -167,7 +172,7 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
     .from(chunksTable)
     .where(eq(chunksTable.documentId, doc.id));
 
-  res.json(GetDocumentResponse.parse(docToResponse(doc, cnt)));
+  res.json(GetDocumentResponse.parse(docToResponse(doc, cnt, true)));
 });
 
 router.delete("/documents/:id", async (req, res): Promise<void> => {

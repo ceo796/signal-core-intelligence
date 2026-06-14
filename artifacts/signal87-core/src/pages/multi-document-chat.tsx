@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
 import {
   useListDocuments,
@@ -332,11 +332,28 @@ export default function MultiDocumentChat() {
   const { data: documents, isLoading } = useListDocuments();
   const multiChat = useMultiChat();
 
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number[]>(() => {
+    if (typeof window === "undefined") return [];
+    const preselect = new URLSearchParams(window.location.search).get("preselect");
+    const presetId = preselect ? Number(preselect) : NaN;
+    return Number.isFinite(presetId) ? [presetId] : [];
+  });
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<MultiResult | null>(null);
 
   const eligible = (documents ?? []).filter((d) => d.chunkCount > 0);
+
+  // Reconcile any ?preselect seed against eligible documents once they load:
+  // drop ids that don't exist or have no chunks so they can't be hidden-but-selected.
+  useEffect(() => {
+    if (!documents) return;
+    const valid = selected.filter((id) => documents.some((d) => d.id === id && d.chunkCount > 0));
+    if (valid.length !== selected.length) {
+      setSelected(valid);
+      toast.error("A preselected document isn't available for comparison and was removed.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documents]);
 
   const toggle = (id: number) => {
     setSelected((prev) => {

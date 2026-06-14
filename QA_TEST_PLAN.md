@@ -1,9 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Verification_Trace_Polish_v1**
+> Checkpoint: **Signal87_Core_Document_Detail_Page_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
-> Note: v1 polish is frontend-only — all backend tests (T01–T10, T16–T21) are unchanged from Durable_File_Storage_v2.
+> Note: The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
 ---
 
@@ -358,6 +358,67 @@ To test manually today:
 
 ---
 
+## T22 — Document Detail Page — open from card
+
+**Goal:** Verify clicking a document opens the detail page (not Analyze directly).
+
+**Steps:**
+1. Navigate to `/documents`
+2. Click a document card body (icon / name / metadata area)
+
+**Expected:** Routes to `/documents/:id` showing the detail header (name, type badge, size, upload date, chunk count) and 5 tabs. The card's `ANALYZE` quick-action button still routes to `/documents/:id/chat`.
+
+---
+
+## T23 — Detail header actions
+
+**Goal:** Verify the five primary actions.
+
+**Steps & expected:**
+1. `ANALYZE_DOCUMENT` → routes to `/documents/:id/chat` (existing single-doc chat).
+2. `COMPARE` → routes to `/compare?preselect=:id` with this document preselected.
+3. `DOWNLOAD_ORIGINAL` → downloads the original file (disabled when `originalFileAvailable: false`).
+4. `RE-INDEX` → re-runs extraction/chunking (disabled when no stored original); chunk count refreshes.
+5. `DELETE` → confirm dialog; on success returns to `/documents` and the document is gone.
+
+---
+
+## T24 — Preview tab (PDF and non-PDF)
+
+**Goal:** Verify the Preview tab.
+
+**Steps:**
+1. Open a PDF document with a stored original → Preview tab
+2. Open a TXT/DOCX document → Preview tab
+
+**Expected:** PDF renders inline in an embedded viewer (blob object-URL, not a forced download). Non-PDF shows a readable extracted-text preview. Both keep a working Download Original action. Documents with no stored original show `ORIGINAL_FILE_UNAVAILABLE`.
+
+---
+
+## T25 — Extracted Text / Citations / History / System tabs
+
+**Goal:** Verify the remaining inspection tabs.
+
+**Expected:**
+- **Extracted Text:** full extracted text (not just the 200-char preview), copy button, chunk count, extraction-status badge, indexed timestamp.
+- **Citations:** every chunk as a source block (chunk #, content, character length).
+- **History:** prior chat Q/A pairs with timestamp and citations count; `NO_CHAT_HISTORY` when empty.
+- **System:** document ID, original stored, storage provider, storage key, file size, file type, extraction status, extraction error (if any), chunks created, re-index available, download available.
+
+---
+
+## T26 — Detail page does not alter backend contracts
+
+**Goal:** Confirm the additive `extractedText` field is read-only and list stays light.
+
+**Steps:**
+1. `GET /api/documents/:id` → `extractedText` is the full text
+2. `GET /api/documents` → each item's `extractedText` is `null`
+
+**Expected:** Single-doc GET carries full text; list payload stays light. `extractedTextPreview` (200 chars) unchanged. Single-doc chat and multi-doc comparison unaffected.
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -401,3 +462,8 @@ To test manually today:
 - [ ] T19 System info hides secret values
 - [ ] T20 Data survives server restart
 - [ ] T21 Re-index with changed chunk params (manual test)
+- [ ] T22 Document card opens detail page `/documents/:id`
+- [ ] T23 Detail header actions (Analyze / Compare-preselect / Download / Re-index / Delete)
+- [ ] T24 Preview tab — PDF inline viewer + non-PDF text preview
+- [ ] T25 Extracted Text / Citations / History / System tabs
+- [ ] T26 Additive `extractedText` read-only; list payload stays light

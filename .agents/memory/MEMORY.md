@@ -1,2 +1,3 @@
 - [pdf-parse v1 bundling quirk](pdf-parse-bundling.md) — must be externalized from esbuild AND its index.js patched to remove the debug test-file block.
 - [Orval codegen naming](orval-codegen-naming.md) — never name an OpenAPI schema `<OperationIdPascal>Response`/`Body`; it collides with Orval's auto-generated symbols.
+- [URL-seeded selection reconcile](url-preselect-reconcile.md) — a `?preselect=` deep-link must be re-validated against the eligible list once it loads, or invalid ids stay hidden-but-selected.
