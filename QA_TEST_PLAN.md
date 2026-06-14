@@ -1,8 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_MVP_Readiness_Fixes_v1**
+> Checkpoint: **Signal87_Core_Core_Flow_Simplification_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
+> Scope note (Core_Flow_Simplification_v1): The Multi-document Comparison (`/compare`), Executive Brief (`/brief`), and Admin Stats (`/admin`) features are now **hidden from the UI** — their nav items, routes, and the document-detail Compare/Generate-Brief buttons were removed. Tests that begin by navigating to `/compare`, `/brief`, or `/admin` in the UI (e.g. T13a–T13h, T18/admin, and the detail-page "Compare"/"Generate Brief" steps in T22) are **N/A for this build**; those routes now resolve to NotFound. The backend endpoints remain and can still be exercised directly (e.g. `POST /api/documents/brief`). All core-flow tests (upload → list → detail → PDF preview → single-doc chat → citations/trace → delete) remain in force.
 > Note: Answer Rendering Polish (T28) is a frontend-only change — shared `MarkdownAnswer` component replaces `whitespace-pre-wrap` plain text in all three answer surfaces; no API, retrieval, or citation payload changes. The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
 ---

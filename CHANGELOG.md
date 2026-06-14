@@ -2,6 +2,27 @@
 
 ---
 
+## [Signal87_Core_Core_Flow_Simplification_v1] — 2026-06-14
+
+### Summary
+Frontend-only simplification pass to focus the app on the single core user flow (upload PDF → list → open document → PDF preview → ask a question → grounded cited answer → delete). The three deferred/secondary features — Multi-document Comparison (`/compare`), Executive Brief (`/brief`), and Admin Stats (`/admin`) — are now **hidden from the UI, not deleted**. Their page files and backend routes remain on disk so the features are fully reversible. No backend changes, no API contract changes, no redesign, and no changes to storage/upload/download/delete/reindex or the PDF viewer.
+
+### Changed
+- **`src/components/layout.tsx`**: sidebar nav reduced to a single "Documents" item; removed the Compare Docs / Exec Brief / Admin Stats nav entries and their now-unused icon imports.
+- **`src/App.tsx`**: removed the `/compare`, `/brief`, and `/admin` routes and the imports of their page components. These paths now fall through to the existing NotFound route.
+- **`src/pages/document-detail.tsx`**: removed the "Compare" and "Generate Brief" cross-link buttons from the primary actions row (and their unused icon imports); relabeled the primary action "Analyze Document" → "Ask a Question".
+- **`src/pages/documents.tsx`**: relabeled the per-document card action "Analyze" → "Ask a Question" to match the core-flow language.
+
+### Preserved
+- The full core flow is intact: upload (PDF/DOCX/TXT/CSV), document list, document detail with all tabs (Preview / Extracted Text / Citations / History / System), the in-platform PDF viewer, single-document chat with grounded `[Source N]` citations + Verification Trace, download original, re-index, and delete.
+- The deferred features are hidden, not removed: `pages/multi-document-chat.tsx`, `pages/executive-brief.tsx`, and `pages/admin.tsx` remain on disk, and their backend routes (`POST /api/documents/brief`, multi-chat, `GET /api/admin/stats`) are unchanged — re-adding a nav item + route restores each feature.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` passes.
+- Dev core-flow smoke (upload real PDF → list → preview/original → chat returns 3 citations → delete) all green; `/documents` and `/documents/:id` render with the cleaned nav and no Compare/Brief buttons; consoles clean.
+
+---
+
 ## [Signal87_Core_MVP_Readiness_Fixes_v1] — 2026-06-14
 
 ### Summary
