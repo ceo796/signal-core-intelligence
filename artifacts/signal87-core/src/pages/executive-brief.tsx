@@ -307,10 +307,10 @@ function ResultView({ result }: { result: BriefResultState }) {
           variant="secondary"
           size="sm"
           onClick={handleCopy}
-          className="font-mono text-[11px] gap-1.5 shrink-0"
+          className="text-xs gap-1.5 shrink-0"
         >
           {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-          {copied ? "COPIED" : "COPY_BRIEF"}
+          {copied ? "Copied" : "Copy Brief"}
         </Button>
       </div>
 
@@ -622,9 +622,9 @@ export default function ExecutiveBrief() {
                     ? "COMPARISON NEEDS 2+ DOCUMENTS"
                     : "READY"}
                 </span>
-                <Button type="submit" disabled={!canSubmit} className="font-mono text-xs gap-2">
+                <Button type="submit" disabled={!canSubmit} className="text-xs gap-2">
                   <Sparkles className="w-3.5 h-3.5" />
-                  GENERATE_BRIEF
+                  Generate Brief
                 </Button>
               </div>
             </form>

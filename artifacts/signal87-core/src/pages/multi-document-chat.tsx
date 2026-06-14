@@ -483,9 +483,9 @@ export default function MultiDocumentChat() {
                       }`
                     : "READY"}
                 </span>
-                <Button type="submit" disabled={!canSubmit} className="font-mono text-xs gap-2">
+                <Button type="submit" disabled={!canSubmit} className="text-xs gap-2">
                   <Send className="w-3.5 h-3.5" />
-                  COMPARE
+                  Compare
                 </Button>
               </div>
             </form>

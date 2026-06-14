@@ -84,9 +84,9 @@ export function PdfViewer({ fileUrl, downloadUrl, fileName }: PdfViewerProps) {
 
   const downloadButton = (
     <a href={downloadUrl} download={fileName}>
-      <Button variant="outline" size="sm" className="font-mono text-xs gap-2 border-border/50">
+      <Button variant="outline" size="sm" className="text-xs gap-2 border-border/50">
         <Download className="w-3 h-3" />
-        DOWNLOAD_ORIGINAL
+        Download Original
       </Button>
     </a>
   );

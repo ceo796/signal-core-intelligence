@@ -119,9 +119,9 @@ export default function DocumentsList() {
 
                     <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border/50">
                       <Link href={`/documents/${doc.id}/chat`} className="flex-1">
-                        <Button variant="secondary" className="w-full font-mono text-xs gap-2">
+                        <Button variant="secondary" className="w-full text-xs gap-2">
                           <MessageSquare className="w-3 h-3" />
-                          ANALYZE
+                          Analyze
                         </Button>
                       </Link>
                       
@@ -139,12 +139,12 @@ export default function DocumentsList() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="font-mono text-xs">CANCEL</AlertDialogCancel>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={() => handleDelete(doc.id)}
-                              className="font-mono text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              CONFIRM_DELETE
+                              Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

@@ -48,23 +48,23 @@ export function FileUploadModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 font-mono text-xs">
+        <Button className="gap-2 text-sm">
           <UploadCloud className="w-4 h-4" />
-          UPLOAD_DOCUMENT
+          Upload Document
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="font-mono text-lg uppercase tracking-tight">Upload Document</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Upload Document</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="file" className="text-muted-foreground font-mono text-xs">SELECT_FILE (PDF, DOCX, TXT, CSV)</Label>
+            <Label htmlFor="file" className="text-muted-foreground text-xs">Select file (PDF, DOCX, TXT, CSV)</Label>
             <Input
               id="file"
               type="file"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="font-mono text-sm bg-background border-border"
+              className="text-sm bg-background border-border"
               accept=".pdf,.docx,.txt,.csv"
             />
           </div>
@@ -73,17 +73,17 @@ export function FileUploadModal() {
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
-            className="font-mono text-xs"
+            className="text-sm"
           >
-            CANCEL
+            Cancel
           </Button>
           <Button 
             onClick={handleUpload} 
             disabled={!file || uploadMutation.isPending}
-            className="font-mono text-xs"
+            className="text-sm"
           >
             {uploadMutation.isPending && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
-            {uploadMutation.isPending ? "UPLOADING..." : "UPLOAD"}
+            {uploadMutation.isPending ? "Uploading..." : "Upload"}
           </Button>
         </DialogFooter>
       </DialogContent>

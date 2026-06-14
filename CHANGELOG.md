@@ -2,6 +2,29 @@
 
 ---
 
+## [Signal87_Core_Typography_Polish_v1] — 2026-06-14
+
+### Summary
+Frontend-only typography and readability pass. **Inter is now the sole primary UI font** (Geist removed from the font-family stack; Inter was already loaded via Google Fonts). Space Mono is retained exclusively for Verification Trace values, system metadata labels, route/model names, and technical debug identifiers. All user-facing action button labels converted from `SCREAMING_CASE` to Title Case. No backend changes, no API contract changes, no layout or component redesign.
+
+### Changed
+- **`src/index.css`**: `--app-font-sans` changed from `'Geist', 'Inter', sans-serif` → `'Inter', sans-serif`.
+- **`pages/documents.tsx`**: "ANALYZE" → "Analyze"; "CANCEL" / "CONFIRM_DELETE" → "Cancel" / "Delete"; `font-mono` removed from all action buttons.
+- **`pages/document-detail.tsx`**: "ANALYZE_DOCUMENT" → "Analyze Document"; "COMPARE" → "Compare"; "GENERATE_BRIEF" → "Generate Brief"; "DOWNLOAD_ORIGINAL" → "Download Original" (×3); "RE-INDEX" → "Re-Index"; "DELETE" → "Delete"; "CANCEL" / "CONFIRM_DELETE" → "Cancel" / "Delete"; "COPY_TEXT" → "Copy Text"; "CHAT_HISTORY — prior analysis on this document" → "Chat history — prior analysis on this document"; "NO_CHAT_HISTORY" → "No chat history"; `font-mono` removed from all action buttons and the history section header.
+- **`pages/multi-document-chat.tsx`**: "COMPARE" → "Compare"; `font-mono` removed from submit button.
+- **`pages/executive-brief.tsx`**: "COPY_BRIEF" / "COPIED" → "Copy Brief" / "Copied"; "GENERATE_BRIEF" → "Generate Brief"; `font-mono` removed from both buttons.
+- **`components/file-upload.tsx`**: "UPLOAD_DOCUMENT" → "Upload Document"; "SELECT_FILE (PDF, DOCX, TXT, CSV)" → "Select file (PDF, DOCX, TXT, CSV)"; "UPLOADING..." / "UPLOAD" → "Uploading..." / "Upload"; "CANCEL" → "Cancel"; `font-mono` removed from all interactive elements; dialog title changed to `font-semibold`.
+- **`components/pdf-viewer.tsx`**: "DOWNLOAD_ORIGINAL" → "Download Original"; `font-mono` removed.
+
+### Preserved (intentional mono)
+- Verification Trace fields: all values remain Space Mono.
+- System tab metadata: `DOCUMENT_ID`, `STORAGE_KEY`, `EXTRACTION_STATUS`, etc. remain mono.
+- Technical status indicators: extraction status badge, chunk/indexed metadata in the Extracted Text tab.
+- Brand/terminal labels on the home page: `CORE_SYSTEM_ONLINE`, `ACCESS_SYSTEM`, `INTELLIGENCE_NODE_ACTIVE`, `SYSTEM_CORE_v1.0.4`.
+- Page sub-headers: `INDEXED_FILES`, `BRIEF_GENERATOR // SELECT 1–5 DOCUMENTS`, etc.
+
+---
+
 ## [Signal87_Core_Answer_Rendering_Polish_v1] — 2026-06-14
 
 ### Summary

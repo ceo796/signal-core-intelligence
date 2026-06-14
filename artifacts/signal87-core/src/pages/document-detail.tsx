@@ -286,39 +286,39 @@ export default function DocumentDetail() {
           {/* Primary actions */}
           <div className="flex items-center gap-2 flex-wrap">
             <Link href={`/documents/${doc.id}/chat`}>
-              <Button variant="default" className="font-mono text-xs gap-2">
+              <Button variant="default" className="text-sm gap-2">
                 <MessageSquare className="w-3 h-3" />
-                ANALYZE_DOCUMENT
+                Analyze Document
               </Button>
             </Link>
             <Link href={`/compare?preselect=${doc.id}`}>
-              <Button variant="secondary" className="font-mono text-xs gap-2">
+              <Button variant="secondary" className="text-sm gap-2">
                 <GitCompare className="w-3 h-3" />
-                COMPARE
+                Compare
               </Button>
             </Link>
             <Link href={`/brief?preselect=${doc.id}`}>
-              <Button variant="secondary" className="font-mono text-xs gap-2">
+              <Button variant="secondary" className="text-sm gap-2">
                 <ScrollText className="w-3 h-3" />
-                GENERATE_BRIEF
+                Generate Brief
               </Button>
             </Link>
             {doc.originalFileAvailable ? (
               <a href={originalUrl} download={doc.fileName}>
-                <Button variant="outline" className="font-mono text-xs gap-2 border-border/50">
+                <Button variant="outline" className="text-sm gap-2 border-border/50">
                   <Download className="w-3 h-3" />
-                  DOWNLOAD_ORIGINAL
+                  Download Original
                 </Button>
               </a>
             ) : (
-              <Button variant="outline" className="font-mono text-xs gap-2 border-border/50" disabled>
+              <Button variant="outline" className="text-sm gap-2 border-border/50" disabled>
                 <Download className="w-3 h-3" />
-                DOWNLOAD_ORIGINAL
+                Download Original
               </Button>
             )}
             <Button
               variant="outline"
-              className="font-mono text-xs gap-2 border-border/50"
+              className="text-sm gap-2 border-border/50"
               disabled={!doc.originalFileAvailable || reindexMutation.isPending}
               onClick={handleReindex}
             >
@@ -327,16 +327,16 @@ export default function DocumentDetail() {
               ) : (
                 <RefreshCw className="w-3 h-3" />
               )}
-              RE-INDEX
+              Re-Index
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="font-mono text-xs gap-2 text-muted-foreground hover:text-destructive border-border/50"
+                  className="text-sm gap-2 text-muted-foreground hover:text-destructive border-border/50"
                 >
                   <Trash2 className="w-3 h-3" />
-                  DELETE
+                  Delete
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-card border-border font-sans">
@@ -347,12 +347,12 @@ export default function DocumentDetail() {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="font-mono text-xs">CANCEL</AlertDialogCancel>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
-                    className="font-mono text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    CONFIRM_DELETE
+                    Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -392,9 +392,9 @@ export default function DocumentDetail() {
                       The original file could not be fetched for preview. You can still download it.
                     </p>
                     <a href={originalUrl} download={doc.fileName}>
-                      <Button variant="outline" size="sm" className="font-mono text-xs gap-2 border-border/50">
+                      <Button variant="outline" size="sm" className="text-sm gap-2 border-border/50">
                         <Download className="w-3 h-3" />
-                        DOWNLOAD_ORIGINAL
+                        Download Original
                       </Button>
                     </a>
                   </div>
@@ -433,12 +433,12 @@ export default function DocumentDetail() {
                 </div>
                 <Button
                   variant="outline"
-                  className="font-mono text-xs gap-2 border-border/50"
+                  className="text-sm gap-2 border-border/50"
                   disabled={!doc.extractedText}
                   onClick={handleCopy}
                 >
                   <Copy className="w-3 h-3" />
-                  COPY_TEXT
+                  Copy Text
                 </Button>
               </div>
               {doc.extractedText ? (
@@ -501,8 +501,8 @@ export default function DocumentDetail() {
 
             {/* History */}
             <TabsContent value="history" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
-              <p className="text-xs font-mono text-muted-foreground mb-4">
-                CHAT_HISTORY — prior analysis on this document
+              <p className="text-xs text-muted-foreground mb-4">
+                Chat history — prior analysis on this document
               </p>
               {historyLoading ? (
                 <div className="space-y-3">
@@ -537,8 +537,8 @@ export default function DocumentDetail() {
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="text-center text-sm font-mono text-muted-foreground p-8">
-                  NO_CHAT_HISTORY
+                <div className="text-center text-sm text-muted-foreground p-8">
+                  No chat history
                 </div>
               )}
             </TabsContent>
