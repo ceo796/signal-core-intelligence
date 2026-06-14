@@ -1,6 +1,6 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Durable_Storage_v1**
+> Checkpoint: **Signal87_Core_Durable_File_Storage_v2**
 > Last updated: 2026-06-14
 
 ---
@@ -51,7 +51,12 @@ OpenAI client singleton: **`artifacts/api-server/src/lib/ai-provider.ts`**
 
 **`artifacts/api-server/src/routes/documents/index.ts`** — `router.post("/documents/upload", upload.single("file"), ...)`
 
-Uses `multer` with `memoryStorage` (20 MB limit). The raw file bytes never touch disk — see storage section below.
+Uses `multer` with `memoryStorage` (20 MB limit). The upload flow is:
+1. Receive file bytes in memory
+2. Upload original bytes to Replit Object Storage (GCS-backed)
+3. Extract text
+4. Chunk text
+5. Write document + chunks to PostgreSQL
 
 ---
 
@@ -65,7 +70,7 @@ Uses `multer` with `memoryStorage` (20 MB limit). The raw file bytes never touch
 | DOCX | `mammoth` (externalized from esbuild) |
 | TXT / CSV | `Buffer.toString("utf-8")` — no library |
 
-> **Known quirk:** `pdf-parse@1.1.1` runs a test-file read at module load time when `module.parent` is null (CJS-in-ESM via esbuild). Workaround: `node_modules/.pnpm/pdf-parse@1.1.1/node_modules/pdf-parse/index.js` is patched to remove that block, and both `pdf-parse` and `mammoth` are in `external[]` in `artifacts/api-server/build.mjs`. Re-apply if `pnpm install` reinstalls those packages.
+> **Known quirk:** `pdf-parse@1.1.1` runs a test-file read at module load time when `module.parent` is null (CJS-in-ESM via esbuild). Workaround: `node_modules/.pnpm/pdf-parse@1.1.1/node_modules/pdf-parse/index.js` is patched to remove that block, and both `pdf-parse` and `mammoth` are in `external[]` in `artifacts/api-server/build.mjs`. Re-apply after any clean install.
 
 ---
 
@@ -92,41 +97,52 @@ Algorithm:
 3. Compute cosine similarity between question embedding and each chunk embedding
 4. Return top-K chunks sorted by score descending
 
-> **Limitation:** Embeddings are **not persisted** — recomputed fresh on every query. See Known Limitations section.
+> **Limitation:** Embeddings are **not persisted** — recomputed fresh on every query.
 
 ---
 
-## 9. Where are uploaded files stored?
+## 9. Where are files stored?
 
-### What IS stored (durable — PostgreSQL)
+### What IS stored (durable)
 
-| Data | Table / Column | Notes |
-|------|---------------|-------|
-| Extracted text | `documents.extracted_text` (TEXT) | Full document text, survives restarts and deploys |
-| Chunks | `chunks` table | All text segments with `chunk_index` and `document_id` FK |
-| Chat history | `chat_messages` table | Includes citations + debug JSON per assistant message |
+| Data | Storage | Notes |
+|------|---------|-------|
+| **Original file bytes** | Replit Object Storage (GCS-backed) | Stored on every upload. Key saved in `documents.storage_key`. Provider: `replit-object-storage`. |
+| Extracted text | `documents.extracted_text` (PostgreSQL TEXT) | Full document text, survives restarts and deploys |
+| Chunks | `chunks` table (PostgreSQL) | All text segments with `chunk_index` and `document_id` FK |
+| Chat history + citations | `chat_messages` table (PostgreSQL) | Citations + debug JSON per assistant message |
+| File metadata | `documents` table — `file_name`, `file_type`, `file_size`, `storage_provider`, `storage_key`, `extraction_status`, `extraction_error` | All persisted on upload |
 
 ### What is NOT stored
 
 | Data | Why not |
 |------|---------|
-| Original file bytes (PDF/DOCX/etc.) | Held in memory only (`multer.memoryStorage()`), discarded after extraction. Never written to disk or object storage. |
-| Embeddings | Recomputed on every query from the stored chunk text. Not persisted. |
+| Embeddings | Recomputed on every query from stored chunk text — not persisted |
+
+### Object storage key format
+
+Storage key format: `{PRIVATE_OBJECT_DIR}/documents/{uuid}`
+
+Where `PRIVATE_OBJECT_DIR` is the Replit-provisioned GCS path (e.g. `replit-objstore-xxx/private`).
+Stored in `documents.storage_key`. Used by file-store.ts to reconstruct bucket/object names for download and delete.
 
 ---
 
 ## 10. How does re-indexing work?
 
-Full re-indexing (re-chunking + re-embedding) **does not require re-uploading** because the full extracted text is stored in `documents.extracted_text`.
+**Re-indexing is fully available** because the original file is stored in object storage.
 
-Current state: there is no re-indexing endpoint. To re-index a document today you must delete it and re-upload the file.
+Endpoint: **`POST /api/documents/:id/reindex`**
 
-Planned path for a future re-indexing endpoint:
-1. `DELETE FROM chunks WHERE document_id = $id`
-2. Read `documents.extracted_text`
-3. Call `chunkText()` with new parameters
-4. Insert new chunks into `chunks`
-5. (Optionally persist new embeddings if vector storage is added)
+Flow:
+1. Look up document; verify `storage_key` is set
+2. Download original file bytes from GCS (`file-store.ts:downloadFile`)
+3. Re-extract text (`text-extractor.ts:extractText`)
+4. `DELETE FROM chunks WHERE document_id = $id`
+5. Call `chunkText()` with current parameters
+6. Insert new chunks
+7. Update `documents.extracted_text`, `extraction_status`, `extraction_error`
+8. Chat history is **preserved** — not deleted on re-index
 
 ---
 
@@ -146,13 +162,13 @@ The frontend Verification Trace panel uses `chunkIndex + 1` for 1-based display 
 
 ---
 
-## 12. How can the original file be retrieved or reprocessed?
+## 12. How can the original file be retrieved?
 
-**The original file binary cannot be retrieved** — it is discarded after extraction. However:
+**`GET /api/documents/:id/original`** — returns the original file bytes from GCS.
 
-- The **full extracted text** is available in `documents.extracted_text` and can be used to re-chunk without re-uploading
-- The **filename and file type** are preserved in `documents.file_name` and `documents.file_type`
-- If the original file needs to be re-extracted with different logic, the user must re-upload the file
+- Response headers: `Content-Type` (correct MIME type), `Content-Disposition: attachment; filename="..."`, `Content-Length`
+- Returns 404 if no `storage_key` (document was uploaded before durable storage was enabled)
+- Downloads from `{PRIVATE_OBJECT_DIR}/documents/{uuid}` via `@google-cloud/storage`
 
 ---
 
@@ -164,14 +180,12 @@ The frontend Verification Trace panel uses `chunkIndex + 1` for 1-based display 
 
 ## 14. What kind of storage is it?
 
-**Replit-provisioned PostgreSQL**, accessed via `DATABASE_URL`.
+**Two storage layers:**
 
-- ORM: **Drizzle ORM** (`drizzle-orm/node-postgres`)
-- Connection: `pg.Pool` with `DATABASE_URL`
-- DB entry point: `lib/db/src/index.ts`
-- Schema push (dev only): `pnpm --filter @workspace/db run push`
-
-Not SQLite. Not in-memory. Not Replit Key-Value DB. Not object/file storage.
+| Layer | Technology | Used for |
+|-------|-----------|---------|
+| PostgreSQL | Replit-managed Postgres, accessed via `DATABASE_URL`, Drizzle ORM | Document metadata, extracted text, chunks, chat history |
+| Object Storage | Replit Object Storage (GCS-backed), auth via sidecar at `127.0.0.1:1106` | Original file bytes |
 
 ---
 
@@ -182,6 +196,9 @@ Not SQLite. Not in-memory. Not Replit Key-Value DB. Not object/file storage.
 | `DATABASE_URL` | ✅ Yes | `lib/db/src/index.ts` | Postgres connection string |
 | `OPENAI_API_KEY` | ✅ Yes | `artifacts/api-server/src/lib/ai-provider.ts` | Chat completions + embeddings |
 | `PORT` | ✅ Yes (workflow-injected) | `artifacts/api-server/src/index.ts` | 8080 in dev |
+| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | ✅ Yes (object storage) | Replit sidecar | GCS bucket ID |
+| `PRIVATE_OBJECT_DIR` | ✅ Yes (object storage) | `artifacts/api-server/src/lib/file-store.ts` | Base path for private object uploads |
+| `PUBLIC_OBJECT_SEARCH_PATHS` | ✅ Yes (object storage) | `objectStorage.ts` | Not used by document upload, provisioned alongside the bucket |
 | `SESSION_SECRET` | ⚠️ Present, unused | — | Replit secret, not referenced in current code |
 | `NODE_ENV` | Injected | app startup | `development` in dev, `production` on deploy |
 
@@ -235,7 +252,7 @@ A Replit reverse proxy routes `/api/*` → API server and `/*` → frontend.
 2. Frontend built (`vite build`) and served as static files with SPA rewrite (`/* → /index.html`)
 3. Same reverse proxy routes requests
 4. Health check polls `GET /api/healthz` before traffic is routed
-5. Secrets (`DATABASE_URL`, `OPENAI_API_KEY`) must be set in the Replit deployment secrets panel
+5. Secrets (`DATABASE_URL`, `OPENAI_API_KEY`, `DEFAULT_OBJECT_STORAGE_BUCKET_ID`, `PRIVATE_OBJECT_DIR`, `PUBLIC_OBJECT_SEARCH_PATHS`) must be set in the Replit deployment secrets panel — object storage secrets are auto-provisioned by Replit and carry over to production
 
 ---
 
@@ -243,13 +260,13 @@ A Replit reverse proxy routes `/api/*` → API server and `/*` → frontend.
 
 | # | Limitation | Impact | Mitigation path |
 |---|-----------|--------|----------------|
-| 1 | Original file bytes not retained | Cannot re-extract with different parser logic without re-upload | Add object storage (e.g. Replit Object Storage) to persist raw files |
-| 2 | Embeddings recomputed on every query | Extra OpenAI API cost and ~200–600ms latency per query | Add `embedding` vector column to `chunks` table; persist on upload |
-| 3 | No re-indexing endpoint | Changing chunk size/overlap requires delete + re-upload | Implement `POST /api/documents/:id/reindex` using stored `extracted_text` |
-| 4 | No pgvector | Cosine similarity computed in-memory over all chunks; degrades at scale | Add pgvector extension; store embeddings in DB; use `<=>` ANN operator |
-| 5 | `pdf-parse` patch in node_modules | Patch is in VCS but could be wiped by clean install | Upstream fix or replace with a library that does not run test files at load time |
-| 6 | Upload size limit | 20 MB cap on uploaded files | Configurable via multer `limits.fileSize` |
-| 7 | `SESSION_SECRET` unused | Dead env var | Remove or wire into future auth layer |
+| 1 | Embeddings recomputed on every query | Extra OpenAI API cost and ~200–600ms latency per query | Add `embedding` vector column to `chunks` table; persist on upload |
+| 2 | No re-indexing endpoint updates chunk params via UI | User must call API directly to adjust chunk size/overlap | Add a settings panel |
+| 3 | No pgvector | Cosine similarity computed in-memory over all chunks; degrades at scale | Add pgvector extension; store embeddings in DB; use `<=>` ANN operator |
+| 4 | `pdf-parse` patch in node_modules | Patch wiped by clean install | Upstream fix or replace with a library that does not run test files at load time |
+| 5 | Upload size limit | 20 MB cap on uploaded files | Configurable via multer `limits.fileSize` |
+| 6 | `SESSION_SECRET` unused | Dead env var | Remove or wire into future auth layer |
+| 7 | Documents uploaded before v2 have no `storage_key` | Original download / re-index not available for pre-v2 documents | Re-upload to get durable storage |
 
 ---
 
@@ -262,6 +279,8 @@ POST   /api/documents/upload
 GET    /api/documents/:id
 DELETE /api/documents/:id
 GET    /api/documents/:id/chunks
+GET    /api/documents/:id/original     ← NEW v2
+POST   /api/documents/:id/reindex      ← NEW v2
 POST   /api/documents/:id/chat
 GET    /api/documents/:id/history
 DELETE /api/documents/:id/history
@@ -281,22 +300,27 @@ artifacts/api-server/
     routes/
       index.ts            ← combines health + documents + chat routers
       health/index.ts     ← GET /api/healthz
-      documents/index.ts  ← document CRUD, upload, admin/stats, system/info
+      documents/index.ts  ← document CRUD, upload, original, reindex, admin/stats, system/info
       chat/index.ts       ← POST chat, GET/DELETE history
     lib/
       ai-provider.ts      ← OpenAI singleton + PROVIDER_CONFIG
       chunker.ts          ← chunkText() — 500-word chunks, 50 overlap
       retriever.ts        ← cosine similarity retrieval via OpenAI embeddings
       text-extractor.ts   ← PDF / DOCX / TXT / CSV → plain text
+      file-store.ts       ← GCS upload / download / delete for original files (NEW v2)
+      objectStorage.ts    ← GCS client wrapper (Replit sidecar auth)
+      objectAcl.ts        ← ACL framework (required by objectStorage.ts)
       logger.ts           ← pino logger singleton
-  build.mjs               ← esbuild config (pdf-parse + mammoth externalized)
+  build.mjs               ← esbuild config (@google-cloud/* already externalized)
 
 lib/
   db/
     src/
       index.ts            ← drizzle + pg.Pool, exports db client
       schema/
-        documents.ts      ← documents table (id, file_name, file_type, extracted_text, uploaded_at)
+        documents.ts      ← documents table — id, file_name, file_type, file_size,
+                             extracted_text, extraction_status, extraction_error,
+                             storage_provider, storage_key, uploaded_at
         chunks.ts         ← chunks table (id, document_id FK, chunk_index, content)
         chat_messages.ts  ← chat_messages table (id, document_id, role, content, debug JSON, created_at)
 
@@ -306,5 +330,5 @@ artifacts/signal87-core/  ← React + Vite frontend (separate process)
       home.tsx            ← landing page
       documents.tsx       ← document list + upload trigger
       document-chat.tsx   ← chat interface with Verification Trace + citation chips
-      admin.tsx           ← System Panel (stats + backend architecture)
+      admin.tsx           ← System Panel (stats + backend architecture + storage config)
 ```

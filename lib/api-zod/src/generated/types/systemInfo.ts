@@ -9,6 +9,7 @@ import type { SystemInfoAi } from './systemInfoAi';
 import type { SystemInfoChunkConfig } from './systemInfoChunkConfig';
 import type { SystemInfoDatabase } from './systemInfoDatabase';
 import type { SystemInfoEnv } from './systemInfoEnv';
+import type { SystemInfoFileStorageConfig } from './systemInfoFileStorageConfig';
 
 export interface SystemInfo {
   framework: string;
@@ -19,5 +20,6 @@ export interface SystemInfo {
   ai: SystemInfoAi;
   env: SystemInfoEnv;
   fileStorage: string;
+  fileStorageConfig: SystemInfoFileStorageConfig;
   chunkConfig: SystemInfoChunkConfig;
 }

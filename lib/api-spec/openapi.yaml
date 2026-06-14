@@ -109,6 +109,63 @@ paths:
                 items:
                   $ref: "#/components/schemas/Chunk"
 
+  /documents/{id}/original:
+    get:
+      operationId: getDocumentOriginal
+      tags: [documents]
+      summary: Download the original uploaded file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Original file bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Document not found or original file not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents/{id}/reindex:
+    post:
+      operationId: reindexDocument
+      tags: [documents]
+      summary: Re-extract text and re-chunk from the stored original file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reindex result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReindexResult"
+        "404":
+          description: Document not found or original file not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Extraction failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /documents/{id}/chat:
     post:
       operationId: chatWithDocument
@@ -211,7 +268,7 @@ components:
 
     Document:
       type: object
-      required: [id, fileName, fileType, uploadedAt, chunkCount]
+      required: [id, fileName, fileType, uploadedAt, chunkCount, extractionStatus, originalFileAvailable]
       properties:
         id:
           type: integer
@@ -219,6 +276,8 @@ components:
           type: string
         fileType:
           type: string
+        fileSize:
+          type: ["integer", "null"]
         uploadedAt:
           type: string
           format: date-time
@@ -226,6 +285,16 @@ components:
           type: integer
         extractedTextPreview:
           type: ["string", "null"]
+        extractionStatus:
+          type: string
+        extractionError:
+          type: ["string", "null"]
+        storageProvider:
+          type: ["string", "null"]
+        storageKey:
+          type: ["string", "null"]
+        originalFileAvailable:
+          type: boolean
 
     Chunk:
       type: object
@@ -239,6 +308,23 @@ components:
           type: integer
         content:
           type: string
+
+    ReindexResult:
+      type: object
+      required: [id, fileName, fileType, chunkCount, extractionStatus]
+      properties:
+        id:
+          type: integer
+        fileName:
+          type: string
+        fileType:
+          type: string
+        chunkCount:
+          type: integer
+        extractionStatus:
+          type: string
+        extractedTextPreview:
+          type: ["string", "null"]
 
     ChatInput:
       type: object
@@ -353,7 +439,7 @@ components:
 
     SystemInfo:
       type: object
-      required: [framework, nodeVersion, nodeEnv, routes, database, ai, env, fileStorage, chunkConfig]
+      required: [framework, nodeVersion, nodeEnv, routes, database, ai, env, fileStorage, fileStorageConfig, chunkConfig]
       properties:
         framework:
           type: string
@@ -395,6 +481,18 @@ components:
             type: string
         fileStorage:
           type: string
+        fileStorageConfig:
+          type: object
+          required: [provider, bucketConfigured, originalFilesStored, embeddingsPersisted]
+          properties:
+            provider:
+              type: string
+            bucketConfigured:
+              type: boolean
+            originalFilesStored:
+              type: boolean
+            embeddingsPersisted:
+              type: boolean
         chunkConfig:
           type: object
           required: [chunkSizeWords, overlapWords]

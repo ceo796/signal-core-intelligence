@@ -2,53 +2,84 @@
 
 ---
 
-## [Signal87_Core_Durable_Storage_v1] — 2026-06-14
+## [Signal87_Core_Durable_File_Storage_v2] — 2026-06-14
 
 ### Summary
-First stable checkpoint. Full document intelligence flow is operational end-to-end. All core data (extracted text, chunks, chat history, citations) is durably stored in PostgreSQL. Original file bytes are not retained; see Known Limitations.
+Full durable file storage added. Original uploaded file bytes are now persisted in Replit Object Storage (GCS-backed). Documents can be downloaded as original files and re-indexed at any time without re-uploading. The previous checkpoint ("Durable_Storage_v1") is corrected: it stored extracted text and chunks durably, but not original file bytes. v2 completes both layers.
 
 ### Added
-- **Document upload pipeline** — multipart `POST /api/documents/upload` accepts PDF, DOCX, TXT, CSV (20 MB limit). Extracts text, chunks it, writes document + chunk rows to PostgreSQL.
-- **Text chunking** — 500-word chunks with 50-word overlap (`lib/chunker.ts`). No external AI call.
-- **Embedding-based retrieval** — on each chat query, all chunk texts are embedded with `text-embedding-3-small` and ranked by cosine similarity against the question embedding. Top 5 returned.
-- **Chat completion** — `gpt-4o-mini` answers questions grounded only in the top-5 retrieved chunks. Cites chunks by number.
-- **Citation storage** — assistant messages persist `{ debug, citations }` as JSON in `chat_messages.debug`, so citations are available when reloading history.
-- **Verification Trace panel** — expandable citation chips in the chat UI showing document name, chunk number, relevance %, and expandable source excerpt.
-- **AI Audit Trail panel** — collapsible panel per assistant message showing provider, model, route, fallback status, chunk counts, retrieval/LLM/total latency, errors.
-- **Chat history** — `GET /api/documents/:id/history` returns full conversation. `DELETE /api/documents/:id/history` clears it.
-- **Admin / System Panel** — live stats (document, chunk, message counts + format breakdown) plus full backend architecture panel (runtime, AI config, DB, env var status, all active routes).
-- **`GET /api/system/info`** — machine-readable backend metadata; no secret values exposed.
-- **`BACKEND_MAP.md`** — complete written record of backend architecture, storage behaviour, and known limitations.
-- **`QA_TEST_PLAN.md`** — manual test plan covering all flows.
+- **Replit Object Storage** provisioned (`DEFAULT_OBJECT_STORAGE_BUCKET_ID`, `PRIVATE_OBJECT_DIR`, `PUBLIC_OBJECT_SEARCH_PATHS` set as secrets).
+- **`artifacts/api-server/src/lib/file-store.ts`** — server-side GCS upload, download, and delete using Replit sidecar auth. Functions: `uploadFile(buffer, name, contentType)`, `downloadFile(storageKey)`, `deleteFile(storageKey)`, `isConfigured()`, `getMimeType(fileType)`.
+- **`artifacts/api-server/src/lib/objectStorage.ts`** — GCS client wrapper from Replit Object Storage skill (required peer for sidecar auth setup).
+- **`artifacts/api-server/src/lib/objectAcl.ts`** — ACL framework (required companion to objectStorage.ts).
+- **`GET /api/documents/:id/original`** — streams the original uploaded file from GCS with correct MIME type and `Content-Disposition: attachment` header.
+- **`POST /api/documents/:id/reindex`** — re-downloads original from GCS, re-extracts text, deletes old chunks, creates new chunks, updates document record. Chat history is preserved.
+- **New DB columns on `documents` table:** `file_size` (integer), `extraction_status` (text, default `"pending"`), `extraction_error` (text nullable), `storage_provider` (text nullable), `storage_key` (text nullable).
+- **Updated upload flow:** file bytes saved to GCS before extraction; if GCS upload fails the request is rejected 500; if extraction fails after GCS save, the document is still recorded (status `"failed"`) and returns 207 so the user can re-index.
+- **Delete cascade to GCS:** `DELETE /api/documents/:id` now also deletes the GCS object (best-effort, non-fatal).
+- **Updated `GET /api/system/info`:** now returns `fileStorageConfig` object (`provider`, `bucketConfigured`, `originalFilesStored`, `embeddingsPersisted`) in addition to the string `fileStorage` description.
+- **Updated System Panel** (`admin.tsx`): new "FILE STORAGE" card showing provider, bucket configured (yes/no), original files stored (yes/no), embeddings persisted (no), re-index available (yes/no).
+- **Updated `Document` schema** in OpenAPI and generated Zod: adds `fileSize`, `extractionStatus`, `extractionError`, `storageProvider`, `storageKey`, `originalFileAvailable` fields.
+- **`@google-cloud/storage` and `google-auth-library`** installed on `@workspace/api-server`. Already externalized in `build.mjs` (`@google-cloud/*` glob).
 
 ### Changed
-- Admin page renamed "System Panel"; upgraded with architecture cards pulled from `/api/system/info`.
-- `DEBUG_TRACE` panel renamed "AI Audit Trail" in chat UI.
+- Upload route now returns 207 (not 422) when the file is saved to GCS but extraction fails — the document record is preserved so re-index can retry.
+- `documents.extracted_text` column is now nullable (was NOT NULL). Existing data unaffected.
+- System Panel replaces "File Storage: none (memory only)" row with a dedicated storage card.
+- Route count: 11 → 13 (added `/original` and `/reindex`).
 
 ### Fixed
-- `pdf-parse@1.1.1` crashes at startup when bundled with esbuild (module.parent = null triggers a test-file read). Fix: patch `index.js` to remove the debug block; externalize `pdf-parse` and `mammoth` in `build.mjs`.
-- Port-conflict (`EADDRINUSE`) on workflow restart after checkpoint restore. Fix: `fuser -k` stale processes before restarting workflows.
-- Citations missing from chat history on reload. Fix: store `{ debug, citations }` together in `chat_messages.debug` (previously only `debug` was stored, citations were lost).
-- Bad deep import path `@workspace/api-client-react/src/generated/api.schemas`. Fix: import from package root.
+- n/a (no regression fixes in this release)
 
-### Known Limitations (v1)
+### Naming correction
+The v1 checkpoint was called `Signal87_Core_Durable_Storage_v1` but only stored the extracted text and intelligence layer (chunks, chat history) durably. The original binary file was discarded. That checkpoint is now accurately described as a **Durable Text Index**. v2 adds **Durable File Storage** (original file bytes in object storage), making both layers complete.
+
+### Known Limitations (v2)
 | # | Limitation |
 |---|-----------|
-| 1 | Original file bytes not retained — cannot re-extract without re-upload |
-| 2 | Embeddings recomputed on every query — not persisted |
-| 3 | No re-indexing endpoint — changing chunk params requires delete + re-upload |
-| 4 | No pgvector — cosine similarity computed in-memory; degrades at scale |
-| 5 | `pdf-parse` patch lives in `node_modules` — must be re-applied after clean install |
-| 6 | 20 MB upload cap |
-| 7 | `SESSION_SECRET` env var present but unused |
+| 1 | Embeddings recomputed on every query — not persisted |
+| 2 | No pgvector — cosine similarity computed in-memory |
+| 3 | `pdf-parse` patch lives in `node_modules` — must be re-applied after clean install |
+| 4 | 20 MB upload cap |
+| 5 | `SESSION_SECRET` env var present but unused |
+| 6 | Documents uploaded before v2 have no `storage_key` — original download / re-index not available |
+
+---
+
+## [Signal87_Core_Durable_Storage_v1] — 2026-06-14  *(Durable Text Index)*
+
+> **Naming correction:** This checkpoint stored extracted text, chunks, and chat history durably in PostgreSQL, but did NOT store original file bytes. It is more accurately described as a **Durable Text Index** checkpoint, not Durable File Storage.
+
+### Summary
+First stable checkpoint. Full document intelligence flow operational end-to-end. All extracted content (text, chunks, chat history, citations) durably stored in PostgreSQL. Original file bytes were not retained.
+
+### Added
+- Document upload pipeline (PDF, DOCX, TXT, CSV — 20 MB limit)
+- Text extraction (pdf-parse, mammoth, utf-8)
+- 500-word chunking with 50-word overlap
+- Embedding-based retrieval (text-embedding-3-small, cosine similarity, top-5)
+- Chat completion (gpt-4o-mini, grounded in top-5 chunks)
+- Citation storage (`chat_messages.debug` as `{ debug, citations }` JSON)
+- Verification Trace citation chips in chat UI
+- AI Audit Trail collapsible panel per assistant message
+- Chat history persistence + clear
+- Admin / System Panel with live stats + backend architecture cards
+- `GET /api/system/info` endpoint (no secrets exposed)
+- `BACKEND_MAP.md`, `CHANGELOG.md`, `QA_TEST_PLAN.md` documentation
+
+### Fixed
+- `pdf-parse@1.1.1` startup crash (patched `index.js`, externalized in esbuild)
+- Port conflict on workflow restart (`fuser -k`)
+- Citations lost on history reload (store `{ debug, citations }` together)
+- Bad deep import path from `@workspace/api-client-react`
 
 ---
 
 ## [Pre-release] — 2026-06-13
 
 ### Added
-- Monorepo scaffold: pnpm workspaces, TypeScript, Express 5 API server, React + Vite frontend.
-- PostgreSQL schema: `documents`, `chunks`, `chat_messages` tables via Drizzle ORM.
-- OpenAPI spec (`lib/api-spec/openapi.yaml`) with Orval codegen generating React Query hooks and Zod validators.
-- Initial frontend pages: landing, documents list, document chat, admin stats.
-- `GET /api/healthz` health check.
+- Monorepo scaffold: pnpm workspaces, TypeScript, Express 5, React + Vite
+- PostgreSQL schema: `documents`, `chunks`, `chat_messages` via Drizzle ORM
+- OpenAPI spec (`lib/api-spec/openapi.yaml`) with Orval codegen
+- Initial frontend pages: landing, documents list, document chat, admin stats
+- `GET /api/healthz` health check

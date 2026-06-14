@@ -23,9 +23,15 @@ export const ListDocumentsResponseItem = zod.object({
   "id": zod.number(),
   "fileName": zod.string(),
   "fileType": zod.string(),
+  "fileSize": zod.number().nullish(),
   "uploadedAt": zod.coerce.date(),
   "chunkCount": zod.number(),
-  "extractedTextPreview": zod.string().nullish()
+  "extractedTextPreview": zod.string().nullish(),
+  "extractionStatus": zod.string(),
+  "extractionError": zod.string().nullish(),
+  "storageProvider": zod.string().nullish(),
+  "storageKey": zod.string().nullish(),
+  "originalFileAvailable": zod.boolean()
 })
 export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
 
@@ -41,9 +47,15 @@ export const GetDocumentResponse = zod.object({
   "id": zod.number(),
   "fileName": zod.string(),
   "fileType": zod.string(),
+  "fileSize": zod.number().nullish(),
   "uploadedAt": zod.coerce.date(),
   "chunkCount": zod.number(),
-  "extractedTextPreview": zod.string().nullish()
+  "extractedTextPreview": zod.string().nullish(),
+  "extractionStatus": zod.string(),
+  "extractionError": zod.string().nullish(),
+  "storageProvider": zod.string().nullish(),
+  "storageKey": zod.string().nullish(),
+  "originalFileAvailable": zod.boolean()
 })
 
 
@@ -69,6 +81,31 @@ export const GetDocumentChunksResponseItem = zod.object({
   "content": zod.string()
 })
 export const GetDocumentChunksResponse = zod.array(GetDocumentChunksResponseItem)
+
+
+/**
+ * @summary Download the original uploaded file
+ */
+export const GetDocumentOriginalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Re-extract text and re-chunk from the stored original file
+ */
+export const ReindexDocumentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReindexDocumentResponse = zod.object({
+  "id": zod.number(),
+  "fileName": zod.string(),
+  "fileType": zod.string(),
+  "chunkCount": zod.number(),
+  "extractionStatus": zod.string(),
+  "extractedTextPreview": zod.string().nullish()
+})
 
 
 /**
@@ -155,6 +192,12 @@ export const GetSystemInfoResponse = zod.object({
 }),
   "env": zod.record(zod.string(), zod.string()),
   "fileStorage": zod.string(),
+  "fileStorageConfig": zod.object({
+  "provider": zod.string(),
+  "bucketConfigured": zod.boolean(),
+  "originalFilesStored": zod.boolean(),
+  "embeddingsPersisted": zod.boolean()
+}),
   "chunkConfig": zod.object({
   "chunkSizeWords": zod.number(),
   "overlapWords": zod.number()

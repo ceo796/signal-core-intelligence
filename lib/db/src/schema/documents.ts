@@ -6,7 +6,12 @@ export const documentsTable = pgTable("documents", {
   id: serial("id").primaryKey(),
   fileName: text("file_name").notNull(),
   fileType: text("file_type").notNull(),
-  extractedText: text("extracted_text").notNull(),
+  fileSize: integer("file_size"),
+  extractedText: text("extracted_text"),
+  extractionStatus: text("extraction_status").notNull().default("pending"),
+  extractionError: text("extraction_error"),
+  storageProvider: text("storage_provider"),
+  storageKey: text("storage_key"),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

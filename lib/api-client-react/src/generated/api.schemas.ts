@@ -13,10 +13,20 @@ export interface Document {
   id: number;
   fileName: string;
   fileType: string;
+  /** @nullable */
+  fileSize?: number | null;
   uploadedAt: string;
   chunkCount: number;
   /** @nullable */
   extractedTextPreview?: string | null;
+  extractionStatus: string;
+  /** @nullable */
+  extractionError?: string | null;
+  /** @nullable */
+  storageProvider?: string | null;
+  /** @nullable */
+  storageKey?: string | null;
+  originalFileAvailable: boolean;
 }
 
 export interface Chunk {
@@ -24,6 +34,16 @@ export interface Chunk {
   documentId: number;
   chunkIndex: number;
   content: string;
+}
+
+export interface ReindexResult {
+  id: number;
+  fileName: string;
+  fileType: string;
+  chunkCount: number;
+  extractionStatus: string;
+  /** @nullable */
+  extractedTextPreview?: string | null;
 }
 
 export interface ChatInput {
@@ -95,6 +115,13 @@ export type SystemInfoAi = {
 
 export type SystemInfoEnv = {[key: string]: string};
 
+export type SystemInfoFileStorageConfig = {
+  provider: string;
+  bucketConfigured: boolean;
+  originalFilesStored: boolean;
+  embeddingsPersisted: boolean;
+};
+
 export type SystemInfoChunkConfig = {
   chunkSizeWords: number;
   overlapWords: number;
@@ -109,6 +136,7 @@ export interface SystemInfo {
   ai: SystemInfoAi;
   env: SystemInfoEnv;
   fileStorage: string;
+  fileStorageConfig: SystemInfoFileStorageConfig;
   chunkConfig: SystemInfoChunkConfig;
 }
 

@@ -10,8 +10,18 @@ export interface Document {
   id: number;
   fileName: string;
   fileType: string;
+  /** @nullable */
+  fileSize?: number | null;
   uploadedAt: Date;
   chunkCount: number;
   /** @nullable */
   extractedTextPreview?: string | null;
+  extractionStatus: string;
+  /** @nullable */
+  extractionError?: string | null;
+  /** @nullable */
+  storageProvider?: string | null;
+  /** @nullable */
+  storageKey?: string | null;
+  originalFileAvailable: boolean;
 }

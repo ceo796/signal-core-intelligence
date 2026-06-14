@@ -12,12 +12,12 @@ import {
   Cpu,
   Key,
   Route,
-  Box,
+  HardDrive,
 } from "lucide-react";
 
 function StatusBadge({ value }: { value: string }) {
-  const ok = value === "set" || value === "development" || value === "production";
-  const warn = value === "missing";
+  const ok = value === "set" || value === "development" || value === "production" || value === "yes";
+  const warn = value === "missing" || value === "no";
   return (
     <span
       className={`font-mono text-[11px] px-2 py-0.5 rounded ${
@@ -150,9 +150,41 @@ export default function AdminStats() {
                         <Row label="Framework" value={info.framework} />
                         <Row label="Node.js" value={info.nodeVersion} />
                         <Row label="Environment" value={<StatusBadge value={info.nodeEnv} />} />
-                        <Row label="File Storage" value="none (memory only)" />
                         <Row label="Chunk Size" value={`${info.chunkConfig.chunkSizeWords} words`} />
                         <Row label="Chunk Overlap" value={`${info.chunkConfig.overlapWords} words`} />
+                      </dl>
+                    </CardContent>
+                  </Card>
+
+                  {/* File storage */}
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5">
+                      <SectionHeading icon={HardDrive} label="File Storage" />
+                      <dl className="space-y-2 font-mono text-sm">
+                        <Row
+                          label="Provider"
+                          value={
+                            info.fileStorageConfig?.provider === "none"
+                              ? <StatusBadge value="none" />
+                              : <span className="text-green-400">{info.fileStorageConfig?.provider ?? "—"}</span>
+                          }
+                        />
+                        <Row
+                          label="Bucket configured"
+                          value={<StatusBadge value={info.fileStorageConfig?.bucketConfigured ? "yes" : "no"} />}
+                        />
+                        <Row
+                          label="Original files stored"
+                          value={<StatusBadge value={info.fileStorageConfig?.originalFilesStored ? "yes" : "no"} />}
+                        />
+                        <Row
+                          label="Embeddings persisted"
+                          value={<StatusBadge value={info.fileStorageConfig?.embeddingsPersisted ? "yes" : "no"} />}
+                        />
+                        <Row
+                          label="Re-index available"
+                          value={<StatusBadge value={info.fileStorageConfig?.originalFilesStored ? "yes" : "no"} />}
+                        />
                       </dl>
                     </CardContent>
                   </Card>

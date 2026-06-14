@@ -28,6 +28,7 @@ import type {
   Document,
   ErrorResponse,
   HealthStatus,
+  ReindexResult,
   SystemInfo
 } from './api.schemas';
 
@@ -420,6 +421,153 @@ export function useGetDocumentChunks<TData = Awaited<ReturnType<typeof getDocume
 
 
 
+
+export const getGetDocumentOriginalUrl = (id: number,) => {
+
+
+
+
+  return `/api/documents/${id}/original`
+}
+
+/**
+ * @summary Download the original uploaded file
+ */
+export const getDocumentOriginal = async (id: number, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetDocumentOriginalUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDocumentOriginalQueryKey = (id: number,) => {
+    return [
+    `/api/documents/${id}/original`
+    ] as const;
+    }
+
+
+export const getGetDocumentOriginalQueryOptions = <TData = Awaited<ReturnType<typeof getDocumentOriginal>>, TError = ErrorType<ErrorResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDocumentOriginal>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDocumentOriginalQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDocumentOriginal>>> = ({ signal }) => getDocumentOriginal(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDocumentOriginal>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDocumentOriginalQueryResult = NonNullable<Awaited<ReturnType<typeof getDocumentOriginal>>>
+export type GetDocumentOriginalQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Download the original uploaded file
+ */
+
+export function useGetDocumentOriginal<TData = Awaited<ReturnType<typeof getDocumentOriginal>>, TError = ErrorType<ErrorResponse>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDocumentOriginal>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDocumentOriginalQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getReindexDocumentUrl = (id: number,) => {
+
+
+
+
+  return `/api/documents/${id}/reindex`
+}
+
+/**
+ * @summary Re-extract text and re-chunk from the stored original file
+ */
+export const reindexDocument = async (id: number, options?: RequestInit): Promise<ReindexResult> => {
+
+  return customFetch<ReindexResult>(getReindexDocumentUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getReindexDocumentMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reindexDocument>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reindexDocument>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['reindexDocument'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reindexDocument>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  reindexDocument(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReindexDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof reindexDocument>>>
+
+    export type ReindexDocumentMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Re-extract text and re-chunk from the stored original file
+ */
+export const useReindexDocument = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reindexDocument>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reindexDocument>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getReindexDocumentMutationOptions(options));
+    }
 
 export const getChatWithDocumentUrl = (id: number,) => {
 

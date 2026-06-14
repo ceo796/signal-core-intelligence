@@ -1,0 +1,89 @@
+The current Signal87 Core system is working well. Do not rebuild the app and do not add new product features.
+
+Important correction:
+The system currently durably stores extracted text, chunks, document metadata, citations, and chat history in PostgreSQL. However, it does not store the original uploaded file binary. Uploads use multer memoryStorage, and the original file bytes are discarded after extraction.
+
+We need to add true durable original-file storage while preserving the current working flow.
+
+Current working flow to preserve:
+upload document → extract text → chunk document → store extracted text/chunks → chat with citations → Verification Trace
+
+Tasks:
+
+1. Do not break the current working upload, extraction, chunking, chat, citation, or Verification Trace behavior.
+
+2. Add persistent storage for the original uploaded file bytes.
+
+3. Use the simplest reliable Replit-compatible storage option:
+   - Prefer Replit Object Storage if available and suitable for deployed apps.
+   - If not, use a persistent uploads directory only if it is confirmed durable after restart/deploy.
+   - If neither is suitable, use S3-compatible object storage.
+
+4. Update PostgreSQL document metadata to include:
+   - original_file_name
+   - file_type
+   - file_size
+   - storage_provider
+   - storage_key or storage_path
+   - upload_timestamp
+   - extraction_status
+   - extraction_error if any
+   - extracted_text_available
+   - original_file_available
+
+5. Update the upload route so the original file is:
+   - received
+   - saved to durable storage
+   - then extracted
+   - then chunked
+   - then recorded in PostgreSQL
+
+6. Add a retrieve/download endpoint:
+   GET /api/documents/:id/original
+
+   This should return the stored original file if available.
+
+7. Add a true re-index endpoint:
+   POST /api/documents/:id/reindex
+
+   This should:
+   - reload the original stored file
+   - re-extract text
+   - delete old chunks for that document
+   - create new chunks
+   - preserve document metadata
+   - preserve chat history unless there is a clear reason not to
+
+8. Update the System Panel to show:
+   - original file stored: yes/no
+   - storage provider
+   - storage key/path
+   - extracted text stored: yes/no
+   - chunks count
+   - re-index available: yes/no
+
+9. Update:
+   - BACKEND_MAP.md
+   - CHANGELOG.md
+   - QA_TEST_PLAN.md
+
+10. Correct the naming:
+   The current state should be described as Durable Text Index, not Durable File Storage, unless original file bytes are actually stored.
+
+11. After implementation, run sanity checks confirming:
+   - document upload still works
+   - chat still works
+   - citations still work
+   - Verification Trace still works
+   - original file can be retrieved
+   - re-index works from stored original file
+   - app still runs cleanly
+
+Do not add Gemini.
+Do not add global search.
+Do not add billing.
+Do not add agents.
+Do not redesign the UI.
+
+Goal:
+Signal87 Core should durably preserve both the original uploaded document and the extracted intelligence layer.

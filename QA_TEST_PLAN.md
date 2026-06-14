@@ -1,6 +1,6 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Durable_Storage_v1**
+> Checkpoint: **Signal87_Core_Durable_File_Storage_v2**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
 
@@ -10,320 +10,319 @@
 
 1. Confirm both workflows are running (API server + frontend web)
 2. Confirm `GET /api/healthz` returns `{"status":"ok"}`
-3. Confirm `GET /api/system/info` shows `OPENAI_API_KEY: "set"` and `DATABASE_URL: "set"`
+3. Confirm `GET /api/system/info` shows:
+   - `OPENAI_API_KEY: "set"`
+   - `DATABASE_URL: "set"`
+   - `DEFAULT_OBJECT_STORAGE_BUCKET_ID: "set"`
+   - `PRIVATE_OBJECT_DIR: "set"`
+   - `fileStorageConfig.bucketConfigured: true`
+   - `fileStorageConfig.originalFilesStored: true`
 
 ---
 
 ## T01 — Document Upload (TXT)
 
-**Goal:** Verify plain-text upload, extraction, and chunking work end-to-end.
+**Goal:** Verify plain-text upload, storage, extraction, and chunking.
 
 **Steps:**
 1. Navigate to `/documents`
-2. Click `UPLOAD_DOCUMENT`
-3. Select a `.txt` file containing at least 200 words
-4. Submit
+2. Click `UPLOAD_DOCUMENT`, select a `.txt` file with ≥ 200 words
+3. Submit
 
 **Expected:**
-- Upload modal closes
-- Document card appears in the list with correct filename
-- `CHUNKS:` shows ≥ 1
-- `UPLOADED:` timestamp is recent
-
-**Cleanup:** Leave document for T04.
+- Document card appears with `TXT` badge
+- `CHUNKS:` ≥ 1
+- API response includes `originalFileAvailable: true`, `storageProvider: "replit-object-storage"`, `extractionStatus: "success"`
 
 ---
 
 ## T02 — Document Upload (PDF)
 
-**Goal:** Verify PDF text extraction (uses patched `pdf-parse`).
+**Goal:** Verify PDF text extraction.
 
 **Steps:**
 1. Upload a `.pdf` file with readable text
 
 **Expected:**
-- Document card appears with `PDF` badge
-- `CHUNKS:` > 0
-- No server error in the API logs
+- `PDF` badge, chunks > 0, `originalFileAvailable: true`
 
 **Edge case — scanned PDF (no text layer):**
-- Expected: API returns 422 "No text could be extracted from the file"
-- UI shows an error toast
+- Expected: 207 response, document created with `extractionStatus: "failed"`, `originalFileAvailable: true`
+- File is still stored in GCS so re-index can be attempted
 
 ---
 
 ## T03 — Document Upload (DOCX)
 
-**Goal:** Verify DOCX extraction via `mammoth`.
-
-**Steps:**
-1. Upload a `.docx` file
-
-**Expected:**
-- Document card appears with `DOCX` badge
-- Chunks > 0
+**Expected:** `DOCX` badge, chunks > 0, `originalFileAvailable: true`
 
 ---
 
 ## T04 — Document Upload (CSV)
 
-**Goal:** Verify CSV handled as plain text.
-
-**Steps:**
-1. Upload a `.csv` file
-
-**Expected:**
-- Document card appears with `CSV` badge
-- Chunks > 0 (one chunk per 500-word window; small CSVs may yield 1 chunk)
+**Expected:** `CSV` badge, chunks > 0, `originalFileAvailable: true`
 
 ---
 
 ## T05 — Upload size limit
 
-**Goal:** Verify 20 MB cap is enforced.
-
-**Steps:**
-1. Attempt to upload a file larger than 20 MB
-
-**Expected:**
-- Request rejected before the server processes it
-- Error shown to the user (toast or modal)
+**Steps:** Attempt to upload a file > 20 MB
+**Expected:** Request rejected before server processes it; error shown in UI
 
 ---
 
 ## T06 — Unsupported file type
 
-**Goal:** Verify unsupported types are rejected.
-
-**Steps:**
-1. Attempt to upload a `.xlsx` or `.jpg` file
-
-**Expected:**
-- API returns 400 "Unsupported file type"
-- Error shown in UI
+**Steps:** Attempt to upload `.xlsx` or `.jpg`
+**Expected:** API returns 400 "Unsupported file type"; UI shows error
 
 ---
 
-## T07 — Chat: basic question answering
+## T07 — Original file download
+
+**Goal:** Verify original file bytes are retrievable from GCS after upload.
+
+**Steps:**
+1. Upload a known file (note the file content)
+2. Call `GET /api/documents/:id/original`
+
+**Expected:**
+- HTTP 200 with correct `Content-Type` (e.g. `text/plain` for TXT)
+- `Content-Disposition: attachment; filename="<original filename>"`
+- File content is byte-for-byte identical to the uploaded file
+
+**Verify via curl:**
+```bash
+curl -o /tmp/retrieved.txt localhost:80/api/documents/<id>/original
+diff /tmp/original.txt /tmp/retrieved.txt  # should produce no output
+```
+
+---
+
+## T08 — Original file unavailable (pre-v2 document)
+
+**Goal:** Verify graceful 404 for documents uploaded before durable storage was enabled.
+
+**Steps:**
+1. Find a document where `storage_key` is NULL in the DB
+2. Call `GET /api/documents/:id/original`
+
+**Expected:**
+- HTTP 404 with error message explaining the file predates durable storage
+
+---
+
+## T09 — Re-index endpoint
+
+**Goal:** Verify re-extraction and re-chunking from stored original file.
+
+**Steps:**
+1. Upload a document (note the chunk count)
+2. Call `POST /api/documents/:id/reindex`
+
+**Expected:**
+- HTTP 200 with `extractionStatus: "success"`
+- `chunkCount` matches original (same file, same chunker)
+- `extractedTextPreview` is non-empty
+
+**Verify chat history preserved:**
+1. Send a chat message before reindex
+2. Reindex
+3. Confirm history still shows original message
+
+---
+
+## T10 — Re-index without stored file
+
+**Goal:** Verify 404 when no original file is stored.
+
+**Steps:**
+1. Find a document with `storage_key: null`
+2. Call `POST /api/documents/:id/reindex`
+
+**Expected:** HTTP 404 "Original file not available"
+
+---
+
+## T11 — Chat: basic question answering
 
 **Goal:** Verify full RAG pipeline — embedding, retrieval, completion, citation storage.
 
-**Pre-condition:** At least one document is uploaded with ≥ 1 chunk.
-
 **Steps:**
 1. Navigate to `/documents/:id/chat`
-2. Type a question that can be answered from the document
-3. Submit
+2. Type a question answerable from the document
 
 **Expected:**
-- Typing indicator shows `PROCESSING_QUERY...`
-- Response appears with answer text
-- **Verification Trace** section appears below the answer with ≥ 1 citation chip
-- Each chip shows: `Chunk N`, document filename, relevance % (0–100)
-- Clicking a chip expands to show the source excerpt
-- **AI Audit Trail** collapsible is present
-- Expanding it shows: PROVIDER (`openai`), MODEL (`gpt-4o-mini`), ROUTE, FALLBACK (`NO`), CHUNKS_SEARCHED, CHUNKS_RETRIEVED, latency values
+- `PROCESSING_QUERY...` indicator shown
+- Response with answer text
+- **Verification Trace** section with ≥ 1 citation chip (Chunk N, doc name, relevance %)
+- Clicking chip expands to source excerpt
+- **AI Audit Trail** collapsible present with PROVIDER, MODEL, ROUTE, FALLBACK: NO, latency values
 
 ---
 
-## T08 — Chat: citation accuracy
+## T12 — Chat: citation accuracy
 
-**Goal:** Verify citation `chunkIndex` maps to real chunk content.
+**Goal:** Verify `citation.chunkIndex` maps to correct DB chunk.
 
 **Steps:**
-1. After a chat response, note the `Chunk N` number from a citation chip
-2. Call `GET /api/documents/:id/chunks` and find chunk at `chunkIndex = N - 1`
-3. Compare the expanded excerpt in the UI against the DB chunk content
+1. Note Chunk N from a citation chip
+2. Call `GET /api/documents/:id/chunks`
+3. Find chunk at index `N - 1`
 
-**Expected:**
-- Excerpt in UI matches `chunk.content.slice(0, 300)` from the DB
+**Expected:** Excerpt in UI matches `chunk.content.slice(0, 300)`
 
 ---
 
-## T09 — Chat: search scope (document isolation)
+## T13 — Chat: document isolation
 
-**Goal:** Confirm chat only retrieves chunks from the selected document.
-
-**Pre-condition:** At least 2 different documents are uploaded.
+**Goal:** Chat only retrieves chunks from the selected document.
 
 **Steps:**
-1. Upload Document A and Document B with clearly distinct content
-2. Open chat for Document A
-3. Ask a question whose answer only exists in Document B
+1. Upload Document A and Document B with distinct content
+2. Ask a question in Document A whose answer only exists in B
 
-**Expected:**
-- Model answers "the information is not in the provided document" (or similar)
-- Citation chips only reference chunks from Document A
-- No content from Document B appears in the answer
+**Expected:** "information not in document" response; no B content in answer or citations
 
 ---
 
-## T10 — Chat history persistence
-
-**Goal:** Verify history survives page navigation and server restart.
+## T14 — Chat history persistence
 
 **Steps:**
-1. Send a question in a document chat session
-2. Navigate away to `/documents`
-3. Return to the same document's chat page
+1. Send a message in a chat session
+2. Navigate away, return
 
-**Expected:**
-- User message and assistant response are still visible
-- Citation chips and AI Audit Trail are present on the historical message
-- (Note: pre-checkpoint messages stored without citations will show the audit trail but no citation chips — this is expected for the legacy format)
+**Expected:** Message + response + citations still visible
 
 ---
 
-## T11 — Chat history clear
+## T15 — Clear chat history
 
-**Goal:** Verify `CLEAR` button wipes history.
-
-**Steps:**
-1. On a document chat page with ≥ 1 message, click `CLEAR`
-2. Confirm the confirmation toast appears
-3. Check the page
+**Steps:** Click CLEAR on a document with messages
 
 **Expected:**
-- Chat area shows `SYSTEM_READY` empty state
+- Empty state shown
 - `GET /api/documents/:id/history` returns `[]`
 
 ---
 
-## T12 — Document delete
+## T16 — Delete document cascades to GCS
 
-**Goal:** Verify document + its chunks and messages are removed.
+**Goal:** Verify deletion removes document from DB and GCS.
 
 **Steps:**
-1. On the Documents page, click the delete icon for a document
-2. Confirm deletion
+1. Upload a document and note its ID and storage key
+2. Delete the document
+3. Try `GET /api/documents/:id/original`
 
 **Expected:**
-- Document card disappears
-- `GET /api/documents/:id` returns 404
-- `GET /api/documents/:id/chunks` returns 404 or empty
-- `GET /api/documents/:id/history` returns empty
+- 404 on document fetch
+- GCS object deleted (best-effort — may take a moment)
 
 ---
 
-## T13 — System Panel (Admin)
+## T17 — System Panel — Storage Card
 
-**Goal:** Verify `/admin` page shows accurate live backend info.
+**Goal:** Verify the new FILE STORAGE section in the System Panel.
 
 **Steps:**
 1. Navigate to `/admin`
 
 **Expected:**
-- DOCUMENTS / CHUNKS / MESSAGES counters match actual data
-- FORMAT_BREAKDOWN bar chart shows correct file type distribution
-- BACKEND RUNTIME section shows:
-  - Framework: `Express 5`
-  - Node.js version starts with `v24`
-  - Environment badge: `development`
-  - File Storage: `none (memory only)`
-  - Chunk Size: `500 words`
-  - Chunk Overlap: `50 words`
-- AI CONFIGURATION section shows:
-  - Provider: `OpenAI`
-  - Chat Model: `gpt-4o-mini`
-  - Embedding Model: `text-embedding-3-small`
-  - Max Tokens: `2048`
-- DATABASE section shows:
-  - Type: `PostgreSQL`
-  - ORM: `Drizzle ORM`
-  - Tables: `documents, chunks, chat_messages`
-- ENVIRONMENT VARIABLES: `DATABASE_URL`, `OPENAI_API_KEY`, `PORT` all show green `set`
-- ACTIVE API ROUTES: all 11 routes listed, colour-coded by method
+- FILE STORAGE card visible
+- Provider: `replit-object-storage` (green)
+- Bucket configured: `yes` (green)
+- Original files stored: `yes` (green)
+- Embeddings persisted: `no` (red — expected)
+- Re-index available: `yes` (green)
+- ENVIRONMENT VARIABLES now shows `DEFAULT_OBJECT_STORAGE_BUCKET_ID: set` and `PRIVATE_OBJECT_DIR: set`
+- ACTIVE API ROUTES shows 13 routes including `/documents/:id/original` (GET, green) and `/documents/:id/reindex` (POST, blue)
 
 ---
 
-## T14 — API health check
-
-**Goal:** Verify health endpoint is reachable.
+## T18 — API health check
 
 ```bash
 curl -s localhost:80/api/healthz
 ```
-
 **Expected:** `{"status":"ok"}`
 
 ---
 
-## T15 — System info endpoint (no secrets)
-
-**Goal:** Verify `/api/system/info` exposes no secret values.
+## T19 — System info endpoint (no secrets)
 
 ```bash
 curl -s localhost:80/api/system/info
 ```
-
 **Expected:**
-- `env.OPENAI_API_KEY` is `"set"` or `"missing"` — never the actual key value
-- `env.DATABASE_URL` is `"set"` or `"missing"` — never the connection string
-- Response contains `framework`, `routes[]`, `database`, `ai`, `chunkConfig`
+- `env.OPENAI_API_KEY` is `"set"` — never the actual key
+- `env.DATABASE_URL` is `"set"` — never the connection string
+- `env.DEFAULT_OBJECT_STORAGE_BUCKET_ID` is `"set"` — never the bucket ID
+- `fileStorageConfig.bucketConfigured: true`
 
 ---
 
-## T16 — Re-index capability (manual / future)
+## T20 — Post-restart data durability
 
-**Goal:** Document current behaviour and limitation.
-
-**Current state:** No re-indexing endpoint exists.
-
-**What is possible today:**
-1. `DELETE /api/documents/:id` — removes document, chunks, and history
-2. Re-upload the original file — triggers fresh extraction, chunking, and chunk insert
-
-**What would be required for in-place re-indexing:**
-- `DELETE FROM chunks WHERE document_id = $id`
-- Read `documents.extracted_text`
-- Call `chunkText()` with new parameters
-- Insert new chunks
-- (Optionally persist new embeddings)
-
----
-
-## T17 — Post-restart data durability
-
-**Goal:** Confirm data survives API server restart (PostgreSQL durability).
+**Goal:** Confirm all data + GCS files survive API server restart.
 
 **Steps:**
-1. Upload a document and send at least one chat message
+1. Upload a document, send a chat message
 2. Restart the API server workflow
-3. Navigate to `/documents` and then to the document's chat page
+3. Navigate to the document's chat page
 
 **Expected:**
-- Document is still listed
-- Chat history is intact with citations
+- Document listed, chat history intact
+- `GET /api/documents/:id/original` still returns the file (GCS is durable)
 
 ---
 
-## Known failure modes (by design, not bugs)
+## T21 — Re-index after text parameter change (future path)
+
+**Goal:** (Currently requires code change — no UI for chunk params yet.)
+
+To test manually today:
+1. Temporarily change `chunkSizeWords` in `chunker.ts` to 100
+2. Rebuild and restart API server
+3. Call `POST /api/documents/:id/reindex`
+
+**Expected:** `chunkCount` changes to reflect new chunk size; chat still works
+
+---
+
+## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
 |----------|-------------------|
-| Upload a file, try to re-download the original | Not possible — file binary not stored |
-| Large document with many chunks — slow chat response | Expected: embeddings recomputed on every query; latency grows linearly with chunk count |
+| Document without `storage_key` | `/original` returns 404; `/reindex` returns 404 — expected for pre-v2 documents |
+| Upload where extraction fails | 207 response with `warning` field; document and GCS file preserved; re-index available |
+| Large document with many chunks | Slower chat response — embeddings recomputed on every query |
 | Pre-v1 chat messages (stored without citations) | Show AI Audit Trail but no citation chips — legacy format gracefully handled |
-| Scanned PDF with no text layer | 422 error "No text could be extracted" |
+| Scanned PDF (no text layer) | 207 with `extractionStatus: "failed"`, `originalFileAvailable: true` |
+| GCS delete fails on document delete | Non-fatal — logged server-side, 204 still returned |
 
 ---
 
-## Sign-off checklist
+## Sign-off checklist — v2
 
-- [ ] T01 TXT upload
+- [ ] T01 TXT upload (storageKey set, originalFileAvailable true)
 - [ ] T02 PDF upload
 - [ ] T03 DOCX upload
 - [ ] T04 CSV upload
 - [ ] T05 Size limit enforced
 - [ ] T06 Unsupported type rejected
-- [ ] T07 Chat returns answer + citations
-- [ ] T08 Citation maps to correct chunk
-- [ ] T09 Chat scoped to selected document only
-- [ ] T10 History persists across navigation
-- [ ] T11 Clear history works
-- [ ] T12 Delete document cascades
-- [ ] T13 System Panel accurate
-- [ ] T14 Health check responds
-- [ ] T15 System info hides secret values
-- [ ] T16 Re-index limitation documented
-- [ ] T17 Data survives server restart
+- [ ] T07 Original file download — byte-for-byte match
+- [ ] T08 Pre-v2 document returns 404 on /original
+- [ ] T09 Re-index works, chat history preserved
+- [ ] T10 Re-index without stored file returns 404
+- [ ] T11 Chat returns answer + citations
+- [ ] T12 Citation maps to correct chunk
+- [ ] T13 Chat scoped to selected document
+- [ ] T14 History persists across navigation
+- [ ] T15 Clear history works
+- [ ] T16 Delete cascades to GCS
+- [ ] T17 System Panel shows storage card
+- [ ] T18 Health check responds
+- [ ] T19 System info hides secret values
+- [ ] T20 Data survives server restart
+- [ ] T21 Re-index with changed chunk params (manual test)
