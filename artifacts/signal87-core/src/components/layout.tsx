@@ -17,7 +17,7 @@ export function Layout({ children }: LayoutProps) {
     <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
       <aside className="shrink-0 w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-card flex flex-col">
         <div className="p-4 border-b border-border flex items-center">
-          <img src="/signal87-logo.png" alt="Signal87" className="h-8 w-auto" />
+          <img src="/signal87-logo.png" alt="Signal87" className="h-12 w-auto" />
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {

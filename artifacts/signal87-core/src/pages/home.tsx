@@ -1,15 +1,12 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, ShieldCheck, Database, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, Database, Zap } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/30">
       <header className="p-6 flex justify-between items-center border-b border-border/50">
-        <div className="flex items-center gap-2">
-          <Layers className="w-6 h-6 text-primary" />
-          <span className="font-mono font-bold tracking-tight text-xl">SIGNAL<span className="text-primary">87</span></span>
-        </div>
+        <img src="/signal87-logo.png" alt="Signal87" className="h-10 w-auto" />
         <div className="text-xs font-mono text-muted-foreground">Open Preview</div>
       </header>
 
