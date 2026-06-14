@@ -262,6 +262,78 @@ router.get("/documents/:id/original", async (req, res): Promise<void> => {
   res.send(buffer);
 });
 
+// ── PUT /documents/:id/original — attach or replace the stored original file ─
+router.put(
+  "/documents/:id/original",
+  upload.single("file"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid document ID" });
+      return;
+    }
+
+    const file = (req as Request & { file?: Express.Multer.File }).file;
+    if (!file) {
+      res.status(400).json({ error: "No file uploaded" });
+      return;
+    }
+
+    const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
+    if (!doc) {
+      res.status(404).json({ error: "Document not found" });
+      return;
+    }
+
+    // Validate file type matches the document's stored type.
+    const fileType = getFileType(file.mimetype, file.originalname);
+    if (!fileType || fileType.toLowerCase() !== doc.fileType.toLowerCase()) {
+      res.status(400).json({
+        error: `File type mismatch: this document is ${doc.fileType.toUpperCase()}. Please upload a ${doc.fileType.toUpperCase()} file.`,
+      });
+      return;
+    }
+
+    if (!fileStore.isConfigured()) {
+      res.status(400).json({ error: "Durable file storage is not configured." });
+      return;
+    }
+
+    // Delete the existing stored file to avoid orphaned objects.
+    if (doc.storageKey) {
+      try {
+        await fileStore.deleteFile(doc.storageKey);
+      } catch (err) {
+        req.log.warn({ err, storageKey: doc.storageKey }, "Could not delete previous stored file before replacement");
+      }
+    }
+
+    let storageKey: string;
+    const storageProvider = "replit-object-storage";
+    try {
+      const mimeType = fileStore.getMimeType(fileType);
+      storageKey = await fileStore.uploadFile(file.buffer, file.originalname, mimeType);
+    } catch (err) {
+      req.log.error({ err }, "Failed to store replacement original file");
+      res.status(500).json({ error: "Failed to store file" });
+      return;
+    }
+
+    const [updated] = await db
+      .update(documentsTable)
+      .set({ storageKey, storageProvider })
+      .where(eq(documentsTable.id, id))
+      .returning();
+
+    res.json({
+      id: updated.id,
+      originalFileAvailable: Boolean(updated.storageKey),
+      storageProvider: updated.storageProvider ?? null,
+      storageKey: updated.storageKey ?? null,
+    });
+  },
+);
+
 // ── POST /documents/:id/reindex — re-extract and re-chunk from stored file ───
 router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
   const id = parseInt(req.params.id, 10);

@@ -21,6 +21,8 @@ import type {
 
 import type {
   AdminStats,
+  AttachDocumentOriginalBody,
+  AttachOriginalResult,
   BriefInput,
   BriefResult,
   ChatInput,
@@ -502,6 +504,80 @@ export function useGetDocumentOriginal<TData = Awaited<ReturnType<typeof getDocu
 
 
 
+
+export const getAttachDocumentOriginalUrl = (id: number,) => {
+
+
+
+
+  return `/api/documents/${id}/original`
+}
+
+/**
+ * @summary Attach or replace the original file for a document that has no stored original
+ */
+export const attachDocumentOriginal = async (id: number,
+    attachDocumentOriginalBody: AttachDocumentOriginalBody, options?: RequestInit): Promise<AttachOriginalResult> => {
+    const formData = new FormData();
+formData.append(`file`, attachDocumentOriginalBody.file);
+
+  return customFetch<AttachOriginalResult>(getAttachDocumentOriginalUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+    ,
+    body:
+      formData,
+  }
+);}
+
+
+
+
+export const getAttachDocumentOriginalMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof attachDocumentOriginal>>, TError,{id: number;data: BodyType<AttachDocumentOriginalBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof attachDocumentOriginal>>, TError,{id: number;data: BodyType<AttachDocumentOriginalBody>}, TContext> => {
+
+const mutationKey = ['attachDocumentOriginal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof attachDocumentOriginal>>, {id: number;data: BodyType<AttachDocumentOriginalBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  attachDocumentOriginal(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AttachDocumentOriginalMutationResult = NonNullable<Awaited<ReturnType<typeof attachDocumentOriginal>>>
+    export type AttachDocumentOriginalMutationBody = BodyType<AttachDocumentOriginalBody>
+    export type AttachDocumentOriginalMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Attach or replace the original file for a document that has no stored original
+ */
+export const useAttachDocumentOriginal = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof attachDocumentOriginal>>, TError,{id: number;data: BodyType<AttachDocumentOriginalBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof attachDocumentOriginal>>,
+        TError,
+        {id: number;data: BodyType<AttachDocumentOriginalBody>},
+        TContext
+      > => {
+      return useMutation(getAttachDocumentOriginalMutationOptions(options));
+    }
 
 export const getReindexDocumentUrl = (id: number,) => {
 

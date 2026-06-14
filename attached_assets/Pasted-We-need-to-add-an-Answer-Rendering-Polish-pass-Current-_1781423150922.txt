@@ -1,0 +1,84 @@
+We need to add an Answer Rendering Polish pass.
+
+Current issue:
+AI responses contain Markdown formatting such as **bold titles**, numbered lists, bullets, and section headings, but the UI renders them as raw text. This makes answers look unpolished and exposes Markdown syntax to users.
+
+Checkpoint:
+Signal87_Core_Answer_Rendering_Polish_v1
+
+Goal:
+Render AI-generated answers cleanly across the platform without changing the AI backend or response generation.
+
+Scope:
+Apply clean Markdown rendering to:
+- single-document chat answers
+- multi-document comparison answers
+- executive brief outputs
+- copied brief output only if needed
+
+Requirements:
+
+1. Convert Markdown-style answer text into clean rendered output:
+   - **bold text** should render as bold
+   - numbered lists should render cleanly
+   - bullet lists should render cleanly
+   - paragraphs should have proper spacing
+   - section headings should be visually distinct
+   - inline citations should continue to render as citation pills
+
+2. Preserve existing citation behavior:
+   - do not break [Chunk N] citation pill conversion
+   - do not break [Source N] citation rendering
+   - do not change citation payloads
+   - do not change grouped citations
+   - do not change Verification Trace
+
+3. Improve spacing:
+   - add appropriate paragraph spacing
+   - avoid cramped list formatting
+   - keep answer cards readable
+   - keep the dark UI aesthetic
+
+4. Do not change:
+   - backend architecture
+   - OpenAI routing
+   - storage
+   - PDF viewer
+   - upload/download/delete/reindex
+   - single-document retrieval
+   - multi-document retrieval
+   - brief generation logic
+   - Verification Trace data
+
+5. Use a safe frontend Markdown renderer if appropriate.
+   If adding a Markdown library, ensure it does not break citation-pill parsing.
+   Citation tokens should still become clickable pills, not plain Markdown text.
+
+Testing:
+Verify:
+1. Single-document chat renders bold section titles correctly.
+2. Numbered lists render correctly.
+3. Bullet lists render correctly.
+4. Citation pills still work.
+5. Verification Trace still works.
+6. Multi-document comparison still renders correctly.
+7. Executive Briefs still render correctly.
+8. Copy Brief still works.
+9. No raw **bold markers** appear in normal answer display.
+10. Frontend typecheck passes.
+11. Backend typecheck passes only if backend was touched.
+
+Documentation:
+Update:
+- CHANGELOG.md
+- QA_TEST_PLAN.md
+- BACKEND_MAP.md only if needed
+
+Do not add Gemini.
+Do not add global search.
+Do not add billing.
+Do not add agents.
+Do not redesign the app.
+
+Goal:
+Make all AI-generated answers look polished, readable, and professional while preserving citations and Verification Trace.

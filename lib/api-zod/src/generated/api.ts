@@ -94,6 +94,25 @@ export const GetDocumentOriginalParams = zod.object({
 
 
 /**
+ * @summary Attach or replace the original file for a document that has no stored original
+ */
+export const AttachDocumentOriginalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AttachDocumentOriginalBody = zod.object({
+  "file": zod.instanceof(File)
+})
+
+export const AttachDocumentOriginalResponse = zod.object({
+  "id": zod.number(),
+  "originalFileAvailable": zod.boolean(),
+  "storageProvider": zod.string().nullish(),
+  "storageKey": zod.string().nullish()
+})
+
+
+/**
  * @summary Re-extract text and re-chunk from the stored original file
  */
 export const ReindexDocumentParams = zod.object({

@@ -1,0 +1,95 @@
+Pause Executive Brief polish.
+
+We need to fix the Document Detail PDF viewer experience first.
+
+Current issue:
+On /documents/1, the Preview tab shows ORIGINAL_FILE_UNAVAILABLE. This document is a PDF, but its original file was not stored because it was uploaded before durable original-file storage existed.
+
+The user experience is confusing. It appears as if the platform has no PDF viewer, even though the viewer only cannot render because the original file is unavailable.
+
+Goal:
+Improve the PDF Preview tab and legacy document handling.
+
+Current stable checkpoint:
+Signal87_Core_PDF_Viewer_v1
+
+Tasks:
+
+1. Do not change the PDF viewer core component unless necessary.
+2. Do not change durable storage architecture.
+3. Do not change upload/download/delete/reindex.
+4. Do not change single-document chat.
+5. Do not change multi-document comparison.
+6. Do not change Executive Briefs.
+7. Do not add Gemini.
+8. Do not add global search.
+9. Do not add billing.
+10. Do not add agents.
+
+Fix the Preview tab behavior:
+
+A. If document is a PDF and originalFileAvailable is true:
+- Render the real PDF viewer.
+- Show page navigation, zoom, fit-to-width, and Download Original.
+
+B. If document is a PDF and originalFileAvailable is false:
+Replace the raw ORIGINAL_FILE_UNAVAILABLE text with a clear user-facing panel:
+
+Title:
+Original PDF not available
+
+Message:
+This document was indexed before original-file storage was enabled, so Signal87 can analyze the extracted text but cannot display the original PDF preview.
+
+Show:
+- File name
+- File type
+- Extraction status
+- Chunk count
+- Analyze Document button
+- Re-upload Original PDF button if feasible
+- Download disabled with explanation
+
+C. Add a way to attach or replace the missing original file if feasible:
+- Button: Re-upload Original
+- Allows uploading the original PDF for this existing document record
+- Stores it using existing object storage
+- Updates originalFileAvailable/storage metadata
+- Does not delete extracted text or chat history
+- Does not automatically re-index unless user chooses Re-index after upload
+
+If attaching original file to an existing document is too risky, do not implement it yet. Instead, show a clear instruction:
+“Upload this PDF again as a new document to enable PDF preview.”
+
+D. For non-PDF files:
+- Keep the existing extracted-text preview fallback.
+
+E. Add a visual status badge near the Preview tab or document header:
+- Original Stored: Yes/No
+- Preview Available: Yes/No
+
+Testing:
+1. Open a PDF with originalFileAvailable true and confirm the PDF viewer renders.
+2. Open legacy PDF doc 1 with originalFileAvailable false and confirm the new clear empty-state panel appears.
+3. Confirm users no longer see raw ORIGINAL_FILE_UNAVAILABLE.
+4. Confirm non-PDF preview still works.
+5. Confirm Analyze still works for legacy PDFs.
+6. Confirm Download Original is disabled with explanation when no original exists.
+7. Confirm single-document chat still works.
+8. Confirm multi-document comparison still works.
+9. Confirm Executive Briefs still work.
+10. Confirm upload/download/reindex still works for documents with stored originals.
+11. Frontend typecheck passes.
+12. Backend typecheck passes if backend was touched.
+
+Documentation:
+Update:
+- CHANGELOG.md
+- QA_TEST_PLAN.md
+- BACKEND_MAP.md only if backend changes
+
+Checkpoint:
+Signal87_Core_PDF_Viewer_Legacy_File_State_v1
+
+Goal:
+Make the PDF viewer experience clear and professional, especially for legacy documents where the original PDF was never stored.
