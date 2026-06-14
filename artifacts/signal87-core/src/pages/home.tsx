@@ -43,8 +43,8 @@ export default function Home() {
           </div>
           <div className="space-y-3">
             <Database className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-sm">Full Debug Trace</h3>
-            <p className="text-xs text-muted-foreground font-mono">Complete visibility into routing, retrieval latency, and model fallbacks.</p>
+            <h3 className="font-bold text-sm">Verification Trace</h3>
+            <p className="text-xs text-muted-foreground font-mono">Complete visibility into provider, model, routing, retrieval latency, and fallbacks.</p>
           </div>
           <div className="space-y-3">
             <Zap className="w-5 h-5 text-primary" />

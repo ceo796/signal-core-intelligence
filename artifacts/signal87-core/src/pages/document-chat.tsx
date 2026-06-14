@@ -35,19 +35,175 @@ import {
 import { toast } from "sonner";
 import type { DebugInfo, Citation } from "@workspace/api-client-react";
 
-function AuditTrailPanel({ debug }: { debug: DebugInfo }) {
+function Row({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-center gap-2 min-w-0">
+      <span className="shrink-0 text-muted-foreground/60">{label}</span>
+      <span className={`text-right truncate ${highlight ? "text-primary" : "text-foreground/80"}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// Inline citation marker rendered inside the answer in place of raw "[Chunk N]".
+function InlineCitation({
+  n,
+  hasSource,
+  active,
+  onActivate,
+}: {
+  n: number;
+  hasSource: boolean;
+  active: boolean;
+  onActivate: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onActivate}
+      disabled={!hasSource}
+      title={hasSource ? `View source — Chunk ${n}` : `Chunk ${n}`}
+      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-mono font-semibold leading-none transition-colors ${
+        active
+          ? "bg-primary text-primary-foreground"
+          : hasSource
+          ? "bg-primary/15 text-primary hover:bg-primary/30 cursor-pointer"
+          : "bg-muted text-muted-foreground/50 cursor-default"
+      }`}
+    >
+      {n}
+    </button>
+  );
+}
+
+// Parse answer text, replacing "[Chunk N]" tokens with clean inline citation markers.
+function renderAnswerWithCitations(
+  content: string,
+  citationByNum: Map<number, Citation>,
+  activeChunk: number | null,
+  onActivate: (chunkIndex: number) => void
+): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /\[\s*chunks?\s+(\d+)\s*\]/gi;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = regex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(content.slice(lastIndex, match.index));
+    }
+    const n = parseInt(match[1], 10);
+    const citation = citationByNum.get(n);
+    parts.push(
+      <InlineCitation
+        key={`cite-${key++}`}
+        n={n}
+        hasSource={Boolean(citation)}
+        active={citation ? activeChunk === citation.chunkIndex : false}
+        onActivate={() => citation && onActivate(citation.chunkIndex)}
+      />
+    );
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex));
+  }
+  return parts;
+}
+
+function CitationChip({
+  citation,
+  documentName,
+  expanded,
+  onToggle,
+}: {
+  citation: Citation;
+  documentName: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const score = citation.relevanceScore;
+  const scoreColor =
+    score >= 0.85
+      ? "text-green-400"
+      : score >= 0.65
+      ? "text-yellow-400"
+      : "text-muted-foreground";
+
+  return (
+    <div
+      className={`rounded border bg-background/60 overflow-hidden text-sm transition-colors ${
+        expanded ? "border-primary/50" : "border-border/40"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors"
+      >
+        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold shrink-0">
+          {citation.chunkIndex + 1}
+        </span>
+        <span className="text-[11px] text-muted-foreground/70 truncate flex-1 min-w-0">
+          {documentName}
+        </span>
+        {score > 0 && (
+          <span className={`font-mono text-[11px] shrink-0 ${scoreColor}`}>
+            {(score * 100).toFixed(0)}% match
+          </span>
+        )}
+        {expanded ? (
+          <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
+        ) : (
+          <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+        )}
+      </button>
+      {expanded && (
+        <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-black/20">
+          <div className="flex items-center gap-1.5 mt-2 mb-1.5">
+            <Quote className="w-3 h-3 text-primary/50" />
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+              Source Excerpt
+            </span>
+          </div>
+          <p className="text-muted-foreground text-[12px] leading-relaxed italic border-l-2 border-primary/30 pl-3">
+            {citation.content}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TraceDetailPanel({
+  debug,
+  documentName,
+}: {
+  debug: DebugInfo;
+  documentName: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="mt-3 border border-border/40 bg-black/20 rounded-md overflow-hidden"
+      className="border border-border/40 bg-black/20 rounded-md overflow-hidden"
     >
       <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-xs font-mono text-muted-foreground hover:bg-white/5 transition-colors">
         <div className="flex items-center gap-2">
           <Terminal className="w-3 h-3 text-primary/70" />
-          <span className="text-primary/70 uppercase tracking-widest text-[10px]">AI Audit Trail</span>
+          <span className="text-primary/70 uppercase tracking-widest text-[10px]">Trace Detail</span>
         </div>
         {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
       </CollapsibleTrigger>
@@ -69,6 +225,9 @@ function AuditTrailPanel({ debug }: { debug: DebugInfo }) {
           <Row label="CHUNKS_SEARCHED" value={String(debug.chunksSearched)} />
           <Row label="CHUNKS_RETRIEVED" value={String(debug.chunksRetrieved)} />
         </div>
+        <div className="border-t border-border/30 pt-1.5 mt-1">
+          <Row label="DOCUMENT" value={documentName} />
+        </div>
         <div className="border-t border-border/30 pt-1.5 mt-1 grid grid-cols-3 gap-x-4 gap-y-1.5">
           <Row label="RETRIEVAL" value={`${debug.retrievalLatencyMs}ms`} />
           <Row label="LLM" value={`${debug.llmLatencyMs}ms`} />
@@ -84,114 +243,66 @@ function AuditTrailPanel({ debug }: { debug: DebugInfo }) {
   );
 }
 
-function Row({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: React.ReactNode;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="flex justify-between items-center gap-2 min-w-0">
-      <span className="shrink-0 text-muted-foreground/60">{label}</span>
-      <span className={`text-right truncate ${highlight ? "text-primary" : "text-foreground/80"}`}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function CitationChip({
-  citation,
-  index,
-  documentName,
-}: {
-  citation: Citation;
-  index: number;
-  documentName: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const score = citation.relevanceScore;
-  const scoreColor =
-    score >= 0.85
-      ? "text-green-400"
-      : score >= 0.65
-      ? "text-yellow-400"
-      : "text-muted-foreground";
-
-  return (
-    <div className="rounded border border-border/40 bg-background/60 overflow-hidden text-sm">
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors"
-      >
-        <Quote className="w-3 h-3 text-primary/60 shrink-0" />
-        <span className="font-mono text-[11px] text-primary/80 shrink-0">
-          Chunk {citation.chunkIndex + 1}
-        </span>
-        <span className="text-[11px] text-muted-foreground/60 truncate flex-1 min-w-0">
-          {documentName}
-        </span>
-        <span className={`font-mono text-[11px] shrink-0 ${scoreColor}`}>
-          {(score * 100).toFixed(0)}%
-        </span>
-        {expanded ? (
-          <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
-        ) : (
-          <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
-        )}
-      </button>
-      {expanded && (
-        <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-black/20">
-          <p className="text-muted-foreground text-[12px] leading-relaxed italic mt-2 border-l-2 border-primary/30 pl-3">
-            {citation.content}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function VerificationSection({
+function AssistantAnswer({
+  content,
   citations,
   debug,
   documentName,
 }: {
+  content: string;
   citations: Citation[];
   debug: DebugInfo | null;
   documentName: string;
 }) {
-  if (citations.length === 0 && !debug) return null;
+  const [activeChunk, setActiveChunk] = useState<number | null>(null);
+
+  const citationByNum = new Map<number, Citation>();
+  citations.forEach((c) => citationByNum.set(c.chunkIndex + 1, c));
+
+  const handleActivate = (chunkIndex: number) => {
+    setActiveChunk((prev) => (prev === chunkIndex ? null : chunkIndex));
+  };
+
+  const hasTrace = citations.length > 0 || !!debug;
 
   return (
-    <div className="mt-3 space-y-2">
-      {citations.length > 0 && (
-        <div>
-          <div className="flex items-center gap-1.5 mb-2">
+    <>
+      <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+        {renderAnswerWithCitations(content, citationByNum, activeChunk, handleActivate)}
+      </div>
+
+      {hasTrace && (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3 h-3 text-primary/70" />
             <span className="font-mono text-[10px] uppercase tracking-widest text-primary/70">
               Verification Trace
             </span>
-            <span className="font-mono text-[10px] text-muted-foreground/50 ml-1">
-              — {citations.length} source{citations.length !== 1 ? "s" : ""}
-            </span>
+            {citations.length > 0 && (
+              <span className="font-mono text-[10px] text-muted-foreground/50 ml-1">
+                — {citations.length} source{citations.length !== 1 ? "s" : ""}
+              </span>
+            )}
           </div>
-          <div className="space-y-1.5">
-            {citations.map((cit, i) => (
-              <CitationChip
-                key={i}
-                citation={cit}
-                index={i}
-                documentName={documentName}
-              />
-            ))}
-          </div>
+
+          {citations.length > 0 && (
+            <div className="space-y-1.5">
+              {citations.map((cit) => (
+                <CitationChip
+                  key={cit.chunkIndex}
+                  citation={cit}
+                  documentName={documentName}
+                  expanded={activeChunk === cit.chunkIndex}
+                  onToggle={() => handleActivate(cit.chunkIndex)}
+                />
+              ))}
+            </div>
+          )}
+
+          {debug && <TraceDetailPanel debug={debug} documentName={documentName} />}
         </div>
       )}
-      {debug && <AuditTrailPanel debug={debug} />}
-    </div>
+    </>
   );
 }
 
@@ -372,12 +483,13 @@ export default function DocumentChat() {
                             : "bg-card border border-border"
                         }`}
                       >
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                          {msg.content}
-                        </div>
-
-                        {!isUser && (
-                          <VerificationSection
+                        {isUser ? (
+                          <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                            {msg.content}
+                          </div>
+                        ) : (
+                          <AssistantAnswer
+                            content={msg.content}
                             citations={citations}
                             debug={debugData}
                             documentName={document.fileName}
