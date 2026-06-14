@@ -158,6 +158,53 @@ router.get("/documents/:id/chunks", async (req, res): Promise<void> => {
   res.json(GetDocumentChunksResponse.parse(chunks));
 });
 
+router.get("/system/info", (_req, res): void => {
+  const envStatus = (key: string) =>
+    process.env[key] ? "set" : "missing";
+
+  res.json({
+    framework: "Express 5",
+    nodeVersion: process.version,
+    nodeEnv: process.env["NODE_ENV"] ?? "unknown",
+    routes: [
+      "GET  /api/healthz",
+      "GET  /api/documents",
+      "POST /api/documents/upload",
+      "GET  /api/documents/:id",
+      "DELETE /api/documents/:id",
+      "GET  /api/documents/:id/chunks",
+      "POST /api/documents/:id/chat",
+      "GET  /api/documents/:id/history",
+      "DELETE /api/documents/:id/history",
+      "GET  /api/admin/stats",
+      "GET  /api/system/info",
+    ],
+    database: {
+      type: "PostgreSQL",
+      orm: "Drizzle ORM",
+      tables: ["documents", "chunks", "chat_messages"],
+    },
+    ai: {
+      provider: "OpenAI",
+      chatModel: "gpt-4o-mini",
+      embeddingModel: "text-embedding-3-small",
+      maxTokens: 2048,
+    },
+    env: {
+      DATABASE_URL: envStatus("DATABASE_URL"),
+      OPENAI_API_KEY: envStatus("OPENAI_API_KEY"),
+      PORT: envStatus("PORT"),
+      SESSION_SECRET: envStatus("SESSION_SECRET"),
+      NODE_ENV: process.env["NODE_ENV"] ?? "not set",
+    },
+    fileStorage: "none — files are held in memory (multer memoryStorage) and discarded after text extraction",
+    chunkConfig: {
+      chunkSizeWords: 500,
+      overlapWords: 50,
+    },
+  });
+});
+
 router.get("/admin/stats", async (_req, res): Promise<void> => {
   const [docCount] = await db.select({ cnt: count(documentsTable.id) }).from(documentsTable);
   const [chunkCount] = await db.select({ cnt: count(chunksTable.id) }).from(chunksTable);

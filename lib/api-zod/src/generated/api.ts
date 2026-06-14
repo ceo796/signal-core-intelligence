@@ -135,6 +135,34 @@ export const ClearChatHistoryParams = zod.object({
 
 
 /**
+ * @summary Get backend system information
+ */
+export const GetSystemInfoResponse = zod.object({
+  "framework": zod.string(),
+  "nodeVersion": zod.string(),
+  "nodeEnv": zod.string(),
+  "routes": zod.array(zod.string()),
+  "database": zod.object({
+  "type": zod.string(),
+  "orm": zod.string(),
+  "tables": zod.array(zod.string())
+}),
+  "ai": zod.object({
+  "provider": zod.string(),
+  "chatModel": zod.string(),
+  "embeddingModel": zod.string(),
+  "maxTokens": zod.number()
+}),
+  "env": zod.record(zod.string(), zod.string()),
+  "fileStorage": zod.string(),
+  "chunkConfig": zod.object({
+  "chunkSizeWords": zod.number(),
+  "overlapWords": zod.number()
+})
+})
+
+
+/**
  * @summary Get admin statistics
  */
 export const GetAdminStatsResponse = zod.object({

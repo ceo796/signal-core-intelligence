@@ -17,3 +17,8 @@ export * from './docTypeCount';
 export * from './document';
 export * from './errorResponse';
 export * from './healthStatus';
+export * from './systemInfo';
+export * from './systemInfoAi';
+export * from './systemInfoChunkConfig';
+export * from './systemInfoDatabase';
+export * from './systemInfoEnv';

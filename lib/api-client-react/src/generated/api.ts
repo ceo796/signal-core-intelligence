@@ -27,7 +27,8 @@ import type {
   Chunk,
   Document,
   ErrorResponse,
-  HealthStatus
+  HealthStatus,
+  SystemInfo
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -638,6 +639,83 @@ export const useClearChatHistory = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getClearChatHistoryMutationOptions(options));
     }
+
+export const getGetSystemInfoUrl = () => {
+
+
+
+
+  return `/api/system/info`
+}
+
+/**
+ * @summary Get backend system information
+ */
+export const getSystemInfo = async ( options?: RequestInit): Promise<SystemInfo> => {
+
+  return customFetch<SystemInfo>(getGetSystemInfoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSystemInfoQueryKey = () => {
+    return [
+    `/api/system/info`
+    ] as const;
+    }
+
+
+export const getGetSystemInfoQueryOptions = <TData = Awaited<ReturnType<typeof getSystemInfo>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSystemInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSystemInfoQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSystemInfo>>> = ({ signal }) => getSystemInfo({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSystemInfo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSystemInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getSystemInfo>>>
+export type GetSystemInfoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get backend system information
+ */
+
+export function useGetSystemInfo<TData = Awaited<ReturnType<typeof getSystemInfo>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSystemInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSystemInfoQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetAdminStatsUrl = () => {
 

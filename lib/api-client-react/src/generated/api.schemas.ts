@@ -80,6 +80,38 @@ export interface AdminStats {
   documentsByType: DocTypeCount[];
 }
 
+export type SystemInfoDatabase = {
+  type: string;
+  orm: string;
+  tables: string[];
+};
+
+export type SystemInfoAi = {
+  provider: string;
+  chatModel: string;
+  embeddingModel: string;
+  maxTokens: number;
+};
+
+export type SystemInfoEnv = {[key: string]: string};
+
+export type SystemInfoChunkConfig = {
+  chunkSizeWords: number;
+  overlapWords: number;
+};
+
+export interface SystemInfo {
+  framework: string;
+  nodeVersion: string;
+  nodeEnv: string;
+  routes: string[];
+  database: SystemInfoDatabase;
+  ai: SystemInfoAi;
+  env: SystemInfoEnv;
+  fileStorage: string;
+  chunkConfig: SystemInfoChunkConfig;
+}
+
 export interface ErrorResponse {
   error: string;
 }

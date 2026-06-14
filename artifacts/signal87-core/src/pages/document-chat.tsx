@@ -33,7 +33,7 @@ import {
   Quote,
 } from "lucide-react";
 import { toast } from "sonner";
-import { DebugInfo, Citation } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { DebugInfo, Citation } from "@workspace/api-client-react";
 
 function AuditTrailPanel({ debug }: { debug: DebugInfo }) {
   const [isOpen, setIsOpen] = useState(false);

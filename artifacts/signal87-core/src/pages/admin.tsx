@@ -1,121 +1,247 @@
 import { Layout } from "@/components/layout";
-import { useGetAdminStats } from "@workspace/api-client-react";
+import { useGetAdminStats, useGetSystemInfo } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, Database, FileText, MessageSquare, AlertCircle } from "lucide-react";
+import {
+  Activity,
+  Database,
+  FileText,
+  MessageSquare,
+  AlertCircle,
+  Server,
+  Cpu,
+  Key,
+  Route,
+  Box,
+} from "lucide-react";
+
+function StatusBadge({ value }: { value: string }) {
+  const ok = value === "set" || value === "development" || value === "production";
+  const warn = value === "missing";
+  return (
+    <span
+      className={`font-mono text-[11px] px-2 py-0.5 rounded ${
+        warn
+          ? "bg-destructive/20 text-destructive"
+          : ok
+          ? "bg-green-500/15 text-green-400"
+          : "bg-secondary text-muted-foreground"
+      }`}
+    >
+      {value}
+    </span>
+  );
+}
+
+function SectionHeading({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <Icon className="w-4 h-4 text-primary/70" />
+      <span className="font-mono text-xs uppercase tracking-widest text-primary/70">{label}</span>
+    </div>
+  );
+}
 
 export default function AdminStats() {
-  const { data: stats, isLoading, error } = useGetAdminStats();
+  const { data: stats, isLoading: statsLoading, error: statsError } = useGetAdminStats();
+  const { data: info, isLoading: infoLoading, error: infoError } = useGetSystemInfo();
+
+  const loading = statsLoading || infoLoading;
 
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <header className="p-6 border-b border-border bg-card">
-          <h1 className="text-2xl font-bold tracking-tight">System Telemetry</h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">ADMIN_STATS</p>
+          <h1 className="text-2xl font-bold tracking-tight">System Panel</h1>
+          <p className="text-sm text-muted-foreground font-mono mt-1">ADMIN_STATS + BACKEND_ARCHITECTURE</p>
         </header>
 
         <div className="flex-1 overflow-auto p-6 space-y-6">
-          {isLoading ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="bg-card border-border/50">
-                    <CardContent className="p-6">
-                      <Skeleton className="h-4 w-1/2 mb-4" />
-                      <Skeleton className="h-8 w-1/3" />
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* ── Document counts ── */}
+              {statsError ? (
+                <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md flex items-center gap-2 text-sm font-mono">
+                  <AlertCircle className="w-4 h-4" /> FAILED_TO_LOAD_STATS
+                </div>
+              ) : stats ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-mono text-muted-foreground mb-1">DOCUMENTS</p>
+                        <h2 className="text-3xl font-bold">{stats.totalDocuments}</h2>
+                      </div>
+                      <div className="p-3 bg-primary/10 rounded-full text-primary">
+                        <FileText className="w-5 h-5" />
+                      </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-              <Card className="bg-card border-border/50">
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-1/4 mb-6" />
-                  <div className="space-y-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : error ? (
-            <div className="p-6 text-center border border-destructive/50 bg-destructive/10 text-destructive rounded-md flex flex-col items-center gap-2">
-              <AlertCircle className="w-8 h-8" />
-              <p className="font-mono text-sm">FAILED_TO_LOAD_TELEMETRY</p>
-            </div>
-          ) : stats ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-card border-border/50">
-                  <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-mono text-muted-foreground mb-1">TOTAL_DOCUMENTS</p>
-                      <h2 className="text-3xl font-bold">{stats.totalDocuments}</h2>
-                    </div>
-                    <div className="p-3 bg-primary/10 rounded-full text-primary">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-card border-border/50">
-                  <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-mono text-muted-foreground mb-1">TOTAL_CHUNKS</p>
-                      <h2 className="text-3xl font-bold">{stats.totalChunks}</h2>
-                    </div>
-                    <div className="p-3 bg-primary/10 rounded-full text-primary">
-                      <Database className="w-6 h-6" />
-                    </div>
-                  </CardContent>
-                </Card>
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-mono text-muted-foreground mb-1">CHUNKS</p>
+                        <h2 className="text-3xl font-bold">{stats.totalChunks}</h2>
+                      </div>
+                      <div className="p-3 bg-primary/10 rounded-full text-primary">
+                        <Database className="w-5 h-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-mono text-muted-foreground mb-1">MESSAGES</p>
+                        <h2 className="text-3xl font-bold">{stats.totalMessages}</h2>
+                      </div>
+                      <div className="p-3 bg-primary/10 rounded-full text-primary">
+                        <MessageSquare className="w-5 h-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : null}
 
+              {/* ── Format breakdown ── */}
+              {stats && stats.documentsByType.length > 0 && (
                 <Card className="bg-card border-border/50">
-                  <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-mono text-muted-foreground mb-1">TOTAL_MESSAGES</p>
-                      <h2 className="text-3xl font-bold">{stats.totalMessages}</h2>
-                    </div>
-                    <div className="p-3 bg-primary/10 rounded-full text-primary">
-                      <MessageSquare className="w-6 h-6" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="bg-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" />
-                    Format Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {stats.documentsByType.length === 0 ? (
-                      <p className="text-muted-foreground text-sm font-mono">NO_DATA_AVAILABLE</p>
-                    ) : (
-                      stats.documentsByType.map((type) => (
-                        <div key={type.fileType} className="flex items-center">
-                          <div className="w-24 font-mono text-sm">{type.fileType.toUpperCase()}</div>
-                          <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden mx-4">
-                            <div 
-                              className="h-full bg-primary" 
-                              style={{ width: `${(type.count / stats.totalDocuments) * 100}%` }}
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 font-mono text-muted-foreground">
+                      <Activity className="w-4 h-4 text-primary" /> FORMAT_BREAKDOWN
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {stats.documentsByType.map((t) => (
+                        <div key={t.fileType} className="flex items-center gap-3">
+                          <span className="w-12 font-mono text-xs text-muted-foreground">{t.fileType.toUpperCase()}</span>
+                          <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary rounded-full"
+                              style={{ width: `${(t.count / stats.totalDocuments) * 100}%` }}
                             />
                           </div>
-                          <div className="w-12 text-right font-mono text-sm">{type.count}</div>
+                          <span className="w-6 text-right font-mono text-xs">{t.count}</span>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ── Backend architecture ── */}
+              {infoError ? (
+                <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md flex items-center gap-2 text-sm font-mono">
+                  <AlertCircle className="w-4 h-4" /> FAILED_TO_LOAD_SYSTEM_INFO
+                </div>
+              ) : info ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Framework + runtime */}
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5">
+                      <SectionHeading icon={Server} label="Backend Runtime" />
+                      <dl className="space-y-2 font-mono text-sm">
+                        <Row label="Framework" value={info.framework} />
+                        <Row label="Node.js" value={info.nodeVersion} />
+                        <Row label="Environment" value={<StatusBadge value={info.nodeEnv} />} />
+                        <Row label="File Storage" value="none (memory only)" />
+                        <Row label="Chunk Size" value={`${info.chunkConfig.chunkSizeWords} words`} />
+                        <Row label="Chunk Overlap" value={`${info.chunkConfig.overlapWords} words`} />
+                      </dl>
+                    </CardContent>
+                  </Card>
+
+                  {/* AI config */}
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5">
+                      <SectionHeading icon={Cpu} label="AI Configuration" />
+                      <dl className="space-y-2 font-mono text-sm">
+                        <Row label="Provider" value={info.ai.provider} />
+                        <Row label="Chat Model" value={info.ai.chatModel} />
+                        <Row label="Embedding Model" value={info.ai.embeddingModel} />
+                        <Row label="Max Tokens" value={String(info.ai.maxTokens)} />
+                      </dl>
+                    </CardContent>
+                  </Card>
+
+                  {/* Database */}
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5">
+                      <SectionHeading icon={Database} label="Database" />
+                      <dl className="space-y-2 font-mono text-sm">
+                        <Row label="Type" value={info.database.type} />
+                        <Row label="ORM" value={info.database.orm} />
+                        <Row
+                          label="Tables"
+                          value={
+                            <span className="text-right text-xs text-muted-foreground">
+                              {info.database.tables.join(", ")}
+                            </span>
+                          }
+                        />
+                      </dl>
+                    </CardContent>
+                  </Card>
+
+                  {/* Env vars */}
+                  <Card className="bg-card border-border/50">
+                    <CardContent className="p-5">
+                      <SectionHeading icon={Key} label="Environment Variables" />
+                      <dl className="space-y-2 font-mono text-sm">
+                        {Object.entries(info.env).map(([k, v]) => (
+                          <Row key={k} label={k} value={<StatusBadge value={String(v)} />} />
+                        ))}
+                      </dl>
+                    </CardContent>
+                  </Card>
+
+                  {/* Routes */}
+                  <Card className="bg-card border-border/50 md:col-span-2">
+                    <CardContent className="p-5">
+                      <SectionHeading icon={Route} label="Active API Routes" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                        {info.routes.map((r: string) => {
+                          const [method, ...rest] = r.trim().split(/\s+/);
+                          const path = rest.join(" ");
+                          const color =
+                            method === "GET"
+                              ? "text-green-400"
+                              : method === "POST"
+                              ? "text-blue-400"
+                              : method === "DELETE"
+                              ? "text-red-400"
+                              : "text-muted-foreground";
+                          return (
+                            <div key={r} className="flex items-center gap-2 font-mono text-xs py-0.5">
+                              <span className={`w-14 shrink-0 ${color}`}>{method}</span>
+                              <span className="text-muted-foreground">{path}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : null}
             </>
-          ) : null}
+          )}
         </div>
       </div>
     </Layout>
+  );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between items-center gap-4 min-w-0">
+      <dt className="text-muted-foreground/60 text-xs shrink-0">{label}</dt>
+      <dd className="text-right text-xs text-foreground/80 truncate">{value}</dd>
+    </div>
   );
 }

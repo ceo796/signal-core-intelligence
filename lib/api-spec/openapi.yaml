@@ -174,6 +174,19 @@ paths:
         "204":
           description: History cleared
 
+  /system/info:
+    get:
+      operationId: getSystemInfo
+      tags: [documents]
+      summary: Get backend system information
+      responses:
+        "200":
+          description: System info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemInfo"
+
   /admin/stats:
     get:
       operationId: getAdminStats
@@ -337,6 +350,59 @@ components:
           type: string
         count:
           type: integer
+
+    SystemInfo:
+      type: object
+      required: [framework, nodeVersion, nodeEnv, routes, database, ai, env, fileStorage, chunkConfig]
+      properties:
+        framework:
+          type: string
+        nodeVersion:
+          type: string
+        nodeEnv:
+          type: string
+        routes:
+          type: array
+          items:
+            type: string
+        database:
+          type: object
+          required: [type, orm, tables]
+          properties:
+            type:
+              type: string
+            orm:
+              type: string
+            tables:
+              type: array
+              items:
+                type: string
+        ai:
+          type: object
+          required: [provider, chatModel, embeddingModel, maxTokens]
+          properties:
+            provider:
+              type: string
+            chatModel:
+              type: string
+            embeddingModel:
+              type: string
+            maxTokens:
+              type: integer
+        env:
+          type: object
+          additionalProperties:
+            type: string
+        fileStorage:
+          type: string
+        chunkConfig:
+          type: object
+          required: [chunkSizeWords, overlapWords]
+          properties:
+            chunkSizeWords:
+              type: integer
+            overlapWords:
+              type: integer
 
     ErrorResponse:
       type: object
