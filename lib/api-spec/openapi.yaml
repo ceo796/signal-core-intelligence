@@ -228,6 +228,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /documents/brief:
+    post:
+      operationId: generateBrief
+      tags: [chat]
+      summary: Generate a structured executive brief over 1-5 selected documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BriefInput"
+      responses:
+        "200":
+          description: Structured brief with citations and verification trace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BriefResult"
+        "400":
+          description: Invalid selection or brief type (e.g. Comparison Brief with fewer than 2 documents, or a selected document has no chunks)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: One or more selected documents not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /documents/{id}/history:
     get:
       operationId: getChatHistory
@@ -536,6 +567,126 @@ components:
             $ref: "#/components/schemas/MultiCitation"
         debug:
           $ref: "#/components/schemas/MultiDebugInfo"
+
+    BriefInput:
+      type: object
+      required: [documentIds, briefType]
+      properties:
+        documentIds:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items:
+            type: integer
+        briefType:
+          type: string
+          enum: [executive_summary, risk, diligence, contract_review, comparison]
+        focus:
+          type: ["string", "null"]
+          maxLength: 500
+
+    BriefSection:
+      type: object
+      required: [heading, body]
+      properties:
+        heading:
+          type: string
+        body:
+          type: string
+
+    BriefCitation:
+      type: object
+      required: [citationNumber, documentId, documentName, chunkIndex, content, relevanceScore]
+      properties:
+        citationNumber:
+          type: integer
+        documentId:
+          type: integer
+        documentName:
+          type: string
+        chunkIndex:
+          type: integer
+        content:
+          type: string
+        relevanceScore:
+          type: number
+
+    BriefDebugInfo:
+      type: object
+      required:
+        - route
+        - provider
+        - model
+        - fallbackUsed
+        - briefType
+        - focusProvided
+        - documentIds
+        - documentNames
+        - documentsSearched
+        - chunksSearched
+        - chunksRetrieved
+        - chunksRetrievedByDocument
+        - retrievalLatencyMs
+        - llmLatencyMs
+        - totalLatencyMs
+      properties:
+        route:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        fallbackUsed:
+          type: boolean
+        briefType:
+          type: string
+        focusProvided:
+          type: boolean
+        documentIds:
+          type: array
+          items:
+            type: integer
+        documentNames:
+          type: array
+          items:
+            type: string
+        documentsSearched:
+          type: integer
+        chunksSearched:
+          type: integer
+        chunksRetrieved:
+          type: integer
+        chunksRetrievedByDocument:
+          type: array
+          items:
+            $ref: "#/components/schemas/MultiChatDocumentStat"
+        retrievalLatencyMs:
+          type: number
+        llmLatencyMs:
+          type: number
+        totalLatencyMs:
+          type: number
+        errors:
+          type: ["string", "null"]
+
+    BriefResult:
+      type: object
+      required: [briefType, title, sections, citations, debug]
+      properties:
+        briefType:
+          type: string
+        title:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSection"
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefCitation"
+        debug:
+          $ref: "#/components/schemas/BriefDebugInfo"
 
     ChatMessage:
       type: object

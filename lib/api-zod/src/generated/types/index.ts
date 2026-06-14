@@ -7,6 +7,12 @@
  */
 
 export * from './adminStats';
+export * from './briefCitation';
+export * from './briefDebugInfo';
+export * from './briefInput';
+export * from './briefInputBriefType';
+export * from './briefResult';
+export * from './briefSection';
 export * from './chatInput';
 export * from './chatMessage';
 export * from './chatResponse';

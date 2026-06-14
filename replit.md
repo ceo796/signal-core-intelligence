@@ -1,6 +1,6 @@
-# [Project name]
+# Signal87 Core
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A document-intelligence PoC: upload documents, then query them with an LLM that answers with grounded, per-source citations and a full Verification Trace.
 
 ## Run & Operate
 
@@ -22,23 +22,38 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- **API contract (source of truth):** `lib/api-spec/openapi.yaml` → codegen produces Zod (`@workspace/api-zod`) and React Query hooks (`@workspace/api-client-react`).
+- **Backend:** `artifacts/api-server/src/` — routes in `routes/<name>/index.ts`, shared logic in `lib/`. See `BACKEND_MAP.md` for the full route + file index.
+- **Frontend:** `artifacts/signal87-core/src/` — pages in `pages/`, routes in `App.tsx`, nav in `components/layout.tsx`.
+- **DB schema:** `@workspace/db` (Drizzle).
+- **Project docs:** `CHANGELOG.md` (per-checkpoint history), `BACKEND_MAP.md`, `QA_TEST_PLAN.md`.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Contract-first:** every endpoint is defined in OpenAPI first; never hand-write client hooks or Zod schemas. Avoid naming a schema `<OperationIdPascal>Response`/`Body` (collides with Orval auto-symbols).
+- **Retrieval:** cosine similarity over OpenAI `text-embedding-3-small` chunks; chat uses `gpt-4o-mini`. Single-doc and multi-doc retrieval live in `lib/retriever.ts`.
+- **Citations + Verification Trace:** every LLM answer returns global `[Source N]` citations plus a debug trace (provider/model/chunk stats/latencies). This is a core product invariant — preserve it on any new LLM feature.
+- **Ephemeral LLM features:** multi-chat and brief results are not persisted (only single-doc chat history is).
+- **Feature duplication over coupling:** the Executive Brief duplicates the multi-chat retrieval/citation pattern rather than refactoring multi-chat, to avoid regressing it.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Document library:** upload (PDF/DOCX/TXT/CSV), list, detail page with tabbed Preview (in-platform PDF viewer) / Extracted Text / Citations / History / System, download original, re-index, delete.
+- **Single-document chat:** ask questions about one document; persisted history; grounded citations + trace.
+- **Multi-document comparison** (`/compare`): one question across 2–5 documents with grouped citations.
+- **Executive Brief** (`/brief`): generate a structured brief (Executive Summary / Risk / Diligence / Contract Review / Comparison) over 1–5 documents, with an optional focus instruction, citations, and a trace. Comparison requires ≥2 documents.
+- **Admin stats** (`/admin`).
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Each feature is shipped as a named checkpoint with a `CHANGELOG.md` entry and updates to `BACKEND_MAP.md` / `QA_TEST_PLAN.md`.
+- Scope discipline: no Gemini, global search, billing, or agents. Don't redesign existing UI or change durable storage / upload / download / delete / reindex / PDF viewer unless asked.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always regenerate the client after editing `openapi.yaml`: `pnpm --filter @workspace/api-spec run codegen`.
+- New backend routes require an API server restart to be picked up (dev server does not always hot-reload new route files).
+- Verify with `pnpm run typecheck`, not `build` (build needs workflow-provided `PORT`/`BASE_PATH`).
 
 ## Pointers
 

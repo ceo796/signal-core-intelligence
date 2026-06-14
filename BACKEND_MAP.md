@@ -1,8 +1,9 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Multi_Document_Comparison_v1**
+> Checkpoint: **Signal87_Core_Executive_Brief_Generator_v1**
 > Last updated: 2026-06-14
-> Note: `Signal87_Core_Multi_Document_Comparison_v1` adds one additive route (`POST /api/documents/multi-chat`) and one retriever helper (`retrieveAcrossDocuments`). Single-doc chat, prompts, citation payload, storage, upload/download/delete/reindex, and OpenAI routing are unchanged. Multi-chat is ephemeral (not persisted). The earlier `Verification_Trace_Polish_v1` checkpoint was frontend-only.
+> Note: `Signal87_Core_Executive_Brief_Generator_v1` adds one additive route (`POST /api/documents/brief`, in `routes/brief/index.ts`) plus a brief-template lib (`lib/brief.ts`). It reuses `retrieveAcrossDocuments` and the multi-chat citation/trace pattern (duplicated, not refactored into multi-chat). Brief results are ephemeral (not persisted). The brief LLM call uses `response_format: json_object` to return structured `{title, sections}`. Single-doc chat, multi-chat, prompts, citation payload, storage, upload/download/delete/reindex, and OpenAI routing are unchanged.
+> Prior: `Signal87_Core_Multi_Document_Comparison_v1` added `POST /api/documents/multi-chat` and `retrieveAcrossDocuments`. The earlier `Verification_Trace_Polish_v1` checkpoint was frontend-only.
 
 ---
 
@@ -288,6 +289,7 @@ GET    /api/documents/:id/chunks
 GET    /api/documents/:id/original     ← NEW v2 (also feeds the in-platform PDF viewer; unchanged)
 POST   /api/documents/:id/reindex      ← NEW v2
 POST   /api/documents/multi-chat       ← NEW multi-doc comparison
+POST   /api/documents/brief            ← NEW executive brief (5 types, 1–5 docs, structured JSON)
 POST   /api/documents/:id/chat
 GET    /api/documents/:id/history
 DELETE /api/documents/:id/history
@@ -305,13 +307,15 @@ artifacts/api-server/
     index.ts              ← entry point — reads PORT, calls app.listen()
     app.ts                ← Express app, middleware, mounts /api router
     routes/
-      index.ts            ← combines health + documents + multi-chat + chat routers
+      index.ts            ← combines health + documents + multi-chat + brief + chat routers
       health/index.ts     ← GET /api/healthz
       documents/index.ts  ← document CRUD, upload, original, reindex, admin/stats, system/info
       chat/index.ts       ← POST chat, GET/DELETE history (single-doc)
       multi-chat/index.ts ← POST /documents/multi-chat (2–5 doc comparison, ephemeral)
+      brief/index.ts      ← POST /documents/brief (executive brief, 1–5 docs, ephemeral)
     lib/
       ai-provider.ts      ← OpenAI singleton + PROVIDER_CONFIG
+      brief.ts            ← BRIEF_TEMPLATES (5 types) + buildBriefRetrievalQuery + COMPARISON_MIN_DOCS_MESSAGE
       chunker.ts          ← chunkText() — 500-word chunks, 50 overlap
       retriever.ts        ← cosine similarity retrieval (single-doc + retrieveAcrossDocuments)
       text-extractor.ts   ← PDF / DOCX / TXT / CSV → plain text

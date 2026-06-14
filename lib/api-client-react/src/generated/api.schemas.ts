@@ -130,6 +130,73 @@ export interface MultiChatResult {
   debug: MultiDebugInfo;
 }
 
+export type BriefInputBriefType = typeof BriefInputBriefType[keyof typeof BriefInputBriefType];
+
+
+export const BriefInputBriefType = {
+  executive_summary: 'executive_summary',
+  risk: 'risk',
+  diligence: 'diligence',
+  contract_review: 'contract_review',
+  comparison: 'comparison',
+} as const;
+
+export interface BriefInput {
+  /**
+     * @minItems 1
+     * @maxItems 5
+     */
+  documentIds: number[];
+  briefType: BriefInputBriefType;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  focus?: string | null;
+}
+
+export interface BriefSection {
+  heading: string;
+  body: string;
+}
+
+export interface BriefCitation {
+  citationNumber: number;
+  documentId: number;
+  documentName: string;
+  chunkIndex: number;
+  content: string;
+  relevanceScore: number;
+}
+
+export interface BriefDebugInfo {
+  route: string;
+  provider: string;
+  model: string;
+  fallbackUsed: boolean;
+  briefType: string;
+  focusProvided: boolean;
+  documentIds: number[];
+  documentNames: string[];
+  documentsSearched: number;
+  chunksSearched: number;
+  chunksRetrieved: number;
+  chunksRetrievedByDocument: MultiChatDocumentStat[];
+  retrievalLatencyMs: number;
+  llmLatencyMs: number;
+  totalLatencyMs: number;
+  /** @nullable */
+  errors?: string | null;
+}
+
+export interface BriefResult {
+  briefType: string;
+  title: string;
+  sections: BriefSection[];
+  citations: BriefCitation[];
+  debug: BriefDebugInfo;
+}
+
 export interface ChatMessage {
   id: number;
   documentId: number;

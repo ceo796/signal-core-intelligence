@@ -38,6 +38,7 @@ import {
   ArrowLeft,
   MessageSquare,
   GitCompare,
+  ScrollText,
   Download,
   RefreshCw,
   Trash2,
@@ -294,6 +295,12 @@ export default function DocumentDetail() {
               <Button variant="secondary" className="font-mono text-xs gap-2">
                 <GitCompare className="w-3 h-3" />
                 COMPARE
+              </Button>
+            </Link>
+            <Link href={`/brief?preselect=${doc.id}`}>
+              <Button variant="secondary" className="font-mono text-xs gap-2">
+                <ScrollText className="w-3 h-3" />
+                GENERATE_BRIEF
               </Button>
             </Link>
             {doc.originalFileAvailable ? (

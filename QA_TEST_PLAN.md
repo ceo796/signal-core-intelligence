@@ -1,9 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_PDF_Viewer_v1**
+> Checkpoint: **Signal87_Core_Executive_Brief_Generator_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
-> Note: The PDF viewer (T27) is frontend-only (no backend change). The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
+> Note: The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
 ---
 
@@ -253,6 +253,56 @@ diff /tmp/original.txt /tmp/retrieved.txt  # should produce no output
 
 ---
 
+## T13e — Executive Brief: all 5 types generate
+
+**Goal:** Each brief type produces a structured brief with its section plan, citations, and a trace.
+
+**Steps:**
+1. Navigate to `/brief` (or via Document Detail → GENERATE_BRIEF)
+2. Select 1 indexed document
+3. For each brief type (Executive Summary, Risk, Diligence, Contract Review), click GENERATE_BRIEF
+4. Select 2+ documents and run Comparison Brief
+
+**Expected:**
+- 200 with `title` + ordered `sections[]` matching the chosen type's section plan
+- Citations grouped by document; inline `[Source N]` pills resolve to chunk excerpts when the model cites
+- Trace Detail shows provider `openai`, model `gpt-4o-mini`, `BRIEF_TYPE` = chosen type, per-document chunk counts, latencies, fallback = NO
+
+---
+
+## T13f — Executive Brief: focus instruction
+
+**Goal:** The optional focus instruction steers the brief.
+
+**Steps:** Select a document, add a focus instruction (e.g. "financial exposure"), generate.
+
+**Expected:** 200; `debug.focusProvided` = true; brief content reflects the focus.
+
+---
+
+## T13g — Executive Brief: validation guards
+
+**Steps (via `POST /api/documents/brief`):**
+1. Send 0 document ids → expect 400 ("between 1 and 5")
+2. Send 6 document ids → expect 400
+3. Send `briefType: "comparison"` with 1 document → expect 400 with the exact message: `Comparison Brief requires at least 2 documents. Select another document or choose Executive Summary instead.`
+4. Send a nonexistent document id → expect 404 naming the missing id
+5. Send a document with zero indexed chunks → expect 400 naming the empty document
+
+**Expected:** Each case returns the stated status and message; no LLM call is made on validation failure. In the UI, Comparison with <2 docs disables GENERATE_BRIEF and shows the exact message.
+
+---
+
+## T13h — Executive Brief: document isolation & multi-chat unaffected
+
+**Goal:** Brief uses only selected documents and does not regress chat or multi-chat.
+
+**Steps:** Run a brief on documents {A, B}; then run a single-doc chat and a multi-chat.
+
+**Expected:** All `citations[].documentId` and `debug.documentIds` ⊆ {A, B}; single-doc chat and multi-chat both return 200 with unchanged behavior (brief logic is duplicated, not wired into multi-chat).
+
+---
+
 ## T14 — Chat history persistence
 
 **Steps:**
@@ -476,6 +526,10 @@ To test manually today:
 - [ ] T13b Multi-doc validation guards (1/6/dupe/missing/empty)
 - [ ] T13c Multi-doc isolation — only selected docs in citations/trace
 - [ ] T13d Single-doc chat unaffected by multi-chat
+- [ ] T13e Exec Brief — all 5 types generate structured sections + citations + trace
+- [ ] T13f Exec Brief — focus instruction sets `focusProvided` and steers content
+- [ ] T13g Exec Brief — validation guards (0/6/comparison<2 exact msg/missing/empty)
+- [ ] T13h Exec Brief — isolation ⊆ selected docs; chat + multi-chat unaffected
 - [ ] T14 History persists across navigation
 - [ ] T15 Clear history works
 - [ ] T16 Delete cascades to GCS

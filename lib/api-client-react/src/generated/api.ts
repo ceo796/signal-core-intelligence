@@ -21,6 +21,8 @@ import type {
 
 import type {
   AdminStats,
+  BriefInput,
+  BriefResult,
   ChatInput,
   ChatMessage,
   ChatResponse,
@@ -712,6 +714,77 @@ export const useMultiChat = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getMultiChatMutationOptions(options));
+    }
+
+export const getGenerateBriefUrl = () => {
+
+
+
+
+  return `/api/documents/brief`
+}
+
+/**
+ * @summary Generate a structured executive brief over 1-5 selected documents
+ */
+export const generateBrief = async (briefInput: BriefInput, options?: RequestInit): Promise<BriefResult> => {
+
+  return customFetch<BriefResult>(getGenerateBriefUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      briefInput,)
+  }
+);}
+
+
+
+
+export const getGenerateBriefMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateBrief>>, TError,{data: BodyType<BriefInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateBrief>>, TError,{data: BodyType<BriefInput>}, TContext> => {
+
+const mutationKey = ['generateBrief'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateBrief>>, {data: BodyType<BriefInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateBrief(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateBriefMutationResult = NonNullable<Awaited<ReturnType<typeof generateBrief>>>
+    export type GenerateBriefMutationBody = BodyType<BriefInput>
+    export type GenerateBriefMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Generate a structured executive brief over 1-5 selected documents
+ */
+export const useGenerateBrief = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateBrief>>, TError,{data: BodyType<BriefInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateBrief>>,
+        TError,
+        {data: BodyType<BriefInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateBriefMutationOptions(options));
     }
 
 export const getGetChatHistoryUrl = (id: number,) => {

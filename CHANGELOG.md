@@ -2,6 +2,24 @@
 
 ---
 
+## [Signal87_Core_Executive_Brief_Generator_v1] — 2026-06-14
+
+### Summary
+Added an **Executive Brief generator**: select 1–5 indexed documents, pick one of **5 brief types** (Executive Summary, Risk, Diligence, Contract Review, Comparison), optionally add a free-text **focus instruction**, and generate a **structured brief** (titled sections) with inline `[Source N]` citations and a full **Verification Trace**. New additive backend route (`POST /api/documents/brief`) and a new frontend page (`/brief`). Brief generation **duplicates** the multi-chat retrieval/citation pattern — it does **not** modify or call multi-chat. No Gemini, global search, billing, or agents. No changes to durable storage, the PDF viewer, upload/download/delete/reindex, single-doc chat, or multi-doc comparison.
+
+### Added
+- **OpenAPI contract** (`lib/api-spec/openapi.yaml`): `POST /documents/brief` (operationId `generateBrief`, tag `chat`) with schemas `BriefInput` (documentIds 1–5, briefType enum of 5, optional `focus` ≤500 chars), `BriefSection`, `BriefCitation`, `BriefDebugInfo` (reuses `MultiChatDocumentStat`, adds `briefType` + `focusProvided`), `BriefResult`. Schema names chosen to avoid Orval auto-symbol collisions. Regenerated client hooks + Zod via codegen.
+- **Brief template lib** (`artifacts/api-server/src/lib/brief.ts`): `BRIEF_TEMPLATES` for all 5 types (label, title hint, ordered section headings, prompt instructions, retrieval seed), `COMPARISON_MIN_DOCS_MESSAGE`, and `buildBriefRetrievalQuery(type, focus)` (synthesizes an embedding query from the brief type + optional focus, since briefs have no user question).
+- **Backend route** (`artifacts/api-server/src/routes/brief/index.ts`, registered in `routes/index.ts`): validates via Zod `GenerateBriefBody`, dedupes ids, enforces 1–5 and Comparison ≥2 (exact `COMPARISON_MIN_DOCS_MESSAGE`), fetches docs + chunks scoped strictly to the selection, fails closed on missing docs (404) or empty-chunk docs (400), runs `retrieveAcrossDocuments` (top-3 per doc), builds global `[Source N]` blocks, calls OpenAI `gpt-4o-mini` with `response_format: json_object`, parses `{title, sections}` (single-section fallback on parse/LLM error), and returns a debug trace (route/provider/model/fallbackUsed/briefType/focusProvided/per-doc chunk stats/latencies/errors).
+- **Frontend page** (`artifacts/signal87-core/src/pages/executive-brief.tsx`): document selection grid (1–5, `?preselect=` deep-link reconciled against eligible docs), 5-way brief-type selector, optional focus Textarea (500-char cap), Generate button, and a ResultView with titled sections, inline citation chips, citations grouped by document, a collapsible Trace Detail panel, and Copy Brief. Comparison with <2 docs disables submit and shows the exact message. Route `/brief` added in `App.tsx`; nav item **Exec Brief** (`ScrollText`) added in `layout.tsx`.
+- **Document Detail link**: `GENERATE_BRIEF` header action → `/brief?preselect=:id` (mirrors the existing Compare link).
+
+### Unchanged / preserved
+- Single-document chat and multi-document comparison (multi-chat code path untouched — brief logic is duplicated, not refactored into it).
+- Durable file storage, upload/download/delete/reindex, PDF viewer, OpenAI routing, citation payload shape, Verification Trace.
+
+---
+
 ## [Signal87_Core_PDF_Viewer_v1] — 2026-06-14
 
 ### Summary

@@ -196,6 +196,62 @@ export const MultiChatResponse = zod.object({
 
 
 /**
+ * @summary Generate a structured executive brief over 1-5 selected documents
+ */
+export const generateBriefBodyDocumentIdsMax = 5;
+
+export const generateBriefBodyFocusMax = 500;
+
+
+
+export const GenerateBriefBody = zod.object({
+  "documentIds": zod.array(zod.number()).min(1).max(generateBriefBodyDocumentIdsMax),
+  "briefType": zod.enum(['executive_summary', 'risk', 'diligence', 'contract_review', 'comparison']),
+  "focus": zod.string().max(generateBriefBodyFocusMax).nullish()
+})
+
+export const GenerateBriefResponse = zod.object({
+  "briefType": zod.string(),
+  "title": zod.string(),
+  "sections": zod.array(zod.object({
+  "heading": zod.string(),
+  "body": zod.string()
+})),
+  "citations": zod.array(zod.object({
+  "citationNumber": zod.number(),
+  "documentId": zod.number(),
+  "documentName": zod.string(),
+  "chunkIndex": zod.number(),
+  "content": zod.string(),
+  "relevanceScore": zod.number()
+})),
+  "debug": zod.object({
+  "route": zod.string(),
+  "provider": zod.string(),
+  "model": zod.string(),
+  "fallbackUsed": zod.boolean(),
+  "briefType": zod.string(),
+  "focusProvided": zod.boolean(),
+  "documentIds": zod.array(zod.number()),
+  "documentNames": zod.array(zod.string()),
+  "documentsSearched": zod.number(),
+  "chunksSearched": zod.number(),
+  "chunksRetrieved": zod.number(),
+  "chunksRetrievedByDocument": zod.array(zod.object({
+  "documentId": zod.number(),
+  "documentName": zod.string(),
+  "chunksSearched": zod.number(),
+  "chunksRetrieved": zod.number()
+})),
+  "retrievalLatencyMs": zod.number(),
+  "llmLatencyMs": zod.number(),
+  "totalLatencyMs": zod.number(),
+  "errors": zod.string().nullish()
+})
+})
+
+
+/**
  * @summary Get chat history for a document
  */
 export const GetChatHistoryParams = zod.object({
