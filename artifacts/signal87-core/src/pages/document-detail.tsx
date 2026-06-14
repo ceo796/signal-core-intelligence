@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { PdfViewer } from "@/components/pdf-viewer";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -124,12 +125,20 @@ export default function DocumentDetail() {
   const deleteMutation = useDeleteDocument();
 
   const isPdf = doc?.fileType?.toLowerCase() === "pdf";
+  const originalAvailable = doc?.originalFileAvailable ?? false;
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
 
+  // Depend only on stable primitives so a query refetch (changed `doc` identity)
+  // doesn't re-download the whole PDF blob.
   useEffect(() => {
-    if (!doc || !isPdf || !doc.originalFileAvailable) return;
+    if (!isPdf || !originalAvailable) {
+      setPdfUrl(null);
+      setPdfLoading(false);
+      setPdfError(false);
+      return;
+    }
     let revoked = false;
     let objectUrl: string | null = null;
     setPdfLoading(true);
@@ -150,7 +159,7 @@ export default function DocumentDetail() {
       revoked = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [id, isPdf, doc]);
+  }, [id, isPdf, originalAvailable]);
 
   const handleReindex = () => {
     reindexMutation.mutate(
@@ -358,7 +367,7 @@ export default function DocumentDetail() {
             </div>
 
             {/* Preview */}
-            <TabsContent value="preview" className="flex-1 overflow-auto p-6 m-0">
+            <TabsContent value="preview" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
               {isPdf ? (
                 !doc.originalFileAvailable ? (
                   <div className="text-center text-sm font-mono text-muted-foreground p-8">
@@ -369,18 +378,26 @@ export default function DocumentDetail() {
                     <Loader2 className="w-4 h-4 animate-spin" /> LOADING_PREVIEW
                   </div>
                 ) : pdfError || !pdfUrl ? (
-                  <div className="text-center text-sm font-mono text-destructive p-8">
-                    FAILED_TO_LOAD_PREVIEW
+                  <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+                    <AlertCircle className="w-8 h-8 text-destructive" />
+                    <p className="font-mono text-sm text-destructive">FAILED_TO_LOAD_PREVIEW</p>
+                    <p className="font-mono text-xs text-muted-foreground max-w-sm">
+                      The original file could not be fetched for preview. You can still download it.
+                    </p>
+                    <a href={originalUrl} download={doc.fileName}>
+                      <Button variant="outline" size="sm" className="font-mono text-xs gap-2 border-border/50">
+                        <Download className="w-3 h-3" />
+                        DOWNLOAD_ORIGINAL
+                      </Button>
+                    </a>
                   </div>
                 ) : (
-                  <iframe
-                    src={pdfUrl}
-                    title="PDF preview"
-                    className="w-full h-[70vh] rounded border border-border bg-white"
-                  />
+                  <div className="flex-1 min-h-0">
+                    <PdfViewer fileUrl={pdfUrl} downloadUrl={originalUrl} fileName={doc.fileName} />
+                  </div>
                 )
               ) : doc.extractedText ? (
-                <Card className="bg-card border-border/50">
+                <Card className="bg-card border-border/50 flex-1 overflow-auto">
                   <CardContent className="p-5">
                     <p className="text-xs font-mono text-muted-foreground mb-3">
                       EXTRACTED_TEXT_PREVIEW — original format not embeddable

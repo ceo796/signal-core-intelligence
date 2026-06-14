@@ -1,9 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Document_Detail_Page_v1**
+> Checkpoint: **Signal87_Core_PDF_Viewer_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
-> Note: The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
+> Note: The PDF viewer (T27) is frontend-only (no backend change). The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
 ---
 
@@ -419,6 +419,28 @@ To test manually today:
 
 ---
 
+## T27 — In-platform PDF viewer (Preview tab)
+
+**Goal:** Verify the real PDF viewer renders and is interactive, with graceful fallbacks.
+
+**Setup:** Upload a normal multi-page PDF; open `/documents/:id` → Preview tab.
+
+**Steps & expected:**
+1. **Render:** the PDF renders page-by-page inside the platform (not an iframe download), showing page 1 and a `1 / N` page counter with the correct total.
+2. **Navigation:** Next/Previous advance and retreat pages; Previous is disabled on page 1, Next is disabled on the last page.
+3. **Zoom:** Zoom in / zoom out change the rendered size (50%–300%); the percentage indicator updates.
+4. **Fit-to-width:** toggling fit-to-width scales the page to the container width (shows `FIT`); re-toggling returns to percentage zoom.
+5. **Loading state:** a `LOADING_PDF` / `RENDERING_PAGE` indicator appears briefly while fetching/rendering.
+6. **Error state:** if the PDF cannot be parsed/rendered, the viewer shows `FAILED_TO_RENDER_PDF` and still offers Download Original — the page does not crash.
+7. **Download Original:** the toolbar Download Original button downloads the stored file.
+8. **Non-PDF fallback:** a TXT/DOCX document still shows the extracted-text preview (no viewer).
+9. **No original:** a PDF without a stored original shows `ORIGINAL_FILE_UNAVAILABLE`.
+10. **Worker:** no pdf.js worker errors in the browser console (the worker is bundled via Vite `?url`).
+
+**Regression sweep:** Extracted Text / Citations / History / System tabs, single-doc chat, multi-doc comparison, and upload/download/reindex all still work.
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -467,3 +489,5 @@ To test manually today:
 - [ ] T24 Preview tab — PDF inline viewer + non-PDF text preview
 - [ ] T25 Extracted Text / Citations / History / System tabs
 - [ ] T26 Additive `extractedText` read-only; list payload stays light
+- [ ] T27 PDF viewer renders + page nav + zoom + fit-to-width + error/Download fallback
+- [ ] T27 Non-PDF fallback, no-original state, and no pdf.js worker console errors

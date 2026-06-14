@@ -1,0 +1,98 @@
+We need to add a real PDF viewer to Signal87 Core before moving to Executive Briefs.
+
+Current checkpoint:
+Signal87_Core_Document_Detail_Page_v1
+
+Issue:
+The platform has durable original PDF storage and a Document Detail Page, but it still does not have a true in-platform PDF viewer experience. The Preview tab needs to render PDFs reliably inside the platform, not just expose the original file or rely on a weak/basic preview.
+
+Goal:
+Add a proper PDF Viewer v1 inside the Document Detail Page.
+
+Checkpoint name:
+Signal87_Core_PDF_Viewer_v1
+
+Important constraints:
+- Do not change durable file storage.
+- Do not change upload/download/delete/reindex behavior.
+- Do not change OpenAI routing.
+- Do not add Gemini.
+- Do not add global search.
+- Do not add billing.
+- Do not add agents.
+- Do not redesign the whole app.
+- Do not break single-document chat.
+- Do not break multi-document comparison.
+- Do not break the Document Detail Page.
+
+Implementation requirements:
+
+1. Use the existing original file endpoint:
+   GET /api/documents/:id/original
+
+2. In the Document Detail Page Preview tab:
+   - If the document is a PDF, render the PDF inside the platform.
+   - If the document is not a PDF, keep the existing extracted-text preview fallback.
+
+3. Add a simple PDF viewer component with:
+   - page rendering
+   - next page / previous page
+   - current page number
+   - total page count
+   - zoom in / zoom out
+   - fit-to-width if easy
+   - loading state
+   - error state
+   - Download Original button
+
+4. Prefer a stable frontend PDF rendering library such as react-pdf/pdfjs if compatible with the current app.
+   If using pdfjs, configure the worker properly so it works in Replit/Vite.
+
+5. Do not build:
+   - annotation tools
+   - highlighting
+   - redaction
+   - signing
+   - editing
+   - OCR
+   - advanced search inside PDF
+   - page thumbnails
+
+6. Keep this as a viewer only.
+
+7. PDF viewer should work with the original stored PDF blob from:
+   GET /api/documents/:id/original
+
+8. Add clear fallback behavior:
+   - If the PDF cannot render, show a helpful error.
+   - Still allow Download Original.
+   - Do not crash the page.
+
+9. Testing:
+   - Upload a normal PDF.
+   - Open /documents/:id.
+   - Confirm Preview tab renders the PDF.
+   - Confirm page navigation works.
+   - Confirm zoom works.
+   - Confirm Download Original still works.
+   - Confirm non-PDF preview still works.
+   - Confirm Extracted Text tab still works.
+   - Confirm Citations tab still works.
+   - Confirm History tab still works.
+   - Confirm System tab still works.
+   - Confirm single-document chat still works.
+   - Confirm multi-document comparison still works.
+   - Confirm upload/download/reindex still works.
+   - Run frontend typecheck.
+   - Run backend typecheck if backend is touched.
+
+10. Documentation:
+   Update:
+   - CHANGELOG.md
+   - BACKEND_MAP.md if needed
+   - QA_TEST_PLAN.md
+
+Do not move to Executive Brief Generator until the PDF viewer is stable.
+
+Goal:
+Give Signal87 users a real in-platform PDF viewing experience while preserving the stable document intelligence architecture.

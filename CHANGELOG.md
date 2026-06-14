@@ -2,6 +2,33 @@
 
 ---
 
+## [Signal87_Core_PDF_Viewer_v1] — 2026-06-14
+
+### Summary
+Replaced the basic `<iframe>` PDF preview in the Document Detail Page's **Preview tab** with a real in-platform **PDF viewer** built on `react-pdf` (pdf.js). PDFs now render page-by-page inside the platform with navigation, zoom, and fit-to-width — no reliance on the browser's native plugin or a forced download. This is a **viewer only**: no annotation, highlighting, redaction, signing, editing, OCR, in-PDF search, or thumbnails. Frontend-only change — no backend, storage, OpenAI routing, or contract changes. No Gemini, global search, billing, or agents.
+
+### Added
+- **`PdfViewer` component** (`artifacts/signal87-core/src/components/pdf-viewer.tsx`):
+  - Page rendering via `react-pdf` `<Document>` / `<Page>`.
+  - Previous / next page navigation with current page + total page count (`N / M`).
+  - Zoom in / zoom out (50%–300%, 25% steps) and a fit-to-width toggle (uses a `ResizeObserver` on the container).
+  - Loading state (`LOADING_PDF` / `RENDERING_PAGE`) and error state (`FAILED_TO_RENDER_PDF`).
+  - Download Original button in the toolbar and in the error fallback, so the original is always reachable even if rendering fails.
+  - pdf.js worker configured for Vite via `import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url"` and `pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl`.
+
+### Changed
+- **Preview tab** (`pages/document-detail.tsx`): for PDFs with a stored original, renders `<PdfViewer>` (fed the existing object-URL blob fetched from `GET /api/documents/:id/original`) instead of an `<iframe>`. Non-PDF files keep the extracted-text preview fallback unchanged. The blob-fetch failure state now also offers Download Original.
+
+### Dependencies
+- Added `react-pdf` and `pdfjs-dist` (pinned to match react-pdf's pdf.js version) as dev dependencies of `@workspace/signal87-core`.
+
+### Unchanged / preserved
+- Durable file storage, upload/download/delete/reindex, OpenAI routing, citation payloads, Verification Trace.
+- The other Detail tabs (Extracted Text, Citations, History, System), single-document chat, multi-document comparison.
+- No backend code or API contract changes — the viewer consumes the existing `/original` endpoint.
+
+---
+
 ## [Signal87_Core_Document_Detail_Page_v1] — 2026-06-14
 
 ### Summary

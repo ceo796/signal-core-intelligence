@@ -285,7 +285,7 @@ POST   /api/documents/upload
 GET    /api/documents/:id               ← single (adds full extractedText — additive, read-only)
 DELETE /api/documents/:id
 GET    /api/documents/:id/chunks
-GET    /api/documents/:id/original     ← NEW v2
+GET    /api/documents/:id/original     ← NEW v2 (also feeds the in-platform PDF viewer; unchanged)
 POST   /api/documents/:id/reindex      ← NEW v2
 POST   /api/documents/multi-chat       ← NEW multi-doc comparison
 POST   /api/documents/:id/chat
