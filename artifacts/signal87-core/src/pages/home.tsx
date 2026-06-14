@@ -7,7 +7,11 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/30">
       <header className="p-6 flex justify-between items-center border-b border-border/50">
         <img src="/signal87-logo.png" alt="Signal87" className="h-10 w-auto" />
-        <div className="text-xs font-mono text-muted-foreground">Open Preview</div>
+        <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+          <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+          <Link href="/documents" className="text-primary hover:text-primary/80 font-medium transition-colors">Open App</Link>
+        </nav>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
