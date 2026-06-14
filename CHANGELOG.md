@@ -2,6 +2,20 @@
 
 ---
 
+## [Signal87_Core_PDF_Preview_Fallback_v1] — 2026-06-14
+
+### Summary
+Frontend-only fix to the Document Detail Page **Preview tab** for PDFs whose original file was never stored (documents uploaded before durable file storage was enabled). Previously these showed a cryptic, centered `ORIGINAL_FILE_UNAVAILABLE` dead-end with no context — which made it look like the in-platform PDF viewer was missing. The viewer itself (`Signal87_Core_PDF_Viewer_v1`) is unchanged and continues to render any PDF that has a stored original. No backend changes, no API contract changes, no storage/upload/download/delete/reindex changes.
+
+### Changed
+- **`pages/document-detail.tsx`**: the PDF `!originalFileAvailable` Preview branch now renders a clear, plain-language notice ("Original PDF not stored — can't render in viewer") explaining the cause (uploaded before durable storage) and the fix (re-upload to enable preview; new uploads render automatically), and falls back to the document's extracted text when available (reusing the existing extracted-text Card pattern) instead of a bare dead-end.
+
+### Preserved
+- The `PdfViewer` component and the normal PDF render path (page nav, zoom, fit-to-width, loading/error states, Download Original) are untouched.
+- Download Original / Re-Index header controls remain disabled when no original is stored.
+
+---
+
 ## [Signal87_Core_Typography_Polish_v1] — 2026-06-14
 
 ### Summary

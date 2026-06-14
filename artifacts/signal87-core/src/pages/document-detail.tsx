@@ -377,8 +377,34 @@ export default function DocumentDetail() {
             <TabsContent value="preview" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
               {isPdf ? (
                 !doc.originalFileAvailable ? (
-                  <div className="text-center text-sm font-mono text-muted-foreground p-8">
-                    ORIGINAL_FILE_UNAVAILABLE
+                  <div className="flex-1 overflow-auto flex flex-col gap-4">
+                    <div className="flex items-start gap-3 rounded border border-border/50 bg-card p-4">
+                      <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-foreground">
+                          Original PDF not stored — can't render in viewer
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed max-w-prose">
+                          This document was uploaded before durable file storage was enabled,
+                          so its original PDF was never saved and can't be shown in the
+                          in-platform viewer. Re-upload the PDF to enable full preview. Any new
+                          PDF you upload will render here automatically.
+                          {doc.extractedText ? " The extracted text is shown below." : ""}
+                        </p>
+                      </div>
+                    </div>
+                    {doc.extractedText ? (
+                      <Card className="bg-card border-border/50 flex-1 overflow-auto">
+                        <CardContent className="p-5">
+                          <p className="text-xs font-mono text-muted-foreground mb-3">
+                            EXTRACTED_TEXT_PREVIEW — original PDF not available
+                          </p>
+                          <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
+                            {doc.extractedText}
+                          </pre>
+                        </CardContent>
+                      </Card>
+                    ) : null}
                   </div>
                 ) : pdfLoading ? (
                   <div className="flex items-center justify-center gap-2 p-8 text-sm font-mono text-muted-foreground">

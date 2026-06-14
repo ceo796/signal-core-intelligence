@@ -484,7 +484,7 @@ To test manually today:
 6. **Error state:** if the PDF cannot be parsed/rendered, the viewer shows `FAILED_TO_RENDER_PDF` and still offers Download Original — the page does not crash.
 7. **Download Original:** the toolbar Download Original button downloads the stored file.
 8. **Non-PDF fallback:** a TXT/DOCX document still shows the extracted-text preview (no viewer).
-9. **No original:** a PDF without a stored original shows `ORIGINAL_FILE_UNAVAILABLE`.
+9. **No original:** a PDF without a stored original shows a clear plain-language explanation ("Original PDF not stored — can't render in viewer", with re-upload guidance) and falls back to rendering the document's extracted text when available — not a bare `ORIGINAL_FILE_UNAVAILABLE` dead-end. The header Download Original / Re-Index controls remain disabled.
 10. **Worker:** no pdf.js worker errors in the browser console (the worker is bundled via Vite `?url`).
 
 **Regression sweep:** Extracted Text / Citations / History / System tabs, single-doc chat, multi-doc comparison, and upload/download/reindex all still work.
