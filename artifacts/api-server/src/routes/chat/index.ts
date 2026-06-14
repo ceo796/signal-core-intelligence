@@ -121,7 +121,12 @@ ${contextBlocks}`;
 
   await db.insert(chatMessagesTable).values([
     { documentId: id, role: "user", content: question, debug: null },
-    { documentId: id, role: "assistant", content: answer, debug: JSON.stringify(debug) },
+    {
+      documentId: id,
+      role: "assistant",
+      content: answer,
+      debug: JSON.stringify({ debug, citations }),
+    },
   ]);
 
   res.json({ answer, citations, debug });
