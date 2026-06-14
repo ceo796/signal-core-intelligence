@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { FileText, Activity, Layers, GitCompare, ScrollText } from "lucide-react";
+import { FileText, Activity, GitCompare, ScrollText } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -19,9 +19,8 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row font-sans">
       <aside className="w-full md:w-64 border-r border-border bg-card flex flex-col h-auto md:h-screen sticky top-0">
-        <div className="p-4 border-b border-border flex items-center gap-2">
-          <Layers className="w-5 h-5 text-primary" />
-          <span className="font-mono font-bold tracking-tight text-lg">SIGNAL<span className="text-primary">87</span></span>
+        <div className="p-4 border-b border-border flex items-center">
+          <img src="/signal87-logo.png" alt="Signal87" className="h-8 w-auto" />
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
