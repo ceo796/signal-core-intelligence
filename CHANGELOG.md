@@ -2,6 +2,21 @@
 
 ---
 
+## [Signal87_Core_MVP_Readiness_Fixes_v1] — 2026-06-14
+
+### Summary
+Production-readiness pass against a 15-item publishable-MVP checklist. Verification only confirmed the core flows (upload → list → open → PDF preview → Q&A → grounded citations → delete) all work on well-formed documents. Two small, contained launch-blocker fixes were made; no new features, no redesign, no API contract changes, no storage/upload/download/delete/reindex/PDF-viewer changes. Per an explicit product decision, the app ships **open access** (no signup/login).
+
+### Fixed
+- **`components/file-upload.tsx`**: added a `DialogDescription` to the Upload Document modal, resolving a Radix accessibility warning (`Missing Description or aria-describedby` for `DialogContent`) that surfaced in the browser console.
+- **`lib/retriever.ts`**: `retrieveRelevantChunks` now returns `[]` early when a document has 0 chunks, mirroring the existing guard in `retrieveAcrossDocuments`. Previously, asking a question about a document whose extraction failed (0 chunks) sent an empty array to the OpenAI embeddings API, throwing `400 Invalid 'input': input cannot be an empty array` and logging a server ERROR. The chat endpoint already caught this and returned a graceful "no information" answer (HTTP 200), but the failed API call and ERROR log are now eliminated.
+
+### Preserved
+- Normal (non-empty) single-doc retrieval, multi-doc comparison, Executive Brief, citations, and Verification Trace behavior are unchanged.
+- The chat endpoint still returns HTTP 200 with a grounded "no information" answer for 0-chunk documents.
+
+---
+
 ## [Signal87_Core_PDF_Preview_Fallback_v1] — 2026-06-14
 
 ### Summary

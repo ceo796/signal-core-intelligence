@@ -1,6 +1,6 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Answer_Rendering_Polish_v1**
+> Checkpoint: **Signal87_Core_MVP_Readiness_Fixes_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
 > Note: Answer Rendering Polish (T28) is a frontend-only change — shared `MarkdownAnswer` component replaces `whitespace-pre-wrap` plain text in all three answer surfaces; no API, retrieval, or citation payload changes. The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
@@ -656,6 +656,7 @@ To test manually today:
 - [ ] T10 Re-index without stored file returns 404
 - [ ] T11 Chat returns answer + citations (inline pills + Trace Detail)
 - [ ] T11b Inline citation pill parsing edge cases
+- [ ] T11c Chat on a 0-chunk doc (extraction failed) → HTTP 200, graceful "no information" answer, 0 citations, and NO server ERROR / no empty-array OpenAI call (`retrieveRelevantChunks` empty-chunks guard)
 - [ ] T12 Citation maps to correct chunk
 - [ ] T13 Chat scoped to selected document
 - [ ] T13a Multi-doc compare returns synthesized answer + grouped citations + trace

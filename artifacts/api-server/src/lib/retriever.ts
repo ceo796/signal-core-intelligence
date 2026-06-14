@@ -34,6 +34,10 @@ export async function retrieveRelevantChunks(
   chunks: { id: number; documentId: number; chunkIndex: number; content: string }[],
   topK = 5
 ): Promise<ScoredChunk[]> {
+  if (chunks.length === 0) {
+    return [];
+  }
+
   const questionEmbedding = await getEmbedding(question);
 
   const chunkTexts = chunks.map((c) => c.content);
