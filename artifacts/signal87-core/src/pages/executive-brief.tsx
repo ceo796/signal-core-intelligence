@@ -259,6 +259,12 @@ function TraceDetailPanel({ debug }: { debug: BriefDebugInfo }) {
             <span className="font-bold">ERROR:</span> {debug.errors}
           </div>
         )}
+
+        <div className="mt-1.5 pt-1.5 border-t border-border/30 text-muted-foreground/60 text-[10px] leading-relaxed">
+          Brief generation uses a synthesized retrieval seed across selected
+          documents. Relevance scores may be lower than direct question-answer
+          retrieval but are used to identify supporting source chunks.
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -295,9 +301,23 @@ function ResultView({ result }: { result: BriefResultState }) {
   });
 
   const handleCopy = () => {
-    const text =
-      `${result.title}\n\n` +
+    const body =
+      `# ${result.title}\n\n` +
       result.sections.map((s) => `## ${s.heading}\n${s.body}`).join("\n\n");
+    const sourcesFooter =
+      result.citations.length > 0
+        ? "\n\n## Sources\n" +
+          result.citations
+            .map((c) => {
+              const score =
+                c.relevanceScore != null
+                  ? ` (relevance ${c.relevanceScore.toFixed(3)})`
+                  : "";
+              return `[Source ${c.citationNumber}] ${c.documentName} — Chunk ${c.chunkIndex}${score}`;
+            })
+            .join("\n")
+        : "";
+    const text = body + sourcesFooter;
     navigator.clipboard
       .writeText(text)
       .then(() => {

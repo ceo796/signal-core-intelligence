@@ -2,6 +2,24 @@
 
 ---
 
+## [Signal87_Core_Executive_Brief_Quality_Polish_v1] — 2026-06-14
+
+### Summary
+Quality polish pass on the Executive Brief generator. **No new features, no architecture changes, no new endpoints, no retrieval changes.** Five improvements: (1) Copy Brief now outputs a proper `# Title` heading and a `## Sources` footer mapping every `[Source N]` to document name, chunk number, and relevance score. (2) The Risk Brief prompt enforces citation honesty — severity/likelihood/impact ratings are prefixed "Assessed" and citations must support the underlying risk, not the inferred rating. (3) System prompt gains explicit anti-fluff rules (ban on "innovative", "powerful", "cutting-edge", etc.) and requires recommendations to trace to cited findings or be omitted. (4) Executive Summary sections restructured to eliminate overlap: Overview / Key Findings / What Stands Out / Watch Items / Open Questions / Source Notes. (5) Verification Trace panel adds a synthesized-query note explaining why relevance scores may read lower than Q&A searches; section names polished ("Risk Assessment", "Open Items", "Notes by Document").
+
+### Changed
+- **`lib/brief.ts`**: Executive Summary sections renamed and de-duplicated; Risk template section "Severity & Likelihood" → "Risk Assessment"; Diligence "Outstanding Items" → "Open Items"; Comparison "Per-Document Notes" → "Notes by Document". Risk `instructions` updated to require "Assessed" prefix on ratings and prohibit citing a source for an inferred rating. Executive Summary `instructions` updated to keep each section distinct with no cross-section repetition.
+- **`routes/brief/index.ts`**: System prompt hardened with Rule 5 (ban unsupported evaluative adjectives) and Rule 6 (recommendations must trace to a cited finding or be omitted); Rule 3 extended to require stating when sources are insufficient.
+- **`pages/executive-brief.tsx`** — `handleCopy`: output changed from `title\n\n## sections` to `# title\n\n## sections\n\n## Sources\n[Source N] name — Chunk K (relevance S)`.
+- **`pages/executive-brief.tsx`** — `TraceDetailPanel`: synthesized-query note added at the bottom of the expanded trace.
+
+### Unchanged / preserved
+- API contract, endpoint, and all Zod schemas — no codegen re-run needed.
+- Citation generation, retrieval pipeline, chunk scoping, fallback behaviour.
+- PDF viewer, storage, upload/download/delete/reindex, single-doc chat, multi-doc comparison.
+
+---
+
 ## [Signal87_Core_Executive_Brief_Generator_v1] — 2026-06-14
 
 ### Summary

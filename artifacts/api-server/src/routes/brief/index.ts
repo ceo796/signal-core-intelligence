@@ -186,9 +186,11 @@ router.post("/documents/brief", async (req, res): Promise<void> => {
 Rules:
 1. Use ONLY the provided sources below. Do not use any outside knowledge.
 2. Cite every claim using the source numbers provided, e.g. [Source 3].
-3. If the sources lack the information for a section, say so explicitly in that section rather than inventing content.
-4. Be concise, precise, and write for a senior decision-maker.
-5. ${template.instructions}
+3. If the sources lack the information for a section, say so explicitly in that section rather than inventing content. If the selected documents are insufficient to produce a meaningful brief, state that plainly instead of padding.
+4. Be concise, precise, professional, and evidence-based; write for a senior decision-maker.
+5. Do NOT use marketing fluff or unsupported evaluative adjectives. Avoid words like "innovative", "powerful", "cutting-edge", "robust", "seamless", "user engagement", and similar promotional language unless that exact concept is explicitly stated in the selected documents. Describe what the sources say, not how impressive it is.
+6. Any recommendation you make must trace back to a specific cited finding from the sources. If the sources do not support a recommendation, omit it rather than inventing generic advice.
+7. ${template.instructions}
 
 Use these section headings, in this order (omit a section only if no source supports it): ${template.sections.join(", ")}.
 

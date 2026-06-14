@@ -1,0 +1,90 @@
+Proceed with the Executive Brief quality polish pass.
+
+Current stable checkpoint:
+Signal87_Core_Executive_Brief_Generator_v1
+
+New checkpoint after verification:
+Signal87_Core_Executive_Brief_Quality_Polish_v1
+
+This is a polish pass only. Do not add new features.
+
+Implement the approved improvements:
+
+1. Copy Brief source legend
+Update Copy Brief so copied output includes:
+- proper # heading title
+- brief body
+- Sources footer mapping each [Source N] to document name, chunk number, and relevance score if available
+
+2. Risk Brief citation honesty
+Do not cite inferred severity, likelihood, or impact ratings as if directly stated by the source.
+Use labels such as “Assessed Impact” or “Risk Assessment” when the model is making an assessment.
+Citations should support the underlying risk evidence, not the inferred rating itself.
+
+3. Prompt tightening
+Update brief prompt instructions to:
+- avoid marketing fluff
+- avoid unsupported evaluative adjectives
+- avoid generic recommendations
+- require recommendations to trace to cited findings
+- omit recommendations when not supported
+- keep language concise, professional, and evidence-based
+- state when selected documents are insufficient
+
+4. Executive Summary de-duplication
+Use this structure:
+- Overview
+- Key Findings
+- What Stands Out / Watch Items
+- Open Questions
+- Source Notes
+
+Avoid repetitive overlap between sections.
+
+5. Verification Trace note and section-name polish
+Add a small note in the Brief Verification Trace:
+“Brief generation uses a synthesized retrieval seed across selected documents. Relevance scores may be lower than direct question-answer retrieval but are used to identify supporting source chunks.”
+
+Rename:
+- “Per-Document Notes” → “Notes by Document”
+- “Severity & Likelihood” → “Impact & Likelihood” or “Risk Assessment”
+- “Outstanding Items” → “Open Items”
+- Keep “Parties & Term” as-is.
+
+Hard constraints:
+- Do not change backend architecture.
+- Do not change durable storage.
+- Do not change PDF viewer.
+- Do not change upload/download/delete/reindex.
+- Do not change single-document chat.
+- Do not change multi-document comparison.
+- Do not add Gemini.
+- Do not add global search.
+- Do not add billing.
+- Do not add agents.
+- Do not redesign the app.
+- Do not change selected-document-only retrieval.
+
+Testing:
+Verify:
+1. All five brief types still generate.
+2. Copy Brief includes clean Sources footer.
+3. Risk Brief does not cite inferred impact/likelihood ratings as directly sourced.
+4. Recommendations are cited or omitted.
+5. Executive Summary is less repetitive.
+6. Verification Trace includes the synthesized retrieval note.
+7. Citations still render and group by document.
+8. Single-document chat still works.
+9. Multi-document comparison still works.
+10. PDF viewer still works.
+11. Upload/download/re-index still works.
+12. Frontend typecheck passes.
+13. Backend typecheck passes if backend was touched.
+
+Documentation:
+Update:
+- CHANGELOG.md
+- QA_TEST_PLAN.md
+- BACKEND_MAP.md only if needed
+
+Do not proceed beyond this polish pass.
