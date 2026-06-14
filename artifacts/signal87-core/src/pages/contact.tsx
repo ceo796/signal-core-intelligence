@@ -19,10 +19,10 @@ export default function Contact() {
             <div>
               <h2 className="font-semibold text-sm mb-1">Email</h2>
               <a
-                href="mailto:hello@signal87.ai"
+                href="mailto:contact@signal87.ai"
                 className="text-primary hover:underline text-sm"
               >
-                hello@signal87.ai
+                contact@signal87.ai
               </a>
               <p className="text-xs text-muted-foreground mt-2">
                 We aim to respond within 2 business days.

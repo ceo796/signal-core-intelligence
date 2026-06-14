@@ -76,8 +76,8 @@ export default function Terms() {
               Questions about these terms? Reach us at the{" "}
               <Link href="/contact" className="text-primary hover:underline">Contact page</Link>{" "}
               or by email at{" "}
-              <a href="mailto:hello@signal87.ai" className="text-primary hover:underline">
-                hello@signal87.ai
+              <a href="mailto:contact@signal87.ai" className="text-primary hover:underline">
+                contact@signal87.ai
               </a>
               .
             </p>
