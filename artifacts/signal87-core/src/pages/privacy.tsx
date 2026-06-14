@@ -63,7 +63,7 @@ export default function Privacy() {
               Uploaded documents, extracted text, source chunks, and chat history are stored until you delete them. You can delete any document — and all associated history — from within the application at any time. Deletion is permanent and cannot be undone.
             </p>
             <p>
-              We retain server logs (request metadata, error information) for operational and debugging purposes. These logs do not contain the full content of your documents or questions.
+              We retain server logs (request metadata, error information) for operational and debugging purposes. These logs do not contain your document content or question text.
             </p>
           </Section>
 
