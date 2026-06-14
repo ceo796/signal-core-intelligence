@@ -7,8 +7,6 @@
  */
 
 export * from './adminStats';
-export * from './attachDocumentOriginalBody';
-export * from './attachOriginalResult';
 export * from './briefCitation';
 export * from './briefDebugInfo';
 export * from './briefInput';

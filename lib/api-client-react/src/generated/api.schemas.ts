@@ -9,15 +9,6 @@ export interface HealthStatus {
   status: string;
 }
 
-export interface AttachOriginalResult {
-  id: number;
-  originalFileAvailable: boolean;
-  /** @nullable */
-  storageProvider?: string | null;
-  /** @nullable */
-  storageKey?: string | null;
-}
-
 export interface Document {
   id: number;
   fileName: string;
@@ -271,8 +262,4 @@ export interface SystemInfo {
 export interface ErrorResponse {
   error: string;
 }
-
-export type AttachDocumentOriginalBody = {
-  file: Blob;
-};
 

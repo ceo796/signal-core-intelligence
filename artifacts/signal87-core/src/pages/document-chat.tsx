@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { DebugInfo, Citation } from "@workspace/api-client-react";
+import { MarkdownAnswer } from "@/components/markdown-answer";
 
 function Row({
   label,
@@ -83,42 +84,6 @@ function InlineCitation({
       {n}
     </button>
   );
-}
-
-// Parse answer text, replacing "[Chunk N]" tokens with clean inline citation markers.
-function renderAnswerWithCitations(
-  content: string,
-  citationByNum: Map<number, Citation>,
-  activeChunk: number | null,
-  onActivate: (chunkIndex: number) => void
-): React.ReactNode[] {
-  const parts: React.ReactNode[] = [];
-  const regex = /\[\s*chunks?\s+(\d+)\s*\]/gi;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  let key = 0;
-
-  while ((match = regex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(content.slice(lastIndex, match.index));
-    }
-    const n = parseInt(match[1], 10);
-    const citation = citationByNum.get(n);
-    parts.push(
-      <InlineCitation
-        key={`cite-${key++}`}
-        n={n}
-        hasSource={Boolean(citation)}
-        active={citation ? activeChunk === citation.chunkIndex : false}
-        onActivate={() => citation && onActivate(citation.chunkIndex)}
-      />
-    );
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < content.length) {
-    parts.push(content.slice(lastIndex));
-  }
-  return parts;
 }
 
 function CitationChip({
@@ -267,9 +232,22 @@ function AssistantAnswer({
 
   return (
     <>
-      <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-        {renderAnswerWithCitations(content, citationByNum, activeChunk, handleActivate)}
-      </div>
+      <MarkdownAnswer
+        content={content}
+        citationPattern={/\[\s*chunks?\s+(\d+)\s*\]/}
+        renderCitation={(n, key) => {
+          const citation = citationByNum.get(n);
+          return (
+            <InlineCitation
+              key={key}
+              n={n}
+              hasSource={Boolean(citation)}
+              active={citation ? activeChunk === citation.chunkIndex : false}
+              onActivate={() => citation && handleActivate(citation.chunkIndex)}
+            />
+          );
+        }}
+      />
 
       {hasTrace && (
         <div className="mt-3 space-y-2">

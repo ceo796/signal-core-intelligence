@@ -31,6 +31,7 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MarkdownAnswer } from "@/components/markdown-answer";
 
 const MIN_DOCS = 1;
 const MAX_DOCS = 5;
@@ -92,41 +93,6 @@ function InlineCitation({
       {n}
     </button>
   );
-}
-
-function renderBodyWithCitations(
-  content: string,
-  citationByNum: Map<number, BriefCitation>,
-  activeNum: number | null,
-  onActivate: (citationNumber: number) => void,
-): React.ReactNode[] {
-  const parts: React.ReactNode[] = [];
-  const regex = /\[\s*sources?\s+(\d+)\s*\]/gi;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  let key = 0;
-
-  while ((match = regex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(content.slice(lastIndex, match.index));
-    }
-    const n = parseInt(match[1], 10);
-    const citation = citationByNum.get(n);
-    parts.push(
-      <InlineCitation
-        key={`cite-${key++}`}
-        n={n}
-        hasSource={Boolean(citation)}
-        active={citation ? activeNum === n : false}
-        onActivate={() => citation && onActivate(n)}
-      />,
-    );
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < content.length) {
-    parts.push(content.slice(lastIndex));
-  }
-  return parts;
 }
 
 function CitationChip({
@@ -354,9 +320,22 @@ function ResultView({ result }: { result: BriefResultState }) {
             <h3 className="font-mono text-[11px] uppercase tracking-widest text-primary/80">
               {section.heading}
             </h3>
-            <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-              {renderBodyWithCitations(section.body, citationByNum, activeNum, handleActivate)}
-            </div>
+            <MarkdownAnswer
+              content={section.body}
+              citationPattern={/\[\s*sources?\s+(\d+)\s*\]/}
+              renderCitation={(n, key) => {
+                const citation = citationByNum.get(n);
+                return (
+                  <InlineCitation
+                    key={key}
+                    n={n}
+                    hasSource={Boolean(citation)}
+                    active={citation ? activeNum === n : false}
+                    onActivate={() => citation && handleActivate(n)}
+                  />
+                );
+              }}
+            />
           </div>
         ))}
       </div>

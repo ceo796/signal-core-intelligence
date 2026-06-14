@@ -27,6 +27,7 @@ import {
   Layers,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MarkdownAnswer } from "@/components/markdown-answer";
 
 const MIN_DOCS = 2;
 const MAX_DOCS = 5;
@@ -79,42 +80,6 @@ function InlineCitation({
       {n}
     </button>
   );
-}
-
-// Parse answer text, replacing "[Source N]" tokens with clean inline citation markers.
-function renderAnswerWithCitations(
-  content: string,
-  citationByNum: Map<number, MultiCitation>,
-  activeNum: number | null,
-  onActivate: (citationNumber: number) => void
-): React.ReactNode[] {
-  const parts: React.ReactNode[] = [];
-  const regex = /\[\s*sources?\s+(\d+)\s*\]/gi;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  let key = 0;
-
-  while ((match = regex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(content.slice(lastIndex, match.index));
-    }
-    const n = parseInt(match[1], 10);
-    const citation = citationByNum.get(n);
-    parts.push(
-      <InlineCitation
-        key={`cite-${key++}`}
-        n={n}
-        hasSource={Boolean(citation)}
-        active={citation ? activeNum === n : false}
-        onActivate={() => citation && onActivate(n)}
-      />
-    );
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < content.length) {
-    parts.push(content.slice(lastIndex));
-  }
-  return parts;
 }
 
 function CitationChip({
@@ -282,9 +247,22 @@ function ResultView({ result }: { result: MultiResult }) {
         <span className="text-foreground/80">{result.question}</span>
       </div>
 
-      <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-        {renderAnswerWithCitations(result.answer, citationByNum, activeNum, handleActivate)}
-      </div>
+      <MarkdownAnswer
+        content={result.answer}
+        citationPattern={/\[\s*sources?\s+(\d+)\s*\]/}
+        renderCitation={(n, key) => {
+          const citation = citationByNum.get(n);
+          return (
+            <InlineCitation
+              key={key}
+              n={n}
+              hasSource={Boolean(citation)}
+              active={citation ? activeNum === n : false}
+              onActivate={() => citation && handleActivate(n)}
+            />
+          );
+        }}
+      />
 
       <div className="mt-3 space-y-3">
         <div className="flex items-center gap-1.5">

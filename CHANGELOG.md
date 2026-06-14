@@ -2,6 +2,28 @@
 
 ---
 
+## [Signal87_Core_Answer_Rendering_Polish_v1] — 2026-06-14
+
+### Summary
+Frontend-only Markdown rendering pass for all AI-generated answer text. Replaced the `whitespace-pre-wrap` plain-text rendering in single-document chat, multi-document comparison, and Executive Brief sections with a shared `MarkdownAnswer` component backed by `react-markdown` + `remark-gfm`. **Bold text, numbered lists, bullet lists, section headings, and paragraphs now render as structured HTML.** Citation pill injection is preserved — citation tokens (`[Chunk N]`, `[Source N]`) are intercepted inside the Markdown renderer's component overrides and converted to the existing `InlineCitation` pill components. No backend changes, no API contract changes, no retrieval changes.
+
+### Added
+- **`src/components/markdown-answer.tsx`** (new shared component): `MarkdownAnswer` — accepts `content`, `citationPattern` (regex), and `renderCitation` callback; uses `react-markdown` + `remark-gfm` for structure; custom component overrides for `p`, `li`, `ul`, `ol`, `h1`–`h3`, `strong`, `em`, `code`, `pre`, `blockquote`. A `processChildren` helper walks React children from markdown nodes and splits any string children on the citation pattern, replacing matches with pill components from the caller's `renderCitation` callback.
+
+### Changed
+- **`pages/document-chat.tsx`**: removed `renderAnswerWithCitations`; `AssistantAnswer` now renders AI answers via `<MarkdownAnswer citationPattern={/\[\s*chunks?\s+(\d+)\s*\]/} … />` preserving existing `InlineCitation` pills.
+- **`pages/multi-document-chat.tsx`**: removed `renderAnswerWithCitations`; comparison answers now rendered via `<MarkdownAnswer citationPattern={/\[\s*sources?\s+(\d+)\s*\]/} … />`.
+- **`pages/executive-brief.tsx`**: removed `renderBodyWithCitations`; each section body now rendered via `<MarkdownAnswer citationPattern={/\[\s*sources?\s+(\d+)\s*\]/} … />`.
+- **`package.json` (signal87-core)**: added `react-markdown`, `remark-gfm`.
+
+### Unchanged / preserved
+- API contract, all Zod schemas, codegen — not touched.
+- Citation pill component definitions, citation payload shape, Verification Trace.
+- PDF viewer, storage, upload/download/delete/reindex, OpenAI routing.
+- Copy Brief output (plain-text Markdown string — unaffected by rendering layer).
+
+---
+
 ## [Signal87_Core_Executive_Brief_Quality_Polish_v1] — 2026-06-14
 
 ### Summary

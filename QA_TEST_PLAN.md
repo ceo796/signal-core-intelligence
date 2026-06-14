@@ -1,9 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Executive_Brief_Quality_Polish_v1**
+> Checkpoint: **Signal87_Core_Answer_Rendering_Polish_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
-> Note: The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
+> Note: Answer Rendering Polish (T28) is a frontend-only change — shared `MarkdownAnswer` component replaces `whitespace-pre-wrap` plain text in all three answer surfaces; no API, retrieval, or citation payload changes. The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
 ---
 
@@ -488,6 +488,55 @@ To test manually today:
 10. **Worker:** no pdf.js worker errors in the browser console (the worker is bundled via Vite `?url`).
 
 **Regression sweep:** Extracted Text / Citations / History / System tabs, single-doc chat, multi-doc comparison, and upload/download/reindex all still work.
+
+---
+
+## T28 — Answer Rendering Polish (Markdown rendering)
+
+**Goal:** Verify AI-generated answers render as structured Markdown, citation pills still work, and no raw `**bold**` markers are visible.
+
+**Precondition:** At least one indexed document with ≥ 3 chunks.
+
+### T28a — Single-document chat
+
+1. Open `/documents/:id/chat` for any indexed document.
+2. Ask a question that is likely to produce a multi-paragraph answer with bold section labels (e.g. "Summarize this document in detail with section headings").
+3. **Expected:**
+   - Bold text renders as **bold** (not `**bold**`).
+   - Numbered or bullet lists render with proper spacing and list markers.
+   - Section headings render visually distinct (slightly larger/bolder).
+   - Inline `[Chunk N]` citations become clickable orange pills — not plain text.
+   - Clicking a citation pill expands the corresponding CitationChip in the Verification Trace.
+   - No raw Markdown syntax characters (`**`, `##`, `- `, `1. `) appear in the rendered text.
+
+### T28b — Multi-document comparison
+
+1. Navigate to `/compare`, select 2–3 documents, ask "Compare the risk profiles across these documents".
+2. **Expected:** Same rendering requirements as T28a but for `[Source N]` citation pills.
+
+### T28c — Executive Brief
+
+1. Navigate to `/brief`, select 1–2 documents, generate an Executive Summary brief.
+2. **Expected:**
+   - Section bodies render as structured Markdown.
+   - `[Source N]` tokens become clickable pills; clicking opens the citation group in the Verification Trace.
+   - No raw Markdown characters in the rendered text.
+
+### T28d — Copy Brief unchanged
+
+1. Generate any brief and click `COPY_BRIEF`.
+2. Paste into a plain-text editor.
+3. **Expected:** Output is plain Markdown text (the copy path is unchanged — it reads the raw `section.body` strings, not the rendered HTML).
+
+### T28e — Verification Trace unchanged
+
+1. In any of T28a–T28c, expand the Verification Trace.
+2. **Expected:** All trace fields (provider, model, chunk stats, latencies) still display correctly; citation cards show relevance scores.
+
+### T28f — No backend regression
+
+1. Run `pnpm run typecheck` — must pass with 0 errors.
+2. Backend was not touched; no API contract changes needed.
 
 ---
 
