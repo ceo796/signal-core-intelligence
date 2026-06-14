@@ -10,28 +10,27 @@ export default function Home() {
           <Layers className="w-6 h-6 text-primary" />
           <span className="font-mono font-bold tracking-tight text-xl">SIGNAL<span className="text-primary">87</span></span>
         </div>
-        <div className="text-xs font-mono text-muted-foreground">CORE_SYSTEM_ONLINE</div>
+        <div className="text-xs font-mono text-muted-foreground">Open Preview</div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
         <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 text-xs font-mono text-secondary-foreground border border-border">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          INTELLIGENCE_NODE_ACTIVE
+          AI-powered · Cites every source
         </div>
-        
+
         <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6 text-foreground">
           Precision Document Intelligence.
         </h1>
-        
+
         <p className="text-lg text-muted-foreground mb-10 max-w-xl text-balance">
-          No fluff. No hallucinations. Signal87 Core extracts, analyzes, and cites every claim directly from your source documents with complete debug transparency.
+          Upload any PDF, DOCX, or text file. Ask questions. Get answers that cite exactly where they came from.
         </p>
 
         <Link href="/documents" className="inline-block">
-          <Button size="lg" className="font-mono gap-2 h-12 px-8 group relative overflow-hidden">
-            <span className="relative z-10 flex items-center gap-2">
-              ACCESS_SYSTEM <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </span>
+          <Button size="lg" className="gap-2 h-12 px-8 group">
+            Get Started
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </Link>
 
@@ -39,17 +38,17 @@ export default function Home() {
           <div className="space-y-3">
             <ShieldCheck className="w-5 h-5 text-primary" />
             <h3 className="font-bold text-sm">Verified Citations</h3>
-            <p className="text-xs text-muted-foreground font-mono">Every assertion is linked to specific document chunks with confidence scores.</p>
+            <p className="text-xs text-muted-foreground">Every answer cites the exact passages it came from, so you can verify any claim.</p>
           </div>
           <div className="space-y-3">
             <Database className="w-5 h-5 text-primary" />
             <h3 className="font-bold text-sm">Verification Trace</h3>
-            <p className="text-xs text-muted-foreground font-mono">Complete visibility into provider, model, routing, retrieval latency, and fallbacks.</p>
+            <p className="text-xs text-muted-foreground">See which AI model answered, how long it took, and which sections of your document it read.</p>
           </div>
           <div className="space-y-3">
             <Zap className="w-5 h-5 text-primary" />
             <h3 className="font-bold text-sm">Rapid Analysis</h3>
-            <p className="text-xs text-muted-foreground font-mono">Optimized processing pipeline for complex PDFs, CSVs, and text documents.</p>
+            <p className="text-xs text-muted-foreground">Works with PDFs, Word documents, spreadsheets, and plain text files.</p>
           </div>
         </div>
       </main>

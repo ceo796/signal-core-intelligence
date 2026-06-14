@@ -2,6 +2,25 @@
 
 ---
 
+## [Signal87_Core_PublicDemo_Polish_v1] — 2026-06-14
+
+### Summary
+Final public-demo polish pass. No new features, no rebuilds, no backend or API contract changes. All edits are cosmetic/copy — removing internal-looking labels, fixing mobile layout, and making every user-facing string readable to a first-time visitor. The SIGNAL87 logotype and all System-tab debug content intentionally keep the terminal aesthetic.
+
+### Changed
+- **`src/pages/home.tsx`**: `CORE_SYSTEM_ONLINE` → `Open Preview`; `INTELLIGENCE_NODE_ACTIVE` badge → `AI-powered · Cites every source`; subheadline rewritten from jargon-heavy copy to `Upload any PDF, DOCX, or text file. Ask questions. Get answers that cite exactly where they came from.`; CTA `ACCESS_SYSTEM` → `Get Started` (removed `font-mono` and layout overrides from button); feature card descriptions de-monospaced and rewritten for non-technical readers.
+- **`src/pages/documents.tsx`**: `INDEXED_FILES` subtitle → `Your uploaded documents`; `FAILED_TO_LOAD_DOCUMENTS` → `Could not load your documents`; empty state title `No documents indexed` → `No documents yet` with clearer body copy; `CHUNKS:` / `UPLOADED:` labels → `Chunks` / `Uploaded`.
+- **`src/components/layout.tsx`**: outer container `min-h-screen` → `h-screen overflow-hidden`; sidebar `sticky h-auto md:h-screen` → `shrink-0` with `border-b md:border-b-0 md:border-r` (fixes mobile overflow where `h-screen` on `<main>` pushed total height to sidebar + 100vh); main `h-screen` → `min-h-0`; footer `SYSTEM_CORE_v1.0.4` → `Signal87 Core`.
+- **`src/pages/not-found.tsx`**: was `bg-gray-50 / text-gray-900` (wrong theme) with developer message "Did you forget to add the page to the router?"; rewritten to match app dark theme, links to `/documents`, no dev message.
+- **`src/pages/document-chat.tsx`**: `INITIALIZING_SESSION...` → `Loading...`; empty-state heading `SYSTEM_READY` (font-mono) → `Ready for your questions` (font-semibold) with added hint "Every answer will cite its exact source."; `PROCESSING_QUERY...` → `Thinking...` (removed font-mono); input placeholder `Query document...` → `Ask a question about this document...`; footer `SIGNAL87 CORE // RESPONSES GROUNDED IN SOURCE DOCUMENTS` → `Answers grounded in your document`.
+- **`src/pages/document-detail.tsx`**: 14 user-facing SCREAMING labels converted — `BACK_TO_DOCUMENTS` → `Back to Documents` (×2), `DOCUMENT_NOT_FOUND` → `Document not found`, `LOADING_PREVIEW` → `Loading preview...`, `FAILED_TO_LOAD_PREVIEW` → `Failed to load preview`, `NO_PREVIEW_AVAILABLE` → `No preview available`, both `EXTRACTED_TEXT_PREVIEW —` banners → readable descriptions, `CHUNKS` / `INDEXED:` → `chunks` / `Indexed:`, `NO_EXTRACTED_TEXT` → `No extracted text available`, `SOURCE_CHUNKS — N blocks indexed for retrieval` → `Source chunks · N indexed for retrieval`, `CHUNK_LOAD_FAILED — ...` → `Could not load source chunks`, `CHUNK #N` badge → `Chunk N`, `N CHARS` → `N chars`, `NO_CHUNKS_INDEXED` → `No source chunks found`, `HISTORY_LOAD_FAILED — ...` → `Could not load history`. System-tab row labels kept as-is (intentional debug content).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` passes.
+- Screenshots confirmed: homepage clear headline/CTA, documents list with readable labels, chat with updated placeholder and footer.
+
+---
+
 ## [Signal87_Core_Core_Flow_Simplification_v1] — 2026-06-14
 
 ### Summary

@@ -216,11 +216,11 @@ export default function DocumentDetail() {
       <Layout>
         <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
           <AlertCircle className="w-10 h-10 text-destructive" />
-          <p className="font-mono text-sm text-destructive">DOCUMENT_NOT_FOUND</p>
+          <p className="text-sm text-destructive">Document not found</p>
           <Link href="/documents">
-            <Button variant="secondary" className="font-mono text-xs gap-2 mt-2">
+            <Button variant="secondary" className="text-xs gap-2 mt-2">
               <ArrowLeft className="w-3 h-3" />
-              BACK_TO_DOCUMENTS
+              Back to Documents
             </Button>
           </Link>
         </div>
@@ -256,7 +256,7 @@ export default function DocumentDetail() {
           <Link href="/documents">
             <button className="inline-flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-3 h-3" />
-              BACK_TO_DOCUMENTS
+              Back to Documents
             </button>
           </Link>
 
@@ -393,14 +393,14 @@ export default function DocumentDetail() {
                     ) : null}
                   </div>
                 ) : pdfLoading ? (
-                  <div className="flex items-center justify-center gap-2 p-8 text-sm font-mono text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" /> LOADING_PREVIEW
+                  <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading preview...
                   </div>
                 ) : pdfError || !pdfUrl ? (
                   <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
                     <AlertCircle className="w-8 h-8 text-destructive" />
-                    <p className="font-mono text-sm text-destructive">FAILED_TO_LOAD_PREVIEW</p>
-                    <p className="font-mono text-xs text-muted-foreground max-w-sm">
+                    <p className="text-sm text-destructive">Failed to load preview</p>
+                    <p className="text-xs text-muted-foreground max-w-sm">
                       The original file could not be fetched for preview. You can still download it.
                     </p>
                     <a href={originalUrl} download={doc.fileName}>
@@ -418,8 +418,8 @@ export default function DocumentDetail() {
               ) : doc.extractedText ? (
                 <Card className="bg-card border-border/50 flex-1 overflow-auto">
                   <CardContent className="p-5">
-                    <p className="text-xs font-mono text-muted-foreground mb-3">
-                      EXTRACTED_TEXT_PREVIEW — original format not embeddable
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Extracted text (original format not embeddable)
                     </p>
                     <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
                       {doc.extractedText}
@@ -427,8 +427,8 @@ export default function DocumentDetail() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="text-center text-sm font-mono text-muted-foreground p-8">
-                  NO_PREVIEW_AVAILABLE
+                <div className="text-center text-sm text-muted-foreground p-8">
+                  No preview available
                 </div>
               )}
             </TabsContent>
@@ -440,8 +440,8 @@ export default function DocumentDetail() {
                   <Badge variant={extractionOk ? "secondary" : "destructive"} className="font-mono">
                     {doc.extractionStatus?.toUpperCase() || "UNKNOWN"}
                   </Badge>
-                  <span>{doc.chunkCount} CHUNKS</span>
-                  <span>INDEXED: {format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}</span>
+                  <span>{doc.chunkCount} chunks</span>
+                  <span>Indexed: {format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}</span>
                 </div>
                 <Button
                   variant="outline"
@@ -460,8 +460,8 @@ export default function DocumentDetail() {
                   </pre>
                 </ScrollArea>
               ) : (
-                <div className="text-center text-sm font-mono text-muted-foreground p-8">
-                  NO_EXTRACTED_TEXT
+                <div className="text-center text-sm text-muted-foreground p-8">
+                  No extracted text available
                   {doc.extractionError ? (
                     <p className="text-destructive mt-2">{doc.extractionError}</p>
                   ) : null}
@@ -472,7 +472,7 @@ export default function DocumentDetail() {
             {/* Citations / chunk inspection */}
             <TabsContent value="citations" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
               <p className="text-xs font-mono text-muted-foreground mb-4">
-                SOURCE_CHUNKS — {chunks?.length ?? 0} blocks indexed for retrieval
+                Source chunks · {chunks?.length ?? 0} indexed for retrieval
               </p>
               {chunksLoading ? (
                 <div className="space-y-3">
@@ -481,8 +481,8 @@ export default function DocumentDetail() {
                   ))}
                 </div>
               ) : chunksError ? (
-                <div className="text-center text-sm font-mono text-destructive p-8">
-                  CHUNK_LOAD_FAILED — could not retrieve source chunks
+                <div className="text-center text-sm text-destructive p-8">
+                  Could not load source chunks
                 </div>
               ) : chunks && chunks.length > 0 ? (
                 <ScrollArea className="flex-1">
@@ -492,9 +492,9 @@ export default function DocumentDetail() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between gap-3 mb-2 text-xs font-mono text-muted-foreground">
                             <Badge variant="secondary" className="font-mono">
-                              CHUNK #{chunk.chunkIndex}
+                              Chunk {chunk.chunkIndex}
                             </Badge>
-                            <span>{chunk.content.length} CHARS</span>
+                            <span>{chunk.content.length} chars</span>
                           </div>
                           <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words leading-relaxed">
                             {chunk.content}
@@ -505,8 +505,8 @@ export default function DocumentDetail() {
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="text-center text-sm font-mono text-muted-foreground p-8">
-                  NO_CHUNKS_INDEXED
+                <div className="text-center text-sm text-muted-foreground p-8">
+                  No source chunks found
                 </div>
               )}
             </TabsContent>
@@ -523,8 +523,8 @@ export default function DocumentDetail() {
                   ))}
                 </div>
               ) : historyError ? (
-                <div className="text-center text-sm font-mono text-destructive p-8">
-                  HISTORY_LOAD_FAILED — could not retrieve chat history
+                <div className="text-center text-sm text-destructive p-8">
+                  Could not load history
                 </div>
               ) : messagePairs.length > 0 ? (
                 <ScrollArea className="flex-1">

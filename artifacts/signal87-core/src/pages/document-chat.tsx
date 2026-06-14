@@ -369,7 +369,7 @@ export default function DocumentChat() {
     return (
       <Layout>
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse font-mono text-muted-foreground">INITIALIZING_SESSION...</div>
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
       </Layout>
     );
@@ -433,9 +433,9 @@ export default function DocumentChat() {
           <div className="max-w-3xl mx-auto space-y-6 pb-6">
             {history?.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">
-                <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <h3 className="font-mono mb-2">SYSTEM_READY</h3>
-                <p className="text-sm">Ask a question about {document.fileName}.</p>
+                <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <h3 className="font-semibold mb-2 text-foreground">Ready for your questions</h3>
+                <p className="text-sm">Ask anything about {document.fileName}.<br />Every answer will cite its exact source.</p>
               </div>
             ) : (
               history?.map((msg) => {
@@ -487,9 +487,9 @@ export default function DocumentChat() {
                 </div>
                 <div className="flex-1">
                   <div className="inline-block text-left max-w-full rounded-lg p-4 bg-card border border-border">
-                    <div className="flex items-center gap-2 text-muted-foreground font-mono text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      PROCESSING_QUERY...
+                      Thinking...
                     </div>
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export default function DocumentChat() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Query document..."
+              placeholder="Ask a question about this document..."
               className="bg-background border-border flex-1 font-mono text-sm h-12"
               disabled={chatMutation.isPending}
             />
@@ -519,8 +519,8 @@ export default function DocumentChat() {
               <Send className="w-4 h-4" />
             </Button>
           </form>
-          <div className="text-center mt-2 font-mono text-[10px] text-muted-foreground">
-            SIGNAL87 CORE // RESPONSES GROUNDED IN SOURCE DOCUMENTS
+          <div className="text-center mt-2 text-[10px] text-muted-foreground">
+            Answers grounded in your document
           </div>
         </div>
       </div>
