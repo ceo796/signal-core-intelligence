@@ -129,7 +129,7 @@
 
   --app-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --app-font-serif: Georgia, serif;
-  --app-font-mono: 'Space Mono', 'Menlo', monospace;
+  --app-font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Menlo', monospace;
   --radius: 0.25rem;
   
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.05);
