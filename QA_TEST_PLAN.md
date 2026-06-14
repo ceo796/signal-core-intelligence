@@ -1,8 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Durable_File_Storage_v2**
+> Checkpoint: **Signal87_Core_Verification_Trace_Polish_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
+> Note: v1 polish is frontend-only — all backend tests (T01–T10, T16–T21) are unchanged from Durable_File_Storage_v2.
 
 ---
 
@@ -155,9 +156,23 @@ diff /tmp/original.txt /tmp/retrieved.txt  # should produce no output
 **Expected:**
 - `PROCESSING_QUERY...` indicator shown
 - Response with answer text
+- Raw `[Chunk N]` references in the answer are rendered as clean inline citation pills (no literal `[Chunk N]` text visible)
 - **Verification Trace** section with ≥ 1 citation chip (Chunk N, doc name, relevance %)
-- Clicking chip expands to source excerpt
-- **AI Audit Trail** collapsible present with PROVIDER, MODEL, ROUTE, FALLBACK: NO, latency values
+- Clicking a chip — or its matching inline pill — expands to the source excerpt
+- **Trace Detail** collapsible (renamed from "AI Audit Trail") present with PROVIDER, MODEL, ROUTE, DOCUMENT, chunks searched/retrieved, FALLBACK: NO, latency values
+
+---
+
+## T11b — Chat: inline citation pill parsing (frontend)
+
+**Goal:** Verify `[Chunk N]` token parsing and pill rendering edge cases.
+
+**Steps & expected:**
+1. **Normal case** — answer contains `[Chunk 1]` → renders as a clickable pill "1"; clicking it highlights/expands source chip 1.
+2. **Multiple citations** — answer contains `[Chunk 1] ... [Chunk 2]` → two distinct pills, each linked to its source.
+3. **Missing citation** — answer references `[Chunk 9]` but no citation #9 exists → pill renders but maps to no source (no crash, no React key warning).
+4. **Malformed token** — text like `[Chunk]` or `[Chink 1]` → left as literal text, not converted.
+5. **Legacy history** — a pre-v1 message stored without citations → renders Trace Detail but no citation chips (backward compatible).
 
 ---
 
@@ -318,7 +333,8 @@ To test manually today:
 - [ ] T08 Pre-v2 document returns 404 on /original
 - [ ] T09 Re-index works, chat history preserved
 - [ ] T10 Re-index without stored file returns 404
-- [ ] T11 Chat returns answer + citations
+- [ ] T11 Chat returns answer + citations (inline pills + Trace Detail)
+- [ ] T11b Inline citation pill parsing edge cases
 - [ ] T12 Citation maps to correct chunk
 - [ ] T13 Chat scoped to selected document
 - [ ] T14 History persists across navigation

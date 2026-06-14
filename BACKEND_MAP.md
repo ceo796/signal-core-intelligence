@@ -2,6 +2,7 @@
 
 > Checkpoint: **Signal87_Core_Durable_File_Storage_v2**
 > Last updated: 2026-06-14
+> Note: The `Signal87_Core_Verification_Trace_Polish_v1` checkpoint is **frontend-only** — no backend routes, prompts, citation payload, storage, retrieval, or upload/delete behavior changed. This map remains accurate.
 
 ---
 

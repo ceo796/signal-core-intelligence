@@ -2,6 +2,31 @@
 
 ---
 
+## [Signal87_Core_Verification_Trace_Polish_v1] — 2026-06-14
+
+### Summary
+Frontend-only polish of the chat citation and trust layer. The answer now renders inline citation pills instead of raw `[Chunk N]` text, and a single unified **Verification Trace** section presents both the cited sources and the technical trace. No backend, citation payload, storage, retrieval, or upload/delete behavior was changed.
+
+### Changed (frontend only)
+- **Inline citation pills:** raw `[Chunk N]` / `[Chunks N]` references the model emits in answer text are parsed (`/\[\s*chunks?\s+(\d+)\s*\]/gi`) and replaced with clean, clickable inline citation pills. Malformed tokens are left as-is (safe fallback).
+- **Citation chips:** each source chip shows the chunk number, document name, relevance score (e.g. "58% match"), and expands to reveal the source excerpt.
+- **Unified Verification Trace:** assistant messages now group everything under one "Verification Trace" header — the source citation chips plus a collapsible **Trace Detail** panel.
+- **Trace Detail** (renamed from "AI Audit Trail") preserves full technical visibility: provider, model, route, document searched, chunks searched/retrieved, latency, and fallback yes/no.
+- **Shared active-chunk state:** clicking an inline pill highlights and expands the matching source chip, and vice versa.
+- **Home page:** "Full Debug Trace" feature label renamed to "Verification Trace" with an updated description.
+
+### Not changed (explicitly preserved)
+- Backend architecture — no route, prompt, or server logic changes.
+- Citation payload shape — `chunkIndex`, `relevanceScore`, `content` consumed as-is; `chat_messages.debug` `{ debug, citations }` format unchanged.
+- Object storage, re-indexing, OpenAI routing (embeddings + gpt-4o-mini), and upload/delete behavior — all unchanged.
+- Legacy debug-only chat history still renders (backward compatible).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — passes.
+- Live chat test confirmed inline `[Chunk 1]` → citation pill conversion; citation chip shows document name + relevance score + expandable excerpt; Trace Detail intact.
+
+---
+
 ## [Signal87_Core_Durable_File_Storage_v2] — 2026-06-14
 
 ### Summary
