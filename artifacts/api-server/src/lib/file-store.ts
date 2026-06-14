@@ -77,13 +77,9 @@ export async function downloadFile(storageKey: string): Promise<Buffer> {
 }
 
 export async function deleteFile(storageKey: string): Promise<void> {
-  try {
-    const { bucketName, objectName } = parseStoragePath(storageKey);
-    const bucket = gcsClient.bucket(bucketName);
-    await bucket.file(objectName).delete();
-  } catch {
-    // Non-fatal: log and continue
-  }
+  const { bucketName, objectName } = parseStoragePath(storageKey);
+  const bucket = gcsClient.bucket(bucketName);
+  await bucket.file(objectName).delete({ ignoreNotFound: true });
 }
 
 export function isConfigured(): boolean {

@@ -64,19 +64,22 @@ router.post(
       return;
     }
 
-    // ── 1. Save original file to object storage ──────────────────────────────
-    let storageKey: string | null = null;
-    let storageProvider: string | null = null;
-    if (fileStore.isConfigured()) {
-      try {
-        const mimeType = fileStore.getMimeType(fileType);
-        storageKey = await fileStore.uploadFile(file.buffer, file.originalname, mimeType);
-        storageProvider = "replit-object-storage";
-      } catch (err) {
-        req.log.error({ err }, "Failed to save original file to object storage");
-        res.status(500).json({ error: "Failed to store uploaded file" });
-        return;
-      }
+    // ── 1. Save original file to object storage (durable storage is required) ──
+    if (!fileStore.isConfigured()) {
+      req.log.error("Object storage is not configured — refusing non-durable upload");
+      res.status(503).json({ error: "Durable file storage is not configured. Upload rejected." });
+      return;
+    }
+
+    let storageKey: string;
+    const storageProvider = "replit-object-storage";
+    try {
+      const mimeType = fileStore.getMimeType(fileType);
+      storageKey = await fileStore.uploadFile(file.buffer, file.originalname, mimeType);
+    } catch (err) {
+      req.log.error({ err }, "Failed to save original file to object storage");
+      res.status(500).json({ error: "Failed to store uploaded file" });
+      return;
     }
 
     // ── 2. Extract text ───────────────────────────────────────────────────────
@@ -96,37 +99,48 @@ router.post(
       extractionError = (err as Error).message ?? "Extraction failed";
     }
 
-    // ── 3. Insert document record ─────────────────────────────────────────────
-    const [doc] = await db
-      .insert(documentsTable)
-      .values({
-        fileName: file.originalname,
-        fileType,
-        fileSize: file.size,
-        extractedText,
-        extractionStatus,
-        extractionError,
-        storageProvider,
-        storageKey,
-      })
-      .returning();
-
-    // ── 4. Chunk (only on success) ────────────────────────────────────────────
+    // ── 3 & 4. Persist document + chunks; clean up stored file on failure ──────
+    let doc: typeof documentsTable.$inferSelect;
     let chunkCount = 0;
-    if (extractionStatus === "success" && extractedText) {
-      const chunks = chunkText(extractedText);
-      if (chunks.length > 0) {
-        await db.insert(chunksTable).values(
-          chunks.map((content, i) => ({ documentId: doc.id, chunkIndex: i, content }))
-        );
-        chunkCount = chunks.length;
+    try {
+      [doc] = await db
+        .insert(documentsTable)
+        .values({
+          fileName: file.originalname,
+          fileType,
+          fileSize: file.size,
+          extractedText,
+          extractionStatus,
+          extractionError,
+          storageProvider,
+          storageKey,
+        })
+        .returning();
+
+      if (extractionStatus === "success" && extractedText) {
+        const chunks = chunkText(extractedText);
+        if (chunks.length > 0) {
+          await db.insert(chunksTable).values(
+            chunks.map((content, i) => ({ documentId: doc.id, chunkIndex: i, content }))
+          );
+          chunkCount = chunks.length;
+        }
       }
+    } catch (err) {
+      req.log.error({ err }, "Failed to persist document — removing orphaned file from storage");
+      try {
+        await fileStore.deleteFile(storageKey);
+      } catch (cleanupErr) {
+        req.log.error({ err: cleanupErr, storageKey }, "Failed to clean up orphaned file after DB error");
+      }
+      res.status(500).json({ error: "Failed to save document" });
+      return;
     }
 
     if (extractionStatus === "failed") {
       res.status(207).json({
         ...docToResponse(doc, chunkCount),
-        warning: extractionError ?? "File stored but text extraction failed. Re-index to retry.",
+        warning: "Original file stored, but text extraction failed. Re-index to retry. " + (extractionError ?? ""),
       });
       return;
     }
@@ -173,13 +187,20 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Delete original file from object storage before removing the DB record,
+  // so a failure leaves storage_key intact for a retry rather than orphaning.
+  if (doc.storageKey) {
+    try {
+      await fileStore.deleteFile(doc.storageKey);
+    } catch (err) {
+      req.log.error({ err, storageKey: doc.storageKey }, "Failed to delete original file from storage");
+      res.status(500).json({ error: "Failed to delete original file from storage" });
+      return;
+    }
+  }
+
   await db.delete(chunksTable).where(eq(chunksTable.documentId, doc.id));
   await db.delete(documentsTable).where(eq(documentsTable.id, doc.id));
-
-  // Delete original file from object storage (best-effort)
-  if (doc.storageKey) {
-    fileStore.deleteFile(doc.storageKey).catch(() => {});
-  }
 
   res.sendStatus(204);
 });

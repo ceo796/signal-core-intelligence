@@ -53,10 +53,11 @@ OpenAI client singleton: **`artifacts/api-server/src/lib/ai-provider.ts`**
 
 Uses `multer` with `memoryStorage` (20 MB limit). The upload flow is:
 1. Receive file bytes in memory
-2. Upload original bytes to Replit Object Storage (GCS-backed)
-3. Extract text
-4. Chunk text
-5. Write document + chunks to PostgreSQL
+2. **Fail-closed:** if object storage is not configured, reject the upload with 503 (durable storage is required for this checkpoint)
+3. Upload original bytes to Replit Object Storage (GCS-backed)
+4. Extract text
+5. Chunk text
+6. Write document + chunks to PostgreSQL. **If this DB step fails, the just-uploaded GCS object is deleted (compensating cleanup) to avoid orphans.**
 
 ---
 
@@ -107,7 +108,7 @@ Algorithm:
 
 | Data | Storage | Notes |
 |------|---------|-------|
-| **Original file bytes** | Replit Object Storage (GCS-backed) | Stored on every upload. Key saved in `documents.storage_key`. Provider: `replit-object-storage`. |
+| **Original file bytes** | Replit Object Storage (GCS-backed) | Stored on every upload (required — upload is rejected with 503 if storage is unconfigured). Key saved in `documents.storage_key`. Provider: `replit-object-storage`. |
 | Extracted text | `documents.extracted_text` (PostgreSQL TEXT) | Full document text, survives restarts and deploys |
 | Chunks | `chunks` table (PostgreSQL) | All text segments with `chunk_index` and `document_id` FK |
 | Chat history + citations | `chat_messages` table (PostgreSQL) | Citations + debug JSON per assistant message |
@@ -143,6 +144,10 @@ Flow:
 6. Insert new chunks
 7. Update `documents.extracted_text`, `extraction_status`, `extraction_error`
 8. Chat history is **preserved** — not deleted on re-index
+
+### Delete cascade (reliable)
+
+`DELETE /api/documents/:id` deletes the GCS object **first** (awaited; uses `ignoreNotFound`), then removes the DB rows. If the GCS delete fails, the request returns 500 and the DB record is left intact (with `storage_key`) so the delete can be safely retried — no silent orphaning.
 
 ---
 

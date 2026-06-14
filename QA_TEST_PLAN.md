@@ -206,18 +206,19 @@ diff /tmp/original.txt /tmp/retrieved.txt  # should produce no output
 
 ---
 
-## T16 — Delete document cascades to GCS
+## T16 — Delete document cascades to GCS (reliable)
 
-**Goal:** Verify deletion removes document from DB and GCS.
+**Goal:** Verify deletion removes the document from DB and GCS reliably.
 
 **Steps:**
-1. Upload a document and note its ID and storage key
-2. Delete the document
+1. Upload a document and note its ID
+2. Delete the document — expect HTTP 204
 3. Try `GET /api/documents/:id/original`
 
 **Expected:**
-- 404 on document fetch
-- GCS object deleted (best-effort — may take a moment)
+- DELETE returns 204
+- `/original` returns 404 immediately (GCS object deleted first, then DB rows — awaited, not best-effort)
+- If the GCS delete had failed, DELETE would return 500 and the DB record would remain intact for a retry (no silent orphaning)
 
 ---
 
@@ -295,11 +296,13 @@ To test manually today:
 | Scenario | Expected behaviour |
 |----------|-------------------|
 | Document without `storage_key` | `/original` returns 404; `/reindex` returns 404 — expected for pre-v2 documents |
+| Object storage not configured | Upload rejected with 503 (fail-closed) — durable storage is required |
+| DB write fails after GCS save | Just-uploaded object is deleted (compensating cleanup); request returns 500 — no orphaned object |
 | Upload where extraction fails | 207 response with `warning` field; document and GCS file preserved; re-index available |
 | Large document with many chunks | Slower chat response — embeddings recomputed on every query |
 | Pre-v1 chat messages (stored without citations) | Show AI Audit Trail but no citation chips — legacy format gracefully handled |
 | Scanned PDF (no text layer) | 207 with `extractionStatus: "failed"`, `originalFileAvailable: true` |
-| GCS delete fails on document delete | Non-fatal — logged server-side, 204 still returned |
+| GCS delete fails on document delete | DELETE returns 500; DB record left intact with `storage_key` for retry — no silent orphaning |
 
 ---
 
