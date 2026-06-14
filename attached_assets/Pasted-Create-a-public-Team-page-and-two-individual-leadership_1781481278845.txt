@@ -1,0 +1,65 @@
+Create a public Team page and two individual leadership profile pages for Signal87 AI.
+
+Before building, use the uploaded headshot files if available. If the files are not already in the project, place them in:
+
+/public/team/
+
+Use these image paths:
+
+- Michael Benezra: /team/michael-benezra.jpg
+- Michael Chavira: /team/michael-chavira.jpg
+
+Do not use screenshots as profile photos. Screenshots are only layout references.
+
+Create these routes:
+
+1. /team
+2. /team/michael-benezra
+3. /team/michael-chavira
+
+Team page:
+- Page title: Leadership
+- Include two cards:
+  - Michael Benezra — CEO & Founder
+  - Michael Chavira — Co-Founder
+- Each card should include photo, role, short bio, and a button/link to the full profile.
+- Keep the design consistent with the current Signal87 dark theme.
+
+Michael Benezra page:
+- Title: Michael Benezra
+- Role: CEO & Founder, Signal87 AI
+- Include biography, professional background, education, affiliations, focus areas, and media/recognition section.
+- Use SEO-friendly headings with “Michael Benezra,” “Signal87 AI,” “AI document intelligence,” and “venture capital” naturally.
+- Add a section titled “Featured Coverage and Profiles.”
+- Add a clearly marked placeholder area where I can later add external hyperlinks for SEO.
+- Do not invent links, awards, certifications, or claims.
+
+Michael Chavira page:
+- Title: Michael Chavira
+- Role: Co-Founder, Signal87 AI
+- Include biography, technical leadership background, systems engineering, data science, AI, defense/intelligence experience, and focus areas.
+- Keep the page professional and concise.
+- Do not invent links, awards, certifications, or claims.
+
+SEO:
+- Add page titles and meta descriptions.
+- Use clean H1/H2 structure.
+- Add internal links between Home, About, Team, Michael Benezra, and Michael Chavira.
+- Add professional alt text for both profile images.
+- Do not keyword-stuff.
+
+Navigation:
+- Add Team to the footer and/or public navigation if appropriate.
+- Confirm no broken routes or dead links.
+
+Safety:
+- Do not claim SOC2, HIPAA, FedRAMP, government approval, or enterprise compliance.
+- Do not change the MVP document upload, preview, Q&A, citation, or delete flows.
+
+At the end, report:
+- Routes created
+- Images used
+- Navigation/footer links added
+- SEO metadata added
+- Placeholder areas needing my hyperlinks
+- Any claims I need to review
