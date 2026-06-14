@@ -1,9 +1,8 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Executive_Brief_Generator_v1**
+> Checkpoint: **Signal87_Core_Backend_Stability_Pass_v1**
 > Last updated: 2026-06-14
-> Note: `Signal87_Core_Executive_Brief_Generator_v1` adds one additive route (`POST /api/documents/brief`, in `routes/brief/index.ts`) plus a brief-template lib (`lib/brief.ts`). It reuses `retrieveAcrossDocuments` and the multi-chat citation/trace pattern (duplicated, not refactored into multi-chat). Brief results are ephemeral (not persisted). The brief LLM call uses `response_format: json_object` to return structured `{title, sections}`. Single-doc chat, multi-chat, prompts, citation payload, storage, upload/download/delete/reindex, and OpenAI routing are unchanged.
-> Prior: `Signal87_Core_Multi_Document_Comparison_v1` added `POST /api/documents/multi-chat` and `retrieveAcrossDocuments`. The earlier `Verification_Trace_Polish_v1` checkpoint was frontend-only.
+> Note: `Signal87_Core_Backend_Stability_Pass_v1` is a hardening-only pass — no new routes, no API contract changes, no schema changes. Changes: (1) `app.ts` now has a global Express 4-arg error handler returning JSON 500; (2) `GET /documents` wrapped in try/catch; (3) reindex chunk delete+insert+update wrapped in `db.transaction()`; (4) both retriever functions filter empty-content chunks before the OpenAI embeddings batch call. Prior: `Signal87_Core_Executive_Brief_Generator_v1` added `POST /api/documents/brief`. Prior: `Signal87_Core_Multi_Document_Comparison_v1` added `POST /api/documents/multi-chat` and `retrieveAcrossDocuments`.
 
 ---
 
@@ -25,6 +24,7 @@ Middleware stack in `app.ts`:
 - `cors` — permissive (all origins, dev and prod)
 - `express.json()` / `express.urlencoded()` — body parsing
 - All routes mounted at `/api`
+- Global 4-arg error handler — catches any unhandled async throw, logs via pino, returns `{ error: "Internal server error" }` HTTP 500 as JSON
 
 ---
 
@@ -101,6 +101,7 @@ Algorithm:
 4. Return top-K chunks sorted by score descending
 
 > **Limitation:** Embeddings are **not persisted** — recomputed fresh on every query.
+> **Robustness:** Both `retrieveRelevantChunks` and `retrieveAcrossDocuments` filter out empty-content chunks (`content.trim().length > 0`) before the batch embeddings call — an empty string in the batch causes a `400 Invalid 'input'` from OpenAI.
 
 ---
 
@@ -141,11 +142,12 @@ Flow:
 1. Look up document; verify `storage_key` is set
 2. Download original file bytes from GCS (`file-store.ts:downloadFile`)
 3. Re-extract text (`text-extractor.ts:extractText`)
-4. `DELETE FROM chunks WHERE document_id = $id`
+4. `DELETE FROM chunks WHERE document_id = $id` ⟩ wrapped in `db.transaction()` with steps 5–7
 5. Call `chunkText()` with current parameters
 6. Insert new chunks
 7. Update `documents.extracted_text`, `extraction_status`, `extraction_error`
-8. Chat history is **preserved** — not deleted on re-index
+8. Transaction commits atomically — if insert fails, old chunks are rolled back (not orphaned)
+9. Chat history is **preserved** — not deleted on re-index
 
 ### Delete cascade (reliable)
 

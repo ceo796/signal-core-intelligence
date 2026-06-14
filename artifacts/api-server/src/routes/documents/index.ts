@@ -39,18 +39,23 @@ function docToResponse(
   };
 }
 
-router.get("/documents", async (_req, res): Promise<void> => {
-  const docs = await db.select().from(documentsTable).orderBy(documentsTable.uploadedAt);
+router.get("/documents", async (req, res): Promise<void> => {
+  try {
+    const docs = await db.select().from(documentsTable).orderBy(documentsTable.uploadedAt);
 
-  const chunksCountResult = await db
-    .select({ documentId: chunksTable.documentId, cnt: count(chunksTable.id) })
-    .from(chunksTable)
-    .groupBy(chunksTable.documentId);
+    const chunksCountResult = await db
+      .select({ documentId: chunksTable.documentId, cnt: count(chunksTable.id) })
+      .from(chunksTable)
+      .groupBy(chunksTable.documentId);
 
-  const chunkMap = new Map(chunksCountResult.map((r) => [r.documentId, r.cnt]));
-  const result = docs.map((doc) => docToResponse(doc, chunkMap.get(doc.id) ?? 0));
+    const chunkMap = new Map(chunksCountResult.map((r) => [r.documentId, r.cnt]));
+    const result = docs.map((doc) => docToResponse(doc, chunkMap.get(doc.id) ?? 0));
 
-  res.json(ListDocumentsResponse.parse(result));
+    res.json(ListDocumentsResponse.parse(result));
+  } catch (err) {
+    req.log.error({ err }, "Failed to list documents");
+    res.status(500).json({ error: "Failed to list documents" });
+  }
 });
 
 router.post(
@@ -381,26 +386,24 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
     return;
   }
 
-  // Delete old chunks
-  await db.delete(chunksTable).where(eq(chunksTable.documentId, id));
-
-  // Re-chunk
+  // Delete old chunks, re-chunk, and update document atomically
   const chunks = chunkText(extractedText);
-  if (chunks.length > 0) {
-    await db.insert(chunksTable).values(
-      chunks.map((content, i) => ({ documentId: id, chunkIndex: i, content }))
-    );
-  }
-
-  // Update document record
-  await db
-    .update(documentsTable)
-    .set({
-      extractedText,
-      extractionStatus: "success",
-      extractionError: null,
-    })
-    .where(eq(documentsTable.id, id));
+  await db.transaction(async (tx) => {
+    await tx.delete(chunksTable).where(eq(chunksTable.documentId, id));
+    if (chunks.length > 0) {
+      await tx.insert(chunksTable).values(
+        chunks.map((content, i) => ({ documentId: id, chunkIndex: i, content }))
+      );
+    }
+    await tx
+      .update(documentsTable)
+      .set({
+        extractedText,
+        extractionStatus: "success",
+        extractionError: null,
+      })
+      .where(eq(documentsTable.id, id));
+  });
 
   res.json({
     id,

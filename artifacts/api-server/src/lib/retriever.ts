@@ -34,19 +34,19 @@ export async function retrieveRelevantChunks(
   chunks: { id: number; documentId: number; chunkIndex: number; content: string }[],
   topK = 5
 ): Promise<ScoredChunk[]> {
-  if (chunks.length === 0) {
+  const nonEmpty = chunks.filter((c) => c.content.trim().length > 0);
+  if (nonEmpty.length === 0) {
     return [];
   }
 
   const questionEmbedding = await getEmbedding(question);
 
-  const chunkTexts = chunks.map((c) => c.content);
   const embedResponse = await openai.embeddings.create({
     model: PROVIDER_CONFIG.embeddingModel,
-    input: chunkTexts,
+    input: nonEmpty.map((c) => c.content),
   });
 
-  const scored: ScoredChunk[] = chunks.map((chunk, i) => ({
+  const scored: ScoredChunk[] = nonEmpty.map((chunk, i) => ({
     ...chunk,
     relevanceScore: cosineSimilarity(questionEmbedding, embedResponse.data[i].embedding),
   }));
@@ -90,12 +90,23 @@ export async function retrieveAcrossDocuments(
       continue;
     }
 
+    const nonEmpty = group.chunks.filter((c) => c.content.trim().length > 0);
+    if (nonEmpty.length === 0) {
+      results.push({
+        documentId: group.documentId,
+        documentName: group.documentName,
+        chunksSearched: group.chunks.length,
+        retrieved: [],
+      });
+      continue;
+    }
+
     const embedResponse = await openai.embeddings.create({
       model: PROVIDER_CONFIG.embeddingModel,
-      input: group.chunks.map((c) => c.content),
+      input: nonEmpty.map((c) => c.content),
     });
 
-    const scored: ScoredChunk[] = group.chunks.map((chunk, i) => ({
+    const scored: ScoredChunk[] = nonEmpty.map((chunk, i) => ({
       ...chunk,
       relevanceScore: cosineSimilarity(questionEmbedding, embedResponse.data[i].embedding),
     }));

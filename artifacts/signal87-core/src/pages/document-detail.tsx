@@ -275,7 +275,7 @@ export default function DocumentDetail() {
                   </Badge>
                   <span>{formatBytes(doc.fileSize)}</span>
                   <span>{format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}</span>
-                  <span>{doc.chunkCount} CHUNKS</span>
+                  <span>{doc.chunkCount} chunks</span>
                 </div>
               </div>
             </div>
@@ -382,8 +382,8 @@ export default function DocumentDetail() {
                     {doc.extractedText ? (
                       <Card className="bg-card border-border/50 flex-1 overflow-auto">
                         <CardContent className="p-5">
-                          <p className="text-xs font-mono text-muted-foreground mb-3">
-                            EXTRACTED_TEXT_PREVIEW — original PDF not available
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Extracted text (original PDF not available)
                           </p>
                           <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
                             {doc.extractedText}

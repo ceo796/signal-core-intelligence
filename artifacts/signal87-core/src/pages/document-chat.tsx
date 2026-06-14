@@ -380,10 +380,10 @@ export default function DocumentChat() {
       <Layout>
         <div className="flex-1 flex items-center justify-center text-destructive flex-col gap-2">
           <AlertCircle className="w-8 h-8" />
-          <p className="font-mono">DOCUMENT_NOT_FOUND</p>
+          <p className="text-sm">Document not found</p>
           <Link href="/documents">
-            <Button variant="outline" className="mt-4 font-mono text-xs">
-              RETURN
+            <Button variant="outline" className="mt-4 text-xs">
+              Back to Documents
             </Button>
           </Link>
         </div>
@@ -409,8 +409,9 @@ export default function DocumentChat() {
                   {document.fileName}
                 </h2>
                 <div className="text-[10px] font-mono text-muted-foreground flex gap-2">
-                  <span>ID:{document.id}</span>
-                  <span>CHUNKS:{document.chunkCount}</span>
+                  <span>doc {document.id}</span>
+                  <span>·</span>
+                  <span>{document.chunkCount} chunks</span>
                 </div>
               </div>
             </div>
@@ -424,7 +425,7 @@ export default function DocumentChat() {
             disabled={clearHistoryMutation.isPending || !history?.length}
           >
             <Trash2 className="w-3 h-3 mr-2" />
-            CLEAR
+            Clear
           </Button>
         </header>
 

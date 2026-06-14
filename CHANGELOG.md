@@ -2,6 +2,29 @@
 
 ---
 
+## [Signal87_Core_Backend_Stability_Pass_v1] — 2026-06-14
+
+### Summary
+Backend-first stability pass in preparation for connecting `app.signal87.ai`. No new features, no API contract changes, no schema changes, no redesign. Four targeted backend hardening fixes plus six residual frontend label corrections from the previous polish pass.
+
+### Fixed — Backend
+- **`app.ts`**: Added a global Express error handler (4-arg middleware) that catches any unhandled async throw, logs it via pino, and returns `{ error: "Internal server error" }` HTTP 500 as JSON instead of an HTML page.
+- **`routes/documents/index.ts` — `GET /documents`**: Wrapped the list query in `try/catch`; DB failure now returns `500 { error: "Failed to list documents" }` instead of throwing uncaught.
+- **`routes/documents/index.ts` — `POST /api/documents/:id/reindex`**: Wrapped chunk delete + new-chunk insert + document update in `db.transaction()`. Previously, if the insert step failed, the document was left with 0 chunks permanently.
+- **`lib/retriever.ts`**: Added empty-content chunk filter (`c.content.trim().length > 0`) before the OpenAI embeddings batch call in both `retrieveRelevantChunks` and `retrieveAcrossDocuments`. An empty string in the batch causes a `400 Invalid 'input'` from OpenAI.
+
+### Fixed — Frontend (residual labels from previous polish pass)
+- **`pages/document-chat.tsx`**: `DOCUMENT_NOT_FOUND` → "Document not found"; `RETURN` button → "Back to Documents"; header sub-row `ID:{id}` / `CHUNKS:{n}` → `doc {id} · {n} chunks`; `CLEAR` → "Clear".
+- **`pages/document-detail.tsx`**: `{n} CHUNKS` in header metadata → `{n} chunks`; `EXTRACTED_TEXT_PREVIEW — original PDF not available` → "Extracted text (original PDF not available)" (removed `font-mono`).
+
+### Verification
+- `pnpm --filter @workspace/api-server run typecheck` — clean.
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- API server restarted; logs show `Server listening port: 8080`, no errors.
+- Frontend HMR applied all label changes; documents list and chat confirmed clean in screenshot.
+
+---
+
 ## [Signal87_Core_PublicDemo_Polish_v1] — 2026-06-14
 
 ### Summary
