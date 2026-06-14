@@ -1,9 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Executive_Brief_Generator_v1**
+> Checkpoint: **Signal87_Core_Executive_Brief_Quality_Polish_v1**
 > Last updated: 2026-06-14
 > Type: Manual end-to-end test plan
-> Note: The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
+> Note: The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
 ---
 
@@ -491,6 +491,93 @@ To test manually today:
 
 ---
 
+## T13i — Copy Brief source legend
+
+**Goal:** Verify that Copy Brief produces a self-contained, pasteable document.
+
+**Steps:**
+1. Navigate to `/brief`, select 1–2 documents, generate any brief type.
+2. Click `COPY_BRIEF`.
+3. Paste into a plain-text editor.
+
+**Expected:**
+- First line is `# <title>` (markdown H1).
+- Each section follows as `## <heading>` then body text with inline `[Source N]` markers.
+- A `## Sources` block appears at the end with one line per citation: `[Source N] <documentName> — Chunk <chunkIndex> (relevance <score>)`.
+- Relevance score is present when the retrieval returned one; otherwise the score suffix is omitted.
+- No dangling `[Source N]` references without a corresponding Sources entry.
+
+---
+
+## T13j — Risk Brief "Risk Assessment" citation honesty
+
+**Goal:** Confirm severity/likelihood/impact ratings are labelled as assessments, not cited as directly stated by the source.
+
+**Steps:**
+1. Select 1–2 documents, choose **Risk Brief**, generate.
+2. Expand the "Risk Assessment" section.
+
+**Expected:**
+- Severity/likelihood/impact ratings are prefixed "Assessed" (e.g. "Assessed severity: High").
+- Any `[Source N]` citation in the Risk Assessment section supports the underlying risk described, not the rating value itself.
+- The section heading reads "Risk Assessment" (not "Severity & Likelihood").
+
+---
+
+## T13k — Executive Summary non-overlapping sections
+
+**Goal:** Confirm the five sections carry distinct, non-repetitive content.
+
+**Steps:**
+1. Select 1–2 documents, choose **Executive Summary**, generate.
+2. Read each section in sequence.
+
+**Expected:**
+- Sections are: Overview / Key Findings / What Stands Out / Watch Items / Open Questions / Source Notes.
+- Overview is 1–2 sentences of context only.
+- Key Findings contains concrete source-grounded facts (not restated in other sections).
+- What Stands Out / Watch Items highlights only the most material items not already listed under Key Findings.
+- Open Questions lists gaps a decision-maker still needs that the sources don't answer.
+- Source Notes briefly notes coverage or gaps in the selected documents.
+
+---
+
+## T13l — Prompt tightening — no fluff, grounded recommendations
+
+**Goal:** Confirm generated briefs avoid evaluative marketing language and tie recommendations to cited evidence.
+
+**Steps:**
+1. Generate an Executive Summary and a Diligence Brief over the same documents.
+2. Scan section bodies for adjectives such as "innovative," "powerful," "cutting-edge," "robust," "seamless."
+3. Check any Recommendations content for citation markers.
+
+**Expected:**
+- No unsupported evaluative adjectives in section bodies.
+- Any recommendation either cites a specific `[Source N]` finding or is absent.
+- If the documents do not provide enough evidence for a section, the section states that explicitly rather than padding.
+
+---
+
+## T13m — Verification Trace synthesized-query note and section-name polish
+
+**Goal:** Confirm the Trace panel explains low relevance scores and that renamed sections appear throughout all brief types.
+
+**Steps:**
+1. Generate any brief, expand **Trace Detail**.
+2. Read the bottom of the Trace panel.
+3. Generate a Diligence Brief → check for "Open Items" (not "Outstanding Items").
+4. Generate a Comparison Brief → check for "Notes by Document" (not "Per-Document Notes").
+5. Generate a Risk Brief → check for "Risk Assessment" (not "Severity & Likelihood").
+
+**Expected:**
+- Trace panel bottom shows: "Brief generation uses a synthesized retrieval seed across selected documents. Relevance scores may be lower than direct question-answer retrieval but are used to identify supporting source chunks."
+- Diligence section heading reads "Open Items."
+- Comparison section heading reads "Notes by Document."
+- Risk section heading reads "Risk Assessment."
+- Contract Review still shows "Parties & Term" unchanged.
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -530,6 +617,11 @@ To test manually today:
 - [ ] T13f Exec Brief — focus instruction sets `focusProvided` and steers content
 - [ ] T13g Exec Brief — validation guards (0/6/comparison<2 exact msg/missing/empty)
 - [ ] T13h Exec Brief — isolation ⊆ selected docs; chat + multi-chat unaffected
+- [ ] T13i Copy Brief includes # title heading and Sources footer with doc name, chunk #, relevance score
+- [ ] T13j Risk Brief "Risk Assessment" section prefixes ratings as "Assessed"; no citation on inferred rating
+- [ ] T13k Executive Summary: five distinct non-overlapping sections (Overview / Key Findings / Watch Items / Open Questions / Source Notes)
+- [ ] T13l No evaluative fluff adjectives; recommendations cite a finding or are omitted
+- [ ] T13m Trace synthesized-query note present; renamed sections confirmed (Risk Assessment / Open Items / Notes by Document / Parties & Term kept)
 - [ ] T14 History persists across navigation
 - [ ] T15 Clear history works
 - [ ] T16 Delete cascades to GCS
