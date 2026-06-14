@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import DocumentsList from "@/pages/documents";
 import DocumentChat from "@/pages/document-chat";
+import MultiDocumentChat from "@/pages/multi-document-chat";
 import AdminStats from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
@@ -17,6 +18,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/documents" component={DocumentsList} />
+      <Route path="/compare" component={MultiDocumentChat} />
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/admin" component={AdminStats} />
       <Route component={NotFound} />

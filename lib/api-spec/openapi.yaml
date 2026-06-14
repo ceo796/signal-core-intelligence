@@ -197,6 +197,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /documents/multi-chat:
+    post:
+      operationId: multiChat
+      tags: [chat]
+      summary: Ask one question across 2-5 selected documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MultiChatInput"
+      responses:
+        "200":
+          description: Synthesized answer with grouped citations and verification trace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MultiChatResult"
+        "400":
+          description: Invalid selection (fewer than 2 or more than 5 documents, or a selected document has no chunks)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: One or more selected documents not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /documents/{id}/history:
     get:
       operationId: getChatHistory
@@ -394,6 +425,115 @@ components:
             $ref: "#/components/schemas/Citation"
         debug:
           $ref: "#/components/schemas/DebugInfo"
+
+    MultiChatInput:
+      type: object
+      required: [documentIds, question]
+      properties:
+        documentIds:
+          type: array
+          minItems: 2
+          maxItems: 5
+          items:
+            type: integer
+        question:
+          type: string
+          minLength: 1
+
+    MultiCitation:
+      type: object
+      required: [citationNumber, documentId, documentName, chunkIndex, content, relevanceScore]
+      properties:
+        citationNumber:
+          type: integer
+        documentId:
+          type: integer
+        documentName:
+          type: string
+        chunkIndex:
+          type: integer
+        content:
+          type: string
+        relevanceScore:
+          type: number
+
+    MultiChatDocumentStat:
+      type: object
+      required: [documentId, documentName, chunksSearched, chunksRetrieved]
+      properties:
+        documentId:
+          type: integer
+        documentName:
+          type: string
+        chunksSearched:
+          type: integer
+        chunksRetrieved:
+          type: integer
+
+    MultiDebugInfo:
+      type: object
+      required:
+        - route
+        - provider
+        - model
+        - fallbackUsed
+        - documentIds
+        - documentNames
+        - documentsSearched
+        - chunksSearched
+        - chunksRetrieved
+        - chunksRetrievedByDocument
+        - retrievalLatencyMs
+        - llmLatencyMs
+        - totalLatencyMs
+      properties:
+        route:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        fallbackUsed:
+          type: boolean
+        documentIds:
+          type: array
+          items:
+            type: integer
+        documentNames:
+          type: array
+          items:
+            type: string
+        documentsSearched:
+          type: integer
+        chunksSearched:
+          type: integer
+        chunksRetrieved:
+          type: integer
+        chunksRetrievedByDocument:
+          type: array
+          items:
+            $ref: "#/components/schemas/MultiChatDocumentStat"
+        retrievalLatencyMs:
+          type: number
+        llmLatencyMs:
+          type: number
+        totalLatencyMs:
+          type: number
+        errors:
+          type: ["string", "null"]
+
+    MultiChatResult:
+      type: object
+      required: [answer, citations, debug]
+      properties:
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/MultiCitation"
+        debug:
+          $ref: "#/components/schemas/MultiDebugInfo"
 
     ChatMessage:
       type: object

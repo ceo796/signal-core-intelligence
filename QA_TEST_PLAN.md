@@ -201,6 +201,58 @@ diff /tmp/original.txt /tmp/retrieved.txt  # should produce no output
 
 ---
 
+## T13a — Multi-doc comparison: valid 2–5 doc compare
+
+**Goal:** Compare 2–5 documents in one synthesized answer with grouped citations and a trace.
+
+**Steps:**
+1. Navigate to `/compare`
+2. Select 2 documents that share a topic (e.g. two policies)
+3. Ask one comparison question and click COMPARE
+
+**Expected:**
+- One synthesized answer that names agreements and/or differences
+- Inline `[Source N]` pills in the answer
+- Citations grouped under each source document heading
+- Verification Trace + Trace Detail showing provider `openai`, model `gpt-4o-mini`, docs searched = N, per-document chunk counts, latencies, fallback = NO
+
+---
+
+## T13b — Multi-doc comparison: validation guards
+
+**Steps (via `POST /api/documents/multi-chat`):**
+1. Send 1 document id → expect 400 ("between 2 and 5")
+2. Send 6 document ids → expect 400
+3. Send duplicate ids that collapse to <2 distinct → expect 400 ("at least 2 distinct")
+4. Send a nonexistent document id → expect 404 naming the missing id
+5. Send a document with zero indexed chunks → expect 400 naming the empty document
+
+**Expected:** Each case returns the stated status and a clear error message; no LLM call is made on validation failure.
+
+---
+
+## T13c — Multi-doc comparison: document isolation
+
+**Goal:** Only the selected documents appear in citations and trace.
+
+**Steps:**
+1. Select documents A and B (exclude C)
+2. Run a comparison
+
+**Expected:** All `citations[].documentId` and `debug.documentIds` are a subset of {A, B}; document C never appears.
+
+---
+
+## T13d — Multi-doc comparison: single-doc chat unaffected
+
+**Goal:** Adding multi-chat does not regress single-document chat.
+
+**Steps:** After running a multi-doc comparison, send a normal `POST /api/documents/:id/chat` request.
+
+**Expected:** 200 with answer + citations + `debug.route` = `POST /api/documents/:id/chat`; behavior unchanged.
+
+---
+
 ## T14 — Chat history persistence
 
 **Steps:**
@@ -337,6 +389,10 @@ To test manually today:
 - [ ] T11b Inline citation pill parsing edge cases
 - [ ] T12 Citation maps to correct chunk
 - [ ] T13 Chat scoped to selected document
+- [ ] T13a Multi-doc compare returns synthesized answer + grouped citations + trace
+- [ ] T13b Multi-doc validation guards (1/6/dupe/missing/empty)
+- [ ] T13c Multi-doc isolation — only selected docs in citations/trace
+- [ ] T13d Single-doc chat unaffected by multi-chat
 - [ ] T14 History persists across navigation
 - [ ] T15 Clear history works
 - [ ] T16 Delete cascades to GCS

@@ -1,0 +1,149 @@
+We are ready to add the next controlled capability to Signal87 Core: Multi-Document Comparison.
+
+Important:
+The current stable checkpoint is Signal87_Core_Verification_Trace_Polish_v1.
+Do not disturb the stable v2 backend architecture.
+Do not add global search.
+Do not add Gemini.
+Do not add billing.
+Do not add agents.
+Do not redesign the app.
+
+Goal:
+Add a narrow, controlled multi-document comparison feature.
+
+The user should be able to:
+1. Select 2–5 uploaded documents.
+2. Ask one question across only those selected documents.
+3. Receive one synthesized answer.
+4. See citations grouped by document.
+5. See a Verification Trace showing exactly which documents were searched, how many chunks were retrieved from each, provider/model used, latency, and fallback status.
+
+Implementation order:
+
+Phase 1 — Review current architecture
+1. Review the existing single-document chat flow:
+   - frontend chat component
+   - POST /api/documents/:id/chat
+   - retriever
+   - OpenAI call
+   - citation payload
+   - Verification Trace rendering
+
+2. Identify the minimum reusable functions for multi-document:
+   - retrieval
+   - citation formatting
+   - OpenAI prompt construction
+   - debug/trace payload generation
+
+Do not code yet until this map is clear.
+
+Phase 2 — Backend route
+3. Add a new backend route:
+
+   POST /api/documents/multi-chat
+
+4. Request body should include:
+   - documentIds: array of document IDs
+   - question: string
+
+5. Validate:
+   - minimum 2 documents
+   - maximum 5 documents
+   - all documents exist
+   - all documents have chunks
+   - no global search
+   - no documents outside the selected list
+
+6. Retrieval should:
+   - search chunks only from selected documents
+   - retrieve relevant chunks per document
+   - preserve document identity for every chunk
+   - include document name in citation metadata
+
+7. The response should include:
+   - answer
+   - citations
+   - documentsSearched
+   - chunksSearched
+   - chunksRetrieved
+   - chunksRetrievedByDocument
+   - provider
+   - model
+   - route
+   - latency
+   - fallbackUsed: false
+
+Phase 3 — Prompting
+8. The system prompt should instruct the model to:
+   - compare only the selected documents
+   - cite claims using source chunks
+   - identify agreements between documents
+   - identify differences or contradictions when relevant
+   - state when the selected documents do not contain enough information
+   - avoid using outside knowledge
+
+9. Do not change the existing single-document prompt unless absolutely necessary.
+
+Phase 4 — Frontend
+10. Add a multi-document comparison UI without redesigning the app:
+   - allow selecting 2–5 documents
+   - add a question box
+   - show the synthesized answer
+   - show citation chips grouped by document
+   - show expandable source excerpts
+   - show Verification Trace
+
+11. Keep the existing single-document chat flow intact.
+
+Phase 5 — Verification Trace
+12. Multi-document Verification Trace should show:
+   - route: POST /api/documents/multi-chat
+   - provider used
+   - model used
+   - fallback used yes/no
+   - selected document IDs
+   - selected document names
+   - chunks searched per document
+   - chunks retrieved per document
+   - total chunks searched
+   - total chunks retrieved
+   - retrieval latency
+   - LLM latency
+   - total latency
+
+Phase 6 — Tests
+13. Add QA tests for:
+   - selecting fewer than 2 documents
+   - selecting more than 5 documents
+   - asking across 2 valid documents
+   - citations grouped by document
+   - no unselected document appears in retrieval
+   - selected document with no chunks returns clear error
+   - Verification Trace accurately lists selected documents
+   - single-document chat still works unchanged
+   - upload/download/re-index still works unchanged
+
+Phase 7 — Documentation
+14. Update:
+   - BACKEND_MAP.md
+   - CHANGELOG.md
+   - QA_TEST_PLAN.md
+
+15. Create a checkpoint after successful verification:
+
+   Signal87_Core_Multi_Document_Comparison_v1
+
+Hard constraints:
+- No Gemini.
+- No fallback provider.
+- No global workspace search.
+- No agents.
+- No billing.
+- No UI redesign.
+- Do not change durable file storage.
+- Do not break single-document chat.
+- Do not change upload, download, delete, or re-index behavior.
+
+Goal:
+Add controlled multi-document intelligence while preserving the stable architecture and maintaining full auditability through Verification Trace.

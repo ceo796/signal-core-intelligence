@@ -351,6 +351,7 @@ router.get("/system/info", (_req, res): void => {
       "GET  /api/documents/:id/chunks",
       "GET  /api/documents/:id/original",
       "POST /api/documents/:id/reindex",
+      "POST /api/documents/multi-chat",
       "POST /api/documents/:id/chat",
       "GET  /api/documents/:id/history",
       "DELETE /api/documents/:id/history",

@@ -28,6 +28,8 @@ import type {
   Document,
   ErrorResponse,
   HealthStatus,
+  MultiChatInput,
+  MultiChatResult,
   ReindexResult,
   SystemInfo
 } from './api.schemas';
@@ -639,6 +641,77 @@ export const useChatWithDocument = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getChatWithDocumentMutationOptions(options));
+    }
+
+export const getMultiChatUrl = () => {
+
+
+
+
+  return `/api/documents/multi-chat`
+}
+
+/**
+ * @summary Ask one question across 2-5 selected documents
+ */
+export const multiChat = async (multiChatInput: MultiChatInput, options?: RequestInit): Promise<MultiChatResult> => {
+
+  return customFetch<MultiChatResult>(getMultiChatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      multiChatInput,)
+  }
+);}
+
+
+
+
+export const getMultiChatMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof multiChat>>, TError,{data: BodyType<MultiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof multiChat>>, TError,{data: BodyType<MultiChatInput>}, TContext> => {
+
+const mutationKey = ['multiChat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof multiChat>>, {data: BodyType<MultiChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  multiChat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MultiChatMutationResult = NonNullable<Awaited<ReturnType<typeof multiChat>>>
+    export type MultiChatMutationBody = BodyType<MultiChatInput>
+    export type MultiChatMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Ask one question across 2-5 selected documents
+ */
+export const useMultiChat = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof multiChat>>, TError,{data: BodyType<MultiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof multiChat>>,
+        TError,
+        {data: BodyType<MultiChatInput>},
+        TContext
+      > => {
+      return useMutation(getMultiChatMutationOptions(options));
     }
 
 export const getGetChatHistoryUrl = (id: number,) => {

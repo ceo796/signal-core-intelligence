@@ -78,6 +78,56 @@ export interface ChatResponse {
   debug: DebugInfo;
 }
 
+export interface MultiChatInput {
+  /**
+     * @minItems 2
+     * @maxItems 5
+     */
+  documentIds: number[];
+  /** @minLength 1 */
+  question: string;
+}
+
+export interface MultiCitation {
+  citationNumber: number;
+  documentId: number;
+  documentName: string;
+  chunkIndex: number;
+  content: string;
+  relevanceScore: number;
+}
+
+export interface MultiChatDocumentStat {
+  documentId: number;
+  documentName: string;
+  chunksSearched: number;
+  chunksRetrieved: number;
+}
+
+export interface MultiDebugInfo {
+  route: string;
+  provider: string;
+  model: string;
+  fallbackUsed: boolean;
+  documentIds: number[];
+  documentNames: string[];
+  documentsSearched: number;
+  chunksSearched: number;
+  chunksRetrieved: number;
+  chunksRetrievedByDocument: MultiChatDocumentStat[];
+  retrievalLatencyMs: number;
+  llmLatencyMs: number;
+  totalLatencyMs: number;
+  /** @nullable */
+  errors?: string | null;
+}
+
+export interface MultiChatResult {
+  answer: string;
+  citations: MultiCitation[];
+  debug: MultiDebugInfo;
+}
+
 export interface ChatMessage {
   id: number;
   documentId: number;

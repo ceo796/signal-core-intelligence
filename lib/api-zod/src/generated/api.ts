@@ -146,6 +146,54 @@ export const ChatWithDocumentResponse = zod.object({
 
 
 /**
+ * @summary Ask one question across 2-5 selected documents
+ */
+export const multiChatBodyDocumentIdsMin = 2;
+export const multiChatBodyDocumentIdsMax = 5;
+
+
+
+
+export const MultiChatBody = zod.object({
+  "documentIds": zod.array(zod.number()).min(multiChatBodyDocumentIdsMin).max(multiChatBodyDocumentIdsMax),
+  "question": zod.string().min(1)
+})
+
+export const MultiChatResponse = zod.object({
+  "answer": zod.string(),
+  "citations": zod.array(zod.object({
+  "citationNumber": zod.number(),
+  "documentId": zod.number(),
+  "documentName": zod.string(),
+  "chunkIndex": zod.number(),
+  "content": zod.string(),
+  "relevanceScore": zod.number()
+})),
+  "debug": zod.object({
+  "route": zod.string(),
+  "provider": zod.string(),
+  "model": zod.string(),
+  "fallbackUsed": zod.boolean(),
+  "documentIds": zod.array(zod.number()),
+  "documentNames": zod.array(zod.string()),
+  "documentsSearched": zod.number(),
+  "chunksSearched": zod.number(),
+  "chunksRetrieved": zod.number(),
+  "chunksRetrievedByDocument": zod.array(zod.object({
+  "documentId": zod.number(),
+  "documentName": zod.string(),
+  "chunksSearched": zod.number(),
+  "chunksRetrieved": zod.number()
+})),
+  "retrievalLatencyMs": zod.number(),
+  "llmLatencyMs": zod.number(),
+  "totalLatencyMs": zod.number(),
+  "errors": zod.string().nullish()
+})
+})
+
+
+/**
  * @summary Get chat history for a document
  */
 export const GetChatHistoryParams = zod.object({

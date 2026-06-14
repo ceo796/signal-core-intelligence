@@ -1,8 +1,8 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Durable_File_Storage_v2**
+> Checkpoint: **Signal87_Core_Multi_Document_Comparison_v1**
 > Last updated: 2026-06-14
-> Note: The `Signal87_Core_Verification_Trace_Polish_v1` checkpoint is **frontend-only** — no backend routes, prompts, citation payload, storage, retrieval, or upload/delete behavior changed. This map remains accurate.
+> Note: `Signal87_Core_Multi_Document_Comparison_v1` adds one additive route (`POST /api/documents/multi-chat`) and one retriever helper (`retrieveAcrossDocuments`). Single-doc chat, prompts, citation payload, storage, upload/download/delete/reindex, and OpenAI routing are unchanged. Multi-chat is ephemeral (not persisted). The earlier `Verification_Trace_Polish_v1` checkpoint was frontend-only.
 
 ---
 
@@ -287,6 +287,7 @@ DELETE /api/documents/:id
 GET    /api/documents/:id/chunks
 GET    /api/documents/:id/original     ← NEW v2
 POST   /api/documents/:id/reindex      ← NEW v2
+POST   /api/documents/multi-chat       ← NEW multi-doc comparison
 POST   /api/documents/:id/chat
 GET    /api/documents/:id/history
 DELETE /api/documents/:id/history
@@ -304,14 +305,15 @@ artifacts/api-server/
     index.ts              ← entry point — reads PORT, calls app.listen()
     app.ts                ← Express app, middleware, mounts /api router
     routes/
-      index.ts            ← combines health + documents + chat routers
+      index.ts            ← combines health + documents + multi-chat + chat routers
       health/index.ts     ← GET /api/healthz
       documents/index.ts  ← document CRUD, upload, original, reindex, admin/stats, system/info
-      chat/index.ts       ← POST chat, GET/DELETE history
+      chat/index.ts       ← POST chat, GET/DELETE history (single-doc)
+      multi-chat/index.ts ← POST /documents/multi-chat (2–5 doc comparison, ephemeral)
     lib/
       ai-provider.ts      ← OpenAI singleton + PROVIDER_CONFIG
       chunker.ts          ← chunkText() — 500-word chunks, 50 overlap
-      retriever.ts        ← cosine similarity retrieval via OpenAI embeddings
+      retriever.ts        ← cosine similarity retrieval (single-doc + retrieveAcrossDocuments)
       text-extractor.ts   ← PDF / DOCX / TXT / CSV → plain text
       file-store.ts       ← GCS upload / download / delete for original files (NEW v2)
       objectStorage.ts    ← GCS client wrapper (Replit sidecar auth)
@@ -335,6 +337,7 @@ artifacts/signal87-core/  ← React + Vite frontend (separate process)
     pages/
       home.tsx            ← landing page
       documents.tsx       ← document list + upload trigger
-      document-chat.tsx   ← chat interface with Verification Trace + citation chips
+      document-chat.tsx   ← single-doc chat with Verification Trace + citation chips
+      multi-document-chat.tsx ← /compare — 2–5 doc comparison, grouped citations + trace
       admin.tsx           ← System Panel (stats + backend architecture + storage config)
 ```
