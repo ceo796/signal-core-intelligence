@@ -2,6 +2,36 @@
 
 ---
 
+## [Signal87_Core_Reliability_Clarity_Pass_v1] — 2026-06-15
+
+### Summary
+Reliability + clarity hardening pass on the existing MVP. **No new features**, no redesign, no schema changes, and no changes to the working PDF viewer / durable storage / upload / download / delete / re-index mechanics or the citation + Verification Trace contract. One additive API contract change (a documented `422` on chat), plus frontend status clarity, friendlier error/empty states, and sparse structured backend logging.
+
+### Changed — API contract
+- **`lib/api-spec/openapi.yaml`**: `POST /documents/{id}/chat` now documents a `422 → ErrorResponse` for documents that have no readable text. Client regenerated via `pnpm --filter @workspace/api-spec run codegen` (no new routes, no schema changes).
+
+### Fixed / Added — Backend
+- **`routes/chat/index.ts` — not-ready guard:** before any OpenAI call, chat now returns `422 { error }` when the document has **0 indexed chunks _or_ `extractionStatus === "failed"`** (mirrors the multi-chat/brief routes and matches the frontend "not ready" gate). Prevents an empty/stale-context LLM call and gives the user an actionable message.
+- **`routes/chat/index.ts` — Q&A logging:** one structured outcome log per request — `info "Q&A succeeded"` (`documentId`, `provider`, `model`, `chunksSearched`, `chunksRetrieved`, `totalLatencyMs`) or `warn "Q&A rejected…"`. **No question or answer content is ever logged** (PII boundary).
+- **`routes/documents/index.ts` — upload logging:** `info` on successful upload (with `chunkCount`) and `warn` on the `207` extraction-failed path (`documentId`, `fileType`); no file content logged.
+- **`routes/documents/index.ts` — reindex bookkeeping:** the "no text extracted" re-index path now sets `extractionStatus = "failed"` + `extractionError` (previously left stale) and emits a reindex success log. Re-index success/atomic-transaction mechanics are unchanged.
+
+### Added — Frontend (clarity only, no redesign)
+- **`src/lib/document-status.ts` (new):** shared `getDocumentStatus()` deriving five states from existing API fields only — **Processing**, **Ready**, **Extraction failed**, **Original file missing**, **Needs re-upload** — plus `canReindex` / `needsReupload` / `isReady` flags. No backend enum added.
+- **`src/components/document-status-badge.tsx` (new):** small tone-colored badge used by the list and detail pages.
+- **`src/pages/documents.tsx`:** status badge on each card; the primary action is now conditional — **Re-Index** for failed/0-chunk docs (with original available), **Ask a Question** for ready docs, disabled otherwise; per-card re-indexing spinner state; re-index success now invalidates `listDocuments` + `getDocument` + `getDocumentChunks`.
+- **`src/pages/document-detail.tsx`:** status badge in the header and a "not ready" banner when applicable.
+- **`src/pages/document-chat.tsx`:** when the document is not ready, the input is disabled with an explanatory inline banner (no API call is made); a "no source citations" note is shown when an answer returns zero citations; citation markers/chips now read **"Section N · {doc}"** instead of "Chunk N" (display-only — `chunkIndex`, prompt, parsing, and the Verification Trace payload are unchanged).
+- **`src/components/file-upload.tsx`:** shows accepted types + 20 MB max; validates extension and size client-side with a clean inline message; surfaces the server's `{ error }` message on failure; treats an HTTP `207` (uploaded but extraction failed) as a **warning** toast, not success.
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+- Backend smoke: `POST /documents/22/chat` (0 chunks, status failed) → `422` with the clear message and **no OpenAI call**; `POST /documents/5/chat` (ready) → `200` with answer + citations + `provider/model` in the trace.
+- Structured logs confirmed in server output (`Q&A succeeded` / `Q&A rejected…`) with no document/question/answer content.
+- Documents list screenshot confirmed: green **Ready** badges, red **Extraction failed** badge on the 0-chunk PDF, and that card correctly shows **Re-Index** instead of "Ask a Question".
+
+---
+
 ## [Signal87_Core_Backend_Stability_Pass_v1] — 2026-06-14
 
 ### Summary

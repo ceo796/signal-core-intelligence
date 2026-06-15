@@ -33,6 +33,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PdfViewer } from "@/components/pdf-viewer";
+import { DocumentStatusBadge } from "@/components/document-status-badge";
+import { getDocumentStatus } from "@/lib/document-status";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -229,6 +231,7 @@ export default function DocumentDetail() {
   }
 
   const extractionOk = doc.extractionStatus?.toLowerCase() === "success";
+  const status = getDocumentStatus(doc);
 
   const messagePairs: { question: string; answer: string; at: string; citations: number | null }[] = [];
   if (history) {
@@ -273,6 +276,7 @@ export default function DocumentDetail() {
                   <Badge variant="secondary" className="font-mono">
                     {doc.fileType.toUpperCase()}
                   </Badge>
+                  <DocumentStatusBadge doc={doc} />
                   <span>{formatBytes(doc.fileSize)}</span>
                   <span>{format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}</span>
                   <span>{doc.chunkCount} chunks</span>
@@ -344,6 +348,13 @@ export default function DocumentDetail() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+
+          {!status.isReady && (
+            <div className="flex items-start gap-3 rounded border border-destructive/30 bg-destructive/5 p-3">
+              <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs text-foreground/80 leading-relaxed">{status.description}</p>
+            </div>
+          )}
         </header>
 
         {/* Tabs */}

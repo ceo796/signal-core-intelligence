@@ -1,8 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Core_Flow_Simplification_v1**
-> Last updated: 2026-06-14
+> Checkpoint: **Signal87_Core_Reliability_Clarity_Pass_v1**
+> Last updated: 2026-06-15
 > Type: Manual end-to-end test plan
+> Note (Reliability_Clarity_Pass_v1): New tests **T29–T35** cover document status labels, list-level Re-Index for failed/0-chunk docs, the chat not-ready gate (frontend) + `422` guard (backend), upload validation + server-error surfacing, citation "Section N" labels + the no-citations note, and structured Q&A/upload logging. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index mechanics / citation + Verification Trace payload) was changed.
 > Scope note (Core_Flow_Simplification_v1): The Multi-document Comparison (`/compare`), Executive Brief (`/brief`), and Admin Stats (`/admin`) features are now **hidden from the UI** — their nav items, routes, and the document-detail Compare/Generate-Brief buttons were removed. Tests that begin by navigating to `/compare`, `/brief`, or `/admin` in the UI (e.g. T13a–T13h, T18/admin, and the detail-page "Compare"/"Generate Brief" steps in T22) are **N/A for this build**; those routes now resolve to NotFound. The backend endpoints remain and can still be exercised directly (e.g. `POST /api/documents/brief`). All core-flow tests (upload → list → detail → PDF preview → single-doc chat → citations/trace → delete) remain in force.
 > Note: Answer Rendering Polish (T28) is a frontend-only change — shared `MarkdownAnswer` component replaces `whitespace-pre-wrap` plain text in all three answer surfaces; no API, retrieval, or citation payload changes. The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
 
@@ -628,6 +629,122 @@ To test manually today:
 
 ---
 
+## T29 — Document status labels (list + detail)
+
+**Goal:** Verify the derived status badge reflects the document's true state.
+
+**Steps:**
+1. Open `/documents` with a mix of documents (at least one ready, one with 0 chunks / failed extraction).
+2. Open a ready document's detail page, then a failed one.
+
+**Expected:**
+- Ready document (chunks > 0, `extractionStatus: "success"`, original available) → green **Ready** badge.
+- 0-chunk or `extractionStatus: "failed"` document with original available → red **Extraction failed** badge.
+- Failed/0-chunk document **without** original available → **Needs re-upload**.
+- Ready document whose original file is missing → **Original file missing** (still answerable).
+- `extractionStatus: "pending"` → **Processing**.
+- Detail header shows the same badge and a "not ready" banner for non-ready states.
+- No layout/redesign change to existing cards beyond the badge.
+
+---
+
+## T30 — Re-Index a failed / 0-chunk document from the list
+
+**Goal:** Verify the list-level Re-Index action and cache invalidation.
+
+**Steps:**
+1. On `/documents`, find a card showing **Extraction failed** with the original available.
+2. Confirm it shows a **Re-Index** button (not "Ask a Question").
+3. Click **Re-Index**; wait for completion.
+
+**Expected:**
+- Button shows a per-card loading state while running (other cards unaffected).
+- Toast "Re-index complete" on success.
+- The card's badge + chunk count refresh without a manual reload (list, detail, and chunks queries are invalidated).
+- If re-extraction still yields no text, the document stays **Extraction failed** (backend marks `extractionStatus: "failed"`).
+
+---
+
+## T31 — Chat blocked on a not-ready document (frontend gate + backend 422)
+
+**Goal:** Verify a not-ready document cannot be queried and gives a clear message.
+
+**Steps:**
+1. Open the chat page for a 0-chunk / failed document.
+2. Observe the input.
+3. Directly call `POST /api/documents/:id/chat` for that document (e.g. via curl).
+
+**Expected:**
+- Frontend: input is **disabled** with an explanatory inline banner linking back to the document; **no API call** is made.
+- Backend: the direct call returns **HTTP 422** with `{ "error": "This document has no readable text yet…" }` and **no OpenAI call** is made.
+- A ready document is unaffected: input enabled, chat returns `200` with answer + citations + Verification Trace.
+
+---
+
+## T32 — Upload validation (client-side)
+
+**Goal:** Verify the upload modal validates before sending and shows limits.
+
+**Steps:**
+1. Open the upload modal.
+2. Attempt a file with an unsupported extension (e.g. `.zip`).
+3. Attempt a supported file larger than 20 MB.
+4. Upload a valid file.
+
+**Expected:**
+- Modal shows accepted types + **20 MB max**.
+- Unsupported extension → clean inline error, no request sent.
+- Oversize file → clean inline error, no request sent.
+- Valid file uploads normally (mechanics unchanged).
+
+---
+
+## T33 — Server error surfaced on upload + 207 warning
+
+**Goal:** Verify the modal reflects the server's response faithfully.
+
+**Steps:**
+1. Trigger an upload that the server rejects (e.g. unsupported type reaching the server, or storage unconfigured → 503).
+2. Upload a file whose text extraction fails (scanned PDF → 207).
+
+**Expected:**
+- Server rejection → the modal surfaces the server's `{ error }` message (not a generic string).
+- 207 (uploaded but extraction failed) → a **warning** toast (not a success toast); the document appears as **Extraction failed** and is re-indexable.
+
+---
+
+## T34 — Citation labels + no-citations note (display only)
+
+**Goal:** Verify citation clarity changes without altering the citation payload.
+
+**Steps:**
+1. Ask a question that returns citations.
+2. Inspect the inline citation markers/chips and the Verification Trace.
+3. Ask a question that returns an answer with zero citations (if reproducible).
+
+**Expected:**
+- Citation markers/chips read **"Section N · {doc}"** instead of "Chunk N".
+- The Verification Trace payload (`chunkIndex`, `relevanceScore`, excerpts, provider/model/latencies) is unchanged — only the display label changed.
+- An answer with zero citations shows a small **"no source citations"** note.
+
+---
+
+## T35 — Structured backend logging (no content leakage)
+
+**Goal:** Verify sparse structured logs exist and never log document/question/answer text.
+
+**Steps:**
+1. Tail the API server logs.
+2. Perform: a successful chat, a chat on a not-ready document, a successful upload, and an extraction-failed (207) upload.
+
+**Expected:**
+- Successful chat → one `info "Q&A succeeded"` with `documentId` / `provider` / `model` / `chunksSearched` / `chunksRetrieved` / `totalLatencyMs`.
+- Not-ready chat → one `warn "Q&A rejected…"` with `documentId` / `extractionStatus` / `chunkCount`.
+- Upload → `info` success (with `chunkCount`); 207 → `warn` extraction-failed.
+- **No log line contains the question, the answer, or file content.**
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -688,3 +805,10 @@ To test manually today:
 - [ ] T26 Additive `extractedText` read-only; list payload stays light
 - [ ] T27 PDF viewer renders + page nav + zoom + fit-to-width + error/Download fallback
 - [ ] T27 Non-PDF fallback, no-original state, and no pdf.js worker console errors
+- [ ] T29 Status badges correct across Ready / Extraction failed / Needs re-upload / Original file missing / Processing
+- [ ] T30 List-level Re-Index runs with per-card state and refreshes badge/chunks without reload
+- [ ] T31 Not-ready chat: frontend input disabled (no call) + backend returns 422 with no OpenAI call
+- [ ] T32 Upload validation: unsupported extension and >20 MB blocked client-side
+- [ ] T33 Server `{ error }` surfaced on upload failure; 207 shows a warning toast
+- [ ] T34 Citation markers read "Section N · {doc}"; no-citations note shown; Trace payload unchanged
+- [ ] T35 Structured Q&A/upload logs present; no question/answer/file content logged

@@ -35,6 +35,7 @@ import {
 import { toast } from "sonner";
 import type { DebugInfo, Citation } from "@workspace/api-client-react";
 import { MarkdownAnswer } from "@/components/markdown-answer";
+import { getDocumentStatus } from "@/lib/document-status";
 
 function Row({
   label,
@@ -72,7 +73,7 @@ function InlineCitation({
       type="button"
       onClick={onActivate}
       disabled={!hasSource}
-      title={hasSource ? `View source — Chunk ${n}` : `Chunk ${n}`}
+      title={hasSource ? `View source — Section ${n}` : `Section ${n}`}
       className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-mono font-semibold leading-none transition-colors ${
         active
           ? "bg-primary text-primary-foreground"
@@ -120,7 +121,7 @@ function CitationChip({
           {citation.chunkIndex + 1}
         </span>
         <span className="text-[11px] text-muted-foreground/70 truncate flex-1 min-w-0">
-          {documentName}
+          Section {citation.chunkIndex + 1} · {documentName}
         </span>
         {score > 0 && (
           <span className={`font-mono text-[11px] shrink-0 ${scoreColor}`}>
@@ -263,6 +264,12 @@ function AssistantAnswer({
             )}
           </div>
 
+          {citations.length === 0 && (
+            <p className="font-mono text-[10px] text-muted-foreground/50 italic">
+              No source citations were returned for this answer.
+            </p>
+          )}
+
           {citations.length > 0 && (
             <div className="space-y-1.5">
               {citations.map((cit) => (
@@ -391,6 +398,8 @@ export default function DocumentChat() {
     );
   }
 
+  const status = getDocumentStatus(document);
+
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative">
@@ -432,7 +441,23 @@ export default function DocumentChat() {
         {/* Messages */}
         <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
           <div className="max-w-3xl mx-auto space-y-6 pb-6">
-            {history?.length === 0 ? (
+            {!status.isReady && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    This document isn't ready for questions yet
+                  </p>
+                  <p className="text-sm text-muted-foreground">{status.description}</p>
+                  <Link href={`/documents/${document.id}`}>
+                    <Button variant="outline" size="sm" className="text-xs mt-1">
+                      Open document
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+            {history?.length === 0 && status.isReady ? (
               <div className="text-center py-20 text-muted-foreground">
                 <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
                 <h3 className="font-semibold mb-2 text-foreground">Ready for your questions</h3>
@@ -508,13 +533,17 @@ export default function DocumentChat() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a question about this document..."
+              placeholder={
+                status.isReady
+                  ? "Ask a question about this document..."
+                  : "This document can't answer questions yet"
+              }
               className="bg-background border-border flex-1 font-mono text-sm h-12"
-              disabled={chatMutation.isPending}
+              disabled={chatMutation.isPending || !status.isReady}
             />
             <Button
               type="submit"
-              disabled={!input.trim() || chatMutation.isPending}
+              disabled={!input.trim() || chatMutation.isPending || !status.isReady}
               className="h-12 w-12 shrink-0 p-0"
             >
               <Send className="w-4 h-4" />

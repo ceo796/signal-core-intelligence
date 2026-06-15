@@ -148,6 +148,10 @@ router.post(
     }
 
     if (extractionStatus === "failed") {
+      req.log.warn(
+        { documentId: doc.id, fileName: file.originalname, fileType, fileSize: file.size, extractionError },
+        "Upload stored but text extraction failed",
+      );
       res.status(207).json({
         ...docToResponse(doc, chunkCount),
         warning: "Original file stored, but text extraction failed. Re-index to retry. " + (extractionError ?? ""),
@@ -155,6 +159,10 @@ router.post(
       return;
     }
 
+    req.log.info(
+      { documentId: doc.id, fileName: file.originalname, fileType, fileSize: file.size, chunkCount },
+      "Upload succeeded",
+    );
     res.status(201).json(docToResponse(doc, chunkCount));
   }
 );
@@ -382,7 +390,13 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
   }
 
   if (!extractedText.trim()) {
-    res.status(422).json({ error: "No text could be extracted from the stored file" });
+    const noTextError = "No text could be extracted from the stored file";
+    await db
+      .update(documentsTable)
+      .set({ extractionStatus: "failed", extractionError: noTextError })
+      .where(eq(documentsTable.id, id));
+    req.log.warn({ documentId: id, fileType: doc.fileType }, "Re-index produced no readable text");
+    res.status(422).json({ error: noTextError });
     return;
   }
 
@@ -404,6 +418,8 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
       })
       .where(eq(documentsTable.id, id));
   });
+
+  req.log.info({ documentId: id, fileType: doc.fileType, chunkCount: chunks.length }, "Re-index succeeded");
 
   res.json({
     id,

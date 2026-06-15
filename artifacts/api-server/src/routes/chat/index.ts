@@ -43,6 +43,23 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     .where(eq(chunksTable.documentId, id))
     .orderBy(chunksTable.chunkIndex);
 
+  // Guard: a document with no indexed chunks (or a failed extraction) cannot
+  // ground an answer. Return a clear error instead of calling OpenAI with empty
+  // or stale context (mirrors the multi-chat and brief routes, and matches the
+  // frontend "not ready" gate).
+  const extractionFailed = (doc.extractionStatus ?? "").toLowerCase() === "failed";
+  if (allChunks.length === 0 || extractionFailed) {
+    req.log.warn(
+      { documentId: id, extractionStatus: doc.extractionStatus, chunkCount: allChunks.length },
+      "Q&A rejected: document is not ready (no readable text)",
+    );
+    res.status(422).json({
+      error:
+        "This document has no readable text yet, so it can't answer questions. Re-index it (or re-upload the original file), then try again.",
+    });
+    return;
+  }
+
   const retrievalStart = Date.now();
   let retrievedChunks;
   let retrievalError: string | null = null;
@@ -128,6 +145,23 @@ ${contextBlocks}`;
       debug: JSON.stringify({ debug, citations }),
     },
   ]);
+
+  // Structured Q&A outcome log (no question/answer content — may be sensitive).
+  const qaLog = {
+    documentId: id,
+    provider: PROVIDER_CONFIG.provider,
+    model: PROVIDER_CONFIG.model,
+    chunksSearched: allChunks.length,
+    chunksRetrieved: retrievedChunks.length,
+    totalLatencyMs,
+  };
+  if (llmError) {
+    req.log.error({ ...qaLog, retrievalError, llmError }, "Q&A failed");
+  } else if (retrievalError) {
+    req.log.warn({ ...qaLog, retrievalError }, "Q&A succeeded with degraded retrieval");
+  } else {
+    req.log.info(qaLog, "Q&A succeeded");
+  }
 
   res.json({ answer, citations, debug });
 });
