@@ -83,29 +83,36 @@ export default function MichaelBenezra() {
               conclusions.
             </p>
             <p>
-              {/* PLACEHOLDER: Add specific firm names, roles, and dates here once confirmed. */}
-              <span className="italic text-muted-foreground/60">
-                [ Firm names, roles, and dates — to be added by Michael Benezra ]
-              </span>
+              He is the founder of <strong className="text-foreground">GK Fund</strong>, a venture
+              capital fund focused on early-stage technology companies, and{" "}
+              <strong className="text-foreground">Erez Capital</strong>, a VC fund he launched to
+              continue backing emerging technology startups.
             </p>
           </Section>
 
           <Section title="Education">
             <p>
-              {/* PLACEHOLDER: Add educational credentials here once confirmed. */}
               <span className="italic text-muted-foreground/60">
-                [ Educational credentials — to be added by Michael Benezra ]
+                [ Educational credentials — to be added ]
               </span>
             </p>
           </Section>
 
           <Section title="Affiliations">
-            <p>
-              {/* PLACEHOLDER: Add board memberships, advisory roles, or professional affiliations here. */}
-              <span className="italic text-muted-foreground/60">
-                [ Board memberships, advisory roles, and affiliations — to be added by Michael Benezra ]
-              </span>
-            </p>
+            <ul className="space-y-1.5 list-disc list-inside">
+              <li>
+                Advisory Board Member,{" "}
+                <a
+                  href="https://netcapital.com/files/dff9c869-1e09-4439-bde8-c49f277d31b5"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  AIEDC (American Innovation &amp; Entrepreneurship Development Council)
+                </a>
+              </li>
+              <li>MassChallenge — startup ecosystem contributor</li>
+            </ul>
           </Section>
 
           <Section title="Focus Areas">
@@ -119,25 +126,96 @@ export default function MichaelBenezra() {
           </Section>
 
           <Section title="Featured Coverage and Profiles">
-            <p className="text-muted-foreground/60 italic text-xs mb-3">
-              [ PLACEHOLDER — Add external media links, interview profiles, and press mentions below.
-              Each item should include the publication name, article title, and a hyperlink. ]
-            </p>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               <li>
-                <span className="text-muted-foreground/50 italic">
-                  [ Publication name — Article title — Link ]
-                </span>
+                <a
+                  href="https://www.bizjournals.com/boston/news/2022/03/17/founder-of-gk-fund-aims-to-have-a-big-effect-on-th.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Boston Business Journal — Founder of GK Fund aims to have a big effect on the startup ecosystem
+                </a>
               </li>
               <li>
-                <span className="text-muted-foreground/50 italic">
-                  [ Publication name — Article title — Link ]
-                </span>
+                <a
+                  href="https://www.bizjournals.com/boston/news/2022/08/15/vc-fund-erez-capital-launches-plans-to-raise-10m.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Boston Business Journal — VC fund Erez Capital launches, plans to raise $10M
+                </a>
               </li>
               <li>
-                <span className="text-muted-foreground/50 italic">
-                  [ Publication name — Article title — Link ]
-                </span>
+                <a
+                  href="https://www.bizjournals.com/boston/news/2021/08/31/bbj-announces-this-year-s-40-under-40.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Boston Business Journal — 40 Under 40
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://masschallenge.org/news/gk-fund-create-innovation-pipeline-startups/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  MassChallenge — GK Fund to Create Innovation Pipeline for Startups
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://podcast.thoughtbot.com/419"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Podcast — Giant Robots Smashing Into Other Giant Robots (thoughtbot): GK Fund Founder Michael Benezra
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.youtube.com/watch?v=0uz3WeM_Urs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Video Interview — Palo Alto Labs / Stanford: Crypto &amp; Emerging Technology
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.openvc.app/blog/how-i-lauched-erez-capital"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  OpenVC — How I Launched Erez Capital
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.bizjournals.com/boston/news/2019/03/27/logmein-is-just-the-latest-mass-tech-firm-expand.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Boston Business Journal — LogMeIn and the Mass. tech expansion wave
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.crunchbase.com/person/michael-benezra-35aa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Crunchbase — Michael Benezra profile
+                </a>
               </li>
             </ul>
           </Section>
