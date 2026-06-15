@@ -183,7 +183,7 @@ export default function MichaelBenezra() {
           <Section title="Education">
             <ul className="space-y-1.5 list-disc list-inside">
               <li>
-                MA, American Government —{" "}
+                AM, American Government —{" "}
                 <a
                   href="https://www.harvardae.org/"
                   target="_blank"
