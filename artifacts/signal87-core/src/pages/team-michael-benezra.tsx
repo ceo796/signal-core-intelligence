@@ -75,18 +75,58 @@ export default function MichaelBenezra() {
           </Section>
 
           <Section title="Professional Background">
-            <p>
-              Michael brings experience in venture capital, enterprise technology, and early-stage
-              company building. His career has spanned investment analysis, due diligence, and the
-              evaluation of technology-driven opportunities — disciplines that require rapidly
-              synthesizing large volumes of documents, contracts, and research into defensible
-              conclusions.
-            </p>
-            <p>
-              He is the founder of <strong className="text-foreground">GK Fund</strong>, a venture
-              capital fund focused on early-stage technology companies, and{" "}
-              <strong className="text-foreground">Erez Capital</strong>, a VC fund he launched to
-              continue backing emerging technology startups.
+            <ul className="space-y-3 list-disc list-inside">
+              <li>
+                Advisor and North America Partner,{" "}
+                <a
+                  href="https://www.crewstoneinternational.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Crewstone Private Equity
+                </a>
+              </li>
+              <li>
+                Founder and Director,{" "}
+                <a
+                  href="https://www.bizjournals.com/boston/news/2022/03/17/founder-of-gk-fund-aims-to-have-a-big-effect-on-th.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  GK Fund
+                </a>{" "}
+                (venture capital); Founder,{" "}
+                <strong className="text-foreground">Erez Capital</strong>
+              </li>
+              <li>
+                <a
+                  href="https://www.bizjournals.com/boston/news/2019/03/27/logmein-is-just-the-latest-mass-tech-firm-expand.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Director of Innovation and Economic Affairs, Israel Foreign Ministry to the U.S.
+                </a>{" "}
+                (Northeast)
+              </li>
+              <li>
+                Research Director, Harvard Law School Project on Disability
+              </li>
+              <li>
+                Policy roles with the U.S. Department of Commerce, U.S. House of
+                Representatives, and several governors
+              </li>
+            </ul>
+            <p className="mt-4">
+              Prior to his current roles, Michael held significant positions in international
+              government service. As Director of Innovation and Economic Affairs, he led critical
+              bilateral trade negotiations — including work on the development of a strategic
+              shipping route connecting North America and the Mediterranean Sea, a landmark
+              infrastructure initiative with significant implications for global trade — and was
+              instrumental in facilitating billions of dollars in venture capital investments,
+              private equity acquisitions, strategic partnerships, and government contracts.
             </p>
           </Section>
 
