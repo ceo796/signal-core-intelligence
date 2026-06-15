@@ -9,6 +9,7 @@ export default function Home() {
         <img src="/signal87-logo.png" alt="Signal87" className="h-10 w-auto" />
         <nav className="flex items-center gap-6 text-sm text-muted-foreground">
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+          <Link href="/team" className="hover:text-foreground transition-colors">Team</Link>
           <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
           <Link href="/documents" className="text-primary hover:text-primary/80 font-medium transition-colors">Open App</Link>
         </nav>
@@ -58,6 +59,7 @@ export default function Home() {
         <span>© 2026 Signal87 AI. All rights reserved.</span>
         <nav className="flex items-center gap-4 flex-wrap">
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+          <Link href="/team" className="hover:text-foreground transition-colors">Team</Link>
           <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
           <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Use</Link>
           <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>

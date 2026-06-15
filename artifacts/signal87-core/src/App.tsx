@@ -12,6 +12,9 @@ import About from "@/pages/about";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import Contact from "@/pages/contact";
+import Team from "@/pages/team";
+import MichaelBenezra from "@/pages/team-michael-benezra";
+import MichaelChavira from "@/pages/team-michael-chavira";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -27,6 +30,9 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/contact" component={Contact} />
+      <Route path="/team" component={Team} />
+      <Route path="/team/michael-benezra" component={MichaelBenezra} />
+      <Route path="/team/michael-chavira" component={MichaelChavira} />
       <Route component={NotFound} />
     </Switch>
   );
