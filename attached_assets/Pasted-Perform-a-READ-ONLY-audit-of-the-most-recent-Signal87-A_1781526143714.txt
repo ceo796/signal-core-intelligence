@@ -1,0 +1,147 @@
+Perform a READ-ONLY audit of the most recent Signal87 AI code changes.
+
+This is an audit and testing task only.
+
+Critical instruction:
+DO NOT change, edit, rewrite, refactor, delete, move, rename, format, or auto-fix any code, files, routes, components, API calls, environment variables, database logic, Supabase logic, authentication logic, upload logic, document processing logic, AI/chat logic, PDF viewer logic, or styling.
+
+Do not apply patches.
+Do not run automated fixes.
+Do not update dependencies.
+Do not modify package files.
+Do not commit anything.
+Do not create new files unless a temporary test output is required, and if so, clearly identify it.
+
+Goal:
+I need to confirm that the last UI/style change did not accidentally shift, corrupt, remove, or break any existing Signal87 platform functionality.
+
+Audit scope:
+
+1. Identify what changed
+- Review the most recent code changes using git diff, git status, commit history, and modified files.
+- List every file changed in the last code change.
+- For each changed file, explain:
+  - What was changed
+  - Whether it was visual/styling only
+  - Whether it touched logic, routes, state, API calls, auth, uploads, document processing, chat, PDF viewing, or Supabase
+  - Whether the change appears safe or risky
+
+2. Confirm whether any core logic was touched
+Specifically check whether the last change modified any of the following:
+- Authentication
+- Supabase client setup
+- Supabase Edge Function calls
+- API routes
+- Environment variable references
+- Upload flow
+- File storage/retrieval
+- Document extraction
+- Document indexing
+- Chat / AI answer generation
+- Citation generation
+- Brief generation
+- PDF viewer file loading
+- Routing/navigation
+- Permissions or RLS-related logic
+- Database queries
+- Model routing/OpenAI/Gemini logic
+
+3. Run tests/checks without making changes
+Run only safe read-only commands, such as:
+- npm install only if dependencies are already missing and required to run tests; otherwise avoid it
+- npm run typecheck, if available
+- npm run lint, if available
+- npm run build, if available
+- npm test, if available
+- Any existing project-specific verification scripts
+
+Do not run any command that modifies code automatically.
+
+4. Manually inspect key flows
+Check whether the code paths still appear intact for:
+- Login/signup
+- Auth callback
+- Document upload
+- Document list loading
+- Opening a document
+- PDF viewer opening an existing PDF
+- Chatting with a single document
+- Asking across multiple documents
+- Brief generation
+- Citation display
+- Download/export actions, if present
+- Delete/reindex actions, if present
+
+5. UI-specific audit
+Confirm whether the UI change only affected:
+- Colors
+- Fonts
+- Layout spacing
+- Sidebar styling
+- Tables
+- Cards
+- Buttons
+- Inputs
+- Panels
+- Chat message appearance
+- PDF viewer container appearance
+
+Flag anything that went beyond styling.
+
+6. Compare before/after behavior
+If possible, compare the last known working state against the current state using git history.
+Identify:
+- What changed since the last working checkpoint
+- Whether any working component was replaced
+- Whether any route was removed or renamed
+- Whether any props, hooks, imports, or data mappings were changed
+- Whether any component now receives different data than before
+
+7. Risk assessment
+Create a risk report with three sections:
+- Safe visual-only changes
+- Potentially risky changes
+- Confirmed broken or suspicious changes
+
+For each risky or suspicious item, explain why it matters and what functionality it could affect.
+
+8. Do not fix yet
+Do not fix anything in this task.
+Only provide findings.
+If fixes are needed, recommend them separately as proposed next steps, but do not implement them.
+
+Final deliverable:
+Provide a clear audit report with:
+
+A. Summary
+- Was this truly a visual-only UI change?
+- Did anything functional appear to change?
+- Is the platform likely safe?
+
+B. Changed files list
+- File name
+- Type of change
+- Risk level: Low / Medium / High
+
+C. Core functionality status
+- Auth
+- Uploads
+- Document list
+- Document detail
+- PDF viewer
+- Chat
+- Citations
+- Briefs
+- Supabase/API calls
+- Routing
+- Build/typecheck/lint
+
+D. Problems found
+- Include exact file names and code areas
+- Explain the risk
+
+E. Recommended next step
+- Either: safe to proceed with style-only redesign
+- Or: pause and fix specific issues first
+
+Again: DO NOT CHANGE CODE. This is a read-only audit and test only.
