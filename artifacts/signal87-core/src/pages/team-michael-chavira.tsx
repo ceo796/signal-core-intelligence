@@ -14,7 +14,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function MichaelChavira() {
   useEffect(() => {
-    document.title = "Michael Chavira — Co-Founder | Signal87 AI";
+    document.title = "Michael Chavira | Co-Founder, Signal87 AI | Systems Engineer · Axiologic Solutions · US Navy Veteran";
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
       meta = document.createElement("meta");
@@ -23,7 +23,7 @@ export default function MichaelChavira() {
     }
     meta.setAttribute(
       "content",
-      "Michael Chavira is Co-Founder of Signal87 AI and Managing Partner of Axiologic Solutions, with 15+ years in sensor development, systems engineering, and enterprise architecture. US Navy veteran, engineer, and entrepreneur."
+      "Michael Chavira is Co-Founder of Signal87 AI and Managing Partner of Axiologic Solutions. US Navy nuclear and intelligence officer, systems engineer, and Booz Allen Hamilton consultant with 15+ years in sensor development and enterprise architecture."
     );
   }, []);
 
@@ -41,24 +41,27 @@ export default function MichaelChavira() {
         <div className="flex flex-col sm:flex-row gap-8 items-start mb-12">
           <img
             src="/team/michael-chavira.jpg"
-            alt="Michael Chavira, Co-Founder of Signal87 AI and Managing Partner of Axiologic Solutions"
+            alt="Michael Chavira, Co-Founder of Signal87 AI and Managing Partner of Axiologic Solutions — systems engineer and US Navy veteran"
             className="w-36 h-36 rounded-xl object-cover object-top shrink-0 border border-border"
           />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Michael Chavira</h1>
             <p className="text-primary font-medium mt-1">Co-Founder, Signal87 AI</p>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-3">Managing Partner, Axiologic Solutions</p>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+              Managing Partner, Axiologic Solutions · US Navy Veteran · Systems Engineer
+            </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Michael Chavira brings more than fifteen years of experience in sensor development
-              and integration, systems engineering, and enterprise architecture — from nuclear and
-              intelligence service in the US Navy to applied AI for defense, energy, and
-              enterprise environments.
+              Michael Chavira brings more than fifteen years of experience in sensor
+              development and integration, systems engineering, and enterprise architecture
+              — from nuclear and intelligence service in the US Navy to applied AI for
+              defense, energy, and enterprise environments.
             </p>
           </div>
         </div>
 
         <div className="space-y-10">
-          <Section title="Biography">
+
+          <Section title="About Michael Chavira">
             <p>
               Michael Chavira is a co-founder and managing partner at{" "}
               <strong className="text-foreground">Axiologic Solutions</strong> with more than
@@ -94,28 +97,35 @@ export default function MichaelChavira() {
           </Section>
 
           <Section title="Career">
-            <ul className="space-y-1.5 list-disc list-inside">
+            <ul className="space-y-2 list-disc list-inside">
               <li>
-                <strong className="text-foreground">Co-Founder &amp; Managing Partner</strong> — Axiologic Solutions
+                <strong className="text-foreground">Co-Founder &amp; Managing Partner</strong>{" "}
+                — Axiologic Solutions
               </li>
               <li>
-                <strong className="text-foreground">Nuclear Officer / Intelligence Officer</strong> — US Navy (via OCS)
+                <strong className="text-foreground">
+                  Nuclear Officer / Intelligence Officer
+                </strong>{" "}
+                — US Navy (via OCS)
               </li>
               <li>
-                <strong className="text-foreground">Engineer</strong> — Applied Synergistics (intelligent systems for power plants)
+                <strong className="text-foreground">Engineer</strong> — Applied Synergistics
+                (intelligent systems for power plants)
               </li>
               <li>
-                <strong className="text-foreground">Consultant</strong> — Booz Allen Hamilton (sensor systems integration, US Army)
+                <strong className="text-foreground">Consultant</strong> — Booz Allen Hamilton
+                (sensor systems integration, US Army)
               </li>
             </ul>
           </Section>
 
           <Section title="Areas of Expertise">
             <ul className="space-y-1.5 list-disc list-inside">
-              <li>Sensor development and integration</li>
+              <li>Sensor development and systems integration</li>
               <li>Systems engineering and enterprise architecture</li>
               <li>Defense and intelligence technology applications</li>
-              <li>Intelligent systems for critical infrastructure</li>
+              <li>Intelligent systems for critical infrastructure and energy</li>
+              <li>AI systems design and retrieval-augmented generation</li>
               <li>Entrepreneurial leadership and company building</li>
             </ul>
           </Section>
