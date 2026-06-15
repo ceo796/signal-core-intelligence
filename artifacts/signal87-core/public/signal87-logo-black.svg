@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="120" viewBox="0 0 460 120" fill="none">
+  <g transform="translate(20,20)">
+    <circle cx="40" cy="40" r="32" stroke="#0A1428" stroke-width="2" stroke-dasharray="160 30" stroke-linecap="round"/>
+    <circle cx="40" cy="40" r="20" stroke="#0A1428" stroke-width="2" opacity="0.7"/>
+    <circle cx="40" cy="40" r="11" stroke="#0A1428" stroke-width="2" opacity="0.5"/>
+    <circle cx="43" cy="37" r="3.5" fill="#0A1428"/>
+  </g>
+  <text x="110" y="58" font-family="Inter, Arial, sans-serif" font-weight="600" font-size="26" fill="#0A1428" letter-spacing="2.5">
+    SIGNAL87
+  </text>
+  <text x="110" y="85" font-family="Inter, Arial, sans-serif" font-size="12" fill="#0A1428" opacity="0.55" letter-spacing="3.5">
+    AI
+  </text>
+</svg>

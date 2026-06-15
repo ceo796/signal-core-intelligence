@@ -6,11 +6,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/30">
       <header className="p-6 flex justify-between items-center border-b border-border/50">
-        <img src="/signal87-logo.png" alt="Signal87" className="h-10 w-auto" />
+        <img src="/signal87-logo-black.svg" alt="Signal87" className="h-10 w-auto" />
         <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-          <Link href="/team" className="hover:text-foreground transition-colors">Team</Link>
-          <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+          <Link href="/about" className="hidden sm:block hover:text-foreground transition-colors">About</Link>
+          <Link href="/team" className="hidden sm:block hover:text-foreground transition-colors">Team</Link>
+          <Link href="/contact" className="hidden sm:block hover:text-foreground transition-colors">Contact</Link>
           <Link href="/documents" className="text-primary hover:text-primary/80 font-medium transition-colors">Open App</Link>
         </nav>
       </header>

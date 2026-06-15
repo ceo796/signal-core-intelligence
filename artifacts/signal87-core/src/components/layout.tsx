@@ -15,18 +15,18 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
-      <aside className="shrink-0 w-full md:w-56 border-b md:border-b-0 md:border-r border-border bg-sidebar flex flex-col">
-        <div className="p-4 border-b border-border flex items-center">
-          <img src="/signal87-logo.png" alt="Signal87" className="h-10 w-auto" />
+      <aside className="shrink-0 w-full md:w-56 border-b md:border-b-0 md:border-r border-border bg-sidebar flex flex-row md:flex-col">
+        <div className="px-4 py-3 md:p-4 md:border-b border-border flex items-center shrink-0">
+          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-8 md:h-10 w-auto" />
         </div>
-        <nav className="flex-1 p-3 space-y-0.5">
+        <nav className="flex-1 flex flex-row md:flex-col px-2 py-2 md:p-3 gap-0.5 items-center md:items-stretch overflow-x-auto">
           {navItems.map((item) => {
             const isActive = location.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors whitespace-nowrap ${
                   isActive
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
