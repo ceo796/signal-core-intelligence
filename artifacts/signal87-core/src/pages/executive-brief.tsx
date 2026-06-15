@@ -107,9 +107,9 @@ function CitationChip({
   const score = citation.relevanceScore;
   const scoreColor =
     score >= 0.85
-      ? "text-green-400"
+      ? "text-green-600"
       : score >= 0.65
-      ? "text-yellow-400"
+      ? "text-amber-600"
       : "text-muted-foreground";
 
   return (
@@ -121,7 +121,7 @@ function CitationChip({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/5 transition-colors"
       >
         <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold shrink-0">
           {citation.citationNumber}
@@ -141,7 +141,7 @@ function CitationChip({
         )}
       </button>
       {expanded && (
-        <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-black/20">
+        <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-muted/60">
           <div className="flex items-center gap-1.5 mt-2 mb-1.5">
             <Quote className="w-3 h-3 text-primary/50" />
             <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
@@ -164,9 +164,9 @@ function TraceDetailPanel({ debug }: { debug: BriefDebugInfo }) {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="border border-border/40 bg-black/20 rounded-md overflow-hidden"
+      className="border border-border/40 bg-muted/40 rounded-md overflow-hidden"
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-xs font-mono text-muted-foreground hover:bg-white/5 transition-colors">
+      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-xs font-mono text-muted-foreground hover:bg-black/5 transition-colors">
         <div className="flex items-center gap-2">
           <Terminal className="w-3 h-3 text-primary/70" />
           <span className="text-primary/70 uppercase tracking-widest text-[10px]">Trace Detail</span>
@@ -529,7 +529,7 @@ export default function ExecutiveBrief() {
                             ? "border-primary/50 bg-primary/5"
                             : atMax
                             ? "border-border/40 opacity-40 cursor-not-allowed"
-                            : "border-border/50 hover:border-primary/40 hover:bg-white/5 cursor-pointer"
+                            : "border-border/50 hover:border-primary/40 hover:bg-black/5 cursor-pointer"
                         }`}
                       >
                         <Checkbox checked={isChecked} className="pointer-events-none" />
@@ -571,7 +571,7 @@ export default function ExecutiveBrief() {
                         className={`text-left p-3 rounded-md border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                           active
                             ? "border-primary/50 bg-primary/5"
-                            : "border-border/50 hover:border-primary/40 hover:bg-white/5"
+                            : "border-border/50 hover:border-primary/40 hover:bg-black/5"
                         }`}
                       >
                         <div className="text-sm font-medium flex items-center gap-1.5">

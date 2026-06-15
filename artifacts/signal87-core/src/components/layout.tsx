@@ -15,32 +15,29 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
-      <aside className="shrink-0 w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-card flex flex-col">
+      <aside className="shrink-0 w-full md:w-56 border-b md:border-b-0 md:border-r border-border bg-sidebar flex flex-col">
         <div className="p-4 border-b border-border flex items-center">
-          <img src="/signal87-logo.png" alt="Signal87" className="h-12 w-auto" />
+          <img src="/signal87-logo.png" alt="Signal87" className="h-10 w-auto" />
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-3 space-y-0.5">
           {navItems.map((item) => {
             const isActive = location.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors font-medium ${
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
                   isActive
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <item.icon className="w-4 h-4" />
+                <item.icon className="w-4 h-4 shrink-0" />
                 {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 text-xs font-mono text-muted-foreground border-t border-border">
-          Signal87 Core
-        </div>
       </aside>
       <main className="flex-1 flex flex-col overflow-hidden min-h-0">
         {children}

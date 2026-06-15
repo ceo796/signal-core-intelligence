@@ -1,0 +1,148 @@
+Apply a visual-only redesign to Signal87 AI using the attached Notion-style reference images.
+
+This is a styling and layout refinement only.
+
+Critical restrictions:
+- Do not create new backend functions.
+- Do not create new Supabase Edge Functions.
+- Do not modify API routes.
+- Do not modify authentication.
+- Do not modify upload logic.
+- Do not modify document processing.
+- Do not modify AI/chat logic.
+- Do not modify database schema.
+- Do not change environment variables.
+- Do not remove existing functionality.
+- Do not invent new product features.
+- Do not refactor business logic.
+
+Only update:
+- Global styling
+- Font
+- Colors
+- Sidebar appearance
+- Page spacing
+- Card styling
+- Table styling
+- Button styling
+- Input styling
+- Document preview panel styling
+- PDF viewer container styling
+- Chat/agent panel styling
+- Empty states
+- Hover states
+- Responsive visual layout
+
+Design target:
+Signal87 AI should look like a clean, minimalist Notion-style document intelligence platform.
+
+Visual direction:
+- White / near-white background
+- Soft gray borders
+- Large whitespace
+- Calm enterprise feel
+- Minimal shadows
+- Thin dividers
+- Clean document tables
+- Simple left sidebar
+- Muted purple accent
+- No heavy gradients
+- No dark futuristic dashboard
+- No neon
+- No dense analytics cards
+- No unnecessary visual clutter
+
+Typography:
+- Use Inter as the primary font.
+- Use a clean sans-serif fallback.
+- Headings should be clear, modern, and restrained.
+- Body text should be readable and professional.
+- Avoid oversized marketing-style typography inside the app.
+
+Suggested design tokens:
+- Background: #FFFFFF
+- Secondary background: #FAFAFA
+- Card background: #FFFFFF
+- Border: #E5E7EB
+- Muted border: #EEF0F3
+- Primary text: #111827
+- Secondary text: #6B7280
+- Muted text: #9CA3AF
+- Accent purple: #7C3AED
+- Light purple background: #F3E8FF
+- Success: #16A34A
+- Warning: #F59E0B
+- Error: #DC2626
+
+Style rules:
+- Use 12px to 16px border radius.
+- Use subtle 1px borders instead of heavy shadows.
+- Buttons should be simple and professional.
+- Inputs should have soft borders and clear focus states.
+- Tables should be spacious, readable, and Notion-like.
+- Selected rows should use a very light purple highlight.
+- Sidebar active state should use light purple background and purple text.
+- Cards should feel like clean workspace containers, not SaaS marketing tiles.
+
+Key areas to restyle:
+
+1. App shell
+- Keep existing routes and navigation.
+- Restyle the left sidebar to feel like Notion.
+- Make the sidebar light, simple, and calm.
+- Reduce visual weight of icons and labels.
+
+2. Home dashboard
+- Keep existing actions and data.
+- Restyle the command/search area as the visual focus.
+- Make recent documents and recent briefs clean table/card sections.
+- Avoid adding new workflow logic.
+
+3. Documents page
+- Restyle the document table.
+- Improve spacing, row height, file icons, status pills, and filters.
+- Keep all existing document actions working exactly as they do now.
+
+4. Document preview panel
+- Restyle the right-side panel only.
+- It should look like a calm AI summary panel.
+- Include existing summary, citations, metadata, and actions only if already available.
+- Do not add new AI calls.
+
+5. PDF viewer
+- Keep the existing PDF viewer implementation.
+- Only improve the surrounding container, toolbar, spacing, border, and side panels.
+- Do not replace the PDF rendering library.
+- Do not change file retrieval logic.
+
+6. Chat / AI agent panel
+- Restyle the existing chat interface to feel like a ChatGPT-style document agent.
+- The agent should visually communicate that it can access documents, briefs, collections, and the current PDF.
+- Keep existing chat behavior and API calls unchanged.
+- Improve message bubbles, citation chips, input box, source cards, and follow-up prompts only visually.
+
+7. Briefs and generated outputs
+- Restyle generated briefs to look like clean document pages.
+- Citation chips should be subtle and readable.
+- Export/save/generate buttons should remain connected to existing logic.
+
+Implementation approach:
+- First update the global theme, Tailwind classes, and shared layout components.
+- Reuse existing components wherever possible.
+- Create purely presentational components only if necessary.
+- Do not introduce new state management.
+- Do not introduce new API requests.
+- Do not introduce new dependencies unless absolutely required for styling.
+- If a change risks breaking functionality, skip it and leave the logic untouched.
+
+Before finishing:
+- Confirm that login still works.
+- Confirm uploads still work.
+- Confirm document list still loads.
+- Confirm document detail still opens.
+- Confirm existing chat still sends and receives responses.
+- Confirm PDF viewer still opens existing PDFs.
+- Confirm no backend/API/Supabase files were changed unless strictly necessary for imports.
+
+Deliverable:
+A visual-only Notion-style redesign of the existing Signal87 AI platform using the attached screenshots as reference, with all current functionality preserved.
