@@ -91,15 +91,61 @@ export default function MichaelBenezra() {
           </Section>
 
           <Section title="Education">
-            <p>
-              <span className="italic text-muted-foreground/60">
-                [ Educational credentials — to be added ]
-              </span>
-            </p>
+            <ul className="space-y-1.5 list-disc list-inside">
+              <li>
+                <a
+                  href="https://www.harvardae.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Harvard University
+                </a>{" "}
+                <span className="italic text-muted-foreground/60">[ Degree and field — to be added ]</span>
+              </li>
+            </ul>
           </Section>
 
           <Section title="Affiliations">
-            <ul className="space-y-1.5 list-disc list-inside">
+            <ul className="space-y-2 list-disc list-inside">
+              <li>
+                Venture Partner,{" "}
+                <strong className="text-foreground">IHQ Ventures</strong> (MIT spin-off)
+              </li>
+              <li>
+                Senior Advisor,{" "}
+                <a
+                  href="https://thefortiagroup.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  The Fortia Group
+                </a>{" "}
+                (M&amp;A advisory)
+              </li>
+              <li>
+                Board Member,{" "}
+                <a
+                  href="https://www.mamh.org/about/team/board-of-directors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Massachusetts Mental Health Association
+                </a>
+              </li>
+              <li>
+                Advisory Board Member,{" "}
+                <a
+                  href="https://www.housingforwardma.org/advisory-committee"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Housing Forward MA
+                </a>
+              </li>
               <li>
                 Advisory Board Member,{" "}
                 <a
@@ -111,7 +157,29 @@ export default function MichaelBenezra() {
                   AIEDC (American Innovation &amp; Entrepreneurship Development Council)
                 </a>
               </li>
-              <li>MassChallenge — startup ecosystem contributor</li>
+              <li>
+                MassChallenge Security and Resiliency Program
+              </li>
+              <li>
+                <a
+                  href="https://hreao.sigs.harvard.edu/article.html?aid=317"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Harvard Real Estate Alumni Organization (HREAO)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.harvardae.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Harvard Alumni Entrepreneurs
+                </a>
+              </li>
             </ul>
           </Section>
 
