@@ -2,6 +2,25 @@
 
 ---
 
+## [Signal87_Core_Stabilization_Smoke_v1] — 2026-06-15  *(Zero-tolerance smoke stabilization)*
+
+### Summary
+Investigated the failed Activity item **"Extraction failed — test-smoke.pdf"** under a zero-tolerance standard. **Root cause: a 75-byte malformed PDF stub** (`pdf-parse`/pdf.js `bad XRef entry`), 0 chunks — **not an app or pipeline bug.** The pipeline behaved correctly: it attempted extraction, caught the error, set `extraction_status=failed`, stored 0 chunks, returned 207, and preserved the original file. Full 17-step lifecycle verification passed on a known-good PDF. **Frontend-only** change (improved failure message); no backend/contract/schema/pipeline changes. All test documents deleted afterward.
+
+### Changed — Frontend
+- **`src/lib/document-status.ts`:** improved the "Extraction failed" (original-available) description to: *"No readable text could be extracted. This may be a scanned, image-only, blank, password-protected, or malformed PDF. Try a text-based PDF or an OCR-enabled version."* `canReindex`/`needsReupload`/`isReady` unchanged (no behavior regression).
+- **`src/pages/activity.tsx`:** the failed not-ready event now uses `status.description` (single source of truth) instead of a hardcoded string; the activity row shows file name and detail on separate lines so the longer message wraps instead of truncating.
+
+### Verified (live)
+- Failed record inspected (id 22, 75 B, `bad XRef entry`, 0 chunks, original preserved); Q&A on it returns **422** with no OpenAI call.
+- Known-good PDF: upload **201** + extraction **success** + **3 chunks**; in-platform preview renders; Q&A **200** with **3 citations**; delete **204**; Activity accurate before/after with no stale entries; no orphan chunks.
+- `pnpm --filter @workspace/signal87-core run typecheck` passes; architect review passed.
+
+### Notes
+- **No OCR added** (out of scope). The improved copy is PDF-oriented per request; it also surfaces for empty DOCX/TXT/CSV failures (acceptable for PoC — failures are overwhelmingly PDFs).
+
+---
+
 ## [Signal87_Core_Ask_Activity_Tabs_v1] — 2026-06-15
 
 ### Summary

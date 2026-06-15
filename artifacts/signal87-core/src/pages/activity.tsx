@@ -72,9 +72,7 @@ export default function Activity() {
         key: `${doc.id}-not-ready`,
         fileName: doc.fileName,
         title: status.label,
-        detail: status.needsReupload
-          ? "Original file isn't stored — re-upload needed"
-          : "No readable text could be extracted",
+        detail: status.description,
         tone: "error",
         timestamp,
         sortKey,
@@ -158,12 +156,10 @@ export default function Activity() {
                               {format(new Date(ev.timestamp), "yyyy-MM-dd HH:mm")}
                             </span>
                           </div>
-                          <p
-                            className="text-xs text-muted-foreground truncate"
-                            title={ev.fileName}
-                          >
-                            {ev.fileName} · {ev.detail}
+                          <p className="text-xs font-medium text-foreground/80 truncate" title={ev.fileName}>
+                            {ev.fileName}
                           </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{ev.detail}</p>
                         </div>
                       </CardContent>
                     </Card>

@@ -3,4 +3,5 @@
 - [URL-seeded selection reconcile](url-preselect-reconcile.md) — a `?preselect=` deep-link must be re-validated against the eligible list once it loads, or invalid ids stay hidden-but-selected.
 - [react-pdf / pdf.js Vite worker](react-pdf-vite-worker.md) — import worker via `pdfjs-dist/build/pdf.worker.min.mjs?url`; pin pdfjs-dist as direct dep at react-pdf's exact version.
 - [OpenAI empty embeddings input](openai-empty-embeddings-input.md) — embeddings.create rejects `input: []` with 400; every retrieval path must short-circuit on 0 chunks before embedding.
+- [pdf-parse test fixtures](pdf-parse-test-fixtures.md) — pdf-parse@1.1.1 rejects hand-rolled PDFs (`bad XRef entry`) even with correct offsets; for a known-good test PDF, re-upload a real one from `/original`.
 - [Document readiness invariant](document-readiness-invariant.md) — "answerable" needs chunks>0 AND extractionStatus==success; a failed reindex leaves stale chunks, so chunk-count alone is not a safe gate.

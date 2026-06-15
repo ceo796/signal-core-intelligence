@@ -868,3 +868,4 @@ To test manually today:
 - [ ] T36 Ask tab: ready-only picker → existing chat; required unselected message; empty/none-ready states
 - [ ] T37 Activity tab: real upload/extraction events only (no fabrication), labels match status, empty state, no internals leaked
 - [ ] T38 Nav shows Documents \| Ask \| Activity; active state + mobile usable; core Documents flow unchanged
+- [x] T39 Malformed-PDF stabilization smoke: failed doc inspected (malformed PDF, 0 chunks, original preserved); Q&A on failed doc → 422 (no OpenAI call); improved extraction-failed message shown and wraps in Activity; known-good PDF full lifecycle (upload 201 / extraction success / 3 chunks / preview renders / Q&A 200 + citations / delete 204); Activity accurate with no stale entries; no orphan chunks; all test docs deleted

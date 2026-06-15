@@ -1,0 +1,65 @@
+Adopt a zero-tolerance stabilization standard for this build.
+
+This version must be clean. If any bug, failed smoke test, failed extraction, broken route, API error, console error, or inconsistent state appears, stop all new work until it is resolved.
+
+Do not add features. Do not redesign. Do not move to UI polish. Do not connect the domain yet.
+
+First, investigate the failed Activity item:
+
+“Extraction failed — test-smoke.pdf — No readable text could be extracted.”
+
+Determine whether this is:
+1. An app bug
+2. A malformed/blank/scanned test PDF
+3. An extraction pipeline weakness
+4. A storage/chunking issue
+5. A logging/status issue
+
+Required verification:
+
+1. Inspect the failed document record.
+2. Confirm whether the original file exists.
+3. Confirm whether the PDF preview works.
+4. Confirm whether the PDF contains selectable text.
+5. Confirm whether extraction attempted and why it failed.
+6. Confirm whether chunks were created.
+7. Confirm whether Q&A is blocked cleanly when chunks are missing.
+8. Confirm whether Activity accurately reports the failure.
+9. Upload a known-good PDF with selectable text.
+10. Confirm upload succeeds.
+11. Confirm extraction succeeds.
+12. Confirm chunks are created.
+13. Confirm preview works.
+14. Confirm Q&A works.
+15. Confirm citations appear.
+16. Confirm delete works.
+17. Confirm Activity accurately reports the successful lifecycle.
+
+Rules:
+- If the failed PDF was malformed, scanned, image-only, or blank, improve the user-facing message.
+- If the extraction pipeline failed on a valid text PDF, fix the pipeline before doing anything else.
+- If Activity is showing misleading failure states, fix Activity before doing anything else.
+- If any test produces a console or API error, stop and fix it.
+- Do not leave failed test documents in the live app.
+- Delete all test documents after verification.
+
+Improve the failed extraction message to say:
+
+“No readable text could be extracted. This may be a scanned, image-only, blank, password-protected, or malformed PDF. Try a text-based PDF or an OCR-enabled version.”
+
+At the end, provide a strict stabilization report:
+
+- Root cause of failed smoke test:
+- App bug found: yes/no
+- Fixes made:
+- Known-good PDF upload: pass/fail
+- Extraction: pass/fail
+- Chunks created: pass/fail
+- Preview: pass/fail
+- Q&A: pass/fail
+- Citations: pass/fail
+- Delete: pass/fail
+- Activity accuracy: pass/fail
+- Console/API errors: yes/no
+- Test documents deleted: yes/no
+- Safe to proceed: yes/no

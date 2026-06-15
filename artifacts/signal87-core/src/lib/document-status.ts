@@ -45,7 +45,8 @@ export function getDocumentStatus(doc: DocumentStatusInput): DocumentStatus {
     if (hasOriginal) {
       return {
         label: "Extraction failed",
-        description: "We couldn't read any searchable text from this file. Re-index to try again.",
+        description:
+          "No readable text could be extracted. This may be a scanned, image-only, blank, password-protected, or malformed PDF. Try a text-based PDF or an OCR-enabled version.",
         tone: "error",
         canReindex: true,
         needsReupload: false,
