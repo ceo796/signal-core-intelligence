@@ -16,3 +16,12 @@ Screenshots of the live `*.replit.app` URL are served through a caching screensh
 
 ## Autoscale cold-start emits transient healthcheck 500s
 On a fresh deploy/scale-from-zero, the platform health probe logs a few `healthcheck /api returned status 500` lines for ~3s until the Node process binds its port and logs `Server listening`; healthz then returns 200. These are internal startup probes (not user-facing) — not an app error.
+
+## Fixing prod row-data: go through the live app endpoints, not the DB tooling
+The `database` skill's `executeSql(environment:"production")` is READ-ONLY (replica), so you cannot UPDATE/INSERT prod rows with it. The only sanctioned way to mutate prod data is the deployed app's own HTTP endpoints on the production URL (the same path users' actions take).
+**How to apply:** to correct one prod document, call the existing product endpoints against the prod URL (e.g. `PUT /api/documents/:id/original`, `POST /api/documents/:id/reindex`) — don't add a maintenance endpoint or try to write the prod DB directly.
+
+## A legacy doc with no stored original may be recoverable from its dev twin
+Docs uploaded before durable storage have `storage_key = null` (`originalFileAvailable:false`), so `reindex` 404s ("Original file not available"). The status helper then shows "Processing" (if still `pending`) or "Original file missing" (if `success` but no file), and a `pending`-with-chunks doc is excluded from the Ask `readyDocs` filter.
+**Why:** the same document often still exists in the dev DB with its original intact (match by file name + identical `text_len` + identical chunk split). Download that original (`GET /api/documents/:id/original` on dev), then `PUT` it to the prod doc and `reindex` — restoring a fully "Ready" state (status `success`, chunks recreated atomically, preview/download restored).
+**How to apply:** verify the dev file is the true original by confirming identical extraction (same `text_len` and chunk boundaries) before attaching it to a prod document. `reindex` is atomic: extraction failure 422s before touching chunks; success swaps chunks inside a transaction — so existing chunks are never lost unless recreated.
