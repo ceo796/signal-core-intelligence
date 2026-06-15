@@ -113,7 +113,7 @@ export default function MichaelBenezra() {
               , a private equity firm with a presence in New York City and Malaysia.
             </p>
             <p>
-              As the founder of <strong className="text-foreground">Erez Capital</strong>,
+              As the founder of Erez Capital,
               Michael leads a venture capital firm with a robust network of venture partners
               and a portfolio of strategic startup investments. His investment work is marked
               by a commitment to social impact. During the COVID-19 pandemic, he founded the{" "}
