@@ -27,7 +27,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         {children}
       </main>
 
-      <footer className="border-t border-border/50 px-6 py-6 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between gap-4">
+      <footer className="border-t border-border/50 px-6 py-12 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between gap-4">
         <span>© 2026 Signal87 AI. All rights reserved.</span>
         <nav className="flex items-center gap-4 flex-wrap">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
