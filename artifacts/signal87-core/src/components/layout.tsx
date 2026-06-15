@@ -1,13 +1,18 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { FileText, MessageSquare, Activity } from "lucide-react";
+import { FileText, MessageSquare, Activity, LogOut } from "lucide-react";
+import { useUser, useClerk } from "@clerk/react";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
@@ -40,6 +45,21 @@ export function Layout({ children }: LayoutProps) {
             );
           })}
         </nav>
+        {user && (
+          <div className="hidden md:flex flex-col px-3 py-3 border-t border-border gap-1.5 mt-auto">
+            <p className="text-xs text-muted-foreground truncate leading-tight">
+              {user.primaryEmailAddress?.emailAddress}
+            </p>
+            <button
+              type="button"
+              onClick={() => signOut({ redirectUrl: basePath || "/" })}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit"
+            >
+              <LogOut className="w-3 h-3" />
+              Sign out
+            </button>
+          </div>
+        )}
       </aside>
       <main className="flex-1 flex flex-col overflow-hidden min-h-0">
         {children}

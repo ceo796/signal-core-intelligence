@@ -2,6 +2,45 @@
 
 ---
 
+## [Signal87_Core_Auth_Pass_v1] — 2026-06-15  *(Authentication & access-control readiness)*
+
+### Summary
+Full Clerk Auth integration (Replit-managed) across frontend and backend. Every app route and API endpoint is now gated behind a valid Clerk session. Public marketing pages remain freely accessible. No changes to document logic, upload/extraction/chat/brief pipelines, DB schema, or existing API contracts.
+
+### Changed — Backend (`artifacts/api-server`)
+- **`app.ts`:** wired Clerk proxy middleware (before body parsers), updated CORS to `credentials: true`, added `clerkMiddleware()` for session parsing, added conditional `requireAuth` guard before all `/api/*` routes (exempts `/healthz` and `/__clerk`).
+- **New `src/middlewares/clerkProxyMiddleware.ts`:** Clerk FAPI proxy for production domain support.
+- **New `src/middlewares/requireAuth.ts`:** `getAuth(req).userId` check — returns `401 { error: "Unauthorized" }` if no valid Clerk session.
+- **New packages:** `@clerk/express`, `@clerk/shared`, `http-proxy-middleware` (all `dependencies`).
+
+### Changed — Frontend (`artifacts/signal87-core`)
+- **`App.tsx`:** full rewrite — `ClerkProvider` wraps the Wouter router; `ProtectedRoute` and `HomeRedirect` components enforce auth + optional approved-email gate; `/sign-in/*?` and `/sign-up/*?` routes added (verbatim required paths for OAuth callbacks).
+- **`components/layout.tsx`:** added signed-in user email display + "Sign out" button at the bottom of the sidebar (desktop only, non-intrusive).
+- **New `pages/sign-in.tsx`:** branded dark-theme sign-in page using Clerk `<SignIn>`.
+- **New `pages/sign-up.tsx`:** branded dark-theme sign-up page using Clerk `<SignUp>`.
+- **New `pages/pending-access.tsx`:** full-page access-pending screen for authenticated but unapproved users.
+- **`index.css`:** added `@layer theme, base, clerk, components, utilities;` (before `@import "tailwindcss"`) and `@import "@clerk/themes/shadcn.css"` for Tailwind v4 Clerk theme compatibility.
+- **`vite.config.ts`:** `tailwindcss({ optimize: false })` — prevents Tailwind v4 layer reordering in prod builds that breaks Clerk UI.
+- **New packages:** `@clerk/react`, `@clerk/themes` (both `devDependencies`).
+
+### Auth design
+- **Public routes:** `/`, `/about`, `/team`, `/team/*`, `/contact`, `/privacy`, `/terms`, `/sign-in/*?`, `/sign-up/*?`
+- **Protected routes:** `/documents`, `/documents/:id`, `/documents/:id/chat`, `/ask`, `/activity`
+- **API:** all `/api/*` requires a valid Clerk session; `/api/healthz` exempt
+- **Approved-user gate (frontend, optional):** set `VITE_APPROVED_EMAILS` in Replit Secrets to a comma-separated list of emails to restrict app access. When unset/empty, all authenticated users are admitted (gate disabled — safe default for pilot launch).
+- **After sign-out:** redirects to the public home page (`/`), not the sign-in page.
+
+### Known limitation
+- Documents are not isolated per user (no `user_id` on `documentsTable`). All approved users share the document library — this is the existing shared-workspace design and cannot be changed without a schema migration. Clerk auth ensures only approved team members can access the shared workspace.
+
+### Verified
+- `pnpm run typecheck` — zero errors
+- `GET /api/healthz` → 200 (public); `GET /api/documents` → 401 (no session); `POST /api/brief` → 401 (no session)
+- `/documents` (unauthenticated) → redirects to sign-in page
+- `/sign-in` → renders branded dark-theme Clerk card with Signal87 logo + Google OAuth
+
+---
+
 ## [Signal87_Core_Stabilization_Smoke_v1] — 2026-06-15  *(Zero-tolerance smoke stabilization)*
 
 ### Summary
