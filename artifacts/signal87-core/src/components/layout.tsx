@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { FileText } from "lucide-react";
+import { FileText, MessageSquare, Activity } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +11,8 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
+    { href: "/ask", label: "Ask", icon: MessageSquare },
+    { href: "/activity", label: "Activity", icon: Activity },
   ];
 
   return (

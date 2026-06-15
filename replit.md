@@ -43,6 +43,7 @@ A document-intelligence PoC: upload documents, then query them with an LLM that 
 - **Multi-document comparison** (`/compare`): one question across 2–5 documents with grouped citations.
 - **Executive Brief** (`/brief`): generate a structured brief (Executive Summary / Risk / Diligence / Contract Review / Comparison) over 1–5 documents, with an optional focus instruction, citations, and a trace. Comparison requires ≥2 documents.
 - **Admin stats** (`/admin`).
+- **Navigation tabs:** Documents | **Ask** (`/ask`, pick one ready document and jump into the existing single-doc chat) | **Activity** (`/activity`, read-only upload/extraction feed derived from existing document data — no separate activity store).
 
 ## User preferences
 

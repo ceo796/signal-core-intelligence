@@ -1,7 +1,8 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Reliability_Clarity_Pass_v1**
+> Checkpoint: **Signal87_Core_Ask_Activity_Tabs_v1**
 > Last updated: 2026-06-15
+> Note (Ask_Activity_Tabs_v1): New tests **T36–T38** cover the two new **frontend-only** nav tabs — **Ask** (`/ask`, ready-doc picker that routes into the existing single-doc chat) and **Activity** (`/activity`, a read-only feed derived only from existing document data, no fabricated events) — plus three-tab navigation and mobile usability. **No backend, API, contract, or schema changes**; no protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was touched.
 > Type: Manual end-to-end test plan
 > Note (Reliability_Clarity_Pass_v1): New tests **T29–T35** cover document status labels, list-level Re-Index for failed/0-chunk docs, the chat not-ready gate (frontend) + `422` guard (backend), upload validation + server-error surfacing, citation "Section N" labels + the no-citations note, and structured Q&A/upload logging. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index mechanics / citation + Verification Trace payload) was changed.
 > Scope note (Core_Flow_Simplification_v1): The Multi-document Comparison (`/compare`), Executive Brief (`/brief`), and Admin Stats (`/admin`) features are now **hidden from the UI** — their nav items, routes, and the document-detail Compare/Generate-Brief buttons were removed. Tests that begin by navigating to `/compare`, `/brief`, or `/admin` in the UI (e.g. T13a–T13h, T18/admin, and the detail-page "Compare"/"Generate Brief" steps in T22) are **N/A for this build**; those routes now resolve to NotFound. The backend endpoints remain and can still be exercised directly (e.g. `POST /api/documents/brief`). All core-flow tests (upload → list → detail → PDF preview → single-doc chat → citations/trace → delete) remain in force.
@@ -745,6 +746,58 @@ To test manually today:
 
 ---
 
+## T36 — Ask tab — document picker + states
+
+**Goal:** Verify the Ask tab lets a user pick one ready document and reach the existing single-doc chat, with correct empty/guidance states. Frontend-only; no backend changes.
+
+**Steps:**
+1. Click **Ask** in the nav (`/ask`).
+2. Observe the page with no document selected.
+3. Open the picker and select a **ready** document, then click **Ask a Question**.
+4. (Setup) Temporarily have zero documents, then have only not-ready documents, and revisit `/ask`.
+
+**Expected:**
+- Header "Ask" + explanatory subtitle; only **ready** documents appear in the picker.
+- Nothing selected (ready docs exist) → shows exactly **"Select a document from Documents to ask questions."**
+- Selecting a doc shows its name + status badge and an **Ask a Question** button linking to `/documents/:id/chat` (the existing chat — citations/trace behave exactly as before; no multi-doc chat).
+- Zero documents → empty state with a **Go to Documents** link.
+- Documents exist but none ready → guidance to re-index/re-upload in the Documents tab (no picker).
+
+---
+
+## T37 — Activity tab — real events only, no fabrication
+
+**Goal:** Verify the Activity feed reflects only real, durable document data and never invents activity or leaks internals.
+
+**Steps:**
+1. Click **Activity** in the nav (`/activity`).
+2. Compare the feed against the Documents list.
+3. (Setup) Revisit with zero documents.
+
+**Expected:**
+- Per document: an **Upload completed** event and an outcome event — **Extraction completed** (`Indexed into N sections`), **Extraction failed**, **Needs re-upload**, or **Processing** — timestamped from `uploadedAt`, newest first.
+- Outcome labels match the document's status badge (e.g. the 0-chunk PDF shows **Extraction failed**).
+- **No** upload-started / Q&A-completed / deleted events (not durably recorded — not fabricated).
+- No raw logs, API keys, stack traces, or developer-only errors anywhere on the page.
+- Zero documents → clean **"No activity yet"** empty state.
+
+---
+
+## T38 — Navigation — three tabs, mobile usable, existing flow intact
+
+**Goal:** Verify the nav shows Documents | Ask | Activity, active state is correct, mobile stays usable, and the core Documents flow is unchanged.
+
+**Steps:**
+1. On desktop and on a narrow viewport (~402px), view the nav across `/documents`, `/ask`, `/activity`, and `/documents/:id`.
+2. Run the core flow: Upload → list → detail/preview → Ask a question → cited answer → delete.
+
+**Expected:**
+- Nav lists **Documents | Ask | Activity**; the current tab is highlighted; `/documents/:id` and `/documents/:id/chat` keep **Documents** active.
+- Mobile nav is a horizontal, scrollable row that remains tappable; no overflow/clipping.
+- The entire core Documents flow (PDF viewer, upload, single-doc chat, citations, delete, re-index) behaves exactly as before — no regressions.
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -812,3 +865,6 @@ To test manually today:
 - [ ] T33 Server `{ error }` surfaced on upload failure; 207 shows a warning toast
 - [ ] T34 Citation markers read "Section N · {doc}"; no-citations note shown; Trace payload unchanged
 - [ ] T35 Structured Q&A/upload logs present; no question/answer/file content logged
+- [ ] T36 Ask tab: ready-only picker → existing chat; required unselected message; empty/none-ready states
+- [ ] T37 Activity tab: real upload/extraction events only (no fabrication), labels match status, empty state, no internals leaked
+- [ ] T38 Nav shows Documents \| Ask \| Activity; active state + mobile usable; core Documents flow unchanged

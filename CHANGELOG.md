@@ -2,6 +2,24 @@
 
 ---
 
+## [Signal87_Core_Ask_Activity_Tabs_v1] — 2026-06-15
+
+### Summary
+Added two lightweight, **frontend-only** navigation tabs — **Ask** and **Activity** — alongside the existing **Documents** tab. **No new major features**, no agents/reports/briefs/billing/integrations/workspaces/knowledge-graph, **no backend changes**, no API/contract/schema changes, and no changes to the working PDF viewer / upload / single-doc chat / citations / delete / re-index flows. Both new pages are read-only and reuse existing data and the existing single-doc chat.
+
+### Added — Frontend
+- **`src/components/layout.tsx`:** two nav items added to the single `navItems` array — **Ask** (`/ask`, `MessageSquare` icon) and **Activity** (`/activity`, `Activity` icon) — reusing the existing `Link`/active-state pattern. Mobile (`flex-row` + `overflow-x-auto`) and desktop (`flex-col`) layouts unchanged and verified usable.
+- **`src/App.tsx`:** two wouter routes (`/ask`, `/activity`) registered before the catch-all.
+- **`src/pages/ask.tsx` (new):** explains the user can ask questions about uploaded documents; a `Select` picker lists only **ready** documents (gated by `getDocumentStatus(doc).isReady`). Selecting one shows a card that links to the **existing** single-doc chat at `/documents/:id/chat` (no new chat logic, no multi-doc chat). States: loading skeleton, error, no-documents empty state (links to Documents), docs-exist-but-none-ready guidance, and the exact required message **"Select a document from Documents to ask questions."** when ready docs exist but none is selected.
+- **`src/pages/activity.tsx` (new):** a read-only activity feed derived **only** from existing `useListDocuments()` data — per document, an **Upload completed** event plus an **Extraction completed** / **Extraction failed** / **Needs re-upload** / **Processing** outcome event, timestamped from `uploadedAt`, sorted newest-first. Failure labels reuse `getDocumentStatus()` for precision. Clean **"No activity yet"** empty state. No invented events (no upload-started / Q&A-completed / deleted, which aren't durably recorded) and no raw logs / API keys / stack traces.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Screenshots (desktop + mobile 402×874) confirmed: Ask picker + required empty message; Activity real upload/extraction feed (incl. red **Extraction failed** for the 0-chunk PDF); Documents tab unchanged (status badges, Ask-a-Question, Re-Index) with the new 3-tab nav.
+- Architect review: **PASS**, no launch blockers.
+
+---
+
 ## [Signal87_Core_Reliability_Clarity_Pass_v1] — 2026-06-15
 
 ### Summary

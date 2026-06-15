@@ -7,6 +7,8 @@ import Home from "@/pages/home";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
+import Ask from "@/pages/ask";
+import Activity from "@/pages/activity";
 import About from "@/pages/about";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
@@ -25,6 +27,8 @@ function Router() {
       <Route path="/documents" component={DocumentsList} />
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />
+      <Route path="/ask" component={Ask} />
+      <Route path="/activity" component={Activity} />
       <Route path="/about" component={About} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
