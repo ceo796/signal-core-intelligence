@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal87 — Intelligent Document Cloud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #06080F;
+    --bg2: #0C1020;
+    --violet: #6B4FE8;
+    --violet-dim: rgba(107, 79, 232, 0.15);
+    --violet-line: rgba(107, 79, 232, 0.4);
+    --white: #F4F5FA;
+    --muted: rgba(244, 245, 250, 0.38);
+    --border: rgba(244, 245, 250, 0.07);
+    --card: rgba(255,255,255,0.03);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 48px;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.4s, background 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(6, 8, 15, 0.88);
+    backdrop-filter: blur(16px);
+    border-color: var(--border);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    position: relative;
+  }
+  .logo-mark svg { width: 28px; height: 28px; }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 13.5px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .btn-ghost {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: color 0.2s;
+    text-decoration: none;
+  }
+  .btn-ghost:hover { color: var(--white); }
+  .btn-primary {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--violet);
+    border: none;
+    border-radius: 6px;
+    padding: 9px 20px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: opacity 0.2s, transform 0.15s;
+    text-decoration: none;
+  }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 24px;
+    overflow: hidden;
+  }
+
+  /* Signal canvas — the signature element */
+  #signal-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Radial glow behind headline */
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(107,79,232,0.12) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--violet);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.3s forwards;
+  }
+
+  .hero-headline {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(44px, 6.5vw, 80px);
+    font-weight: 300;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    color: var(--white);
+    max-width: 820px;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.5s forwards;
+  }
+  .hero-headline em {
+    font-style: normal;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(107,79,232,0.7);
+  }
+
+  .hero-sub {
+    font-size: clamp(15px, 1.6vw, 18px);
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.65;
+    margin-bottom: 44px;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.7s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.9s forwards;
+  }
+  .btn-large {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--violet);
+    border: none;
+    border-radius: 8px;
+    padding: 13px 28px;
+    cursor: pointer;
+    letter-spacing: 0.005em;
+    transition: opacity 0.2s, transform 0.15s;
+    text-decoration: none;
+  }
+  .btn-large:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-outline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 28px;
+    cursor: pointer;
+    letter-spacing: 0.005em;
+    transition: color 0.2s, border-color 0.2s;
+    text-decoration: none;
+  }
+  .btn-outline:hover { color: var(--white); border-color: rgba(244,245,250,0.2); }
+
+  .hero-footnote {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11.5px;
+    color: rgba(244,245,250,0.2);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    opacity: 0;
+    animation: fadeUp 1s 1.2s forwards;
+  }
+
+  /* LOGOS */
+  .logos {
+    padding: 72px 48px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+  .logos-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(244,245,250,0.22);
+    margin-bottom: 36px;
+  }
+  .logos-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 56px;
+    flex-wrap: wrap;
+  }
+  .logo-item {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(244,245,250,0.2);
+    letter-spacing: 0.04em;
+    transition: color 0.3s;
+  }
+  .logo-item:hover { color: rgba(244,245,250,0.45); }
+
+  /* FEATURES */
+  .features {
+    padding: 120px 48px;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--violet);
+    margin-bottom: 20px;
+  }
+  .section-headline {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(30px, 3.5vw, 46px);
+    font-weight: 300;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    color: var(--white);
+    max-width: 560px;
+    margin-bottom: 80px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .feature-cell {
+    background: var(--bg);
+    padding: 44px 40px;
+    transition: background 0.3s;
+  }
+  .feature-cell:hover { background: var(--bg2); }
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 24px;
+    opacity: 0.7;
+  }
+  .feature-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .feature-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* SIGNAL SECTION */
+  .signal-section {
+    padding: 120px 48px;
+    max-width: 1160px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .signal-visual {
+    position: relative;
+    height: 360px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg2);
+  }
+  #mini-canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .signal-content .section-label { margin-bottom: 20px; }
+  .signal-content h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(26px, 3vw, 40px);
+    font-weight: 300;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .signal-content p {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .stat-row {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    color: var(--white);
+  }
+  .stat-num span { color: var(--violet); }
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* VERTICALS */
+  .verticals {
+    padding: 120px 48px;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  .verticals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 56px;
+  }
+  .verticals-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .vertical-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px 28px;
+    background: var(--card);
+    transition: border-color 0.3s, background 0.3s;
+    cursor: default;
+  }
+  .vertical-card:hover {
+    border-color: var(--violet-line);
+    background: var(--violet-dim);
+  }
+  .vertical-icon {
+    font-size: 22px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .vertical-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+  .vertical-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* CTA */
+  .cta-section {
+    margin: 40px 48px 120px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 100px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg2);
+  }
+  .cta-glow {
+    position: absolute;
+    width: 500px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(107,79,232,0.14) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .cta-section h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(28px, 3.5vw, 48px);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .cta-section p {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .cta-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(244,245,250,0.35);
+    letter-spacing: -0.02em;
+  }
+  .footer-copy {
+    font-size: 12.5px;
+    color: rgba(244,245,250,0.18);
+  }
+  .footer-links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-size: 12.5px;
+    color: rgba(244,245,250,0.25);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: rgba(244,245,250,0.55); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .features-grid { grid-template-columns: 1fr; }
+    .signal-section { grid-template-columns: 1fr; gap: 48px; }
+    .verticals-grid { grid-template-columns: 1fr 1fr; }
+    .cta-section { padding: 64px 32px; margin: 40px 24px 80px; }
+    footer { flex-direction: column; gap: 24px; text-align: center; }
+    .logos { padding: 48px 24px; }
+    .features, .signal-section, .verticals { padding: 80px 24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 14 L10 8 L14 12 L18 6 L24 14" stroke="#6B4FE8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="4" cy="14" r="1.5" fill="#6B4FE8" opacity="0.5"/>
+        <circle cx="24" cy="14" r="1.5" fill="#6B4FE8" opacity="0.5"/>
+      </svg>
+    </div>
+    Signal87
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Platform</a></li>
+    <li><a href="#verticals">Solutions</a></li>
+    <li><a href="#">Docs</a></li>
+    <li><a href="#">Pricing</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="#" class="btn-ghost">Sign in</a>
+    <a href="#" class="btn-primary">Request access</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="signal-canvas"></canvas>
+  <div class="hero-glow"></div>
+  <p class="hero-eyebrow">Intelligent Document Cloud</p>
+  <h1 class="hero-headline">Documents that<br><em>think</em> with you</h1>
+  <p class="hero-sub">Signal87 reads across your entire document library — extracting signals, synthesizing context, and turning static files into active intelligence.</p>
+  <div class="hero-actions">
+    <a href="#" class="btn-large">Start free trial</a>
+    <a href="#" class="btn-outline">See a demo</a>
+  </div>
+  <span class="hero-footnote">Trusted by legal, finance, compliance, and defense teams</span>
+</section>
+
+<!-- LOGOS -->
+<section class="logos">
+  <p class="logos-label">Enterprise-ready across sectors</p>
+  <div class="logos-row">
+    <span class="logo-item">LEGAL OPS</span>
+    <span class="logo-item">PRIVATE EQUITY</span>
+    <span class="logo-item">COMPLIANCE</span>
+    <span class="logo-item">GOVERNMENT</span>
+    <span class="logo-item">DEFENSE</span>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <p class="section-label reveal">Platform</p>
+  <h2 class="section-headline reveal">Every document. Every signal. One layer.</h2>
+  <div class="features-grid reveal">
+    <div class="feature-cell">
+      <svg class="feature-icon" viewBox="0 0 36 36" fill="none">
+        <rect x="6" y="4" width="18" height="24" rx="2" stroke="#6B4FE8" stroke-width="1.3"/>
+        <path d="M10 12h10M10 16h8M10 20h6" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M22 20l8 8" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="26" cy="24" r="4" stroke="#6B4FE8" stroke-width="1.3"/>
+      </svg>
+      <h3 class="feature-title">Document Intelligence</h3>
+      <p class="feature-desc">Ingest any format — PDF, DOCX, XLSX — and surface meaning automatically. Extraction, classification, and structured search across your entire library.</p>
+    </div>
+    <div class="feature-cell">
+      <svg class="feature-icon" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="10" stroke="#6B4FE8" stroke-width="1.3"/>
+        <path d="M8 18h4M24 18h4M18 8v4M18 24v4" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="18" cy="18" r="3" fill="#6B4FE8" opacity="0.4"/>
+      </svg>
+      <h3 class="feature-title">AI Brief Generation</h3>
+      <p class="feature-desc">Go from a library of source material to a structured brief in seconds. The model reasons across documents — not just within them.</p>
+    </div>
+    <div class="feature-cell">
+      <svg class="feature-icon" viewBox="0 0 36 36" fill="none">
+        <path d="M6 12h24M6 18h16M6 24h20" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M26 22l4 4-4 4" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h3 class="feature-title">Event & Signal Timeline</h3>
+      <p class="feature-desc">Every decision, risk, and relationship extracted from your documents surfaces as a datable event — building an intelligence layer that accumulates over time.</p>
+    </div>
+    <div class="feature-cell">
+      <svg class="feature-icon" viewBox="0 0 36 36" fill="none">
+        <rect x="4" y="8" width="12" height="16" rx="2" stroke="#6B4FE8" stroke-width="1.3"/>
+        <rect x="20" y="8" width="12" height="16" rx="2" stroke="#6B4FE8" stroke-width="1.3"/>
+        <path d="M16 16h4" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <h3 class="feature-title">Due Diligence Rooms</h3>
+      <p class="feature-desc">Secure deal rooms with permissioned access, AI-generated risk summaries, and investment committee memos drafted as materials arrive.</p>
+    </div>
+    <div class="feature-cell">
+      <svg class="feature-icon" viewBox="0 0 36 36" fill="none">
+        <path d="M8 28V16l10-8 10 8v12" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="14" y="20" width="8" height="8" rx="1" stroke="#6B4FE8" stroke-width="1.3"/>
+      </svg>
+      <h3 class="feature-title">Workflow Automation</h3>
+      <p class="feature-desc">Build document pipelines with a visual builder. Upload triggers, AI extraction, condition logic, and team notifications — no code required.</p>
+    </div>
+    <div class="feature-cell">
+      <svg class="feature-icon" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="12" r="5" stroke="#6B4FE8" stroke-width="1.3"/>
+        <path d="M8 28c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#6B4FE8" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M25 18l3-3M28 18h-3v-3" stroke="#6B4FE8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h3 class="feature-title">Specialized Agents</h3>
+      <p class="feature-desc">Deploy purpose-built agents for contract review, research synthesis, or competitive monitoring — each with its own connected knowledge base.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNAL SECTION -->
+<section class="signal-section">
+  <div class="signal-visual reveal">
+    <canvas id="mini-canvas"></canvas>
+  </div>
+  <div class="signal-content">
+    <p class="section-label reveal">How it works</p>
+    <h2 class="reveal">Reading between the lines — at scale</h2>
+    <p class="reveal">Signal87 processes your document corpus continuously. Each file is chunked, embedded, and indexed — then cross-referenced against every other source to surface non-obvious connections that a human reading in sequence would miss.</p>
+    <div class="stat-row reveal">
+      <div class="stat-item">
+        <div class="stat-num">10<span>×</span></div>
+        <div class="stat-label">faster review cycles</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">98<span>%</span></div>
+        <div class="stat-label">extraction accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">SOC<span> 2</span></div>
+        <div class="stat-label">Type II certified</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VERTICALS -->
+<section class="verticals" id="verticals">
+  <div class="verticals-header">
+    <div>
+      <p class="section-label reveal">Solutions</p>
+      <h2 class="section-headline reveal" style="margin-bottom:0">Built for high-stakes document environments</h2>
+    </div>
+  </div>
+  <div class="verticals-grid">
+    <div class="vertical-card reveal">
+      <span class="vertical-icon">⚖</span>
+      <div class="vertical-name">Legal</div>
+      <p class="vertical-desc">Contract extraction, clause comparison, matter intelligence, and litigation document review at speed.</p>
+    </div>
+    <div class="vertical-card reveal">
+      <span class="vertical-icon">◈</span>
+      <div class="vertical-name">Finance</div>
+      <p class="vertical-desc">Deal flow analysis, due diligence automation, portfolio monitoring, and IC memo generation.</p>
+    </div>
+    <div class="vertical-card reveal">
+      <span class="vertical-icon">◎</span>
+      <div class="vertical-name">Compliance</div>
+      <p class="vertical-desc">Policy mapping, regulatory change monitoring, evidence collection, and audit trail documentation.</p>
+    </div>
+    <div class="vertical-card reveal">
+      <span class="vertical-icon">⬡</span>
+      <div class="vertical-name">Government & Defense</div>
+      <p class="vertical-desc">Classified-ready infrastructure, inter-agency document intelligence, and procurement analysis.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <h2>Put your documents to work</h2>
+  <p>Join legal, finance, and government teams already running on Signal87.</p>
+  <div class="cta-actions">
+    <a href="#" class="btn-large">Start free trial</a>
+    <a href="#" class="btn-outline">Talk to sales</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">Signal87</span>
+  <ul class="footer-links">
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Security</a></li>
+    <li><a href="#">Terms</a></li>
+    <li><a href="#">Docs</a></li>
+  </ul>
+  <span class="footer-copy">© 2025 Signal87 Inc.</span>
+</footer>
+
+<script>
+// ─── HERO SIGNAL ANIMATION ───────────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('signal-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, lines, t = 0;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    buildLines();
+  }
+
+  function buildLines() {
+    lines = [];
+    // Multiple signal traces at different vertical positions
+    const positions = [0.32, 0.5, 0.68];
+    positions.forEach((yFrac, i) => {
+      lines.push({
+        yBase: H * yFrac,
+        amplitude: 18 + i * 8,
+        freq: 0.012 + i * 0.003,
+        speed: 0.4 + i * 0.15,
+        phase: i * Math.PI * 0.7,
+        opacity: 0.08 + i * 0.04,
+        width: 1 + i * 0.3,
+      });
+    });
+  }
+
+  // Horizontal scanning line
+  let scanX = -200;
+  const scanSpeed = 1.2;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.016;
+
+    lines.forEach(line => {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(107, 79, 232, ${line.opacity})`;
+      ctx.lineWidth = line.width;
+
+      for (let x = 0; x <= W; x += 2) {
+        // composite waveform
+        const y = line.yBase
+          + Math.sin(x * line.freq + t * line.speed + line.phase) * line.amplitude
+          + Math.sin(x * line.freq * 2.3 + t * line.speed * 1.4 + line.phase) * (line.amplitude * 0.3);
+
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+
+    // Scanning vertical line with glow
+    scanX += scanSpeed;
+    if (scanX > W + 200) scanX = -200;
+
+    const grad = ctx.createLinearGradient(scanX - 80, 0, scanX + 80, 0);
+    grad.addColorStop(0, 'rgba(107,79,232,0)');
+    grad.addColorStop(0.45, 'rgba(107,79,232,0.05)');
+    grad.addColorStop(0.5, 'rgba(107,79,232,0.18)');
+    grad.addColorStop(0.55, 'rgba(107,79,232,0.05)');
+    grad.addColorStop(1, 'rgba(107,79,232,0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(scanX - 80, 0, 160, H);
+
+    // Highlight points where scan crosses waves
+    lines.forEach(line => {
+      const y = line.yBase
+        + Math.sin(scanX * line.freq + t * line.speed + line.phase) * line.amplitude
+        + Math.sin(scanX * line.freq * 2.3 + t * line.speed * 1.4 + line.phase) * (line.amplitude * 0.3);
+
+      ctx.beginPath();
+      ctx.arc(scanX, y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(107, 79, 232, 0.5)`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+// ─── MINI CANVAS (signal section) ────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('mini-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, t2 = 0;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+
+  // Simulate a document-reading EEG-style trace
+  const segments = [];
+  for (let i = 0; i < 6; i++) {
+    segments.push({
+      y: 0.2 + i * 0.13,
+      amp: 8 + Math.random() * 14,
+      freq: 0.02 + Math.random() * 0.015,
+      speed: 0.25 + Math.random() * 0.2,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    t2 += 0.015;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(107,79,232,0.05)';
+    ctx.lineWidth = 1;
+    for (let y = 0; y < H; y += H / 7) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    segments.forEach((seg, i) => {
+      const yBase = H * seg.y;
+      ctx.beginPath();
+      const alpha = 0.12 + i * 0.04;
+      ctx.strokeStyle = `rgba(107, 79, 232, ${alpha})`;
+      ctx.lineWidth = 1;
+
+      for (let x = 0; x <= W; x += 2) {
+        const y = yBase
+          + Math.sin(x * seg.freq + t2 * seg.speed + seg.phase) * seg.amp
+          + Math.sin(x * seg.freq * 3.1 + t2 * seg.speed * 0.7) * (seg.amp * 0.2);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+
+    // Active read head
+    const readX = (t2 * 40) % W;
+    const lineGrad = ctx.createLinearGradient(readX - 40, 0, readX + 2, 0);
+    lineGrad.addColorStop(0, 'rgba(107,79,232,0)');
+    lineGrad.addColorStop(1, 'rgba(107,79,232,0.25)');
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(readX, 0);
+    ctx.lineTo(readX, H);
+    ctx.stroke();
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+// ─── NAV SCROLL ──────────────────────────────────────────────────────────────
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// ─── REVEAL ON SCROLL ────────────────────────────────────────────────────────
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), 80);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

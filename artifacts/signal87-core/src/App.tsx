@@ -37,6 +37,7 @@ import Contact from "@/pages/contact";
 import Team from "@/pages/team";
 import MichaelBenezra from "@/pages/team-michael-benezra";
 import MichaelChavira from "@/pages/team-michael-chavira";
+import LandingPage from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 import PendingAccess from "@/pages/pending-access";
 
@@ -303,6 +304,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-up/*?" component={SignUpPage} />
 
             {/* Public pages */}
+            <Route path="/landing" component={LandingPage} />
             <Route path="/about" component={About} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />
