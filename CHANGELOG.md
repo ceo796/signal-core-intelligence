@@ -2,6 +2,62 @@
 
 ---
 
+## [Signal87_Core_Dashboard_v2] — 2026-06-16  *(Dashboard layout matching screenshot + Brief single-bubble)*
+
+### Summary
+Rewrote dashboard to match the attached screenshot layout: left sidebar (Home, Documents, Collections*, Briefs, Agents*, Workflows*, Settings*), top bar with search + ⌘K + bell + avatar, AI command bar, action row, 2-column grid (Recent docs / Signal87 AI panel on left; Recent briefs / Recent activity / Suggested actions on right). Brief output re-rendered as single continuous bubble. No backend changes.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**New page: `src/pages/dashboard.tsx`**
+- Full sidebar nav with logo, 7 items (Home, Documents, Collections*, Briefs, Agents*, Workflows*, Settings*), active purple state.
+- Top bar with global search, ⌘K hint, notification bell, user avatar.
+- Welcome back header with user's first name.
+- AI command bar (routes to `/ask`) with sparkle icon and purple arrow.
+- Action row: Upload (working), Create brief (→ `/brief`), New agent / Start workflow / New collection (disabled, greyed out).
+- 2-column grid: left = Recent documents + Signal87 AI panel; right = Recent briefs + Recent activity + Suggested actions.
+- Recent documents: real data from `useListDocuments()`, file-type icons (PDF/DOCX/CSV), relative timestamps, clean empty state.
+- Signal87 AI panel: "Beta" badge, chat demo with suggested question, AI response, citation chips (1-2-3), follow-up chips, input box — all routing to `/ask` safely.
+- Recent briefs: empty state (briefs not persisted).
+- Recent activity: derived from `uploadedAt` of user documents; empty state for new users.
+- Suggested actions: Compare (→ `/compare`), Extract insights (→ `/ask`), Create brief (→ `/brief`), Summarize collection (disabled).
+- Mobile responsive: collapsible sidebar with hamburger menu, all actions tappable.
+
+**Updated: `src/components/file-upload.tsx`**
+- Added optional `open?` / `onOpenChange?` controlled props (backwards compatible).
+
+**Updated: `src/App.tsx`**
+- `HomeRedirect` → `/dashboard` for authenticated+approved users.
+- `/dashboard` route added.
+- `/compare` and `/brief` routes added.
+
+**Updated: `src/pages/brief.tsx`**
+- Single continuous bubble: all brief sections rendered inside one `Card`/`CardContent` with dividers instead of separate cards per section.
+
+**Updated: `src/components/layout.tsx`**
+- Added Compare and Brief nav items.
+
+### Disabled / Coming Soon
+- Collections, Agents, Workflows, Settings (sidebar + action row, greyed out).
+- Summarize a collection (Suggested Actions, disabled).
+- No backend routes called for disabled items.
+
+### Data sources
+- Recent documents: `GET /api/documents` (authenticated, per-user isolated).
+- Recent activity: derived from `uploadedAt` on same document list.
+- Recent briefs: none (not persisted).
+
+### QA results
+- Typecheck: PASS.
+- Build: requires PORT env var (workflow-provided); typecheck is the canonical validation.
+- Auth redirect: `/dashboard` redirects to `/sign-in` for unauthenticated users.
+- No backend/auth/DB/API changes.
+- `owner_user_id` isolation preserved (all documents from authenticated API).
+- Upload, chat, citations, brief generation, model routing preserved.
+- No fake demo documents in real accounts.
+
+---
+
 ## [Signal87_Core_Dashboard_v1] — 2026-06-16  *(Authenticated dashboard home + Compare/Brief routes + Brief single-bubble formatting)*
 
 ### Summary
