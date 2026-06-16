@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { FileText, MessageSquare, Activity, LogOut, Menu, X } from "lucide-react";
+import { FileText, MessageSquare, Activity, LogOut, Menu, X, BookOpen, GitCompare } from "lucide-react";
 import { useUser, useClerk } from "@clerk/react";
 
 interface LayoutProps {
@@ -18,6 +18,8 @@ export function Layout({ children }: LayoutProps) {
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/ask", label: "Ask", icon: MessageSquare },
+    { href: "/compare", label: "Compare", icon: GitCompare },
+    { href: "/brief", label: "Brief", icon: BookOpen },
     { href: "/activity", label: "Activity", icon: Activity },
   ];
 

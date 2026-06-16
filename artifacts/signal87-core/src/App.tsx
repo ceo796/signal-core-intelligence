@@ -26,6 +26,8 @@ import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
 import Ask from "@/pages/ask";
+import Compare from "@/pages/compare";
+import Brief from "@/pages/brief";
 import Activity from "@/pages/activity";
 import About from "@/pages/about";
 import Privacy from "@/pages/privacy";
@@ -238,6 +240,16 @@ const ProtectedAsk = () => (
     <Ask />
   </ProtectedRoute>
 );
+const ProtectedCompare = () => (
+  <ProtectedRoute>
+    <Compare />
+  </ProtectedRoute>
+);
+const ProtectedBrief = () => (
+  <ProtectedRoute>
+    <Brief />
+  </ProtectedRoute>
+);
 const ProtectedActivity = () => (
   <ProtectedRoute>
     <Activity />
@@ -298,6 +310,8 @@ function ClerkProviderWithRoutes() {
             <Route path="/documents/:id" component={ProtectedDocumentDetail} />
             <Route path="/documents" component={ProtectedDocumentsList} />
             <Route path="/ask" component={ProtectedAsk} />
+            <Route path="/compare" component={ProtectedCompare} />
+            <Route path="/brief" component={ProtectedBrief} />
             <Route path="/activity" component={ProtectedActivity} />
 
             <Route component={NotFound} />
