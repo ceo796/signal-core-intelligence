@@ -54,6 +54,27 @@ export async function getActiveSubscriptionForUser(userId: string) {
   }
 }
 
+export async function isAllowedCheckoutPrice(priceId: string): Promise<boolean> {
+  try {
+    const result = await db.execute(
+      sql`
+        SELECT pr.id
+        FROM stripe.prices pr
+        JOIN stripe.products p ON p.id = pr.product
+        WHERE pr.id = ${priceId}
+          AND pr.active = true
+          AND p.active = true
+          AND pr.recurring IS NOT NULL
+          AND pr.unit_amount > 0
+        LIMIT 1
+      `,
+    );
+    return result.rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function listProductsWithPrices() {
   try {
     const result = await db.execute(

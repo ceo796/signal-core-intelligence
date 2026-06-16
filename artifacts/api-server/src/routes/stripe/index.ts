@@ -6,6 +6,7 @@ import {
   getUserByClerkId,
   getActiveSubscriptionForUser,
   listProductsWithPrices,
+  isAllowedCheckoutPrice,
 } from "../../stripe/storage";
 import {
   getOrCreateCustomer,
@@ -56,6 +57,12 @@ router.post("/stripe/checkout", async (req: Request, res: Response): Promise<voi
   if (!priceId) { res.status(400).json({ error: "priceId is required" }); return; }
 
   try {
+    const allowed = await isAllowedCheckoutPrice(priceId);
+    if (!allowed) {
+      res.status(400).json({ error: "invalid_price" });
+      return;
+    }
+
     const customerId = await getOrCreateCustomer(userId, email);
     const base = getBaseUrl(req);
     const session = await createCheckoutSession(

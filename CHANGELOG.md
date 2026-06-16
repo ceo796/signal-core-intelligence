@@ -42,6 +42,11 @@ Full Stripe freemium integration: sign up free → access the app → upgrade pr
 - Pro tier: unlimited (active/trialing Stripe subscription)
 - Limit enforced server-side on every upload; client-side gate via redirect to `/upgrade`
 
+### Fixes (post-integration)
+- `src/stripe/stripeClient.ts` — credentials now read in priority order: `STRIPE_SECRET_KEY` env var (real account / production) → Replit-managed Stripe connector (sandbox / dev). Fixed connector field names (`secret`/`webhook_secret`, not `secret_key`) and auth header (`X-Replit-Token`).
+- `src/stripe/init.ts` — `syncBackfill()` now called with `{ object: "all" }`; without an explicit object it syncs nothing (library default is a function ref, not `"all"`), which left the products table empty. Added a "Stripe backfill complete" log.
+- `replit.md` — documented Stripe credential priority order.
+
 ---
 
 ## [Signal87_Core_Release_Readiness_v1] — 2026-06-16  *(Public-release readiness pass)*

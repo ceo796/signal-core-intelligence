@@ -23,9 +23,18 @@ export async function initStripe(): Promise<void> {
       logger.info({ webhookUrl }, "Stripe webhook configured");
     }
 
-    stripeSync.syncBackfill().catch((err: unknown) => {
-      logger.error({ err }, "Stripe backfill failed");
-    });
+    // Backfill only the catalog (products + prices) needed for the upgrade page.
+    // Subscription state flows in via webhooks; we intentionally do NOT backfill
+    // customers/invoices/charges/etc. to avoid pulling live billing PII into the DB.
+    void (async () => {
+      try {
+        await stripeSync.syncBackfill({ object: "product" });
+        await stripeSync.syncBackfill({ object: "price" });
+        logger.info("Stripe catalog backfill complete (products, prices)");
+      } catch (err: unknown) {
+        logger.error({ err }, "Stripe backfill failed");
+      }
+    })();
 
     logger.info("Stripe initialized");
   } catch (err) {
