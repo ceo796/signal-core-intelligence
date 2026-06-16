@@ -498,7 +498,7 @@ components:
 
     ChatResponse:
       type: object
-      required: [answer, citations, debug]
+      required: [answer, citations, debug, mode]
       properties:
         answer:
           type: string
@@ -508,6 +508,10 @@ components:
             $ref: "#/components/schemas/Citation"
         debug:
           $ref: "#/components/schemas/DebugInfo"
+        mode:
+          type: string
+          enum: ["general", "document", "hybrid"]
+          description: How the query was classified and answered.
 
     MultiChatInput:
       type: object

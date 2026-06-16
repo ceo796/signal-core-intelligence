@@ -182,7 +182,8 @@ export const ChatWithDocumentResponse = zod.object({
   "llmLatencyMs": zod.number(),
   "totalLatencyMs": zod.number(),
   "errors": zod.string().nullish()
-})
+}),
+  "mode": zod.enum(['general', 'document', 'hybrid']).describe('How the query was classified and answered.')
 })
 
 

@@ -2,6 +2,44 @@
 
 ---
 
+## [Signal87_Core_Hybrid_Answering_v1] — 2026-06-16  *(Hybrid answering — general knowledge without document citations)*
+
+### Summary
+The document chat now classifies every query into one of three modes (`general`, `document`, `hybrid`) and answers accordingly. General questions (e.g., "What is a force majeure clause?") are answered directly with general knowledge, no citations, and no retrieval. Document questions (e.g., "What does the force majeure clause say in this contract?") continue to use the existing retrieval + citation + Verification Trace flow. Hybrid/ambiguous questions try retrieval first; if no relevant chunks are found (threshold < 0.3), the answer falls back to general knowledge with an explicit note. The response JSON includes a `mode` field, and the frontend shows a subtle badge for general/hybrid answers (no badge for document-grounded). All typechecks pass. No changes to auth, DB schema, upload, download, PDF viewer, reindex, or other routes.
+
+### Changed — Backend (`artifacts/api-server`)
+
+**`src/routes/chat/index.ts`**
+- Added `classifyQuery()` with keyword heuristics (`DOCUMENT_KEYWORDS` / `GENERAL_KEYWORDS`) → returns `general`, `document`, or `hybrid`.
+- Three prompt builders: `buildDocumentPrompt()` (existing), `buildGeneralPrompt()` (no citations), `buildHybridPrompt()` (retrieval-aware fallback).
+- `isRelevantRetrieval()` requires at least one chunk with `relevanceScore >= 0.3`.
+- `POST /api/documents/:id/chat` branches:
+  - `general` → skip retrieval, call LLM directly with general-knowledge prompt.
+  - `document` → existing retrieval + citation + trace flow.
+  - `hybrid` → run retrieval, then fall back to general if no relevant chunks.
+- Response JSON now includes `mode: "general" | "document" | "hybrid"`.
+- `debug` field stored in chat history includes `mode` for transparency.
+
+### Changed — API Contract (`lib/api-spec`)
+
+- `openapi.yaml`: `ChatResponse` schema gains `mode` enum (`general` / `document` / `hybrid`) as required field.
+- Regenerated Orval client (`pnpm --filter @workspace/api-spec run codegen`).
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/pages/document-chat.tsx`**
+- `parseDebugField()` now extracts `mode` from the stored JSON.
+- `ModeBadge` component renders a subtle label for `general` and `hybrid` modes (hidden for `document` mode to keep existing UI clean).
+- `AssistantAnswer` now takes `mode` prop and conditionally hides the Verification Trace section for non-document answers.
+- History rendering passes `mode` to each `AssistantAnswer`.
+
+### Invariants preserved
+- No changes to auth, database schema, upload/download logic, PDF viewer, reindex, Stripe, or other routes.
+- Document-grounded answers still return full citations + Verification Trace.
+- Chat history storage format is additive (`mode` added to existing JSON); backward compatible with old entries.
+
+---
+
 ## [Signal87_Core_Batch_Upload_v1] — 2026-06-16  *(Batch/multi-file document upload)*
 
 ### Summary

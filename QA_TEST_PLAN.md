@@ -928,3 +928,7 @@ To test manually today:
 - [ ] T43c Batch upload hitting free-tier limit (3 docs): total batch count > remaining limit → 402 with redirect to /upgrade
 - [ ] T43d Single-file upload still works (backward compatibility)
 - [x] T39 Malformed-PDF stabilization smoke: failed doc inspected (malformed PDF, 0 chunks, original preserved); Q&A on failed doc → 422 (no OpenAI call); improved extraction-failed message shown and wraps in Activity; known-good PDF full lifecycle (upload 201 / extraction success / 3 chunks / preview renders / Q&A 200 + citations / delete 204); Activity accurate with no stale entries; no orphan chunks; all test docs deleted
+- [ ] T44 Hybrid answering — general question: ask "What is a force majeure clause?" on a contract doc → answer returned with `mode: "general"`, no citations, no Verification Trace, and frontend badge "General answer — not grounded in this document"
+- [ ] T45 Hybrid answering — document question: ask "What does the force majeure clause say in this contract?" on the same doc → answer returned with `mode: "document"`, full citations + Verification Trace visible, no badge
+- [ ] T45b Hybrid answering — hybrid fallback: ask "Explain this" on a doc with no matching chunks → answer returned with `mode: "hybrid"`, no citations, badge "General answer — no relevant document excerpts found"
+- [ ] T45c Hybrid answering — backward compatibility: old chat history (pre-hybrid) renders without crash, badge absent, trace still visible when applicable

@@ -74,10 +74,24 @@ export interface DebugInfo {
   errors?: string | null;
 }
 
+/**
+ * How the query was classified and answered.
+ */
+export type ChatResponseMode = typeof ChatResponseMode[keyof typeof ChatResponseMode];
+
+
+export const ChatResponseMode = {
+  general: 'general',
+  document: 'document',
+  hybrid: 'hybrid',
+} as const;
+
 export interface ChatResponse {
   answer: string;
   citations: Citation[];
   debug: DebugInfo;
+  /** How the query was classified and answered. */
+  mode: ChatResponseMode;
 }
 
 export interface MultiChatInput {

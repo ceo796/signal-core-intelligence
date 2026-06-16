@@ -16,6 +16,7 @@ export * from './briefSection';
 export * from './chatInput';
 export * from './chatMessage';
 export * from './chatResponse';
+export * from './chatResponseMode';
 export * from './chunk';
 export * from './citation';
 export * from './debugInfo';
@@ -37,6 +38,5 @@ export * from './systemInfoEnv';
 export * from './systemInfoFileStorageConfig';
 export * from './uploadBatchResponse';
 export * from './uploadBatchResponseSummary';
-// Skipped to avoid TS2308 collision with const UploadDocumentsBody from api.ts
 // export * from './uploadDocumentsBody';
 export * from './uploadResult';

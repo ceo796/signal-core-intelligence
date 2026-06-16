@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UploadDocumentsBody = {
-  files: any[];
-};
-// NOTE: This type is NOT re-exported from api-zod's index.ts because
-// generated/api.ts already exports a const with the same name (TS2308).
-// Consumers should import it from @workspace/api-client-react instead.
+// export type UploadDocumentsBody = {
+//   files: Blob[];
+// };

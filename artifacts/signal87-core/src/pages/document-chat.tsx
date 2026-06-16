@@ -209,16 +209,47 @@ function TraceDetailPanel({
   );
 }
 
+function ModeBadge({ mode }: { mode: QueryMode }) {
+  if (mode === "document") return null;
+
+  const labels: Record<QueryMode, { text: string; className: string }> = {
+    general: {
+      text: "General answer — not grounded in this document",
+      className: "bg-muted text-muted-foreground/70 border-border/50",
+    },
+    document: {
+      text: "Document-grounded",
+      className: "bg-primary/10 text-primary border-primary/20",
+    },
+    hybrid: {
+      text: "General answer — no relevant document excerpts found",
+      className: "bg-muted text-muted-foreground/70 border-border/50",
+    },
+  };
+
+  const { text, className } = labels[mode];
+  return (
+    <span
+      className={`inline-block text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${className} mb-2`}
+      title="How Signal87 answered this question"
+    >
+      {text}
+    </span>
+  );
+}
+
 function AssistantAnswer({
   content,
   citations,
   debug,
   documentName,
+  mode,
 }: {
   content: string;
   citations: Citation[];
   debug: DebugInfo | null;
   documentName: string;
+  mode: QueryMode;
 }) {
   const [activeChunk, setActiveChunk] = useState<number | null>(null);
 
@@ -230,9 +261,11 @@ function AssistantAnswer({
   };
 
   const hasTrace = citations.length > 0 || !!debug;
+  const isDocumentGrounded = mode === "document";
 
   return (
     <>
+      <ModeBadge mode={mode} />
       <MarkdownAnswer
         content={content}
         citationPattern={/\[\s*chunks?\s+(\d+)\s*\]/}
@@ -250,7 +283,7 @@ function AssistantAnswer({
         }}
       />
 
-      {hasTrace && (
+      {isDocumentGrounded && hasTrace && (
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3 h-3 text-primary/70" />
@@ -291,28 +324,36 @@ function AssistantAnswer({
   );
 }
 
+type QueryMode = "general" | "document" | "hybrid";
+
 function parseDebugField(raw: string | null | undefined): {
   debug: DebugInfo | null;
   citations: Citation[];
+  mode: QueryMode;
 } {
-  if (!raw) return { debug: null, citations: [] };
+  if (!raw) return { debug: null, citations: [], mode: "document" };
   try {
     const parsed = JSON.parse(raw);
-    // New format: { debug: {...}, citations: [...] }
+    // New format: { debug: {...}, citations: [...], mode: "..." }
     if (parsed.debug?.route) {
       return {
         debug: parsed.debug as DebugInfo,
         citations: Array.isArray(parsed.citations) ? (parsed.citations as Citation[]) : [],
+        mode: (parsed.mode as QueryMode) || "document",
       };
     }
     // Legacy format: the debug object itself (no citations stored)
     if (parsed.route) {
-      return { debug: parsed as DebugInfo, citations: [] };
+      return {
+        debug: parsed as DebugInfo,
+        citations: [],
+        mode: (parsed.mode as QueryMode) || "document",
+      };
     }
   } catch {
     // ignore
   }
-  return { debug: null, citations: [] };
+  return { debug: null, citations: [], mode: "document" };
 }
 
 export default function DocumentChat() {
@@ -466,7 +507,7 @@ export default function DocumentChat() {
             ) : (
               history?.map((msg) => {
                 const isUser = msg.role === "user";
-                const { debug: debugData, citations } = parseDebugField(msg.debug);
+                const { debug: debugData, citations, mode } = parseDebugField(msg.debug);
 
                 return (
                   <div key={msg.id} className={`flex gap-4 ${isUser ? "flex-row-reverse" : ""}`}>
@@ -497,6 +538,7 @@ export default function DocumentChat() {
                             citations={citations}
                             debug={debugData}
                             documentName={document.fileName}
+                            mode={mode}
                           />
                         )}
                       </div>
