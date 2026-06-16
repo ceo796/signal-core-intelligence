@@ -201,18 +201,21 @@ export default function Brief() {
                 <Button variant="outline" size="sm" onClick={handleReset} className="h-8 text-xs border-border/50">New Brief</Button>
               </div>
 
-              {result.sections.map((section) => (
-                <Card key={section.heading} className="bg-card border-border/50">
-                  <CardContent className="p-5">
-                    <h3 className="text-sm font-semibold mb-3 text-foreground">{section.heading}</h3>
-                    <div className="prose prose-sm max-w-none text-sm leading-relaxed text-foreground/90">
-                      <MarkdownAnswer content={section.body} citationPattern={/\[\s*Source\s+(\d+)\s*\]/} renderCitation={(n, key) => (
-                        <span key={key} className="inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold leading-none">{n}</span>
-                      )} />
+              {/* Single continuous answer bubble */}
+              <Card className="bg-card border-border/50">
+                <CardContent className="p-5">
+                  {result.sections.map((section, idx) => (
+                    <div key={section.heading} className={idx > 0 ? "mt-6 pt-6 border-t border-border/40" : ""}>
+                      <h3 className="text-sm font-semibold mb-3 text-foreground">{section.heading}</h3>
+                      <div className="prose prose-sm max-w-none text-sm leading-relaxed text-foreground/90">
+                        <MarkdownAnswer content={section.body} citationPattern={/\[\s*Source\s+(\d+)\s*\]/} renderCitation={(n, key) => (
+                          <span key={key} className="inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold leading-none">{n}</span>
+                        )} />
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  ))}
+                </CardContent>
+              </Card>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">

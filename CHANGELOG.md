@@ -2,7 +2,7 @@
 
 ---
 
-## [Signal87_Core_Dashboard_v1] — 2026-06-16  *(Authenticated dashboard home + Compare/Brief routes)*
+## [Signal87_Core_Dashboard_v1] — 2026-06-16  *(Authenticated dashboard home + Compare/Brief routes + Brief single-bubble formatting)*
 
 ### Summary
 Adds a polished authenticated dashboard as the signed-in landing page (`/dashboard`), matching the attached screenshot. Also wires `/compare` and `/brief` as protected routes. No backend, auth, API contract, DB schema, upload/download/delete/reindex, or citation logic was changed.
