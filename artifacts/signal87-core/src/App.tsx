@@ -5,6 +5,7 @@ import {
   SignUp,
   useUser,
   useClerk,
+  useAuth,
 } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -16,6 +17,7 @@ import {
   Router as WouterRouter,
 } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -89,6 +91,17 @@ function HomeRedirect() {
   if (isSignedIn && isApproved(user)) return <Redirect to="/documents" />;
   if (isSignedIn) return <PendingAccess />;
   return <Home />;
+}
+
+function ClerkAuthTokenSync() {
+  const { getToken, isSignedIn } = useAuth();
+
+  useEffect(() => {
+    setAuthTokenGetter(isSignedIn ? () => getToken() : null);
+    return () => { setAuthTokenGetter(null); };
+  }, [isSignedIn, getToken]);
+
+  return null;
 }
 
 function ClerkQueryClientCacheInvalidator() {
@@ -247,6 +260,7 @@ function ClerkProviderWithRoutes() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <ClerkAuthTokenSync />
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <Switch>
