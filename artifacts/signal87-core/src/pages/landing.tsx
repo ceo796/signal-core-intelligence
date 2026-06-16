@@ -203,6 +203,8 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="signal87-landing">
       {/* ── NAV ── */}
@@ -234,7 +236,37 @@ export default function LandingPage() {
           <Link href="/sign-in" className="sl-btn-ghost">Sign in</Link>
           <Link href="/sign-up" className="sl-btn-primary">Request access</Link>
         </div>
+
+        <button
+          type="button"
+          className="sl-mobile-menu-btn"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M3 6h18M3 12h18M3 18h18" />
+            </svg>
+          )}
+        </button>
       </nav>
+
+      {/* ── MOBILE MENU ── */}
+      {mobileMenuOpen && (
+        <div className="sl-mobile-menu">
+          <a href="#features" className="sl-mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Platform</a>
+          <a href="#verticals" className="sl-mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Solutions</a>
+          <Link href="/contact" className="sl-mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+          <div className="sl-mobile-menu-actions">
+            <Link href="/sign-in" className="sl-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+            <Link href="/sign-up" className="sl-btn-primary" onClick={() => setMobileMenuOpen(false)}>Request access</Link>
+          </div>
+        </div>
+      )}
 
       {/* ── HERO ── */}
       <section className="sl-hero">

@@ -2,6 +2,38 @@
 
 ---
 
+## [Signal87_Core_Release_Readiness_v1] — 2026-06-16  *(Public-release readiness pass)*
+
+### Summary
+First structured release-readiness pass: updated all page-level SEO/OG meta, removed dead code (3 large unused pages + 2 small duplicates), added mobile hamburger nav to the landing page, and added a 480px phone breakpoint for the landing page. No backend changes. All typechecks pass.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`index.html`**
+- Title: `Signal87 Core` → `Signal87 — Intelligent Document Cloud`
+- Description: placeholder text → product description
+- OG title, description, image (`/opengraph.jpg`) wired
+- Twitter card title, description, image wired
+
+**Dead code removed**
+- `src/pages/home.tsx` (360 lines) — old landing page superseded by `landing.tsx`
+- `src/pages/executive-brief.tsx` (649 lines) — legacy brief page superseded by `brief.tsx`
+- `src/pages/multi-document-chat.tsx` (510 lines) — legacy compare page superseded by `compare.tsx`
+- `src/pages/sign-in.tsx` — unused duplicate of inline `SignInPage` in `App.tsx`
+- `src/pages/sign-up.tsx` — unused duplicate of inline `SignUpPage` in `App.tsx`
+
+**`src/pages/landing.tsx`**
+- Added `mobileMenuOpen` state
+- Added hamburger button (visible at ≤900px) with open/close SVG icons
+- Added `sl-mobile-menu` overlay with nav links + sign in / request access CTAs
+
+**`src/styles/landing.css`**
+- Added `.sl-mobile-menu-btn` and `.sl-mobile-menu` styles
+- `@media (max-width: 900px)`: hides `.sl-nav-cta`, shows hamburger + mobile menu
+- `@media (max-width: 480px)`: phone-specific hero, CTA, grid, footer adjustments — stacks hero CTAs vertically, reduces headline size, single-column verticals grid
+
+---
+
 ## [Signal87_Core_Dashboard_v2] — 2026-06-16  *(Dashboard layout matching screenshot + Brief single-bubble)*
 
 ### Summary
