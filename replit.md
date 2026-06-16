@@ -1,6 +1,6 @@
 # Signal87 Core
 
-A document-intelligence PoC: upload documents, then query them with an LLM that answers with grounded, per-source citations and a full Verification Trace.
+A document-intelligence platform: sign up with Google, upload documents, and query them with an LLM that answers with grounded, per-source citations and a full Verification Trace. Each user has an isolated document library — no cross-user data access.
 
 ## Run & Operate
 
@@ -56,9 +56,10 @@ A document-intelligence PoC: upload documents, then query them with an LLM that 
 - Always regenerate the client after editing `openapi.yaml`: `pnpm --filter @workspace/api-spec run codegen`.
 - New backend routes require an API server restart to be picked up (dev server does not always hot-reload new route files).
 - Verify with `pnpm run typecheck`, not `build` (build needs workflow-provided `PORT`/`BASE_PATH`).
-- **Clerk approved-user gate:** set `VITE_APPROVED_EMAILS` in Replit Secrets to a comma-separated list of email addresses to restrict who can use the app. Leave it unset to admit all authenticated users (safe default for team launch). Changing it requires a frontend redeploy.
-- **Clerk dev vs prod user stores:** accounts created during development do not carry over to the published (production) domain — team members must register again on the live URL.
-- **Shared document library:** all approved users see the same documents (no per-user isolation). This is by design for the PoC; a future migration would add `user_id` to `documentsTable`.
+- **Per-user document isolation:** documents are scoped by Clerk `userId` (`owner_user_id` column). New users start with an empty library; users can only see/access their own documents. Legacy test documents (uploaded before isolation) have `owner_user_id = NULL` and are invisible to all public users.
+- **Approved-user gate (optional):** set `VITE_APPROVED_EMAILS` in Replit Secrets to a comma-separated list of emails to restrict app access. Leave it unset (default) to admit all authenticated users. Changing it requires a frontend redeploy.
+- **Clerk dev vs prod user stores:** accounts created during development do not carry over to the published (production) domain — users must register again on the live URL.
+- **Public sign-up:** Google OAuth (Gmail + Google Workspace) works out of the box. No invite or allowlist step is required for normal public access.
 
 ## Pointers
 

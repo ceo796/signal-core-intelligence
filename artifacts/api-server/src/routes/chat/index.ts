@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable, chatMessagesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { getAuth } from "@clerk/express";
 import {
   ChatWithDocumentParams,
   ChatWithDocumentBody,
@@ -15,6 +16,8 @@ const router: IRouter = Router();
 
 router.post("/documents/:id/chat", async (req, res): Promise<void> => {
   const totalStart = Date.now();
+  // userId is guaranteed non-null by requireAuth middleware
+  const { userId } = getAuth(req);
 
   const params = ChatWithDocumentParams.safeParse(req.params);
   if (!params.success) {
@@ -31,7 +34,11 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
   const { id } = params.data;
   const { question } = body.data;
 
-  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId!)));
+
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -167,16 +174,28 @@ ${contextBlocks}`;
 });
 
 router.get("/documents/:id/history", async (req, res): Promise<void> => {
+  const { userId } = getAuth(req);
+
   const params = GetChatHistoryParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId!)));
+
+  if (!doc) {
+    res.status(404).json({ error: "Document not found" });
+    return;
+  }
+
   const messages = await db
     .select()
     .from(chatMessagesTable)
-    .where(eq(chatMessagesTable.documentId, params.data.id))
+    .where(eq(chatMessagesTable.documentId, doc.id))
     .orderBy(chatMessagesTable.createdAt);
 
   res.json(
@@ -190,13 +209,25 @@ router.get("/documents/:id/history", async (req, res): Promise<void> => {
 });
 
 router.delete("/documents/:id/history", async (req, res): Promise<void> => {
+  const { userId } = getAuth(req);
+
   const params = ClearChatHistoryParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  await db.delete(chatMessagesTable).where(eq(chatMessagesTable.documentId, params.data.id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId!)));
+
+  if (!doc) {
+    res.status(404).json({ error: "Document not found" });
+    return;
+  }
+
+  await db.delete(chatMessagesTable).where(eq(chatMessagesTable.documentId, doc.id));
   res.sendStatus(204);
 });
 

@@ -2,6 +2,71 @@
 
 ---
 
+## [Signal87_Core_Public_Access_v1] — 2026-06-16  *(Public individual-user access + per-user document isolation)*
+
+### Summary
+Signal87 is now safe for public individual-user deployment. Every document endpoint enforces Clerk user-ID ownership. Public sign-up via Google OAuth is enabled (no approved-email gate required). New users start with an empty document library and can only ever see, chat with, download, delete, or brief their own documents. No UI was redesigned; no intelligence behavior was changed.
+
+### Changed — Database (`lib/db`)
+- **`lib/db/src/schema/documents.ts`:** added `ownerUserId: text("owner_user_id")` (nullable) column to `documentsTable`. `insertDocumentSchema` omits `ownerUserId` (always set server-side). Migration ran: `pnpm --filter @workspace/db run push`.
+- **Existing legacy rows:** 5 pre-existing test documents (IDs 5, 6, 13, 15, 26) have `owner_user_id = NULL`. These are invisible to all new public users — they won't appear in `GET /documents` or any document operation. They are preserved in the DB for audit purposes.
+
+### Changed — Backend (`artifacts/api-server`)
+
+**Ownership pattern applied uniformly:**
+- Every route that accepts a `documentId` or `documentIds` now filters or validates against the authenticated Clerk `userId` at the database level, before any other processing.
+- Single-document routes: `eq(ownerUserId, userId)` added to the WHERE clause — missing or unowned docs return **404** (never 403, to avoid leaking document existence).
+- Multi-document routes (multi-chat, brief): `and(inArray(id, ids), eq(ownerUserId, userId))` — the existing `docs.length !== uniqueIds.length` count check surfaces 404 when any ID is unowned or doesn't exist.
+
+**`routes/documents/index.ts`:**
+- `GET /documents` — filters by `ownerUserId`; chunk count query scoped to owned doc IDs only
+- `POST /documents/upload` — saves `ownerUserId: userId` on insert; rejects if `getAuth(req).userId` is null (never reached — requireAuth guards first)
+- `GET /documents/:id` — ownership filter in WHERE
+- `DELETE /documents/:id` — ownership filter in WHERE
+- `GET /documents/:id/chunks` — fetches doc with ownership filter before returning chunks
+- `GET /documents/:id/original` — ownership filter in WHERE
+- `PUT /documents/:id/original` — ownership filter in WHERE
+- `POST /documents/:id/reindex` — ownership filter in WHERE
+- `GET /admin/stats` — unchanged (global counts, admin-only view)
+
+**`routes/chat/index.ts`:**
+- `POST /documents/:id/chat` — ownership filter in doc fetch WHERE
+- `GET /documents/:id/history` — adds doc fetch with ownership filter (previously went straight to chat messages)
+- `DELETE /documents/:id/history` — adds doc fetch with ownership filter (same)
+
+**`routes/multi-chat/index.ts`:**
+- `POST /documents/multi-chat` — doc fetch WHERE includes `eq(ownerUserId, userId)`; unowned IDs surface as 404 via count check
+
+**`routes/brief/index.ts`:**
+- `POST /documents/brief` — doc fetch WHERE includes `eq(ownerUserId, userId)`; unowned IDs surface as 404 via count check
+
+### Changed — Frontend (`artifacts/signal87-core`)
+- No changes. The approved-user gate (`VITE_APPROVED_EMAILS`) is already disabled when the env var is unset. All authenticated users are admitted. `ProtectedRoute` and `isApproved` logic unchanged.
+
+### Public sign-up
+- Google OAuth (Gmail + Google Workspace) is enabled via the existing Clerk `<SignIn>` and `<SignUp>` components.
+- New public users can register with any Google account.
+- No invite, allowlist, or approval step is required.
+
+### Legacy document handling
+- **Strategy: hide by NULL.** Existing ownerless documents (5 rows) remain in the DB with `owner_user_id = NULL`. No user has `userId = NULL`, so these rows are unreachable by any API query. Documents are preserved intact — not deleted, not reassigned.
+- This was chosen over admin-assignment to avoid giving any live account access to test data.
+
+### User A / User B isolation guarantees
+- `GET /documents` for User A never returns User B's documents (different `ownerUserId`).
+- `GET /documents/:id`, `/original`, `/chunks`, `/reindex`, `/delete`, `/chat`, `/history` for User A's ID return 404 to User B.
+- `POST /multi-chat` and `POST /brief` with User A's document IDs return 404 to User B.
+- New users always start with an empty document library.
+
+### Verified
+- `pnpm run typecheck` — zero errors across all packages
+- DB migration: `owner_user_id text` column added, nullable, all legacy rows = NULL
+- `GET /api/healthz` → 200; all document endpoints → 401 when unauthenticated
+- Sign-in page renders with Google OAuth; public home page accessible without auth
+- `GET /documents` (authenticated) filters to owner's documents only
+
+---
+
 ## [Signal87_Core_Auth_Pass_v1] — 2026-06-15  *(Authentication & access-control readiness)*
 
 ### Summary
