@@ -1,0 +1,98 @@
+Implement hybrid answering behavior for Signal87 AI.
+
+Goal:
+Signal87 AI should be able to answer simple/general questions even when there is no relevant uploaded document context, while still using grounded document answers with citations when the user is asking about uploaded files.
+
+Strict scope:
+Do not change authentication, routing, document upload, brief generation, database schema, environment variables, Clerk/Supabase/OpenAI configuration, or unrelated platform functionality.
+
+Required behavior:
+
+1. General AI mode
+   If the user asks a general question that does not require uploaded documents, answer normally without requiring document citations.
+
+Examples:
+
+* “What is a SAFE note?”
+* “What does EBITDA mean?”
+* “Draft a follow-up email.”
+* “What is the difference between Seed and Series A?”
+* “Explain this term.”
+
+These should not fail just because no document sources are found.
+
+2. Document-grounded mode
+   If the user asks about uploaded documents, selected documents, contract terms, document summaries, comparisons, risks, clauses, or anything clearly tied to files, use the existing document retrieval/grounding system and provide citations where available.
+
+Examples:
+
+* “What does this document say?”
+* “Summarize the uploaded contract.”
+* “Compare these two PDFs.”
+* “What are the risks in my uploaded file?”
+* “Find the termination clause.”
+
+3. Hybrid mode
+   If the question is ambiguous, provide a general answer first, then clearly state whether document context was available.
+
+Example:
+“Generally, this means X. I do not see enough relevant document context to answer from your uploaded files. Upload or select a document and I can ground the answer with citations.”
+
+4. Do not pretend general answers are document-grounded
+   When answering without document support, do not fabricate citations or imply the answer came from uploaded files.
+
+5. Preserve source transparency
+   The user should always be able to tell whether the answer is:
+
+* General AI knowledge
+* Grounded in uploaded documents
+* A hybrid answer
+
+Implementation approach:
+Inspect the existing chat/AI routing logic and document retrieval flow. Add a lightweight intent-routing layer before document retrieval or before final response generation.
+
+The router should classify the user query as:
+
+* general
+* document
+* hybrid
+
+Use simple, conservative heuristics first:
+
+* If query references “this document,” “uploaded,” “file,” “contract,” “PDF,” “brief,” “compare documents,” “clause,” “source,” “citation,” or selected documents, use document mode.
+* If selected documents are active and the query appears to ask about their content, use document mode.
+* If no relevant documents are found and the question is clearly general, answer in general mode.
+* If uncertain, use hybrid mode.
+
+UI/UX:
+If the answer is general, show a subtle label or note such as:
+“General answer — not grounded in uploaded documents.”
+
+If the answer is document-grounded, preserve the existing citation/source behavior.
+
+If hybrid, use:
+“General answer. No relevant document source found.”
+
+Do not add clutter to the interface.
+
+Validation:
+Test these cases:
+
+1. Ask a general question with no documents uploaded.
+2. Ask a general business/legal/finance definition question.
+3. Ask a document-specific question with a relevant document uploaded.
+4. Ask a document-specific question when no relevant source exists.
+5. Ask an ambiguous question and confirm the answer is transparent.
+6. Confirm citations still work for document-grounded answers.
+7. Confirm no fake citations appear for general answers.
+8. Confirm existing upload, brief, dashboard, and chat functionality still work.
+
+Final report:
+Provide:
+
+* Files changed
+* Routing behavior added
+* How general/document/hybrid mode is detected
+* What was preserved
+* Tests run
+* Confirmation that no auth, database, upload, brief generation, or environment configuration was changed
