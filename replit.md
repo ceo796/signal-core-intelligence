@@ -60,6 +60,7 @@ A document-intelligence platform: sign up with Google, upload documents, and que
 - **Approved-user gate (optional):** set `VITE_APPROVED_EMAILS` in Replit Secrets to a comma-separated list of emails to restrict app access. Leave it unset (default) to admit all authenticated users. Changing it requires a frontend redeploy.
 - **Clerk dev vs prod user stores:** accounts created during development do not carry over to the published (production) domain — users must register again on the live URL.
 - **Public sign-up:** Google OAuth (Gmail + Google Workspace) works out of the box. No invite or allowlist step is required for normal public access.
+- **Stripe credentials (priority order):** (1) `STRIPE_SECRET_KEY` env var — set this in Replit Secrets to use your real Stripe account (production). `STRIPE_WEBHOOK_SECRET` is optional alongside it. (2) Replit-managed Stripe integration (sandbox) — used automatically in dev if the env var is not set. The upgrade page reads live products/prices from whichever account is active.
 
 ## Pointers
 
