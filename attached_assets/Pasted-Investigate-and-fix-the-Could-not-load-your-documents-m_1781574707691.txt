@@ -1,0 +1,50 @@
+Investigate and fix the “Could not load your documents” message on the production Documents dashboard.
+
+Important:
+Do not change auth architecture, document ownership isolation, database schema, upload logic, chat logic, brief logic, citations, or model routing.
+
+Goal:
+The documents dashboard should correctly load the signed-in user’s own documents. If the user has no documents, it should show a clean empty state, not an error.
+
+Steps:
+
+1. Check the frontend network request from /documents to the documents API.
+Confirm the exact production response:
+- status code
+- response body
+- whether Clerk auth/session is being sent
+
+2. If logged-in /api/documents returns 401:
+Fix the frontend fetch so authenticated Clerk users send the required session credentials/token to the backend.
+Do not weaken backend auth.
+Do not make /api/documents public.
+The backend should remain protected.
+
+3. If logged-in /api/documents returns 200 with an empty array:
+Fix the frontend Documents page so an empty document list renders a proper empty state:
+“No documents yet. Upload your first document to begin.”
+Do not show “Could not load your documents” for an empty list.
+
+4. If logged-in /api/documents returns 500:
+Find the server error and fix only the narrow issue.
+Confirm the owner_user_id migration exists in production and the query matches the actual column name.
+
+5. Confirm legacy ownerless documents remain hidden.
+Do not expose NULL owner_user_id documents to public users.
+Do not reassign legacy documents unless explicitly instructed.
+
+6. Final QA:
+- Logged-out /api/documents returns 401.
+- Logged-in new user /api/documents returns 200 and an empty list.
+- New user sees a clean empty dashboard.
+- Uploading a document adds owner_user_id.
+- Uploaded document appears after refresh.
+- Another user cannot see that document.
+- No “Could not load your documents” appears unless there is a real server/network failure.
+
+Report back with:
+- exact cause
+- status code found
+- files changed
+- final logged-in /documents behavior
+- confirmation that auth and per-user isolation remain intact

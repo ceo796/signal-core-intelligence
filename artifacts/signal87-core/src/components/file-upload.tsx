@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ function validateFile(f: File): string | null {
 }
 
 export function FileUploadModal() {
+  const { getToken } = useAuth();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -34,9 +36,11 @@ export function FileUploadModal() {
       const formData = new FormData();
       formData.append("file", uploadFile);
 
+      const token = await getToken();
       const res = await fetch("/api/documents/upload", {
         method: "POST",
         body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
       const data = await res.json().catch(() => null);

@@ -96,10 +96,23 @@ function HomeRedirect() {
 function ClerkAuthTokenSync() {
   const { getToken, isSignedIn } = useAuth();
 
+  // Keep getter reference current without making it a dependency that
+  // triggers spurious effect re-runs.
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   useEffect(() => {
-    setAuthTokenGetter(isSignedIn ? () => getToken() : null);
-    return () => { setAuthTokenGetter(null); };
-  }, [isSignedIn, getToken]);
+    if (isSignedIn === true) {
+      setAuthTokenGetter(() => getTokenRef.current());
+    } else if (isSignedIn === false) {
+      setAuthTokenGetter(null);
+    }
+    // isSignedIn === undefined means Clerk is still loading — leave the
+    // existing getter untouched to avoid a null window during handshake.
+  }, [isSignedIn]);
+
+  // Clear only on unmount, not on every re-run.
+  useEffect(() => () => { setAuthTokenGetter(null); }, []);
 
   return null;
 }
