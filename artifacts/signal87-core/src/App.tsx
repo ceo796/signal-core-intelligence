@@ -22,6 +22,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import Home from "@/pages/home";
+import Dashboard from "@/pages/dashboard";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
@@ -90,7 +91,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function HomeRedirect() {
   const { isLoaded, isSignedIn, user } = useUser();
   if (!isLoaded) return <div className="h-screen bg-background" />;
-  if (isSignedIn && isApproved(user)) return <Redirect to="/documents" />;
+  if (isSignedIn && isApproved(user)) return <Redirect to="/dashboard" />;
   if (isSignedIn) return <PendingAccess />;
   return <Home />;
 }
@@ -235,6 +236,11 @@ const ProtectedDocumentChat = () => (
     <DocumentChat />
   </ProtectedRoute>
 );
+const ProtectedDashboard = () => (
+  <ProtectedRoute>
+    <Dashboard />
+  </ProtectedRoute>
+);
 const ProtectedAsk = () => (
   <ProtectedRoute>
     <Ask />
@@ -306,6 +312,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/team/michael-chavira" component={MichaelChavira} />
 
             {/* Protected app routes — more specific paths first */}
+            <Route path="/dashboard" component={ProtectedDashboard} />
             <Route path="/documents/:id/chat" component={ProtectedDocumentChat} />
             <Route path="/documents/:id" component={ProtectedDocumentDetail} />
             <Route path="/documents" component={ProtectedDocumentsList} />

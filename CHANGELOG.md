@@ -2,6 +2,44 @@
 
 ---
 
+## [Signal87_Core_Dashboard_v1] — 2026-06-16  *(Authenticated dashboard home + Compare/Brief routes)*
+
+### Summary
+Adds a polished authenticated dashboard as the signed-in landing page (`/dashboard`), matching the attached screenshot. Also wires `/compare` and `/brief` as protected routes. No backend, auth, API contract, DB schema, upload/download/delete/reindex, or citation logic was changed.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**New page: `src/pages/dashboard.tsx`**
+- Self-contained layout with sidebar (Home, Documents, Collections*, Briefs, Agents*, Workflows*, Settings*) + top bar with global search + notification bell + user avatar/initials.
+- `*` = "Coming soon" (no backend, shown disabled).
+- Welcome header: "Welcome back, [FirstName] 👋" with fallback.
+- AI command bar routes to `/ask`; five action buttons (Upload doc, Create brief; New agent/workflow/collection disabled).
+- Recent documents card: real data from `useListDocuments()`, with file-type icons (PDF/DOCX/CSV/TXT), relative timestamps, clean empty state.
+- Recent briefs card: empty state (briefs are not persisted).
+- Suggested actions: Compare documents → `/compare`; Create a brief → `/brief`; others disabled.
+- `FileUploadModal` used in controlled (externally-triggered) mode.
+
+**Updated: `src/components/file-upload.tsx`**
+- Added optional `open?: boolean` / `onOpenChange?` props for controlled (external trigger) mode; falls back to self-managed mode with the Upload button trigger when props are omitted — no existing callers broken.
+
+**Updated: `src/App.tsx`**
+- `HomeRedirect` now sends authenticated+approved users to `/dashboard` instead of `/documents`.
+- Added `ProtectedDashboard` wrapper and `/dashboard` route.
+- Added `ProtectedCompare` / `ProtectedBrief` wrappers and `/compare` / `/brief` routes (from prior session).
+
+**Updated: `src/components/layout.tsx`**
+- Added Compare (GitCompare) and Brief (BookOpen) to sidebar nav (from prior session).
+
+### Disabled / Coming Soon
+- Collections, Agents, Workflows, Settings — shown in sidebar and action row as greyed-out "Soon" items; no backend routes called.
+- Summarize a collection — shown as disabled in Suggested Actions.
+
+### Data sources
+- Recent documents: `GET /api/documents` (authenticated, per-user isolated).
+- Recent briefs: none — not persisted; shows empty state.
+
+---
+
 ## [Signal87_Core_Public_Access_v1] — 2026-06-16  *(Public individual-user access + per-user document isolation)*
 
 ### Summary
