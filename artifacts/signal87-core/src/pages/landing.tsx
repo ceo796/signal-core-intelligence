@@ -56,7 +56,7 @@ function HeroCanvas() {
       const yBase = H * 0.5;
 
       c.beginPath();
-      c.strokeStyle = "rgba(107, 79, 232, 0.14)";
+      c.strokeStyle = "rgba(107, 79, 232, 0.22)";
       c.lineWidth = 1.2;
       for (let x = 0; x <= W; x += 2) {
         const y =
@@ -73,9 +73,9 @@ function HeroCanvas() {
 
       const grad = c.createLinearGradient(scanX - 90, 0, scanX + 90, 0);
       grad.addColorStop(0, "rgba(107,79,232,0)");
-      grad.addColorStop(0.42, "rgba(107,79,232,0.04)");
-      grad.addColorStop(0.5, "rgba(107,79,232,0.15)");
-      grad.addColorStop(0.58, "rgba(107,79,232,0.04)");
+      grad.addColorStop(0.42, "rgba(107,79,232,0.06)");
+      grad.addColorStop(0.5, "rgba(107,79,232,0.20)");
+      grad.addColorStop(0.58, "rgba(107,79,232,0.06)");
       grad.addColorStop(1, "rgba(107,79,232,0)");
       c.fillStyle = grad;
       c.fillRect(scanX - 90, 0, 180, H);
@@ -86,7 +86,7 @@ function HeroCanvas() {
         Math.sin(scanX * trace.freq * 2.4 + t * trace.speed * 1.3) * (trace.amp * 0.18);
       c.beginPath();
       c.arc(scanX, dotY, 2.5, 0, Math.PI * 2);
-      c.fillStyle = "rgba(107, 79, 232, 0.55)";
+      c.fillStyle = "rgba(107, 79, 232, 0.70)";
       c.fill();
 
       rafId = requestAnimationFrame(draw);
@@ -139,7 +139,7 @@ function MiniCanvas() {
       c.clearRect(0, 0, W, H);
       t2 += 0.012;
 
-      c.strokeStyle = "rgba(107,79,232,0.05)";
+      c.strokeStyle = "rgba(107,79,232,0.08)";
       c.lineWidth = 1;
       for (let y = 0; y < H; y += H / 7) {
         c.beginPath();
@@ -168,7 +168,7 @@ function MiniCanvas() {
       const readX = (t2 * 38) % W;
       const lineGrad = c.createLinearGradient(readX - 40, 0, readX + 2, 0);
       lineGrad.addColorStop(0, "rgba(107,79,232,0)");
-      lineGrad.addColorStop(1, "rgba(107,79,232,0.22)");
+      lineGrad.addColorStop(1, "rgba(107,79,232,0.28)");
       c.strokeStyle = lineGrad;
       c.lineWidth = 1;
       c.beginPath();

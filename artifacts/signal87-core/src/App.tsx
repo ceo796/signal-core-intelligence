@@ -90,7 +90,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function HomeRedirect() {
   const { isLoaded, isSignedIn, user } = useUser();
-  if (!isLoaded) return <div className="h-screen" style={{ background: "#06080F" }} />;
+  if (!isLoaded) return <div className="h-screen" style={{ background: "#FFFFFF" }} />;
   if (isSignedIn && isApproved(user)) return <Redirect to="/dashboard" />;
   if (isSignedIn) return <PendingAccess />;
   return <LandingPage />;
