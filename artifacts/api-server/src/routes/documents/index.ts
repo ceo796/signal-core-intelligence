@@ -3,6 +3,7 @@ import multer from "multer";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { eq, count, sql, and, inArray } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
+import { checkActiveSubscription } from "../../stripe/storage";
 import {
   GetDocumentParams,
   DeleteDocumentParams,
@@ -14,6 +15,8 @@ import {
 import { extractText, getFileType, type SupportedFileType } from "../../lib/text-extractor";
 import { chunkText } from "../../lib/chunker";
 import * as fileStore from "../../lib/file-store";
+
+const FREE_DOC_LIMIT = 3;
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -89,6 +92,25 @@ router.post(
     if (!fileType) {
       res.status(400).json({ error: "Unsupported file type. Allowed: PDF, DOCX, TXT, CSV" });
       return;
+    }
+
+    // ── 0. Enforce free-tier document limit ──────────────────────────────────
+    const [limitRow] = await db
+      .select({ docCount: count(documentsTable.id) })
+      .from(documentsTable)
+      .where(eq(documentsTable.ownerUserId, userId!));
+    const currentDocCount = Number(limitRow?.docCount ?? 0);
+    if (currentDocCount >= FREE_DOC_LIMIT) {
+      const hasActiveSub = await checkActiveSubscription(userId!);
+      if (!hasActiveSub) {
+        res.status(402).json({
+          error: "upgrade_required",
+          message: "Free plan limit reached. Upgrade to upload more documents.",
+          documentCount: currentDocCount,
+          limit: FREE_DOC_LIMIT,
+        });
+        return;
+      }
     }
 
     // ── 1. Save original file to object storage (durable storage is required) ──

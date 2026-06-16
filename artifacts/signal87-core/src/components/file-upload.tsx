@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -32,6 +33,7 @@ interface FileUploadModalProps {
 
 export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp }: FileUploadModalProps = {}) {
   const { getToken } = useAuth();
+  const [, navigate] = useLocation();
   const [internalOpen, setInternalOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -58,6 +60,11 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
 
       const data = await res.json().catch(() => null);
 
+      if (res.status === 402 && data?.error === "upgrade_required") {
+        // Free tier limit hit — redirect to upgrade page
+        throw Object.assign(new Error("upgrade_required"), { isUpgradeRequired: true });
+      }
+
       if (!res.ok) {
         const serverMessage =
           data && typeof data.error === "string" ? data.error : "Upload failed. Please try again.";
@@ -80,7 +87,12 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
         toast.success("Document uploaded successfully");
       }
     },
-    onError: (err: Error) => {
+    onError: (err: Error & { isUpgradeRequired?: boolean }) => {
+      if (err.isUpgradeRequired) {
+        setOpen(false);
+        navigate("/upgrade");
+        return;
+      }
       toast.error(err.message || "Failed to upload document");
     },
   });

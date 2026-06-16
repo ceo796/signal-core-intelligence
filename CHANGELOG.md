@@ -2,6 +2,48 @@
 
 ---
 
+## [Signal87_Core_Stripe_Freemium_v1] — 2026-06-16  *(Stripe freemium integration)*
+
+### Summary
+Full Stripe freemium integration: sign up free → access the app → upgrade prompt when hitting the 3-document free-tier limit. Packages `stripe` + `stripe-replit-sync` added at workspace root. New `users` table in PostgreSQL tracks Stripe customer/subscription IDs. Stripe schema auto-created by `stripe-replit-sync` on startup. Webhook registered before `express.json()`. All typechecks pass.
+
+### Changed — Backend (`artifacts/api-server`)
+
+**New files**
+- `src/stripe/stripeClient.ts` — fetches Stripe credentials from Replit connection API; `getUncachableStripeClient()` + `getStripeSync()`
+- `src/stripe/webhookHandlers.ts` — `WebhookHandlers.processWebhook()` delegating to StripeSync
+- `src/stripe/storage.ts` — `getUserByClerkId`, `upsertUser`, `checkActiveSubscription`, `getActiveSubscriptionForUser`, `listProductsWithPrices` (all query from `stripe.*` schema with graceful fallback if tables don't exist yet)
+- `src/stripe/stripeService.ts` — `getOrCreateCustomer`, `createCheckoutSession`, `createPortalSession`
+- `src/stripe/init.ts` — `initStripe()`: non-fatal; runs `runMigrations` → `findOrCreateManagedWebhook` → `syncBackfill`
+- `src/routes/stripe/index.ts` — `GET /api/stripe/subscription`, `POST /api/stripe/checkout`, `POST /api/stripe/portal`, `GET /api/stripe/products`
+
+**Updated files**
+- `src/app.ts` — webhook route `/api/stripe/webhook` registered before `express.json()`; `/stripe/webhook` exempted from `requireAuth`
+- `src/index.ts` — calls `await initStripe()` before `app.listen()`
+- `src/routes/index.ts` — adds `stripeRouter`
+- `src/routes/documents/index.ts` — `POST /api/documents/upload` now checks free-tier limit (3 docs); returns HTTP 402 `{ error: "upgrade_required" }` if limit hit and no active subscription
+
+### Changed — DB (`lib/db`)
+
+- `lib/db/src/schema/users.ts` — new `users` table: `id` (Clerk userId PK), `email`, `stripe_customer_id`, `stripe_subscription_id`, `created_at`
+- Schema pushed to DB (`pnpm --filter @workspace/db run push`)
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+- `src/hooks/useSubscription.ts` — React Query hook; fetches `GET /api/stripe/subscription`; returns `{ plan, subscriptionStatus, documentCount, documentLimit }`
+- `src/pages/upgrade.tsx` — Pricing page at `/upgrade`; fetches live Stripe products + prices; initiates checkout redirect
+- `src/pages/checkout-success.tsx` — Post-checkout success page at `/checkout/success`; invalidates subscription query
+- `src/pages/checkout-cancel.tsx` — Post-checkout cancel page at `/checkout/cancel`
+- `src/components/file-upload.tsx` — HTTP 402 `upgrade_required` response redirects to `/upgrade` instead of showing error toast
+- `src/App.tsx` — routes for `/upgrade`, `/checkout/success`, `/checkout/cancel`
+
+### Freemium design
+- Free tier: 3 documents
+- Pro tier: unlimited (active/trialing Stripe subscription)
+- Limit enforced server-side on every upload; client-side gate via redirect to `/upgrade`
+
+---
+
 ## [Signal87_Core_Release_Readiness_v1] — 2026-06-16  *(Public-release readiness pass)*
 
 ### Summary

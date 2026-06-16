@@ -39,6 +39,9 @@ import MichaelChavira from "@/pages/team-michael-chavira";
 import LandingPage from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 import PendingAccess from "@/pages/pending-access";
+import UpgradePage from "@/pages/upgrade";
+import CheckoutSuccessPage from "@/pages/checkout-success";
+import CheckoutCancelPage from "@/pages/checkout-cancel";
 
 const queryClient = new QueryClient();
 
@@ -261,6 +264,11 @@ const ProtectedActivity = () => (
     <Activity />
   </ProtectedRoute>
 );
+const ProtectedUpgrade = () => (
+  <ProtectedRoute>
+    <UpgradePage />
+  </ProtectedRoute>
+);
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
@@ -321,6 +329,9 @@ function ClerkProviderWithRoutes() {
             <Route path="/compare" component={ProtectedCompare} />
             <Route path="/brief" component={ProtectedBrief} />
             <Route path="/activity" component={ProtectedActivity} />
+            <Route path="/upgrade" component={ProtectedUpgrade} />
+            <Route path="/checkout/success" component={CheckoutSuccessPage} />
+            <Route path="/checkout/cancel" component={CheckoutCancelPage} />
 
             <Route component={NotFound} />
           </Switch>

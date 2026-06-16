@@ -1,8 +1,8 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Dashboard_v1**
+> Checkpoint: **Signal87_Core_Stripe_Freemium_v1**
 > Last updated: 2026-06-16
-> Note: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page; Compare + Brief frontend routes wired. No backend changes. Prior: `Signal87_Core_Public_Access_v1` — public individual-user access. Added `ownerUserId` column to `documentsTable`; every document endpoint now enforces ownership via `eq(ownerUserId, userId)` in WHERE or as a post-fetch check. No route added/removed, no contract change, no UI change. Prior: `Signal87_Core_Auth_Pass_v1` — Clerk Auth session guard. Prior: `Signal87_Core_Reliability_Clarity_Pass_v1` — reliability/clarity pass. Prior: `Signal87_Core_Backend_Stability_Pass_v1` — global 500 handler, list try/catch, reindex transaction, retriever empty-chunk filter. Prior: `Signal87_Core_Executive_Brief_Generator_v1` — `POST /api/documents/brief`. Prior: `Signal87_Core_Multi_Document_Comparison_v1` — `POST /api/documents/multi-chat`.
+> Note: `Signal87_Core_Stripe_Freemium_v1` — Stripe freemium integration. Free tier = 3 docs; Pro = unlimited. New routes: `GET /api/stripe/subscription`, `POST /api/stripe/checkout`, `POST /api/stripe/portal`, `GET /api/stripe/products`. New `users` table in DB. Webhook at `/api/stripe/webhook` (before express.json). Prior: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page. Prior: `Signal87_Core_Public_Access_v1` — per-user document isolation. Prior: earlier checkpoints.
 
 ---
 
