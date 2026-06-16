@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, Loader2, AlertCircle } from "lucide-react";
+import { UploadCloud, Loader2, AlertCircle, XCircle, CheckCircle2, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const ALLOWED_EXTENSIONS = ["pdf", "docx", "txt", "csv"];
@@ -25,8 +25,15 @@ function validateFile(f: File): string | null {
   return null;
 }
 
+interface FileItem {
+  file: File;
+  error: string | null;
+  status: "pending" | "uploading" | "success" | "warning" | "error";
+  docName?: string;
+  warning?: string;
+}
+
 interface FileUploadModalProps {
-  /** When provided, the dialog is fully controlled by the caller */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -35,21 +42,17 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
   const { getToken } = useAuth();
   const [, navigate] = useLocation();
   const [internalOpen, setInternalOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [files, setFiles] = useState<FileItem[]>([]);
   const queryClient = useQueryClient();
 
-  // Support both controlled (open/onOpenChange from parent) and uncontrolled (internal state)
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : internalOpen;
-  const setOpen = isControlled
-    ? (next: boolean) => onOpenChangeProp?.(next)
-    : setInternalOpen;
+  const setOpen = isControlled ? (next: boolean) => onOpenChangeProp?.(next) : setInternalOpen;
 
   const uploadMutation = useMutation({
-    mutationFn: async (uploadFile: File) => {
+    mutationFn: async (items: FileItem[]) => {
       const formData = new FormData();
-      formData.append("file", uploadFile);
+      items.forEach((item) => formData.append("files", item.file));
 
       const token = await getToken();
       const res = await fetch("/api/documents/upload", {
@@ -61,7 +64,6 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
       const data = await res.json().catch(() => null);
 
       if (res.status === 402 && data?.error === "upgrade_required") {
-        // Free tier limit hit — redirect to upgrade page
         throw Object.assign(new Error("upgrade_required"), { isUpgradeRequired: true });
       }
 
@@ -71,106 +73,180 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
         throw new Error(serverMessage);
       }
 
-      return { data, status: res.status };
+      return data as {
+        results: Array<{
+          fileName: string;
+          success: boolean;
+          document?: { id: number; fileName: string; extractionStatus?: string };
+          warning?: string;
+          error?: string;
+          statusCode?: number;
+        }>;
+        summary?: { uploaded: number; failed: number; total: number };
+      };
     },
-    onSuccess: (result) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-      setOpen(false);
-      setFile(null);
-      setValidationError(null);
-      if (result.status === 207) {
-        toast.warning(
-          (result.data && typeof result.data.warning === "string" && result.data.warning) ||
-            "File uploaded, but no text could be extracted. Open it to re-index or re-upload.",
-        );
-      } else {
-        toast.success("Document uploaded successfully");
+      const summary = data.summary;
+      const warnings = data.results.filter((r) => r.warning);
+      const failures = data.results.filter((r) => !r.success);
+
+      if (summary) {
+        if (summary.failed === 0) {
+          if (warnings.length > 0) {
+            toast.success(
+              `${summary.uploaded} uploaded. ${warnings.length} with extraction warning.`,
+            );
+          } else {
+            toast.success(`${summary.uploaded} document${summary.uploaded === 1 ? "" : "s"} uploaded successfully`);
+          }
+        } else {
+          if (warnings.length > 0) {
+            toast.warning(
+              `${summary.uploaded} uploaded, ${summary.failed} failed, ${warnings.length} with extraction warning.`,
+            );
+          } else {
+            toast.warning(`${summary.uploaded} uploaded, ${summary.failed} failed`);
+          }
+        }
       }
+
+      setFiles([]);
+      setOpen(false);
     },
     onError: (err: Error & { isUpgradeRequired?: boolean }) => {
       if (err.isUpgradeRequired) {
+        setFiles([]);
         setOpen(false);
         navigate("/upgrade");
         return;
       }
-      toast.error(err.message || "Failed to upload document");
+      // Keep files so user can retry after fixing errors
+      toast.error(err.message || "Failed to upload documents");
     },
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0] || null;
-    setFile(f);
-    setValidationError(f ? validateFile(f) : null);
+    const chosen = e.target.files ? Array.from(e.target.files) : [];
+    if (chosen.length === 0) return;
+    const items: FileItem[] = chosen.map((f) => ({ file: f, error: validateFile(f), status: "pending" }));
+    setFiles(items);
   };
 
   const handleUpload = () => {
-    if (!file) return;
-    const error = validateFile(file);
-    if (error) {
-      setValidationError(error);
+    if (files.length === 0) return;
+    const valid = files.filter((f) => !f.error);
+    if (valid.length === 0) {
+      toast.error("No valid files to upload");
       return;
     }
-    uploadMutation.mutate(file);
+    // Mark all as uploading
+    setFiles((prev) => prev.map((f) => ({ ...f, status: f.error ? f.status : "uploading" })));
+    uploadMutation.mutate(valid);
+  };
+
+  const handleRemove = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (!next) {
-      setFile(null);
-      setValidationError(null);
+      setFiles([]);
+      uploadMutation.reset();
     }
   };
 
   const dialogContent = (
     <DialogContent className="sm:max-w-md bg-card border-border">
       <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">Upload Document</DialogTitle>
+        <DialogTitle className="text-lg font-semibold">Upload Documents</DialogTitle>
         <DialogDescription className="text-muted-foreground text-xs">
-          Accepted types: PDF, DOCX, TXT, CSV · Maximum size: {MAX_SIZE_MB} MB.
+          Accepted types: PDF, DOCX, TXT, CSV · Maximum size: {MAX_SIZE_MB} MB per file.
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="file" className="text-muted-foreground text-xs">
-            Select file
+          <Label htmlFor="files" className="text-muted-foreground text-xs">
+            Select files
           </Label>
           <Input
-            id="file"
+            id="files"
             type="file"
+            multiple
             onChange={handleFileChange}
             className="text-sm bg-background border-border"
             accept=".pdf,.docx,.txt,.csv"
           />
-          {validationError ? (
-            <div className="flex items-start gap-2 text-xs text-destructive">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              <span>{validationError}</span>
-            </div>
-          ) : file ? (
-            <p className="text-xs text-muted-foreground">
-              {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB
-            </p>
-          ) : null}
         </div>
+
+        {files.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {files.map((item, i) => {
+              const isError = !!item.error;
+              return (
+                <div
+                  key={i}
+                  className={`flex items-start gap-2 rounded-md border px-2.5 py-2 text-sm ${
+                    isError ? "border-destructive/40 bg-destructive/5" : "border-border bg-background"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate font-medium text-foreground text-xs">{item.file.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {(item.file.size / 1024 / 1024).toFixed(1)} MB
+                    </p>
+                    {isError && (
+                      <p className="text-[11px] text-destructive mt-0.5">{item.error}</p>
+                    )}
+                    {item.status === "uploading" && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Uploading…
+                      </p>
+                    )}
+                    {item.status === "success" && (
+                      <p className="text-[11px] text-emerald-600 mt-0.5 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Uploaded
+                      </p>
+                    )}
+                    {item.status === "warning" && (
+                      <p className="text-[11px] text-amber-600 mt-0.5 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {item.warning}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(i)}
+                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                    aria-label={`Remove ${item.file.name}`}
+                    disabled={uploadMutation.isPending}
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={() => handleOpenChange(false)} className="text-sm">
+        <Button variant="outline" onClick={() => handleOpenChange(false)} className="text-sm" disabled={uploadMutation.isPending}>
           Cancel
         </Button>
         <Button
           onClick={handleUpload}
-          disabled={!file || !!validationError || uploadMutation.isPending}
+          disabled={files.length === 0 || files.every((f) => !!f.error) || uploadMutation.isPending}
           className="text-sm"
         >
           {uploadMutation.isPending && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
-          {uploadMutation.isPending ? "Uploading..." : "Upload"}
+          {uploadMutation.isPending ? "Uploading..." : `Upload ${files.filter((f) => !f.error).length} file${files.filter((f) => !f.error).length === 1 ? "" : "s"}`}
         </Button>
       </DialogFooter>
     </DialogContent>
   );
 
   if (isControlled) {
-    // Controlled mode: no trigger button, caller manages open state
     return (
       <Dialog open={open} onOpenChange={handleOpenChange}>
         {dialogContent}
@@ -178,7 +254,6 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
     );
   }
 
-  // Uncontrolled mode: renders its own Upload button trigger
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>

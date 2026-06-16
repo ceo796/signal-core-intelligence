@@ -33,7 +33,9 @@ import type {
   MultiChatInput,
   MultiChatResult,
   ReindexResult,
-  SystemInfo
+  SystemInfo,
+  UploadBatchResponse,
+  UploadDocumentsBody
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -201,6 +203,79 @@ export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments
 
 
 
+
+export const getUploadDocumentsUrl = () => {
+
+
+
+
+  return `/api/documents/upload`
+}
+
+/**
+ * @summary Upload one or more documents
+ */
+export const uploadDocuments = async (uploadDocumentsBody: UploadDocumentsBody, options?: RequestInit): Promise<UploadBatchResponse> => {
+    const formData = new FormData();
+uploadDocumentsBody.files.forEach(value => formData.append(`files`, value));
+
+  return customFetch<UploadBatchResponse>(getUploadDocumentsUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body:
+      formData,
+  }
+);}
+
+
+
+
+export const getUploadDocumentsMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadDocuments>>, TError,{data: BodyType<UploadDocumentsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadDocuments>>, TError,{data: BodyType<UploadDocumentsBody>}, TContext> => {
+
+const mutationKey = ['uploadDocuments'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadDocuments>>, {data: BodyType<UploadDocumentsBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadDocuments(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadDocumentsMutationResult = NonNullable<Awaited<ReturnType<typeof uploadDocuments>>>
+    export type UploadDocumentsMutationBody = BodyType<UploadDocumentsBody>
+    export type UploadDocumentsMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Upload one or more documents
+ */
+export const useUploadDocuments = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadDocuments>>, TError,{data: BodyType<UploadDocumentsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadDocuments>>,
+        TError,
+        {data: BodyType<UploadDocumentsBody>},
+        TContext
+      > => {
+      return useMutation(getUploadDocumentsMutationOptions(options));
+    }
 
 export const getGetDocumentUrl = (id: number,) => {
 

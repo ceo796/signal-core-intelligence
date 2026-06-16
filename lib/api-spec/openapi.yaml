@@ -44,6 +44,50 @@ paths:
                 items:
                   $ref: "#/components/schemas/Document"
 
+  /documents/upload:
+    post:
+      operationId: uploadDocuments
+      tags: [documents]
+      summary: Upload one or more documents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [files]
+      responses:
+        "200":
+          description: Upload results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadBatchResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          description: Free tier limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /documents/{id}:
     get:
       operationId: getDocument
@@ -800,6 +844,44 @@ components:
               type: integer
             overlapWords:
               type: integer
+
+    UploadBatchResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/UploadResult"
+        summary:
+          type: object
+          required: [uploaded, failed, total]
+          properties:
+            uploaded:
+              type: integer
+            failed:
+              type: integer
+            total:
+              type: integer
+        upgradeRequired:
+          type: boolean
+
+    UploadResult:
+      type: object
+      required: [fileName, success]
+      properties:
+        fileName:
+          type: string
+        success:
+          type: boolean
+        document:
+          $ref: "#/components/schemas/Document"
+        warning:
+          type: ["string", "null"]
+        error:
+          type: ["string", "null"]
+        statusCode:
+          type: integer
 
     ErrorResponse:
       type: object

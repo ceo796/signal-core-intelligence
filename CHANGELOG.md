@@ -2,6 +2,48 @@
 
 ---
 
+## [Signal87_Core_Batch_Upload_v1] — 2026-06-16  *(Batch/multi-file document upload)*
+
+### Summary
+Users can now upload multiple documents at once from the upload dialog. The backend processes each file individually, stores the originals, extracts text, creates DB records and chunks, and returns a summary of results (uploaded count / failed count / total). The free-tier limit is checked against the total count of files being uploaded. If the limit would be exceeded, a single 402 `upgrade_required` is returned before any processing begins. The `PUT /documents/:id/original` route remains single-file. All typechecks pass.
+
+### Changed — Backend (`artifacts/api-server`)
+
+**`src/routes/documents/index.ts`**
+- `POST /api/documents/upload` changed from `upload.single("file")` to `upload.array("files", 10)` (max 10 files per batch).
+- Pre-validates every file's type before touching storage; any unsupported files are recorded as failures but do not block valid files.
+- Free-tier limit check: `currentDocCount + validatedFiles.length > FREE_DOC_LIMIT` → returns 402 with `upgradeRequired: true` if no active subscription.
+- Loops through each validated file: store original, extract text, persist document + chunks, with per-file try/catch and orphaned-file cleanup on DB failure.
+- Returns HTTP 200 with `UploadBatchResponse` containing `results[]` (per-file: `fileName`, `success`, `document`, `warning`, `error`, `statusCode`) and `summary` (`uploaded`, `failed`, `total`).
+- Extraction warnings (207) are embedded as `warning` in the per-file result, not a top-level HTTP status.
+- `PUT /documents/:id/original` unchanged (still single-file).
+
+### Changed — API Contract (`lib/api-spec`)
+
+- `openapi.yaml`: new `POST /documents/upload` endpoint with multipart/form-data `files` array.
+- New schemas: `UploadBatchResponse`, `UploadResult`, `UploadBatchResponseSummary`.
+- Regenerated Orval client (`pnpm --filter @workspace/api-spec run codegen`).
+- Post-codegen fix: `UploadDocumentsBody` in `generated/types/uploadDocumentsBody.ts` uses `any[]` (no `Blob`/`File` in Node lib context); the type is **not** re-exported from `api-zod` index to avoid TS2308 collision with the const in `api.ts`.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/components/file-upload.tsx`** (rewritten)
+- Input uses `multiple` attribute; tracks a list of `FileItem`s.
+- Each file is validated client-side (extension + size) before upload; invalid files are shown inline with red border.
+- Per-file status chips: uploading spinner, success checkmark, warning alert.
+- Files can be removed individually before upload.
+- Upload button shows count of valid files.
+- On success: shows a summary toast (e.g. "3 documents uploaded successfully" or "2 uploaded, 1 failed"). Warnings included in the toast.
+- On `upgrade_required` (402): closes dialog and redirects to `/upgrade`.
+- On partial failure: error toast shown, dialog stays open so user can retry.
+- `FileUploadModal` still supports both controlled mode (dashboard quick action) and uncontrolled mode (documents page trigger).
+
+### Invariants preserved
+- No changes to auth, routing, DB schema, Stripe, the PDF viewer, chat, citations, or Verification Trace.
+- Single-file upload capability is preserved; the new endpoint handles 1 or many files.
+
+---
+
 ## [Signal87_Core_Dashboard_Redesign_v1] — 2026-06-16  *(Dashboard redesign — visual/layout only)*
 
 ### Summary

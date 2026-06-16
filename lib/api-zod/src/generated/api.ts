@@ -38,6 +38,45 @@ export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
 
 
 /**
+ * @summary Upload one or more documents
+ */
+export const UploadDocumentsBody = zod.object({
+  "files": zod.array(zod.any())
+})
+
+export const UploadDocumentsResponse = zod.object({
+  "results": zod.array(zod.object({
+  "fileName": zod.string(),
+  "success": zod.boolean(),
+  "document": zod.object({
+  "id": zod.number(),
+  "fileName": zod.string(),
+  "fileType": zod.string(),
+  "fileSize": zod.number().nullish(),
+  "uploadedAt": zod.coerce.date(),
+  "chunkCount": zod.number(),
+  "extractedTextPreview": zod.string().nullish(),
+  "extractedText": zod.string().nullish(),
+  "extractionStatus": zod.string(),
+  "extractionError": zod.string().nullish(),
+  "storageProvider": zod.string().nullish(),
+  "storageKey": zod.string().nullish(),
+  "originalFileAvailable": zod.boolean()
+}).optional(),
+  "warning": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "statusCode": zod.number().optional()
+})),
+  "summary": zod.object({
+  "uploaded": zod.number(),
+  "failed": zod.number(),
+  "total": zod.number()
+}).optional(),
+  "upgradeRequired": zod.boolean().optional()
+})
+
+
+/**
  * @summary Get a document by ID
  */
 export const GetDocumentParams = zod.object({

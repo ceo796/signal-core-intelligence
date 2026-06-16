@@ -35,3 +35,8 @@ export * from './systemInfoChunkConfig';
 export * from './systemInfoDatabase';
 export * from './systemInfoEnv';
 export * from './systemInfoFileStorageConfig';
+export * from './uploadBatchResponse';
+export * from './uploadBatchResponseSummary';
+// Skipped to avoid TS2308 collision with const UploadDocumentsBody from api.ts
+// export * from './uploadDocumentsBody';
+export * from './uploadResult';

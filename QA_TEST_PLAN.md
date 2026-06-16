@@ -923,4 +923,8 @@ To test manually today:
 - [ ] T40 Dashboard (light) renders sidebar/welcome/command bar/quick actions/Recent work (real docs)/Signal87 AI "Example answer"/right column; no purple; no overflow
 - [ ] T41 Dashboard dark-mode toggle works, persists (`s87-dashboard-theme`), scoped to dashboard only (other pages + font unaffected)
 - [ ] T42 Dashboard mobile: correct stacking, no horizontal overflow, hamburger drawer opens + in-drawer X closes
+- [ ] T43 Batch upload: select 2–3 valid files → all uploaded, summary toast shown, documents appear in list and dashboard Recent work
+- [ ] T43b Batch upload with one invalid file: valid files uploaded, invalid file shown inline with error, not uploaded
+- [ ] T43c Batch upload hitting free-tier limit (3 docs): total batch count > remaining limit → 402 with redirect to /upgrade
+- [ ] T43d Single-file upload still works (backward compatibility)
 - [x] T39 Malformed-PDF stabilization smoke: failed doc inspected (malformed PDF, 0 chunks, original preserved); Q&A on failed doc → 422 (no OpenAI call); improved extraction-failed message shown and wraps in Activity; known-good PDF full lifecycle (upload 201 / extraction success / 3 chunks / preview renders / Q&A 200 + citations / delete 204); Activity accurate with no stale entries; no orphan chunks; all test docs deleted

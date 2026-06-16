@@ -259,7 +259,34 @@ export interface SystemInfo {
   chunkConfig: SystemInfoChunkConfig;
 }
 
+export type UploadBatchResponseSummary = {
+  uploaded: number;
+  failed: number;
+  total: number;
+};
+
+export interface UploadResult {
+  fileName: string;
+  success: boolean;
+  document?: Document;
+  /** @nullable */
+  warning?: string | null;
+  /** @nullable */
+  error?: string | null;
+  statusCode?: number;
+}
+
+export interface UploadBatchResponse {
+  results: UploadResult[];
+  summary?: UploadBatchResponseSummary;
+  upgradeRequired?: boolean;
+}
+
 export interface ErrorResponse {
   error: string;
 }
+
+export type UploadDocumentsBody = {
+  files: Blob[];
+};
 
