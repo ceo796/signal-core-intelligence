@@ -21,7 +21,6 @@ import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
@@ -91,10 +90,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function HomeRedirect() {
   const { isLoaded, isSignedIn, user } = useUser();
-  if (!isLoaded) return <div className="h-screen bg-background" />;
+  if (!isLoaded) return <div className="h-screen" style={{ background: "#06080F" }} />;
   if (isSignedIn && isApproved(user)) return <Redirect to="/dashboard" />;
   if (isSignedIn) return <PendingAccess />;
-  return <Home />;
+  return <LandingPage />;
 }
 
 function ClerkAuthTokenSync() {
