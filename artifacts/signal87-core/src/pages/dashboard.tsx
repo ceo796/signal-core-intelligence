@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import { useListDocuments } from "@workspace/api-client-react";
 import { FileUploadModal } from "@/components/file-upload";
-import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { formatDistanceToNow } from "date-fns";
 import {
   Home,
@@ -14,51 +13,42 @@ import {
   GitBranch,
   Settings,
   Bell,
-  Search,
   Sparkles,
   Upload,
   ArrowRight,
   FileCode,
   Table,
-  ChevronLeft,
-  ChevronRight,
   GitCompare,
-  Layers,
   TrendingUp,
   LogOut,
   Menu,
   X,
-  MessageSquare,
-  ShieldCheck,
   CircleDot,
   Clock,
-  User,
-  CheckCircle2,
-  Send,
-  Zap,
-  Check,
-  AlertCircle,
-  MessageCircle,
-  MoveRight,
+  MoreHorizontal,
+  Paperclip,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const THEME_KEY = "s87-dashboard-theme";
 
 const fileTypeIcon = (fileType: string) => {
   const t = fileType.toLowerCase();
   if (t === "pdf") return FileText;
-  if (t === "csv") return Table;
+  if (t === "csv" || t === "xlsx" || t === "xls") return Table;
   if (t === "docx" || t === "doc") return FileCode;
   return FileText;
 };
 
-const fileTypeColor = (fileType: string) => {
+const fileGlyphColor = (fileType: string) => {
   const t = fileType.toLowerCase();
-  if (t === "pdf") return "text-rose-500 bg-rose-50";
-  if (t === "csv") return "text-emerald-500 bg-emerald-50";
-  if (t === "docx" || t === "doc") return "text-blue-500 bg-blue-50";
-  if (t === "txt") return "text-amber-500 bg-amber-50";
-  return "text-slate-500 bg-slate-50";
+  if (t === "pdf") return "text-rose-500";
+  if (t === "csv" || t === "xlsx" || t === "xls") return "text-emerald-600";
+  if (t === "docx" || t === "doc") return "text-blue-500";
+  if (t === "txt") return "text-amber-500";
+  return "text-[var(--s87-muted)]";
 };
 
 const sidebarNav = [
@@ -71,18 +61,18 @@ const sidebarNav = [
   { href: null, label: "Settings", icon: Settings, soon: true },
 ];
 
-const suggestedActions = [
-  { icon: Layers, label: "Summarize a collection", desc: "Get a summary of key insights", href: null, soon: true },
-  { icon: GitCompare, label: "Compare documents", desc: "Find similarities and differences", href: "/compare" },
-  { icon: TrendingUp, label: "Extract key insights", desc: "Identify themes and takeaways", href: "/ask" },
-  { icon: BookOpen, label: "Create a brief", desc: "Generate a draft brief instantly", href: "/brief" },
+const quickActions = [
+  { icon: Upload, label: "Upload document", desc: "Add files to your library", action: "upload" as const },
+  { icon: BookOpen, label: "Create brief", desc: "Generate an executive brief", href: "/brief" },
+  { icon: Bot, label: "New agent", desc: "Build custom expertise", soon: true },
+  { icon: GitBranch, label: "Start workflow", desc: "Automate your process", soon: true },
+  { icon: FolderOpen, label: "New collection", desc: "Organize your content", soon: true },
 ];
 
-const suggestedQuestions = [
-  "What are the top 3 growth opportunities for Q2 based on our latest research?",
-  "Summarize the key risks in our current contracts",
-  "Compare the pricing models across our last 3 deals",
-  "What due diligence gaps remain in our current portfolio?",
+const suggestedActions = [
+  { icon: GitCompare, label: "Compare competitor reports", desc: "Identify key differences", href: "/compare" },
+  { icon: BookOpen, label: "Generate board-ready summary", desc: "Create an executive overview", href: "/brief" },
+  { icon: TrendingUp, label: "Extract key risks & opportunities", desc: "From your documents", href: "/ask" },
 ];
 
 const followUps = [
@@ -91,33 +81,69 @@ const followUps = [
   "Compare vs last quarter",
 ];
 
-function Sidebar() {
+const EXAMPLE_QUESTION =
+  "What are the top 3 growth opportunities for Q2 based on our latest research?";
+
+function initialsFor(user: ReturnType<typeof useUser>["user"]) {
+  if (!user) return "U";
+  return (
+    ((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() ||
+    user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
+    "U"
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md text-sm text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)] hover:text-[var(--s87-ink)] transition-colors"
+    >
+      {isDark ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
+      <span>{isDark ? "Light mode" : "Dark mode"}</span>
+    </button>
+  );
+}
+
+function CommandBar({ className = "" }: { className?: string }) {
+  return (
+    <Link href="/ask">
+      <div
+        className={`flex items-center gap-3 h-11 px-3.5 rounded-lg border border-[var(--s87-border)] bg-[var(--s87-panel-2)] hover:border-[var(--s87-muted)] transition-colors cursor-text ${className}`}
+      >
+        <Sparkles className="w-4 h-4 text-[var(--s87-muted)] shrink-0" />
+        <span className="flex-1 text-sm text-[var(--s87-muted)] truncate">
+          Ask Signal87 anything across your documents...
+        </span>
+        <div className="hidden sm:flex items-center gap-0.5">
+          <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded">⌘</kbd>
+          <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded">K</kbd>
+        </div>
+        <div className="w-7 h-7 rounded-md bg-[var(--s87-btn)] flex items-center justify-center shrink-0">
+          <ArrowRight className="w-4 h-4 text-[var(--s87-btn-fg)]" />
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function Sidebar({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
   const [location] = useLocation();
-  const { user } = useClerk();
-  const { signOut } = useClerk();
-  const initials = user
-    ? ((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() ||
-      user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
-      "U"
-    : "U";
+  const { user, signOut } = useClerk();
+  const initials = initialsFor(user);
+  const logo = isDark ? `${basePath}/signal87-logo.png` : `${basePath}/signal87-logo-black.svg`;
 
   return (
-    <aside className="hidden md:flex shrink-0 w-[196px] bg-white border-r border-[#ECECF0] flex-col h-screen">
-      {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#ECECF0] shrink-0">
+    <aside className="hidden md:flex shrink-0 w-[208px] bg-[var(--s87-bg)] border-r border-[var(--s87-border)] flex-col h-screen">
+      <div className="flex items-center px-4 h-16 border-b border-[var(--s87-border)] shrink-0">
         <Link href="/">
-          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-7 w-auto" />
+          <img src={logo} alt="Signal87" className="h-7 w-auto" />
         </Link>
-        <button
-          type="button"
-          className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 transition-colors"
-          aria-label="Collapse sidebar"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 flex flex-col px-2.5 py-3 gap-0.5 overflow-y-auto">
         {sidebarNav.map((item) => {
           const isActive = item.href
@@ -129,9 +155,9 @@ function Sidebar() {
             return (
               <div
                 key={item.label}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 cursor-not-allowed select-none"
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--s87-faint)] cursor-not-allowed select-none"
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="w-[18px] h-[18px] shrink-0" />
                 <span>{item.label}</span>
               </div>
             );
@@ -141,79 +167,98 @@ function Sidebar() {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`relative flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                 isActive
-                  ? "bg-violet-50 text-violet-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-[var(--s87-active-bg)] text-[var(--s87-ink)] font-medium"
+                  : "text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)] hover:text-[var(--s87-ink)]"
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-violet-600" : "text-slate-400"}`} />
+              {isActive && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-[var(--s87-rail)]" />
+              )}
+              <Icon
+                className={`w-[18px] h-[18px] shrink-0 ${
+                  isActive ? "text-[var(--s87-ink)]" : "text-[var(--s87-muted)]"
+                }`}
+              />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom user card */}
-      {user && (
-        <div className="px-2.5 pb-4 pt-3 border-t border-[#ECECF0] shrink-0">
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 group">
-            <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 text-xs font-bold shrink-0">
+      <div className="px-2.5 pb-4 pt-3 border-t border-[var(--s87-border)] shrink-0 space-y-1.5">
+        <ThemeToggle isDark={isDark} onToggle={onToggle} />
+        {user && (
+          <div className="flex items-center gap-2.5 p-2.5 rounded-md hover:bg-[var(--s87-hover-bg)] group transition-colors">
+            <div className="w-8 h-8 rounded-full bg-[var(--s87-chip)] border border-[var(--s87-border)] flex items-center justify-center text-[var(--s87-ink)] text-xs font-semibold shrink-0">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
+              <p className="text-xs font-semibold text-[var(--s87-ink)] truncate leading-tight">
                 {user.firstName
                   ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
                   : user.primaryEmailAddress?.emailAddress?.split("@")[0]}
               </p>
-              <p className="text-[10px] text-slate-400 truncate leading-tight">
+              <p className="text-[10px] text-[var(--s87-muted)] truncate leading-tight">
                 {user.primaryEmailAddress?.emailAddress}
               </p>
             </div>
             <button
               type="button"
               onClick={() => signOut({ redirectUrl: basePath || "/" })}
-              className="p-1 rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-200 transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+              className="p-1 rounded-md text-[var(--s87-faint)] hover:text-[var(--s87-ink)] hover:bg-[var(--s87-active-bg)] transition-colors shrink-0 opacity-0 group-hover:opacity-100"
               title="Sign out"
             >
-              <LogOut className="w-3 h-3" />
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 }
 
-function MobileNav() {
+function MobileNav({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
   const [location] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
   const [open, setOpen] = useState(false);
-  const initials = user
-    ? ((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() ||
-      user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
-      "U"
-    : "U";
+  const initials = initialsFor(user);
+  const logo = isDark ? `${basePath}/signal87-logo.png` : `${basePath}/signal87-logo-black.svg`;
 
   return (
     <>
-      <div className="md:hidden shrink-0 flex items-center justify-between px-4 h-14 border-b border-[#ECECF0] bg-white">
+      <div className="md:hidden shrink-0 flex items-center justify-between px-4 h-14 border-b border-[var(--s87-border)] bg-[var(--s87-bg)]">
         <Link href="/">
-          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-7 w-auto" />
+          <img src={logo} alt="Signal87" className="h-7 w-auto" />
         </Link>
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="p-2 rounded-md hover:bg-slate-100 transition-colors"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          className="p-2 rounded-md text-[var(--s87-body)] hover:bg-[var(--s87-hover-bg)] transition-colors"
         >
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {open && (
-        <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col pt-14">
+        <div className="md:hidden fixed inset-0 z-50 bg-[var(--s87-bg)] flex flex-col">
+          <div className="flex items-center justify-between px-4 h-14 border-b border-[var(--s87-border)] shrink-0">
+            <Link href="/" onClick={() => setOpen(false)}>
+              <img src={logo} alt="Signal87" className="h-7 w-auto" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close menu"
+              className="p-2 rounded-md text-[var(--s87-body)] hover:bg-[var(--s87-hover-bg)] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
           <nav className="flex flex-col px-4 py-4 gap-1">
             {sidebarNav.map((item) => {
               const isActive = item.href
@@ -223,8 +268,11 @@ function MobileNav() {
 
               if (!item.href) {
                 return (
-                  <div key={item.label} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 cursor-not-allowed">
-                    <Icon className="w-4 h-4" />
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-[var(--s87-faint)] cursor-not-allowed"
+                  >
+                    <Icon className="w-[18px] h-[18px]" />
                     <span>{item.label}</span>
                   </div>
                 );
@@ -235,33 +283,46 @@ function MobileNav() {
                   key={item.label}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isActive ? "bg-violet-50 text-violet-700" : "text-slate-600 hover:bg-slate-50"
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? "bg-[var(--s87-active-bg)] text-[var(--s87-ink)] font-medium"
+                      : "text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)]"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-violet-600" : "text-slate-400"}`} />
+                  <Icon
+                    className={`w-[18px] h-[18px] ${
+                      isActive ? "text-[var(--s87-ink)]" : "text-[var(--s87-muted)]"
+                    }`}
+                  />
                   {item.label}
                 </Link>
               );
             })}
           </nav>
+          <div className="px-4 pt-2">
+            <ThemeToggle isDark={isDark} onToggle={onToggle} />
+          </div>
           {user && (
-            <div className="mt-auto px-4 py-4 border-t border-[#ECECF0] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 text-xs font-bold">
+            <div className="mt-auto px-4 py-4 border-t border-[var(--s87-border)] flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[var(--s87-chip)] border border-[var(--s87-border)] flex items-center justify-center text-[var(--s87-ink)] text-xs font-semibold shrink-0">
                   {initials}
                 </div>
-                <div>
-                  <p className="text-xs font-semibold">{user.firstName} {user.lastName}</p>
-                  <p className="text-[10px] text-slate-400">{user.primaryEmailAddress?.emailAddress}</p>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-[var(--s87-ink)] truncate">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-[10px] text-[var(--s87-muted)] truncate">
+                    {user.primaryEmailAddress?.emailAddress}
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => signOut({ redirectUrl: basePath || "/" })}
-                className="p-2 rounded-md hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-md text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)] transition-colors shrink-0"
               >
-                <LogOut className="w-4 h-4 text-slate-400" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -273,35 +334,22 @@ function MobileNav() {
 
 function TopBar() {
   const { user } = useUser();
-  const initials = user
-    ? ((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() ||
-      user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
-      "U"
-    : "U";
+  const initials = initialsFor(user);
 
   return (
-    <div className="h-14 flex items-center gap-4 px-6 border-b border-[#ECECF0] bg-white shrink-0">
-      <div className="flex-1 max-w-xl">
-        <div className="relative flex items-center">
-          <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            readOnly
-            placeholder="Search documents, briefs, collections, and more..."
-            className="w-full pl-9 pr-16 py-2 text-sm bg-slate-50 border border-[#ECECF0] rounded-xl text-slate-500 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 cursor-text transition-all"
-          />
-          <div className="absolute right-3 flex items-center gap-0.5">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-white border border-[#ECECF0] rounded shadow-sm">⌘</kbd>
-            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-white border border-[#ECECF0] rounded shadow-sm">K</kbd>
-          </div>
-        </div>
+    <div className="hidden md:flex h-16 items-center gap-4 px-6 border-b border-[var(--s87-border)] bg-[var(--s87-bg)] shrink-0">
+      <div className="flex-1 max-w-2xl">
+        <CommandBar />
       </div>
-
       <div className="flex items-center gap-3 ml-auto">
-        <button type="button" className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 transition-colors relative">
+        <button
+          type="button"
+          className="w-9 h-9 flex items-center justify-center rounded-md text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)] hover:text-[var(--s87-ink)] transition-colors"
+          aria-label="Notifications"
+        >
           <Bell className="w-[18px] h-[18px]" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 text-sm font-bold cursor-default select-none">
+        <div className="w-9 h-9 rounded-full bg-[var(--s87-chip)] border border-[var(--s87-border)] flex items-center justify-center text-[var(--s87-ink)] text-sm font-semibold cursor-default select-none">
           {initials}
         </div>
       </div>
@@ -309,27 +357,69 @@ function TopBar() {
   );
 }
 
-function RecentDocuments({ docs, isLoading, error }: { docs: any[]; isLoading: boolean; error: any }) {
-  const [uploadOpen, setUploadOpen] = useState(false);
+function SectionCard({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: { label: string; href: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="bg-[var(--s87-panel)] border border-[var(--s87-border)] rounded-lg overflow-hidden">
+      <header className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--s87-divider)]">
+        <h2 className="text-sm font-semibold text-[var(--s87-ink)]">{title}</h2>
+        {action && (
+          <Link href={action.href}>
+            <span className="text-xs text-[var(--s87-muted)] hover:text-[var(--s87-ink)] transition-colors cursor-pointer">
+              {action.label}
+            </span>
+          </Link>
+        )}
+      </header>
+      {children}
+    </section>
+  );
+}
 
+function TypePill({ type }: { type: "Document" | "Brief" }) {
+  return (
+    <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] px-1.5 py-0.5 rounded shrink-0">
+      {type}
+    </span>
+  );
+}
+
+function RecentWork({
+  docs,
+  isLoading,
+  error,
+  onUpload,
+}: {
+  docs: any[];
+  isLoading: boolean;
+  error: any;
+  onUpload: () => void;
+}) {
   if (error) {
     return (
       <div className="px-5 py-10 text-center">
         <p className="text-sm text-rose-500">Could not load your documents</p>
-        <p className="text-xs text-slate-400 mt-1">Check your connection and try again</p>
+        <p className="text-xs text-[var(--s87-muted)] mt-1">Check your connection and try again</p>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="divide-y divide-[#F3F4F6]">
-        {[...Array(3)].map((_, i) => (
+      <div className="divide-y divide-[var(--s87-divider)]">
+        {[...Array(4)].map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-5 py-3.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 animate-pulse shrink-0" />
+            <div className="w-8 h-8 rounded-md bg-[var(--s87-chip)] animate-pulse shrink-0" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 bg-slate-100 animate-pulse rounded w-3/4" />
-              <div className="h-2.5 bg-slate-100 animate-pulse rounded w-1/2" />
+              <div className="h-3 bg-[var(--s87-chip)] animate-pulse rounded w-3/4" />
+              <div className="h-2.5 bg-[var(--s87-chip)] animate-pulse rounded w-1/3" />
             </div>
           </div>
         ))}
@@ -339,182 +429,56 @@ function RecentDocuments({ docs, isLoading, error }: { docs: any[]; isLoading: b
 
   if (docs.length === 0) {
     return (
-      <div className="px-5 py-10 text-center">
-        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-          <FileText className="w-5 h-5 text-slate-300" />
+      <div className="px-5 py-12 text-center">
+        <div className="w-12 h-12 rounded-lg bg-[var(--s87-chip)] flex items-center justify-center mx-auto mb-3">
+          <FileText className="w-5 h-5 text-[var(--s87-muted)]" />
         </div>
-        <p className="text-sm font-medium text-slate-500">No documents yet</p>
-        <p className="text-xs text-slate-400 mt-1 mb-4">Upload your first document to begin.</p>
+        <p className="text-sm font-medium text-[var(--s87-ink)]">No recent work yet</p>
+        <p className="text-xs text-[var(--s87-muted)] mt-1 mb-4">
+          Upload a document or generate a brief to get started.
+        </p>
         <button
           type="button"
-          onClick={() => setUploadOpen(true)}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors"
+          onClick={onUpload}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--s87-ink)] hover:opacity-70 transition-opacity"
         >
           <Upload className="w-3.5 h-3.5" />
           Upload a document
         </button>
-        <FileUploadModal open={uploadOpen} onOpenChange={setUploadOpen} />
       </div>
     );
   }
 
   return (
-    <>
-      <div className="grid grid-cols-[1fr_100px_auto] px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400 border-b border-[#F3F4F6]">
-        <span>Name</span>
-        <span className="text-center">Collection</span>
-        <span className="text-right">Updated</span>
-      </div>
-      <div className="divide-y divide-[#F3F4F6]">
-        {docs.map((doc) => {
-          const Icon = fileTypeIcon(doc.fileType);
-          const colors = fileTypeColor(doc.fileType);
-          const updatedAt = doc.uploadedAt
-            ? formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })
-            : "—";
-          return (
-            <Link key={doc.id} href={`/documents/${doc.id}`}>
-              <div className="grid grid-cols-[1fr_100px_auto] items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colors}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate leading-tight" title={doc.fileName}>
-                      {doc.fileName}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <DocumentStatusBadge doc={doc} />
-                    </div>
-                  </div>
-                </div>
-                <span className="text-xs text-slate-400 text-center truncate">—</span>
-                <span className="text-xs text-slate-400 whitespace-nowrap shrink-0 text-right">{updatedAt}</span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-      <div className="px-5 py-3 border-t border-[#F3F4F6]">
-        <Link href="/documents">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors cursor-pointer">
-            View all documents
-            <ArrowRight className="w-3 h-3" />
-          </span>
-        </Link>
-      </div>
-    </>
-  );
-}
-
-function RecentBriefs() {
-  return (
-    <div className="px-5 py-10 text-center">
-      <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-        <BookOpen className="w-5 h-5 text-slate-300" />
-      </div>
-      <p className="text-sm font-medium text-slate-500">No briefs yet</p>
-      <p className="text-xs text-slate-400 mt-1 mb-4">Generate a brief over your documents to see it here.</p>
-      <Link href="/brief">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors cursor-pointer">
-          <BookOpen className="w-3.5 h-3.5" />
-          Create your first brief
-        </span>
-      </Link>
-    </div>
-  );
-}
-
-function ActivityItem({ icon, text, sub, time }: { icon: React.ElementType; text: string; sub?: string; time: string }) {
-  const Icon = icon;
-  return (
-    <div className="flex items-start gap-3 px-5 py-3 hover:bg-slate-50 transition-colors">
-      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-slate-400" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-slate-700 leading-tight">{text}</p>
-        {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
-      </div>
-      <span className="text-xs text-slate-400 whitespace-nowrap shrink-0">{time}</span>
-    </div>
-  );
-}
-
-function RecentActivity({ docs, isLoading }: { docs: any[]; isLoading: boolean }) {
-  if (isLoading) {
-    return (
-      <div className="space-y-3 px-5 py-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 animate-pulse shrink-0" />
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3 bg-slate-100 animate-pulse rounded w-3/4" />
-              <div className="h-2.5 bg-slate-100 animate-pulse rounded w-1/2" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  const events = docs.map((doc) => ({
-    icon: Upload,
-    text: `You uploaded ${doc.fileName}`,
-    time: doc.uploadedAt ? formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true }) : "—",
-  }));
-
-  if (events.length === 0) {
-    return (
-      <div className="px-5 py-10 text-center">
-        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-          <Clock className="w-5 h-5 text-slate-300" />
-        </div>
-        <p className="text-sm font-medium text-slate-500">No recent activity yet</p>
-        <p className="text-xs text-slate-400 mt-1">Upload documents to see activity here.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="divide-y divide-[#F3F4F6]">
-      {events.slice(0, 5).map((event, i) => (
-        <ActivityItem key={i} icon={event.icon} text={event.text} time={event.time} />
-      ))}
-    </div>
-  );
-}
-
-function SuggestedActions() {
-  return (
-    <div className="divide-y divide-[#F3F4F6]">
-      {suggestedActions.map((action) => {
-        const Icon = action.icon;
-        if (action.soon || !action.href) {
-          return (
-            <div key={action.label} className="flex items-center gap-3 px-5 py-4 cursor-not-allowed select-none">
-              <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                <Icon className="w-[18px] h-[18px] text-slate-300" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-300 leading-tight">{action.label}</p>
-                <p className="text-xs text-slate-300 mt-0.5">{action.desc}</p>
-              </div>
-              <span className="text-[9px] font-semibold text-slate-300 bg-slate-50 px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0">Soon</span>
-            </div>
-          );
-        }
+    <div className="divide-y divide-[var(--s87-divider)]">
+      {docs.map((doc) => {
+        const Icon = fileTypeIcon(doc.fileType);
+        const glyph = fileGlyphColor(doc.fileType);
+        const updatedAt = doc.uploadedAt
+          ? formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })
+          : "—";
         return (
-          <Link key={action.label} href={action.href}>
-            <div className="flex items-center gap-3 px-5 py-4 hover:bg-violet-50 transition-colors cursor-pointer group">
-              <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center shrink-0 group-hover:bg-violet-100 transition-colors">
-                <Icon className="w-[18px] h-[18px] text-violet-500" />
+          <Link key={doc.id} href={`/documents/${doc.id}`}>
+            <div className="group flex items-center gap-3 px-4 sm:px-5 py-3 hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer">
+              <div className="w-8 h-8 rounded-md bg-[var(--s87-chip)] flex items-center justify-center shrink-0">
+                <Icon className={`w-4 h-4 ${glyph}`} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-700 leading-tight group-hover:text-violet-700 transition-colors">{action.label}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{action.desc}</p>
+                <p className="text-sm font-medium text-[var(--s87-ink)] truncate leading-tight" title={doc.fileName}>
+                  {doc.fileName}
+                </p>
+                <div className="flex items-center gap-2 mt-1 sm:hidden">
+                  <TypePill type="Document" />
+                  <span className="text-[11px] text-[var(--s87-muted)] truncate">Uploaded {updatedAt}</span>
+                </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-violet-400 transition-colors shrink-0" />
+              <div className="hidden sm:block w-[88px] shrink-0">
+                <TypePill type="Document" />
+              </div>
+              <span className="hidden sm:block text-xs text-[var(--s87-muted)] whitespace-nowrap shrink-0 text-right w-[120px]">
+                Uploaded {updatedAt}
+              </span>
+              <MoreHorizontal className="hidden sm:block w-4 h-4 text-[var(--s87-faint)] group-hover:text-[var(--s87-muted)] transition-colors shrink-0" />
             </div>
           </Link>
         );
@@ -525,48 +489,49 @@ function SuggestedActions() {
 
 function Signal87AiPanel() {
   return (
-    <div className="space-y-4">
+    <section className="bg-[var(--s87-panel)] border border-[var(--s87-border)] rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-5">
+      <div className="flex items-center justify-between gap-3 px-5 pt-5 flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-violet-600" />
-            <span className="text-sm font-semibold text-slate-800">Signal87 AI</span>
-          </div>
-          <span className="px-1.5 py-0.5 text-[9px] font-semibold text-violet-600 bg-violet-50 rounded border border-violet-100 uppercase tracking-wide">Beta</span>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="flex items-center gap-1">
-            <CircleDot className="w-3 h-3 text-emerald-500" />
-            Sources
+          <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
+          <span className="text-sm font-semibold text-[var(--s87-ink)]">Signal87 AI</span>
+          <span className="px-1.5 py-0.5 text-[9px] font-semibold text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded uppercase tracking-wide">
+            Beta
           </span>
-          <span className="text-slate-300">·</span>
-          <span className="text-slate-600 font-medium">Connected</span>
-          <span className="text-slate-300">·</span>
-          <span className="text-violet-600 hover:text-violet-700 cursor-pointer font-medium transition-colors">Manage</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-[var(--s87-muted)]">
+          <CircleDot className="w-3 h-3" style={{ color: "var(--s87-ok)" }} />
+          <span>Sources connected</span>
+          <span className="text-[var(--s87-faint)]">·</span>
+          <span className="text-[var(--s87-ink)] hover:opacity-70 cursor-pointer font-medium transition-opacity">
+            Manage
+          </span>
         </div>
       </div>
-      <p className="px-5 text-xs text-slate-400">
+      <p className="px-5 mt-2 text-xs text-[var(--s87-muted)]">
         I can answer questions across your uploaded documents.
       </p>
 
-      {/* Suggested question */}
-      <div className="px-5">
+      {/* Example question chip */}
+      <div className="px-5 mt-4">
         <Link href="/ask">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-50 border border-violet-100 text-xs text-violet-700 hover:bg-violet-100 transition-colors cursor-pointer max-w-full">
-            <span className="truncate">What are the top 3 growth opportunities for Q2 based on our latest research?</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-[var(--s87-chip)] border border-[var(--s87-border)] text-xs text-[var(--s87-body)] hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer max-w-full">
+            <span className="truncate">{EXAMPLE_QUESTION}</span>
           </div>
         </Link>
       </div>
 
-      {/* Chat response */}
-      <div className="px-5 pb-2">
+      {/* AI answer */}
+      <div className="px-5 mt-4">
         <div className="flex gap-3">
-          <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center shrink-0 mt-1">
-            <Sparkles className="w-4 h-4 text-violet-600" />
+          <div className="w-7 h-7 rounded-md bg-[var(--s87-chip)] flex items-center justify-center shrink-0 mt-1">
+            <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="bg-slate-50 border border-[#ECECF0] rounded-xl p-4 text-sm text-slate-700 leading-relaxed">
+            <span className="inline-block mb-1.5 text-[10px] font-medium uppercase tracking-wide text-[var(--s87-muted)]">
+              Example answer
+            </span>
+            <div className="bg-[var(--s87-panel-2)] border border-[var(--s87-border)] rounded-lg p-4 text-sm text-[var(--s87-body)] leading-relaxed">
               <p className="mb-3">
                 Based on your Q2 market research and competitive analysis, the top 3 growth opportunities are:
               </p>
@@ -575,35 +540,33 @@ function Signal87AiPanel() {
                 <li>Increase wallet share through integrations and workflow automation.</li>
                 <li>Differentiate on pricing transparency and ROI reporting.</li>
               </ol>
-              <p className="text-slate-500">
+              <p className="text-[var(--s87-muted)]">
                 These are supported by trends in market demand, competitive gaps, and customer feedback.
               </p>
             </div>
 
-            {/* Citation chips */}
+            {/* Citations */}
             <div className="flex flex-wrap gap-2 mt-3">
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-violet-50 border border-violet-100 text-xs text-violet-700">
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-violet-200 text-[9px] font-bold text-violet-700">1</span>
-                Q2 Market Research.pdf
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-violet-50 border border-violet-100 text-xs text-violet-700">
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-violet-200 text-[9px] font-bold text-violet-700">2</span>
-                Competitive Analysis.docx
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-violet-50 border border-violet-100 text-xs text-violet-700">
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-violet-200 text-[9px] font-bold text-violet-700">3</span>
-                Customer Interviews.pdf
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <MoveRight className="w-3 h-3" />
-              </span>
+              {["Q2 Market Research.pdf", "Competitive Analysis.docx", "Customer Interviews.pdf"].map(
+                (src, i) => (
+                  <span
+                    key={src}
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--s87-chip)] border border-[var(--s87-border)] text-xs text-[var(--s87-body)]"
+                  >
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--s87-ink)] text-[9px] font-bold text-[var(--s87-btn-fg)]">
+                      {i + 1}
+                    </span>
+                    {src}
+                  </span>
+                ),
+              )}
             </div>
 
-            {/* Follow-up chips */}
+            {/* Follow-up suggestions */}
             <div className="flex flex-wrap gap-2 mt-3">
               {followUps.map((q) => (
                 <Link key={q} href="/ask">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-[#ECECF0] bg-white text-xs text-slate-500 hover:border-violet-200 hover:text-violet-700 hover:bg-violet-50 transition-colors cursor-pointer">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-[var(--s87-border)] bg-[var(--s87-panel-2)] text-xs text-[var(--s87-muted)] hover:text-[var(--s87-ink)] hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer">
                     {q}
                   </span>
                 </Link>
@@ -614,26 +577,164 @@ function Signal87AiPanel() {
       </div>
 
       {/* Follow-up input */}
-      <div className="px-5 pb-5">
+      <div className="px-5 py-5 mt-2">
         <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
+          <div className="flex-1 relative flex items-center">
+            <Paperclip className="absolute left-3 w-4 h-4 text-[var(--s87-faint)] pointer-events-none" />
             <input
               type="text"
               readOnly
               placeholder="Ask a follow-up..."
-              className="w-full pl-4 pr-4 py-2.5 text-sm bg-white border border-[#ECECF0] rounded-xl text-slate-500 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 cursor-text transition-all"
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-[var(--s87-panel-2)] border border-[var(--s87-border)] rounded-lg text-[var(--s87-body)] placeholder:text-[var(--s87-faint)] focus:outline-none focus:border-[var(--s87-muted)] cursor-text transition-colors"
             />
           </div>
           <Link href="/ask">
-            <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center hover:bg-violet-700 transition-colors cursor-pointer shrink-0">
-              <Send className="w-4 h-4 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-[var(--s87-btn)] flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer shrink-0">
+              <ArrowRight className="w-4 h-4 text-[var(--s87-btn-fg)]" />
             </div>
           </Link>
         </div>
-        <p className="text-[10px] text-slate-400 mt-2 text-center">
+        <p className="text-[10px] text-[var(--s87-muted)] mt-2 text-center">
           AI can make mistakes. Verify important information.
         </p>
       </div>
+    </section>
+  );
+}
+
+function RecentActivity({ docs, isLoading }: { docs: any[]; isLoading: boolean }) {
+  return (
+    <SectionCard title="Recent activity" action={{ label: "View all", href: "/activity" }}>
+      {isLoading ? (
+        <div className="space-y-3 px-4 py-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center gap-2.5">
+              <div className="w-3.5 h-3.5 rounded bg-[var(--s87-chip)] animate-pulse shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-2.5 bg-[var(--s87-chip)] animate-pulse rounded w-3/4" />
+                <div className="h-2 bg-[var(--s87-chip)] animate-pulse rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : docs.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <div className="w-10 h-10 rounded-lg bg-[var(--s87-chip)] flex items-center justify-center mx-auto mb-2.5">
+            <Clock className="w-4 h-4 text-[var(--s87-muted)]" />
+          </div>
+          <p className="text-xs font-medium text-[var(--s87-ink)]">No recent activity</p>
+          <p className="text-[11px] text-[var(--s87-muted)] mt-1">Upload documents to see activity here.</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-[var(--s87-divider)]">
+          {docs.slice(0, 5).map((doc) => {
+            const time = doc.uploadedAt
+              ? formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })
+              : "—";
+            return (
+              <Link key={doc.id} href={`/documents/${doc.id}`}>
+                <div className="flex items-start gap-2.5 px-4 py-2.5 hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer">
+                  <Upload className="w-3.5 h-3.5 text-[var(--s87-muted)] mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-[var(--s87-ink)] truncate leading-tight" title={doc.fileName}>
+                      {doc.fileName}
+                    </p>
+                    <p className="text-[11px] text-[var(--s87-muted)] mt-0.5">Uploaded {time}</p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+function SuggestedActions() {
+  return (
+    <SectionCard title="Suggested actions">
+      <div className="divide-y divide-[var(--s87-divider)]">
+        {suggestedActions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link key={action.label} href={action.href}>
+              <div className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer">
+                <Icon className="w-4 h-4 text-[var(--s87-muted)] mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-[var(--s87-ink)] leading-tight">{action.label}</p>
+                  <p className="text-[11px] text-[var(--s87-muted)] mt-0.5">{action.desc}</p>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+function QuickActions({ onUpload }: { onUpload: () => void }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {quickActions.map((qa) => {
+        const Icon = qa.icon;
+        const inner = (
+          <>
+            <Icon
+              className={`w-[18px] h-[18px] shrink-0 mt-0.5 ${
+                qa.soon ? "text-[var(--s87-faint)]" : "text-[var(--s87-ink)]"
+              }`}
+            />
+            <div className="min-w-0">
+              <p
+                className={`text-sm font-medium leading-tight ${
+                  qa.soon ? "text-[var(--s87-faint)]" : "text-[var(--s87-ink)]"
+                }`}
+              >
+                {qa.label}
+              </p>
+              <p
+                className={`text-[11px] mt-0.5 leading-tight ${
+                  qa.soon ? "text-[var(--s87-faint)]" : "text-[var(--s87-muted)]"
+                }`}
+              >
+                {qa.desc}
+              </p>
+            </div>
+          </>
+        );
+
+        const base =
+          "flex items-start gap-3 bg-[var(--s87-panel)] border border-[var(--s87-border)] rounded-lg px-3.5 py-3 text-left transition-colors";
+
+        if (qa.soon) {
+          return (
+            <div key={qa.label} className={`${base} cursor-not-allowed select-none`}>
+              {inner}
+            </div>
+          );
+        }
+        if (qa.action === "upload") {
+          return (
+            <button
+              key={qa.label}
+              type="button"
+              onClick={onUpload}
+              className={`${base} hover:bg-[var(--s87-hover-bg)] hover:border-[var(--s87-muted)]`}
+            >
+              {inner}
+            </button>
+          );
+        }
+        return (
+          <Link key={qa.label} href={qa.href!}>
+            <div className={`${base} h-full hover:bg-[var(--s87-hover-bg)] hover:border-[var(--s87-muted)] cursor-pointer`}>
+              {inner}
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -642,134 +743,75 @@ export default function Dashboard() {
   const { user } = useUser();
   const { data: documents, isLoading, error } = useListDocuments();
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_KEY) === "dark";
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleTheme = () =>
+    setIsDark((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(THEME_KEY, next ? "dark" : "light");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
 
   const firstName = user?.firstName || null;
-  const recentDocs = (documents ?? []).slice(0, 5);
+  const recentDocs = (documents ?? []).slice(0, 6);
 
   return (
-    <div className="flex h-screen bg-[#FAFAFB] font-sans overflow-hidden">
-      <Sidebar />
+    <div
+      className={`s87 flex h-screen overflow-hidden bg-[var(--s87-bg)] text-[var(--s87-body)] ${
+        isDark ? "s87-dark" : ""
+      }`}
+    >
+      <Sidebar isDark={isDark} onToggle={toggleTheme} />
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <MobileNav />
+        <MobileNav isDark={isDark} onToggle={toggleTheme} />
         <TopBar />
 
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
-
-            {/* Page header */}
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+            {/* Welcome */}
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {firstName ? `Welcome back, ${firstName} 👋` : "Welcome back 👋"}
+              <h1 className="text-3xl font-semibold tracking-tight text-[var(--s87-ink)] leading-tight">
+                {firstName ? `Welcome back, ${firstName}.` : "Welcome back."}
               </h1>
-              <p className="text-sm text-slate-400 mt-0.5">
+              <p className="text-sm text-[var(--s87-muted)] mt-1.5">
                 Your AI workspace for documents, insights, and execution.
               </p>
             </div>
 
-            {/* AI command bar */}
-            <Link href="/ask">
-              <div className="flex items-center gap-4 bg-white border border-[#ECECF0] rounded-2xl px-5 py-4 shadow-sm hover:border-violet-200 hover:shadow-md transition-all cursor-pointer group">
-                <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-violet-500" />
-                </div>
-                <span className="flex-1 text-sm text-slate-400">
-                  Ask Signal87 anything across your documents
-                </span>
-                <div className="w-9 h-9 rounded-full bg-violet-600 flex items-center justify-center shrink-0 group-hover:bg-violet-700 transition-colors">
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </div>
-              </div>
-            </Link>
+            {/* Command bar — desktop lives in the top bar; this is the mobile-stack copy */}
+            <CommandBar className="md:hidden" />
 
-            {/* Action row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <button
-                type="button"
-                onClick={() => setUploadOpen(true)}
-                className="flex flex-col items-center gap-2 bg-white border border-[#ECECF0] rounded-2xl px-4 py-4 text-sm font-medium text-slate-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 transition-all shadow-sm text-center"
-              >
-                <Upload className="w-5 h-5 text-slate-400" />
-                Upload document
-              </button>
+            {/* Quick actions */}
+            <QuickActions onUpload={() => setUploadOpen(true)} />
 
-              <Link href="/brief">
-                <div className="flex flex-col items-center gap-2 bg-white border border-[#ECECF0] rounded-2xl px-4 py-4 text-sm font-medium text-slate-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 transition-all shadow-sm text-center cursor-pointer h-full">
-                  <BookOpen className="w-5 h-5 text-slate-400" />
-                  Create brief
-                </div>
-              </Link>
-
-              <div className="flex flex-col items-center gap-2 bg-white border border-[#ECECF0] rounded-2xl px-4 py-4 text-sm font-medium text-slate-300 shadow-sm text-center cursor-not-allowed select-none">
-                <Bot className="w-5 h-5 text-slate-200" />
-                New agent
+            {/* Main grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
+              <div className="space-y-5 min-w-0">
+                <SectionCard title="Recent work" action={{ label: "View all", href: "/documents" }}>
+                  <RecentWork
+                    docs={recentDocs}
+                    isLoading={isLoading}
+                    error={error}
+                    onUpload={() => setUploadOpen(true)}
+                  />
+                </SectionCard>
+                <Signal87AiPanel />
               </div>
 
-              <div className="flex flex-col items-center gap-2 bg-white border border-[#ECECF0] rounded-2xl px-4 py-4 text-sm font-medium text-slate-300 shadow-sm text-center cursor-not-allowed select-none">
-                <GitBranch className="w-5 h-5 text-slate-200" />
-                Start workflow
-              </div>
-
-              <div className="flex flex-col items-center gap-2 bg-white border border-[#ECECF0] rounded-2xl px-4 py-4 text-sm font-medium text-slate-300 shadow-sm text-center cursor-not-allowed select-none">
-                <FolderOpen className="w-5 h-5 text-slate-200" />
-                New collection
-              </div>
-            </div>
-
-            {/* Two-column grid: Recent docs/briefs + AI/Activity/Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
-              {/* Left column */}
-              <div className="space-y-5">
-                {/* Recent documents */}
-                <div className="bg-white border border-[#ECECF0] rounded-2xl shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#F3F4F6]">
-                    <h2 className="text-sm font-semibold text-slate-800">Recent documents</h2>
-                    <Link href="/documents">
-                      <span className="text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors cursor-pointer">View all</span>
-                    </Link>
-                  </div>
-                  <RecentDocuments docs={recentDocs} isLoading={isLoading} error={error} />
-                </div>
-
-                {/* Signal87 AI panel */}
-                <div className="bg-white border border-[#ECECF0] rounded-2xl shadow-sm overflow-hidden">
-                  <Signal87AiPanel />
-                </div>
-              </div>
-
-              {/* Right column */}
-              <div className="space-y-5">
-                {/* Recent briefs */}
-                <div className="bg-white border border-[#ECECF0] rounded-2xl shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#F3F4F6]">
-                    <h2 className="text-sm font-semibold text-slate-800">Recent briefs</h2>
-                    <Link href="/brief">
-                      <span className="text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors cursor-pointer">View all</span>
-                    </Link>
-                  </div>
-                  <RecentBriefs />
-                </div>
-
-                {/* Recent activity */}
-                <div className="bg-white border border-[#ECECF0] rounded-2xl shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#F3F4F6]">
-                    <h2 className="text-sm font-semibold text-slate-800">Recent activity</h2>
-                    <Link href="/activity">
-                      <span className="text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors cursor-pointer">View all</span>
-                    </Link>
-                  </div>
-                  <RecentActivity docs={recentDocs} isLoading={isLoading} />
-                </div>
-
-                {/* Suggested actions */}
-                <div className="bg-white border border-[#ECECF0] rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-[#F3F4F6]">
-                    <h2 className="text-sm font-semibold text-slate-800">Suggested actions</h2>
-                  </div>
-                  <SuggestedActions />
-                </div>
+              <div className="space-y-5 min-w-0">
+                <RecentActivity docs={recentDocs} isLoading={isLoading} />
+                <SuggestedActions />
               </div>
             </div>
           </div>

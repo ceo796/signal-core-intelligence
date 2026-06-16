@@ -204,6 +204,54 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.5);
 }
 
+/* ---------------------------------------------------------------------------
+   Dashboard-scoped palette (Signal87 "Recent work" redesign).
+   Self-contained so the rest of the app (which uses the global tokens above)
+   is untouched. Light = warm cream / ink. Dark (.s87-dark) = near-black /
+   graphite with warm cream-gold accents. Toggled per-dashboard via the
+   `s87-dark` class — never sets the global `.dark` class.
+--------------------------------------------------------------------------- */
+.s87 {
+  font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --s87-bg: #F6F4EE;
+  --s87-panel: #FCFBF7;
+  --s87-panel-2: #FFFFFF;
+  --s87-border: #E7E2D6;
+  --s87-divider: #EEEAE0;
+  --s87-ink: #1B1A17;
+  --s87-body: #44423B;
+  --s87-muted: #8C887C;
+  --s87-faint: #B7B2A6;
+  --s87-active-bg: #ECE8DD;
+  --s87-hover-bg: #F0EDE3;
+  --s87-rail: #1B1A17;
+  --s87-btn: #1B1A17;
+  --s87-btn-fg: #FAF8F2;
+  --s87-chip: #F0ECE1;
+  --s87-accent: #2A3550;
+  --s87-ok: #4E9A6B;
+}
+
+.s87.s87-dark {
+  --s87-bg: #0C0C0B;
+  --s87-panel: #161513;
+  --s87-panel-2: #1B1A17;
+  --s87-border: #2A2824;
+  --s87-divider: #232220;
+  --s87-ink: #F3EFE4;
+  --s87-body: #CEC9BB;
+  --s87-muted: #8E8A7E;
+  --s87-faint: #5C5950;
+  --s87-active-bg: #201F1B;
+  --s87-hover-bg: #1C1B18;
+  --s87-rail: #D9B47E;
+  --s87-btn: #E6DCC3;
+  --s87-btn-fg: #18170F;
+  --s87-chip: #201F1B;
+  --s87-accent: #D9B47E;
+  --s87-ok: #5BBE86;
+}
+
 @layer base {
   * {
     @apply border-border;

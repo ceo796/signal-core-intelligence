@@ -1,8 +1,8 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Stripe_Freemium_v1**
+> Checkpoint: **Signal87_Core_Dashboard_Redesign_v1**
 > Last updated: 2026-06-16
-> Note: `Signal87_Core_Stripe_Freemium_v1` — Stripe freemium integration. Free tier = 3 docs; Pro = unlimited. New routes: `GET /api/stripe/subscription`, `POST /api/stripe/checkout` (validates `priceId` server-side via `isAllowedCheckoutPrice` — only active recurring prices on active products with amount > 0), `POST /api/stripe/portal`, `GET /api/stripe/products`. New `users` table in DB. Webhook at `/api/stripe/webhook` (before express.json). Startup backfills only products + prices (subscription state via webhook); credentials prefer `STRIPE_SECRET_KEY` env var, fall back to Replit Stripe connector. Prior: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page. Prior: `Signal87_Core_Public_Access_v1` — per-user document isolation. Prior: earlier checkpoints.
+> Note: `Signal87_Core_Dashboard_Redesign_v1` — **frontend-only** dashboard redesign (visual/layout + a dashboard-scoped dark mode). **No backend, API, route, contract, DB, or env changes**, so this backend map is unchanged from the prior checkpoint. Prior: `Signal87_Core_Stripe_Freemium_v1` — Stripe freemium integration. Free tier = 3 docs; Pro = unlimited. New routes: `GET /api/stripe/subscription`, `POST /api/stripe/checkout` (validates `priceId` server-side via `isAllowedCheckoutPrice` — only active recurring prices on active products with amount > 0), `POST /api/stripe/portal`, `GET /api/stripe/products`. New `users` table in DB. Webhook at `/api/stripe/webhook` (before express.json). Startup backfills only products + prices (subscription state via webhook); credentials prefer `STRIPE_SECRET_KEY` env var, fall back to Replit Stripe connector. Prior: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page. Prior: `Signal87_Core_Public_Access_v1` — per-user document isolation. Prior: earlier checkpoints.
 
 ---
 

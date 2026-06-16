@@ -2,6 +2,39 @@
 
 ---
 
+## [Signal87_Core_Dashboard_Redesign_v1] — 2026-06-16  *(Dashboard redesign — visual/layout only)*
+
+### Summary
+Implemented the approved simplified Signal87 dashboard design (per the 166-line spec + mockup). **Strictly visual/layout only** — no backend, auth, routing, API, contract, DB, or env changes. New cream/ink light theme + an optional near-black/graphite **dashboard-scoped dark mode** (warm gold/cream accents, no dominant purple). All theming is isolated to the dashboard via a `.s87` wrapper and CSS variables; the global `:root`/`.dark` tokens and all other pages are untouched. Typecheck passes; desktop + mobile e2e (authenticated) pass.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`index.html`**
+- Added `Inter Tight` (weights 400–700) to the Google Fonts `<link>`.
+
+**`src/index.css`**
+- Added two **additive, dashboard-scoped** CSS-variable blocks (placed before `@layer base`, leaving global tokens untouched):
+  - `.s87` — warm cream/ink light palette + `font-family: 'Inter Tight', …` scoped to the dashboard only.
+  - `.s87.s87-dark` — near-black/graphite surfaces with warm cream-gold accents.
+- The global `--app-font-sans` is **unchanged** (Inter Tight is applied only inside `.s87`, so other pages keep their existing typography).
+
+**`src/pages/dashboard.tsx`** (full rewrite, presentation only)
+- Sidebar: logo, nav with a subtle active state (muted background + 2px left rail, no purple pill), footer with a light/dark **theme toggle** + user profile card.
+- Mobile: top bar with logo + hamburger; slide-out drawer now has its own in-overlay header with a **close (X) button** and the theme toggle; hamburger/close buttons have `aria-label`/`aria-expanded`.
+- Top bar: AI command bar (with a mobile copy shown `md:hidden` in the content flow) + notifications + avatar.
+- Welcome headline ("Welcome back, {firstName}."), compact quick-action row (Upload document / Create brief functional; others marked "soon").
+- Grid `lg:grid-cols-[1fr_300px]`: left = **Recent work** (unified list of **real** documents only — briefs are ephemeral so none are fabricated) + **Signal87 AI** panel (illustrative answer now explicitly labeled **"Example answer"** so its sample citations aren't read as real output); right = **Recent activity** (derived from real documents) + **Suggested actions** (links to `/compare`, `/brief`, `/ask`).
+- Dark mode is a dashboard-local `useState` toggle persisted to `localStorage` key `s87-dashboard-theme`; it toggles `s87-dark` on the wrapper **only** — never the global `.dark` class.
+
+### Scope / invariants preserved
+- No changes to backend, API contract, routing, DB schema, env, auth, durable storage, upload/download/delete/re-index, the PDF viewer, or the citation + Verification Trace payloads.
+- Other pages (landing, upgrade, checkout, document flows) are visually unaffected — they continue to use the global theme tokens and default font.
+
+### Notes
+- `public/opengraph.jpg` shows an unrelated ~88-byte binary delta in the working tree; not introduced by this redesign (only `index.html`, `index.css`, `dashboard.tsx` were edited).
+
+---
+
 ## [Signal87_Core_Stripe_Freemium_v1] — 2026-06-16  *(Stripe freemium integration)*
 
 ### Summary

@@ -1,7 +1,8 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Ask_Activity_Tabs_v1**
-> Last updated: 2026-06-15
+> Checkpoint: **Signal87_Core_Dashboard_Redesign_v1**
+> Last updated: 2026-06-16
+> Note (Dashboard_Redesign_v1): **Frontend-only** dashboard redesign (visual/layout + a dashboard-scoped dark mode). New tests **T40–T42** cover the light dashboard render, the dark-mode toggle + `localStorage` persistence (`s87-dashboard-theme`) scoped to the dashboard only, and mobile stacking + drawer open/close. **No backend, API, contract, schema, auth, or routing changes**; no protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was touched, and all other pages remain visually unchanged (they keep the global theme tokens + default font).
 > Note (Ask_Activity_Tabs_v1): New tests **T36–T38** cover the two new **frontend-only** nav tabs — **Ask** (`/ask`, ready-doc picker that routes into the existing single-doc chat) and **Activity** (`/activity`, a read-only feed derived only from existing document data, no fabricated events) — plus three-tab navigation and mobile usability. **No backend, API, contract, or schema changes**; no protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was touched.
 > Type: Manual end-to-end test plan
 > Note (Reliability_Clarity_Pass_v1): New tests **T29–T35** cover document status labels, list-level Re-Index for failed/0-chunk docs, the chat not-ready gate (frontend) + `422` guard (backend), upload validation + server-error surfacing, citation "Section N" labels + the no-citations note, and structured Q&A/upload logging. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index mechanics / citation + Verification Trace payload) was changed.
@@ -798,6 +799,57 @@ To test manually today:
 
 ---
 
+## T40 — Dashboard (light) renders the redesigned layout
+
+**Goal:** Verify the redesigned dashboard renders all sections in the default (light) theme.
+
+**Steps:**
+1. Sign in and navigate to `/dashboard`
+
+**Expected:**
+- Left sidebar: logo, nav with **Home** active via a subtle muted background + 2px left rail (NOT a bright purple pill), footer with theme toggle + user profile card
+- Welcome headline "Welcome back, {firstName}." (period, no emoji) + subtitle
+- Top AI command bar with placeholder "Ask Signal87 anything across your documents..." and a dark arrow send button
+- Compact quick actions (Upload document / Create brief functional)
+- "Recent work" lists **only real documents** (no fabricated rows); an empty library shows "No recent work yet"
+- "Signal87 AI" panel with the illustrative answer clearly labeled **"Example answer"**
+- Right column: "Recent activity" (derived from real documents) + "Suggested actions" (links to `/compare`, `/brief`, `/ask`)
+- Warm cream/ink palette; no dominant purple; no horizontal overflow
+
+---
+
+## T41 — Dashboard dark-mode toggle (scoped + persisted)
+
+**Goal:** Verify the dashboard dark mode toggles, persists, and does not affect other pages.
+
+**Steps:**
+1. On `/dashboard`, click the theme toggle in the sidebar footer (and the mobile drawer toggle)
+2. Reload `/dashboard`
+3. Navigate to another page (e.g. `/upgrade` or `/documents`)
+
+**Expected:**
+- Dashboard switches to near-black/graphite with cream text + warm gold/cream accents; no dominant purple
+- Preference persists across reload (`localStorage` key `s87-dashboard-theme`)
+- Other pages (e.g. `/upgrade`, landing) stay in their original light theme + font — the dashboard's dark mode and Inter Tight font do **not** leak (global `.dark` class is never set; font is scoped to `.s87`)
+
+---
+
+## T42 — Dashboard mobile layout + nav drawer
+
+**Goal:** Verify mobile stacking and the hamburger drawer (open/close).
+
+**Steps:**
+1. At ~400px width, navigate to `/dashboard`
+2. Tap the hamburger; then tap the in-drawer close (X)
+
+**Expected:**
+- Mobile top bar shows logo + hamburger (desktop sidebar hidden)
+- Content stacks: welcome → command bar → quick actions → Recent work → Signal87 AI → Recent activity → Suggested actions
+- No horizontal overflow (`scrollWidth == clientWidth`)
+- Hamburger opens a drawer with its own header (logo + **X** close), nav items, and theme toggle; the X closes it (the drawer no longer covers the header with an unreachable control)
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -868,4 +920,7 @@ To test manually today:
 - [ ] T36 Ask tab: ready-only picker → existing chat; required unselected message; empty/none-ready states
 - [ ] T37 Activity tab: real upload/extraction events only (no fabrication), labels match status, empty state, no internals leaked
 - [ ] T38 Nav shows Documents \| Ask \| Activity; active state + mobile usable; core Documents flow unchanged
+- [ ] T40 Dashboard (light) renders sidebar/welcome/command bar/quick actions/Recent work (real docs)/Signal87 AI "Example answer"/right column; no purple; no overflow
+- [ ] T41 Dashboard dark-mode toggle works, persists (`s87-dashboard-theme`), scoped to dashboard only (other pages + font unaffected)
+- [ ] T42 Dashboard mobile: correct stacking, no horizontal overflow, hamburger drawer opens + in-drawer X closes
 - [x] T39 Malformed-PDF stabilization smoke: failed doc inspected (malformed PDF, 0 chunks, original preserved); Q&A on failed doc → 422 (no OpenAI call); improved extraction-failed message shown and wraps in Activity; known-good PDF full lifecycle (upload 201 / extraction success / 3 chunks / preview renders / Q&A 200 + citations / delete 204); Activity accurate with no stale entries; no orphan chunks; all test docs deleted

@@ -3,6 +3,7 @@
 - [URL-seeded selection reconcile](url-preselect-reconcile.md) — a `?preselect=` deep-link must be re-validated against the eligible list once it loads, or invalid ids stay hidden-but-selected.
 - [react-pdf / pdf.js Vite worker](react-pdf-vite-worker.md) — import worker via `pdfjs-dist/build/pdf.worker.min.mjs?url`; pin pdfjs-dist as direct dep at react-pdf's exact version.
 - [OpenAI empty embeddings input](openai-empty-embeddings-input.md) — embeddings.create rejects `input: []` with 400; every retrieval path must short-circuit on 0 chunks before embedding.
+- [Page-scoped theming & dark mode](dashboard-scoped-theming.md) — per-page palette/dark/font must scope to a wrapper class; never touch global `.dark` or `--app-font-sans` (other pages aren't dark-safe).
 - [stripe-replit-sync backfill + credentials](stripe-replit-sync-backfill.md) — `syncBackfill()` with no args syncs nothing; connector field names + Replit-Stripe-is-a-sandbox gotchas.
 - [Deployed-app verification](deployed-app-verification.md) — prod has its own DB (read-only via tooling, separate from dev); live-URL screenshots are cached/stale (verify via live API + asset-hash); autoscale cold-start logs transient healthcheck 500s; fix prod rows via the live app's HTTP endpoints; legacy docs missing their original are recoverable from the dev twin via PUT-original + reindex.
 - [pdf-parse test fixtures](pdf-parse-test-fixtures.md) — pdf-parse@1.1.1 rejects hand-rolled PDFs (`bad XRef entry`) even with correct offsets; for a known-good test PDF, re-upload a real one from `/original`.
