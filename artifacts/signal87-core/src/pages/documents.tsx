@@ -30,6 +30,9 @@ import {
   List,
   Search,
   X,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -53,6 +56,8 @@ import {
 
 type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "ready" | "processing" | "error";
+type SortColumn = "name" | "status" | "chunks" | "uploaded";
+type SortDirection = "asc" | "desc";
 
 function getInitialView(): ViewMode {
   try {
@@ -132,10 +137,21 @@ export default function DocumentsList() {
   const [view, setView] = useState<ViewMode>(getInitialView);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortColumn, setSortColumn] = useState<SortColumn>("uploaded");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const switchView = (v: ViewMode) => {
     setView(v);
     try { localStorage.setItem("docs-view", v); } catch {}
+  };
+
+  const handleSort = (col: SortColumn) => {
+    if (sortColumn === col) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(col);
+      setSortDirection("asc");
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -168,16 +184,30 @@ export default function DocumentsList() {
     );
   };
 
-  const filteredDocuments = documents?.filter((doc) => {
-    const nameMatch = doc.fileName.toLowerCase().includes(search.toLowerCase().trim());
-    if (!nameMatch) return false;
-    if (statusFilter === "all") return true;
-    const tone = getDocumentStatus(doc).tone;
-    if (statusFilter === "ready") return tone === "ready" || tone === "warning";
-    if (statusFilter === "processing") return tone === "processing";
-    if (statusFilter === "error") return tone === "error";
-    return true;
-  });
+  const filteredDocuments = documents
+    ?.filter((doc) => {
+      const nameMatch = doc.fileName.toLowerCase().includes(search.toLowerCase().trim());
+      if (!nameMatch) return false;
+      if (statusFilter === "all") return true;
+      const tone = getDocumentStatus(doc).tone;
+      if (statusFilter === "ready") return tone === "ready" || tone === "warning";
+      if (statusFilter === "processing") return tone === "processing";
+      if (statusFilter === "error") return tone === "error";
+      return true;
+    })
+    .sort((a, b) => {
+      let cmp = 0;
+      if (sortColumn === "name") {
+        cmp = a.fileName.localeCompare(b.fileName, undefined, { sensitivity: "base" });
+      } else if (sortColumn === "status") {
+        cmp = getDocumentStatus(a).tone.localeCompare(getDocumentStatus(b).tone);
+      } else if (sortColumn === "chunks") {
+        cmp = a.chunkCount - b.chunkCount;
+      } else if (sortColumn === "uploaded") {
+        cmp = new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
 
   return (
     <Layout>
@@ -400,10 +430,35 @@ export default function DocumentsList() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-6 py-2.5 text-xs font-medium text-muted-foreground w-[40%]">Name</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">Status</th>
-                  <th className="text-right px-3 py-2.5 text-xs font-medium text-muted-foreground">Chunks</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground">Uploaded</th>
+                  {(
+                    [
+                      { col: "name" as SortColumn, label: "Name", align: "left", className: "px-6 py-2.5 w-[40%]" },
+                      { col: "status" as SortColumn, label: "Status", align: "left", className: "px-3 py-2.5" },
+                      { col: "chunks" as SortColumn, label: "Chunks", align: "right", className: "px-3 py-2.5" },
+                      { col: "uploaded" as SortColumn, label: "Uploaded", align: "left", className: "px-3 py-2.5" },
+                    ] as const
+                  ).map(({ col, label, align, className }) => {
+                    const active = sortColumn === col;
+                    const Icon = active
+                      ? sortDirection === "asc"
+                        ? ChevronUp
+                        : ChevronDown
+                      : ChevronsUpDown;
+                    return (
+                      <th
+                        key={col}
+                        className={`text-${align} ${className} text-xs font-medium text-muted-foreground select-none`}
+                      >
+                        <button
+                          onClick={() => handleSort(col)}
+                          className={`inline-flex items-center gap-1 hover:text-foreground transition-colors ${active ? "text-foreground" : ""}`}
+                        >
+                          {label}
+                          <Icon className={`w-3 h-3 shrink-0 ${active ? "opacity-100" : "opacity-40"}`} />
+                        </button>
+                      </th>
+                    );
+                  })}
                   <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
