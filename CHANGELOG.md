@@ -2,6 +2,33 @@
 
 ---
 
+## [Signal87_Core_Clerk_Auth_Fix_v1] — 2026-06-17  *(Auth 401 fix: canonical Clerk wiring + dev-iframe cookie diagnosis)*
+
+### Summary
+Fixed authenticated, approved users receiving **401** on all `/api` routes. **Root cause:** in dev, Clerk's short-lived session cookie cannot be refreshed inside the embedded Replit preview / canvas **iframe** (the browser blocks it as a third-party cookie), so the backend received a `__session` cookie it could not verify (`getAuth(req).userId` was `null` with empty `sessionClaims`). The frontend SDK still considered the user signed in, producing the split. **Dev fix: open the app in a standalone browser tab.** Production is unaffected (first-party cookies on the app's own domain). Also corrected real production-proxy and key-resolution bugs surfaced while diffing against canonical Clerk wiring.
+
+### Fixed — Frontend (`src/main.tsx`)
+- **Production proxy bug:** `proxyUrl` was hardcoded behind a `PROD` gate (`baseUrl + "/api/__clerk"`), which breaks the Clerk Frontend API proxy in production. Now uses `import.meta.env.VITE_CLERK_PROXY_URL` unconditionally (empty in dev, auto-populated by the deploy pipeline in prod).
+- **Publishable key:** now resolved via `publishableKeyFromHost(window.location.hostname, VITE_CLERK_PUBLISHABLE_KEY)` (from `@clerk/react/internal`) so the same build works across the dev domain and custom/production domains.
+
+### Fixed — Backend (`src/app.ts`)
+- `cors()` → `cors({ credentials: true, origin: true })`.
+- `clerkMiddleware()` → host-aware `clerkMiddleware((req) => ({ publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", process.env.CLERK_PUBLISHABLE_KEY) }))` (`@clerk/shared/keys`), matching the proxy host resolution.
+
+### Fixed — Backend (`src/middlewares/requireAuth.ts`)
+- **Robust email resolution:** the default Clerk session token does not include an email claim, so the middleware now falls back to `clerkClient.users.getUser(auth.userId)` to read the primary email for the `APPROVED_EMAILS` allowlist — preventing false **403s** for approved users. Middleware is now async. Removed the temporary per-request diagnostic logging.
+
+### Verification
+- `pnpm run typecheck` — clean. Architect code review — **PASS**, no critical issues.
+- Unauthenticated `GET /api/documents` → **401**; `GET /api/healthz` → **200**.
+- **Dev testing must be done in a standalone browser tab**, not the embedded preview iframe.
+
+### Notes
+- The dev-iframe cookie limitation affects only the embedded preview; it is not a code bug and does not affect production.
+- Before production, confirm `VITE_CLERK_PROXY_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` are present (all currently set).
+
+---
+
 ## [Signal87_Core_Clerk_Auth_v1] — 2026-06-17  *(Minimal Clerk auth with approved-email gate)*
 
 ### Summary

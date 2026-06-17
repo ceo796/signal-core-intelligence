@@ -2,7 +2,12 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import cors from "cors";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
-import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
+import { publishableKeyFromHost } from "@clerk/shared/keys";
+import {
+  CLERK_PROXY_PATH,
+  clerkProxyMiddleware,
+  getClerkProxyHost,
+} from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -31,10 +36,20 @@ app.use(
 // Clerk proxy must be mounted BEFORE express.json()
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-app.use(cors());
+app.use(cors({ credentials: true, origin: true }));
 
-// Clerk session middleware — attaches auth state to request
-app.use(clerkMiddleware());
+// Clerk session middleware — attaches auth state to request.
+// Resolve the publishable key from the request host so the same server works
+// across the dev domain and custom/production domains. Falls back to
+// CLERK_PUBLISHABLE_KEY when the host doesn't map to a custom domain.
+app.use(
+  clerkMiddleware((req) => ({
+    publishableKey: publishableKeyFromHost(
+      getClerkProxyHost(req) ?? "",
+      process.env.CLERK_PUBLISHABLE_KEY,
+    ),
+  })),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

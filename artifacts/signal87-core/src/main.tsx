@@ -1,10 +1,16 @@
 import { createRoot } from "react-dom/client";
 import { ClerkProvider } from "@clerk/react";
+import { publishableKeyFromHost } from "@clerk/react/internal";
 import { dark } from "@clerk/themes";
 import App from "./App";
 import "./index.css";
 
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Resolve the publishable key from the current host so the same build works
+// across the dev domain and custom/production domains.
+const publishableKey = publishableKeyFromHost(
+  window.location.hostname,
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+);
 
 const baseUrl = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 
@@ -17,9 +23,9 @@ const clerkOptions = {
   signUpUrl: baseUrl + "/sign-up",
   afterSignOutUrl: baseUrl + "/",
   redirectUrl,
-  // In production, use the proxy path for the Clerk frontend API
-  // In development, let Clerk use its default
-  proxyUrl: import.meta.env.PROD ? baseUrl + "/api/__clerk" : undefined,
+  // Clerk frontend API proxy URL. Empty in dev (Clerk talks to its dev FAPI
+  // directly); auto-populated by the deploy pipeline in production.
+  proxyUrl: import.meta.env.VITE_CLERK_PROXY_URL,
   appearance: {
     baseTheme: dark,
     variables: {

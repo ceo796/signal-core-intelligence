@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { getAuth } from "@clerk/express";
+import { getAuth, clerkClient } from "@clerk/express";
 
 const approvedEmails = new Set(
   (process.env.APPROVED_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean),
@@ -7,13 +7,14 @@ const approvedEmails = new Set(
 
 const bypassAuth = process.env.CLERK_BYPASS_AUTH === "true";
 
-export function requireApprovedEmail(
+export async function requireApprovedEmail(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   if (bypassAuth) {
-    return next();
+    next();
+    return;
   }
 
   try {
@@ -24,8 +25,23 @@ export function requireApprovedEmail(
       return;
     }
 
-    const email = (auth.sessionClaims?.email as string | undefined) || null;
-    if (!email || typeof email !== "string" || !approvedEmails.has(email.toLowerCase())) {
+    // Clerk's default session token does NOT include the email claim, so we
+    // fetch the user record to resolve their primary verified email.
+    let email =
+      (auth.sessionClaims?.email as string | undefined) ||
+      (auth.sessionClaims?.primaryEmail as string | undefined) ||
+      null;
+
+    if (!email) {
+      const user = await clerkClient.users.getUser(auth.userId);
+      email =
+        user.primaryEmailAddress?.emailAddress ??
+        user.emailAddresses[0]?.emailAddress ??
+        null;
+    }
+
+    if (!email || !approvedEmails.has(email.toLowerCase())) {
+      req.log.info({ resolvedEmail: email ?? null }, "auth denied: email not approved");
       res.status(403).json({
         error: "Access denied. Your email is not approved for this application.",
       });
@@ -34,6 +50,7 @@ export function requireApprovedEmail(
 
     next();
   } catch (err) {
+    req.log.error({ err }, "auth middleware error");
     res.status(401).json({ error: "Authentication failed." });
   }
 }
