@@ -1,0 +1,131 @@
+You are working on the Signal87 AI Replit codebase after I rolled the platform back.
+
+Before making any changes, provide a full status update on the current state of the platform.
+
+CRITICAL RULES:
+
+* Do not modify code.
+* Do not redesign anything.
+* Do not refactor.
+* Do not install packages.
+* Do not change backend logic.
+* Do not change database schema.
+* Do not run migrations.
+* Do not deploy.
+* This is verification and reporting only.
+
+TASK:
+Confirm the current post-rollback state of the platform.
+
+Please inspect and report:
+
+1. Current codebase status
+
+* Current branch/checkpoint/commit if available
+* Whether the rollback appears successful
+* Whether external JPEG/homepage mimic changes still appear to be present
+* Whether any partially reverted design files remain
+
+2. Build and runtime health
+
+* Does TypeScript pass?
+* Does the app build?
+* Does the dev server run?
+* Are there visible console errors?
+* Are there backend/server errors?
+
+3. Core feature verification
+   Verify whether the following routes/features are present and likely functional:
+
+* Landing page
+* Login/auth
+* Home/Dashboard
+* Documents/library
+* Document detail
+* Upload document
+* PDF original view/download
+* Ask/chat
+* Brief generator
+* Compare/multi-document
+* Collections
+* Workflows
+* Agents
+* Settings
+* Mobile navigation
+
+4. Navigation/clickability
+   Check whether all visible navigation items are clickable:
+
+* Home
+* Documents
+* Collections
+* Briefs
+* Agents
+* Workflows
+* Settings
+* Logo
+* Upload actions
+* Create brief
+* Compare documents
+* Suggested action cards
+
+Identify any dead links, placeholder `#` links, buttons without actions, or cards that look clickable but do nothing.
+
+5. Logo/branding status
+   Report:
+
+* Whether the actual Signal87 logo asset exists
+* Where the logo appears now
+* Whether it appears on landing page
+* Whether it appears on login page
+* Whether it appears inside the app/sidebar
+* Any pages still using text-only or placeholder branding
+
+6. Design consistency status
+   Report whether the current UI is:
+
+* Clean and consistent
+* Still partially affected by the external JPEG mimic
+* Mixed across pages
+* Missing black/white branding consistency
+* Using random colors outside document file-type colors
+
+7. Backend safety check
+   Confirm whether backend/database/auth/document/AI logic appears untouched by the rollback:
+
+* Auth
+* Document upload
+* Document storage
+* Document parsing
+* Chat/Ask
+* Brief generation
+* Compare
+* PDF viewer/original file handling
+* AI provider/model routing
+
+8. Risk report
+   List the top current risks, especially:
+
+* Broken navigation
+* Copied static UI
+* Fake clickable elements
+* Missing routes
+* Design inconsistency
+* Logo inconsistency
+* Broken inputs/textboxes
+* Any rollback residue
+
+FINAL RESPONSE FORMAT:
+Provide a concise status report with:
+
+* Rollback status
+* Build status
+* Core feature status
+* Navigation issues found
+* Logo/branding status
+* Design consistency status
+* Backend/database/auth safety status
+* Top 10 current risks
+* Recommended next 3 actions
+
+Do not fix anything yet. Only inspect and report.
