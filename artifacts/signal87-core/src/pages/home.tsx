@@ -216,7 +216,14 @@ export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
 
   return (
-    <div className="min-h-screen text-gray-900 flex flex-col font-sans selection:bg-blue-500/30 bg-white relative overflow-hidden">
+    <div
+      className="min-h-screen text-gray-900 flex flex-col font-sans selection:bg-blue-500/30 relative overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, #ffffff, #eff6ff, #e0f2fe, #ffffff)",
+        backgroundSize: "200% 200%",
+        animation: "s87-gradient 8s ease infinite",
+      }}
+    >
       {/* Full-page particle background */}
       <ParticleCanvas />
 
