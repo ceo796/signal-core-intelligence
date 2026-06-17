@@ -38,4 +38,4 @@ externalPort = 3000
 [userenv]
 
 [userenv.shared]
-APPROVED_EMAILS = ""
+APPROVED_EMAILS = "ceo@signal87.ai"
