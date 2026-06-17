@@ -4,7 +4,6 @@ import { z } from "zod/v4";
 
 export const documentsTable = pgTable("documents", {
   id: serial("id").primaryKey(),
-  ownerUserId: text("owner_user_id"),
   fileName: text("file_name").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size"),
@@ -16,6 +15,6 @@ export const documentsTable = pgTable("documents", {
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, uploadedAt: true, ownerUserId: true });
+export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, uploadedAt: true });
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documentsTable.$inferSelect;

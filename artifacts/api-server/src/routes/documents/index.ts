@@ -1,9 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import multer from "multer";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { eq, count, sql, and, inArray } from "drizzle-orm";
-import { getAuth } from "@clerk/express";
-import { checkActiveSubscription } from "../../stripe/storage";
+import { eq, count, sql } from "drizzle-orm";
 import {
   GetDocumentParams,
   DeleteDocumentParams,
@@ -15,8 +13,6 @@ import {
 import { extractText, getFileType, type SupportedFileType } from "../../lib/text-extractor";
 import { chunkText } from "../../lib/chunker";
 import * as fileStore from "../../lib/file-store";
-
-const FREE_DOC_LIMIT = 3;
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -44,28 +40,15 @@ function docToResponse(
 }
 
 router.get("/documents", async (req, res): Promise<void> => {
-  // userId is guaranteed non-null by requireAuth middleware
-  const { userId } = getAuth(req);
-
   try {
-    const docs = await db
-      .select()
-      .from(documentsTable)
-      .where(eq(documentsTable.ownerUserId, userId!))
-      .orderBy(documentsTable.uploadedAt);
+    const docs = await db.select().from(documentsTable).orderBy(documentsTable.uploadedAt);
 
-    const docIds = docs.map((d) => d.id);
-    let chunkMap = new Map<number, number>();
+    const chunksCountResult = await db
+      .select({ documentId: chunksTable.documentId, cnt: count(chunksTable.id) })
+      .from(chunksTable)
+      .groupBy(chunksTable.documentId);
 
-    if (docIds.length > 0) {
-      const chunksCountResult = await db
-        .select({ documentId: chunksTable.documentId, cnt: count(chunksTable.id) })
-        .from(chunksTable)
-        .where(inArray(chunksTable.documentId, docIds))
-        .groupBy(chunksTable.documentId);
-      chunkMap = new Map(chunksCountResult.map((r) => [r.documentId, r.cnt]));
-    }
-
+    const chunkMap = new Map(chunksCountResult.map((r) => [r.documentId, r.cnt]));
     const result = docs.map((doc) => docToResponse(doc, chunkMap.get(doc.id) ?? 0));
 
     res.json(ListDocumentsResponse.parse(result));
@@ -79,9 +62,6 @@ router.post(
   "/documents/upload",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
-    // userId is guaranteed non-null by requireAuth middleware
-    const { userId } = getAuth(req);
-
     const file = (req as Request & { file?: Express.Multer.File }).file;
     if (!file) {
       res.status(400).json({ error: "No file uploaded" });
@@ -92,25 +72,6 @@ router.post(
     if (!fileType) {
       res.status(400).json({ error: "Unsupported file type. Allowed: PDF, DOCX, TXT, CSV" });
       return;
-    }
-
-    // ── 0. Enforce free-tier document limit ──────────────────────────────────
-    const [limitRow] = await db
-      .select({ docCount: count(documentsTable.id) })
-      .from(documentsTable)
-      .where(eq(documentsTable.ownerUserId, userId!));
-    const currentDocCount = Number(limitRow?.docCount ?? 0);
-    if (currentDocCount >= FREE_DOC_LIMIT) {
-      const hasActiveSub = await checkActiveSubscription(userId!);
-      if (!hasActiveSub) {
-        res.status(402).json({
-          error: "upgrade_required",
-          message: "Free plan limit reached. Upgrade to upload more documents.",
-          documentCount: currentDocCount,
-          limit: FREE_DOC_LIMIT,
-        });
-        return;
-      }
     }
 
     // ── 1. Save original file to object storage (durable storage is required) ──
@@ -155,7 +116,6 @@ router.post(
       [doc] = await db
         .insert(documentsTable)
         .values({
-          ownerUserId: userId!,
           fileName: file.originalname,
           fileType,
           fileSize: file.size,
@@ -208,19 +168,13 @@ router.post(
 );
 
 router.get("/documents/:id", async (req, res): Promise<void> => {
-  const { userId } = getAuth(req);
-
   const params = GetDocumentParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const [doc] = await db
-    .select()
-    .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId!)));
-
+  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, params.data.id));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -235,8 +189,6 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/documents/:id", async (req, res): Promise<void> => {
-  const { userId } = getAuth(req);
-
   const params = DeleteDocumentParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -246,7 +198,7 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId!)));
+    .where(eq(documentsTable.id, params.data.id));
 
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
@@ -272,28 +224,16 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/documents/:id/chunks", async (req, res): Promise<void> => {
-  const { userId } = getAuth(req);
-
   const params = GetDocumentChunksParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const [doc] = await db
-    .select()
-    .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId!)));
-
-  if (!doc) {
-    res.status(404).json({ error: "Document not found" });
-    return;
-  }
-
   const chunks = await db
     .select()
     .from(chunksTable)
-    .where(eq(chunksTable.documentId, doc.id))
+    .where(eq(chunksTable.documentId, params.data.id))
     .orderBy(chunksTable.chunkIndex);
 
   res.json(GetDocumentChunksResponse.parse(chunks));
@@ -301,19 +241,13 @@ router.get("/documents/:id/chunks", async (req, res): Promise<void> => {
 
 // ── GET /documents/:id/original — download the stored original file ──────────
 router.get("/documents/:id/original", async (req, res): Promise<void> => {
-  const { userId } = getAuth(req);
-
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid document ID" });
     return;
   }
 
-  const [doc] = await db
-    .select()
-    .from(documentsTable)
-    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId!)));
-
+  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -346,8 +280,6 @@ router.put(
   "/documents/:id/original",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
-    const { userId } = getAuth(req);
-
     const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "Invalid document ID" });
@@ -360,11 +292,7 @@ router.put(
       return;
     }
 
-    const [doc] = await db
-      .select()
-      .from(documentsTable)
-      .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId!)));
-
+    const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
     if (!doc) {
       res.status(404).json({ error: "Document not found" });
       return;
@@ -407,7 +335,7 @@ router.put(
     const [updated] = await db
       .update(documentsTable)
       .set({ storageKey, storageProvider })
-      .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId!)))
+      .where(eq(documentsTable.id, id))
       .returning();
 
     res.json({
@@ -421,19 +349,13 @@ router.put(
 
 // ── POST /documents/:id/reindex — re-extract and re-chunk from stored file ───
 router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
-  const { userId } = getAuth(req);
-
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid document ID" });
     return;
   }
 
-  const [doc] = await db
-    .select()
-    .from(documentsTable)
-    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId!)));
-
+  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;

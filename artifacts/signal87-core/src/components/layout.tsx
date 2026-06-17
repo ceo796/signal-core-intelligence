@@ -1,165 +1,49 @@
-import { ReactNode, useState } from "react";
-import { useLocation } from "wouter";
-import { useUser, useClerk } from "@clerk/react";
-import {
-  Home as HomeIcon,
-  FileText,
-  Database,
-  Layers,
-  Bot,
-  Workflow,
-  Settings,
-  ChevronRight,
-  Menu,
-  X,
-} from "lucide-react";
-import "../pages/home.css";
+import { ReactNode } from "react";
+import { Link, useLocation } from "wouter";
+import { FileText, MessageSquare, Activity } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-const NAV_ITEMS: { label: string; icon: React.ElementType; href: string | null }[] = [
-  { label: "Home",       icon: HomeIcon,  href: "/dashboard" },
-  { label: "Documents",  icon: FileText,  href: "/documents" },
-  { label: "Collections",icon: Database,  href: null },
-  { label: "Briefs",     icon: Layers,    href: "/brief"     },
-  { label: "Agents",     icon: Bot,       href: null         },
-  { label: "Workflows",  icon: Workflow,  href: null         },
-  { label: "Settings",   icon: Settings,  href: null         },
-];
-
 export function Layout({ children }: LayoutProps) {
-  const [location, navigate] = useLocation();
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const [location] = useLocation();
 
-  const initials = user
-    ? (
-        (user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")
-      ).toUpperCase() ||
-      user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
-      "U"
-    : "U";
-  const displayName = user?.firstName
-    ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
-    : user?.primaryEmailAddress?.emailAddress?.split("@")[0] ?? "Account";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
-
-  const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
-    setMobileOpen(false);
-    if (item.href) {
-      navigate(item.href);
-    } else {
-      setComingSoon(item.label);
-    }
-  };
-
-  const SidebarContent = () => (
-    <>
-      <div className="s87-brand">
-        <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
-      </div>
-
-      <nav className="s87-nav">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.href
-            ? item.href === "/dashboard"
-              ? location === item.href
-              : location.startsWith(item.href)
-            : false;
-          return (
-            <button
-              key={item.label}
-              type="button"
-              className={`s87-nav-item${isActive ? " active" : ""}`}
-              aria-disabled={item.href ? undefined : true}
-              title={item.href ? undefined : `${item.label} — coming soon`}
-              onClick={() => handleNavClick(item)}
-            >
-              <Icon size={18} />
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-
-      <button
-        type="button"
-        className="s87-account"
-        onClick={() => signOut({ redirectUrl: basePath || "/" })}
-        title="Sign out"
-      >
-        <div className="s87-account-avatar">{initials}</div>
-        <span className="s87-account-text">
-          <span className="s87-account-name">{displayName}</span>
-          <span className="s87-account-user">{email}</span>
-        </span>
-        <ChevronRight size={16} />
-      </button>
-    </>
-  );
+  const navItems = [
+    { href: "/documents", label: "Documents", icon: FileText },
+    { href: "/ask", label: "Ask", icon: MessageSquare },
+    { href: "/activity", label: "Activity", icon: Activity },
+  ];
 
   return (
-    <div className="s87-layout-shell">
-      {/* Mobile header */}
-      <header className="s87-mobile-header">
-        <div className="s87-brand">
-          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
+    <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
+      <aside className="shrink-0 w-full md:w-56 border-b md:border-b-0 md:border-r border-border bg-sidebar flex flex-row md:flex-col">
+        <div className="px-4 py-3 md:p-4 md:border-b border-border flex items-center shrink-0">
+          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-8 md:h-10 w-auto" />
         </div>
-        <button
-          type="button"
-          className="s87-mobile-menu-btn"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-        >
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </header>
-
-      {/* Mobile sidebar overlay */}
-      {mobileOpen && (
-        <div className="s87-mobile-overlay" onClick={() => setMobileOpen(false)}>
-          <aside
-            className="s87-sidebar s87-mobile-sidebar"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
-
-      {/* Desktop sidebar */}
-      <aside className="s87-sidebar">
-        <SidebarContent />
+        <nav className="flex-1 flex flex-row md:flex-col px-2 py-2 md:p-3 gap-0.5 items-center md:items-stretch overflow-x-auto">
+          {navItems.map((item) => {
+            const isActive = location.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors whitespace-nowrap ${
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <item.icon className="w-4 h-4 shrink-0" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
       </aside>
-
-      {/* Main content area — children control their own scroll/padding */}
-      <div className="s87-layout-main">
+      <main className="flex-1 flex flex-col overflow-hidden min-h-0">
         {children}
-      </div>
-
-      {/* Coming-soon modal */}
-      {comingSoon && (
-        <div className="s87-modal-overlay" onClick={() => setComingSoon(null)}>
-          <div className="s87-modal" onClick={(e) => e.stopPropagation()}>
-            <strong>{comingSoon}</strong>
-            <p>This feature is coming soon.</p>
-            <button
-              type="button"
-              className="s87-modal-close"
-              onClick={() => setComingSoon(null)}
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
+      </main>
     </div>
   );
 }

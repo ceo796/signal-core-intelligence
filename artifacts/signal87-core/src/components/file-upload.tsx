@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -25,45 +23,23 @@ function validateFile(f: File): string | null {
   return null;
 }
 
-interface FileUploadModalProps {
-  /** When provided, the dialog is fully controlled by the caller */
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-
-export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp }: FileUploadModalProps = {}) {
-  const { getToken } = useAuth();
-  const [, navigate] = useLocation();
-  const [internalOpen, setInternalOpen] = useState(false);
+export function FileUploadModal() {
+  const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const queryClient = useQueryClient();
-
-  // Support both controlled (open/onOpenChange from parent) and uncontrolled (internal state)
-  const isControlled = openProp !== undefined;
-  const open = isControlled ? openProp : internalOpen;
-  const setOpen = isControlled
-    ? (next: boolean) => onOpenChangeProp?.(next)
-    : setInternalOpen;
 
   const uploadMutation = useMutation({
     mutationFn: async (uploadFile: File) => {
       const formData = new FormData();
       formData.append("file", uploadFile);
 
-      const token = await getToken();
       const res = await fetch("/api/documents/upload", {
         method: "POST",
         body: formData,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
       const data = await res.json().catch(() => null);
-
-      if (res.status === 402 && data?.error === "upgrade_required") {
-        // Free tier limit hit — redirect to upgrade page
-        throw Object.assign(new Error("upgrade_required"), { isUpgradeRequired: true });
-      }
 
       if (!res.ok) {
         const serverMessage =
@@ -87,12 +63,7 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
         toast.success("Document uploaded successfully");
       }
     },
-    onError: (err: Error & { isUpgradeRequired?: boolean }) => {
-      if (err.isUpgradeRequired) {
-        setOpen(false);
-        navigate("/upgrade");
-        return;
-      }
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to upload document");
     },
   });
@@ -121,64 +92,6 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
     }
   };
 
-  const dialogContent = (
-    <DialogContent className="sm:max-w-md bg-card border-border">
-      <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">Upload Document</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-xs">
-          Accepted types: PDF, DOCX, TXT, CSV · Maximum size: {MAX_SIZE_MB} MB.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="grid gap-4 py-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="file" className="text-muted-foreground text-xs">
-            Select file
-          </Label>
-          <Input
-            id="file"
-            type="file"
-            onChange={handleFileChange}
-            className="text-sm bg-background border-border"
-            accept=".pdf,.docx,.txt,.csv"
-          />
-          {validationError ? (
-            <div className="flex items-start gap-2 text-xs text-destructive">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              <span>{validationError}</span>
-            </div>
-          ) : file ? (
-            <p className="text-xs text-muted-foreground">
-              {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB
-            </p>
-          ) : null}
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => handleOpenChange(false)} className="text-sm">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleUpload}
-          disabled={!file || !!validationError || uploadMutation.isPending}
-          className="text-sm"
-        >
-          {uploadMutation.isPending && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
-          {uploadMutation.isPending ? "Uploading..." : "Upload"}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  );
-
-  if (isControlled) {
-    // Controlled mode: no trigger button, caller manages open state
-    return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        {dialogContent}
-      </Dialog>
-    );
-  }
-
-  // Uncontrolled mode: renders its own Upload button trigger
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -187,7 +100,51 @@ export function FileUploadModal({ open: openProp, onOpenChange: onOpenChangeProp
           Upload Document
         </Button>
       </DialogTrigger>
-      {dialogContent}
+      <DialogContent className="sm:max-w-md bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">Upload Document</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-xs">
+            Accepted types: PDF, DOCX, TXT, CSV · Maximum size: {MAX_SIZE_MB} MB.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="file" className="text-muted-foreground text-xs">
+              Select file
+            </Label>
+            <Input
+              id="file"
+              type="file"
+              onChange={handleFileChange}
+              className="text-sm bg-background border-border"
+              accept=".pdf,.docx,.txt,.csv"
+            />
+            {validationError ? (
+              <div className="flex items-start gap-2 text-xs text-destructive">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>{validationError}</span>
+              </div>
+            ) : file ? (
+              <p className="text-xs text-muted-foreground">
+                {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)} className="text-sm">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpload}
+            disabled={!file || !!validationError || uploadMutation.isPending}
+            className="text-sm"
+          >
+            {uploadMutation.isPending && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+            {uploadMutation.isPending ? "Uploading..." : "Upload"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

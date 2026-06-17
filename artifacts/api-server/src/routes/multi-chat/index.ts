@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { inArray, and, eq } from "drizzle-orm";
-import { getAuth } from "@clerk/express";
+import { inArray } from "drizzle-orm";
 import { MultiChatBody } from "@workspace/api-zod";
 import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
@@ -13,8 +12,6 @@ const router: IRouter = Router();
 
 router.post("/documents/multi-chat", async (req, res): Promise<void> => {
   const totalStart = Date.now();
-  // userId is guaranteed non-null by requireAuth middleware
-  const { userId } = getAuth(req);
 
   const body = MultiChatBody.safeParse(req.body);
   if (!body.success) {
@@ -37,12 +34,11 @@ router.post("/documents/multi-chat", async (req, res): Promise<void> => {
     return;
   }
 
-  // Fetch the selected documents scoped to the current user.
-  // Ownership is enforced at the DB level — docs not owned by this user won't appear.
+  // Fetch the selected documents and confirm all exist.
   const docs = await db
     .select()
     .from(documentsTable)
-    .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId!)));
+    .where(inArray(documentsTable.id, uniqueIds));
 
   if (docs.length !== uniqueIds.length) {
     const found = new Set(docs.map((d) => d.id));

@@ -1,8 +1,9 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Stripe_Freemium_v1**
-> Last updated: 2026-06-16
-> Note: `Signal87_Core_Stripe_Freemium_v1` — Stripe freemium integration. Free tier = 3 docs; Pro = unlimited. New routes: `GET /api/stripe/subscription`, `POST /api/stripe/checkout` (validates `priceId` server-side via `isAllowedCheckoutPrice` — only active recurring prices on active products with amount > 0), `POST /api/stripe/portal`, `GET /api/stripe/products`. New `users` table in DB. Webhook at `/api/stripe/webhook` (before express.json). Startup backfills only products + prices (subscription state via webhook); credentials prefer `STRIPE_SECRET_KEY` env var, fall back to Replit Stripe connector. Prior: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page. Prior: `Signal87_Core_Public_Access_v1` — per-user document isolation. Prior: earlier checkpoints.
+> Checkpoint: **Signal87_Core_Reliability_Clarity_Pass_v1**
+> Last updated: 2026-06-15
+> Note: `Signal87_Core_Reliability_Clarity_Pass_v1` is a reliability/clarity pass — **no new routes, no schema changes**. One additive contract change + targeted backend hardening: (1) `POST /documents/{id}/chat` now documents/returns `422 → ErrorResponse` and **guards before any OpenAI call** when the doc has 0 chunks _or_ `extractionStatus === "failed"`; (2) one structured Q&A outcome log per chat request (`provider`/`model`/`chunksSearched`/`chunksRetrieved`/`totalLatencyMs`) — never logs question/answer content; (3) upload emits a success log (`chunkCount`) + a `207` extraction-failed warn log; (4) the reindex "no text extracted" path now sets `extractionStatus="failed"` + `extractionError` (bookkeeping) and logs success. Re-index success/transaction mechanics, storage, upload, download, delete, and the citation/Verification-Trace payload are unchanged.
+> Prior: `Signal87_Core_Backend_Stability_Pass_v1` — global JSON 500 handler; `GET /documents` try/catch; reindex wrapped in `db.transaction()`; retriever empty-chunk filter. Prior: `Signal87_Core_Executive_Brief_Generator_v1` added `POST /api/documents/brief`. Prior: `Signal87_Core_Multi_Document_Comparison_v1` added `POST /api/documents/multi-chat` and `retrieveAcrossDocuments`.
 
 ---
 
@@ -19,19 +20,12 @@ Reads `PORT` from the environment, calls `app.listen(port)`, logs startup via pi
 
 **Express 5** (`express@^5.2.1`)
 
-Middleware stack in `app.ts` (in order):
+Middleware stack in `app.ts`:
 - `pino-http` — structured JSON request logging
-- `app.use(CLERK_PROXY_PATH, clerkProxyMiddleware())` — proxies Clerk FAPI at `/api/__clerk` (production only; no-op in dev)
-- `cors({ credentials: true, origin: true })` — allows credentialed requests from any origin
+- `cors` — permissive (all origins, dev and prod)
 - `express.json()` / `express.urlencoded()` — body parsing
-- `clerkMiddleware()` — parses Clerk session cookie and attaches `auth` to `req`
-- Conditional `requireAuth` guard at `/api` — blocks any path that is NOT `/healthz` or `/__clerk*` if no valid Clerk session; returns `401 { error: "Unauthorized" }`
 - All routes mounted at `/api`
 - Global 4-arg error handler — catches any unhandled async throw, logs via pino, returns `{ error: "Internal server error" }` HTTP 500 as JSON
-
-**New auth files:**
-- `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts` — Clerk FAPI proxy (copied from Replit-managed Clerk template)
-- `artifacts/api-server/src/middlewares/requireAuth.ts` — session guard (`getAuth(req).userId` check)
 
 ---
 

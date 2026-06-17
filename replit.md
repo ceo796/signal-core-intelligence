@@ -1,6 +1,6 @@
 # Signal87 Core
 
-A document-intelligence platform: sign up with Google, upload documents, and query them with an LLM that answers with grounded, per-source citations and a full Verification Trace. Each user has an isolated document library — no cross-user data access.
+A document-intelligence PoC: upload documents, then query them with an LLM that answers with grounded, per-source citations and a full Verification Trace.
 
 ## Run & Operate
 
@@ -15,7 +15,6 @@ A document-intelligence platform: sign up with Google, upload documents, and que
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - API: Express 5
-- Auth: Clerk (Replit-managed) — `@clerk/express` (server), `@clerk/react` (frontend)
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
@@ -56,11 +55,6 @@ A document-intelligence platform: sign up with Google, upload documents, and que
 - Always regenerate the client after editing `openapi.yaml`: `pnpm --filter @workspace/api-spec run codegen`.
 - New backend routes require an API server restart to be picked up (dev server does not always hot-reload new route files).
 - Verify with `pnpm run typecheck`, not `build` (build needs workflow-provided `PORT`/`BASE_PATH`).
-- **Per-user document isolation:** documents are scoped by Clerk `userId` (`owner_user_id` column). New users start with an empty library; users can only see/access their own documents. Legacy test documents (uploaded before isolation) have `owner_user_id = NULL` and are invisible to all public users.
-- **Approved-user gate (optional):** set `VITE_APPROVED_EMAILS` in Replit Secrets to a comma-separated list of emails to restrict app access. Leave it unset (default) to admit all authenticated users. Changing it requires a frontend redeploy.
-- **Clerk dev vs prod user stores:** accounts created during development do not carry over to the published (production) domain — users must register again on the live URL.
-- **Public sign-up:** Google OAuth (Gmail + Google Workspace) works out of the box. No invite or allowlist step is required for normal public access.
-- **Stripe credentials (priority order):** (1) `STRIPE_SECRET_KEY` env var — set this in Replit Secrets to use your real Stripe account (production). `STRIPE_WEBHOOK_SECRET` is optional alongside it. (2) Replit-managed Stripe integration (sandbox) — used automatically in dev if the env var is not set. The upgrade page reads live products/prices from whichever account is active.
 
 ## Pointers
 
