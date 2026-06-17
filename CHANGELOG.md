@@ -2,6 +2,41 @@
 
 ---
 
+## [Signal87_Core_Clerk_Auth_v1] — 2026-06-17  *(Minimal Clerk auth with approved-email gate)*
+
+### Summary
+Implemented minimal Clerk-based authentication with an approved-email gate. All backend API routes (except `/healthz`) and all frontend application routes (Documents, Ask, Brief, Compare, Activity) are now protected. The landing page, public pages (About, Team, Contact, Privacy, Terms), and sign-in/sign-up pages remain public. Only users whose email is in the `APPROVED_EMAILS` environment variable can access protected content.
+
+### Added — Backend
+- **`src/middlewares/requireAuth.ts` (new):** `requireApprovedEmail` middleware. Uses `getAuth(req)` from `@clerk/express` to check if the user is signed in and their email is in the `APPROVED_EMAILS` comma-separated list. Returns **401** if not signed in, **403** if email not approved. Supports `CLERK_BYPASS_AUTH=true` for emergency override.
+- **`src/middlewares/clerkProxyMiddleware.ts` (new):** Clerk Frontend API proxy — production-only, no-op in dev. Required for Clerk to work on custom domains and `.replit.app` deployments.
+- **`src/routes/index.ts`:** `healthRouter` remains public; all other routes are now gated with `requireApprovedEmail`.
+
+### Added — Frontend
+- **`src/main.tsx`:** Wraps `<App>` with `<ClerkProvider>` using the `VITE_CLERK_PUBLISHABLE_KEY` environment variable. Configured `signInUrl`, `signUpUrl`, `afterSignOutUrl`, and `redirectUrl` with proper base-path handling. Uses `@clerk/themes` dark theme with Signal87 brand colors.
+- **`src/App.tsx`:** Added `/sign-in` and `/sign-up` routes using `<SignIn>` and `<SignUp>` components. Added `AuthGuard` component that allows public routes (`/`, `/about`, `/terms`, `/privacy`, `/contact`, `/team/*`, `/sign-in`, `/sign-up`) and redirects all other routes to sign-in via `<RedirectToSignIn>` when the user is not signed in.
+- **`src/components/layout.tsx`:** Added `<UserButton>` in the sidebar header (visible when signed in), showing avatar and account popover.
+- **`src/pages/home.tsx`:** CTA button now shows "Sign In" when not signed in and "Open App" when signed in. Header nav also shows Sign In link.
+- **`src/index.css`:** Added Clerk component CSS overrides for Tailwind v4 compatibility — dark-themed cards, form inputs, buttons, social login buttons, and user popover styling.
+
+### Dependencies
+- **Backend:** `@clerk/express`, `@clerk/themes`, `http-proxy-middleware`
+- **Frontend:** `@clerk/react`, `@clerk/themes`
+
+### Verification
+- `pnpm --filter @workspace/api-server run typecheck` — clean.
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- API: `GET /api/documents` → **401** (no auth), `GET /api/healthz` → **200** (public).
+- Frontend: `/documents` redirects to `/sign-in` when not signed in; `/sign-in` shows Clerk sign-in UI with Google OAuth; `/sign-up` shows Clerk sign-up UI.
+- Workflows: `API Server` and `web` both restarted successfully.
+
+### Notes
+- `APPROVED_EMAILS` is set as an empty placeholder. **Before deploying, populate it** with a comma-separated list of approved emails (e.g., `user1@example.com,user2@example.com`).
+- `CLERK_BYPASS_AUTH` is not set — auth is active. If you need to disable it for testing, set `CLERK_BYPASS_AUTH=true` in the environment.
+- The Clerk components render in a light-themed card by default even with the dark theme applied; the CSS overrides ensure the dark theme styling is consistent.
+
+---
+
 ## [Signal87_Core_Stabilization_Smoke_v1] — 2026-06-15  *(Zero-tolerance smoke stabilization)*
 
 ### Summary

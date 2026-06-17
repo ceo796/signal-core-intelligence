@@ -1,7 +1,8 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Ask_Activity_Tabs_v1**
-> Last updated: 2026-06-15
+> Checkpoint: **Signal87_Core_Clerk_Auth_v1**
+> Last updated: 2026-06-17
+> Note (Clerk_Auth_v1): New tests **T40–T50** cover the Clerk auth with approved-email gate. All API routes (except `/healthz`) return **401** when unauthenticated and **403** when signed in but not approved. All frontend app routes (Documents, Ask, Brief, Compare, Activity) redirect to `/sign-in` when not signed in. Landing, public pages, and sign-in/sign-up remain public. The core document flows (upload, PDF viewer, chat, citations, delete) are unchanged and should be tested under a signed-in approved session.
 > Note (Ask_Activity_Tabs_v1): New tests **T36–T38** cover the two new **frontend-only** nav tabs — **Ask** (`/ask`, ready-doc picker that routes into the existing single-doc chat) and **Activity** (`/activity`, a read-only feed derived only from existing document data, no fabricated events) — plus three-tab navigation and mobile usability. **No backend, API, contract, or schema changes**; no protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was touched.
 > Type: Manual end-to-end test plan
 > Note (Reliability_Clarity_Pass_v1): New tests **T29–T35** cover document status labels, list-level Re-Index for failed/0-chunk docs, the chat not-ready gate (frontend) + `422` guard (backend), upload validation + server-error surfacing, citation "Section N" labels + the no-citations note, and structured Q&A/upload logging. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index mechanics / citation + Verification Trace payload) was changed.
@@ -14,7 +15,7 @@
 
 1. Confirm both workflows are running (API server + frontend web)
 2. Confirm `GET /api/healthz` returns `{"status":"ok"}`
-3. Confirm `GET /api/system/info` shows:
+3. Confirm `GET /api/system/info` (with signed-in session) shows:
    - `OPENAI_API_KEY: "set"`
    - `DATABASE_URL: "set"`
    - `DEFAULT_OBJECT_STORAGE_BUCKET_ID: "set"`
@@ -869,3 +870,14 @@ To test manually today:
 - [ ] T37 Activity tab: real upload/extraction events only (no fabrication), labels match status, empty state, no internals leaked
 - [ ] T38 Nav shows Documents \| Ask \| Activity; active state + mobile usable; core Documents flow unchanged
 - [x] T39 Malformed-PDF stabilization smoke: failed doc inspected (malformed PDF, 0 chunks, original preserved); Q&A on failed doc → 422 (no OpenAI call); improved extraction-failed message shown and wraps in Activity; known-good PDF full lifecycle (upload 201 / extraction success / 3 chunks / preview renders / Q&A 200 + citations / delete 204); Activity accurate with no stale entries; no orphan chunks; all test docs deleted
+- [ ] T40 Auth — API unauthenticated: `GET /api/documents` without session cookie → 401
+- [ ] T41 Auth — API authenticated but unapproved email: `GET /api/documents` with signed-in session but email not in `APPROVED_EMAILS` → 403
+- [ ] T42 Auth — API health check: `GET /api/healthz` remains public (no auth) → 200
+- [ ] T43 Auth — Frontend: `/documents` redirects to `/sign-in` when not signed in
+- [ ] T44 Auth — Frontend: `/brief` and `/compare` redirect to `/sign-in` when not signed in
+- [ ] T45 Auth — Frontend: `/about`, `/terms`, `/privacy`, `/contact`, `/team` remain public (no redirect)
+- [ ] T46 Auth — Frontend: Sign-in page shows Clerk UI with Google OAuth option
+- [ ] T47 Auth — Frontend: After sign-in, user is redirected to `/documents`
+- [ ] T48 Auth — Frontend: UserButton shows in sidebar when signed in; clicking opens account popover
+- [ ] T49 Auth — Frontend: Landing page CTA shows "Sign In" when not signed in, "Open App" when signed in
+- [ ] T50 Auth — Backend: `CLERK_BYPASS_AUTH=true` allows all requests through (emergency override)

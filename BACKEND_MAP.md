@@ -1,8 +1,9 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Reliability_Clarity_Pass_v1**
-> Last updated: 2026-06-15
-> Note: `Signal87_Core_Reliability_Clarity_Pass_v1` is a reliability/clarity pass — **no new routes, no schema changes**. One additive contract change + targeted backend hardening: (1) `POST /documents/{id}/chat` now documents/returns `422 → ErrorResponse` and **guards before any OpenAI call** when the doc has 0 chunks _or_ `extractionStatus === "failed"`; (2) one structured Q&A outcome log per chat request (`provider`/`model`/`chunksSearched`/`chunksRetrieved`/`totalLatencyMs`) — never logs question/answer content; (3) upload emits a success log (`chunkCount`) + a `207` extraction-failed warn log; (4) the reindex "no text extracted" path now sets `extractionStatus="failed"` + `extractionError` (bookkeeping) and logs success. Re-index success/transaction mechanics, storage, upload, download, delete, and the citation/Verification-Trace payload are unchanged.
+> Checkpoint: **Signal87_Core_Clerk_Auth_v1**
+> Last updated: 2026-06-17
+> Note: Clerk auth with approved-email gate added. All API routes (except `/healthz`) and all frontend app routes (Documents, Ask, Brief, Compare, Activity) are now protected. Public: landing, about, terms, privacy, contact, team, sign-in, sign-up. `APPROVED_EMAILS` env var controls access; `CLERK_BYPASS_AUTH` can disable auth entirely. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was changed.
+> Prior: `Signal87_Core_Reliability_Clarity_Pass_v1` is a reliability/clarity pass — **no new routes, no schema changes**. One additive contract change + targeted backend hardening: (1) `POST /documents/{id}/chat` now documents/returns `422 → ErrorResponse` and **guards before any OpenAI call** when the doc has 0 chunks _or_ `extractionStatus === "failed"`; (2) one structured Q&A outcome log per chat request (`provider`/`model`/`chunksSearched`/`chunksRetrieved`/`totalLatencyMs`) — never logs question/answer content; (3) upload emits a success log (`chunkCount`) + a `207` extraction-failed warn log; (4) the reindex "no text extracted" path now sets `extractionStatus="failed"` + `extractionError` (bookkeeping) and logs success. Re-index success/transaction mechanics, storage, upload, download, delete, and the citation/Verification-Trace payload are unchanged.
 > Prior: `Signal87_Core_Backend_Stability_Pass_v1` — global JSON 500 handler; `GET /documents` try/catch; reindex wrapped in `db.transaction()`; retriever empty-chunk filter. Prior: `Signal87_Core_Executive_Brief_Generator_v1` added `POST /api/documents/brief`. Prior: `Signal87_Core_Multi_Document_Comparison_v1` added `POST /api/documents/multi-chat` and `retrieveAcrossDocuments`.
 
 ---
@@ -26,6 +27,9 @@ Middleware stack in `app.ts`:
 - `express.json()` / `express.urlencoded()` — body parsing
 - All routes mounted at `/api`
 - Global 4-arg error handler — catches any unhandled async throw, logs via pino, returns `{ error: "Internal server error" }` HTTP 500 as JSON
+- `clerkProxyMiddleware` — Clerk Frontend API proxy (production-only, no-op in dev); must be mounted BEFORE `express.json()`
+- `clerkMiddleware` — Clerk session middleware; attaches `auth` object to request
+- `requireApprovedEmail` — checks `getAuth(req).sessionClaims.email` against `APPROVED_EMAILS` env var; returns **401** if not signed in, **403** if email not approved
 
 ---
 
@@ -34,6 +38,8 @@ Middleware stack in `app.ts`:
 **`artifacts/api-server/src/routes/chat/index.ts`** — `router.post("/documents/:id/chat", ...)`
 
 Mounted via `artifacts/api-server/src/routes/index.ts` → `app.use("/api", router)` in `app.ts`.
+
+**Auth:** `healthRouter` is public; all other routes require `requireApprovedEmail` (401/403 if not signed in or not approved).
 
 **Not-ready guard (returns `422 { error }` before any OpenAI call):** if the document has `allChunks.length === 0` **or** `extractionStatus === "failed"`, the route responds `422` with an actionable message and logs `warn "Q&A rejected…"`. On success it logs one `info "Q&A succeeded"` line with `documentId` / `provider` / `model` / `chunksSearched` / `chunksRetrieved` / `totalLatencyMs`. **Question and answer text are never logged.**
 

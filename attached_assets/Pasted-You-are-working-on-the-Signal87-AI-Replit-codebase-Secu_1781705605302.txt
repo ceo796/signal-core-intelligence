@@ -1,0 +1,159 @@
+You are working on the Signal87 AI Replit codebase.
+
+Security verification found a CRITICAL issue: real documents and all document APIs are publicly accessible without login. This must be fixed before any landing page, dashboard, thumbnail, or design work.
+
+PHASE 2 SECURITY TASK ONLY:
+Implement minimal Clerk-based authentication and API protection.
+
+CRITICAL RULES:
+
+* Do not redesign anything.
+* Do not rebuild the dashboard.
+* Do not touch document parsing logic.
+* Do not touch AI/model routing logic.
+* Do not touch brief/comparison logic except to protect the routes.
+* Do not change database schema unless you stop first and report why required.
+* Do not run migrations.
+* Do not replace working document APIs.
+* Do not create mock data.
+* Make the smallest safe security fix possible.
+
+KNOWN CONTEXT:
+
+* Clerk environment variables already exist:
+
+  * `CLERK_PUBLISHABLE_KEY`
+  * `CLERK_SECRET_KEY`
+  * `VITE_CLERK_PUBLISHABLE_KEY`
+* Clerk is currently dormant and unused.
+* Frontend routes are open.
+* Backend `/api/*` routes are open.
+* Real documents are exposed.
+* `/documents` is currently the app entry route.
+* Landing page may remain public.
+* `/api/healthz` may remain public.
+
+TASK A — Frontend Clerk setup:
+
+1. If Clerk frontend package is missing, install only the necessary current Clerk package for this React/Vite app.
+2. Wrap the frontend app in `ClerkProvider` using `VITE_CLERK_PUBLISHABLE_KEY`.
+3. Add a minimal protected-route wrapper.
+4. Protect these routes:
+
+   * `/documents`
+   * `/ask`
+   * `/activity`
+   * `/brief`
+   * `/compare`
+   * `/admin`, if present
+   * document detail routes
+5. Leave public:
+
+   * landing page `/`
+   * sign-in/sign-up routes or Clerk hosted sign-in flow
+6. Add a minimal sign-in/sign-out/user button area in the app shell/sidebar.
+7. Do not redesign the app shell.
+
+TASK B — Backend API protection:
+
+1. If Clerk backend package is missing, install only the necessary current Clerk Express package.
+2. Add Clerk middleware to the Express server.
+3. Protect all `/api/*` routes except:
+
+   * `/api/healthz`
+4. All unauthenticated requests to document APIs must return 401.
+5. Protect at minimum:
+
+   * `GET /api/documents`
+   * `GET /api/documents/:id`
+   * `GET /api/documents/:id/chunks`
+   * document original/view/download endpoints
+   * upload endpoints
+   * delete/re-index endpoints
+   * `POST /api/documents/:id/chat`
+   * `POST /api/documents/brief`
+   * `POST /api/documents/multi-chat`
+   * `/api/admin`, if present
+
+TASK C — Approved-user safety gate:
+Because this app currently has no confirmed per-user document isolation, do not allow any signed-in user to see all documents.
+
+Implement one of the following safe approaches:
+
+Preferred:
+
+* Add backend approved-email enforcement using an environment variable such as `APPROVED_EMAILS` or the existing approved-email variable if one already exists.
+* Only authenticated Clerk users whose email is approved may access protected app APIs.
+* Unauthorized authenticated users should receive 403.
+
+If no approved-email variable exists:
+
+* Stop and report exactly what environment variable is needed.
+* Do not leave the app in a state where any signed-in Clerk user can read all existing documents.
+
+TASK D — API client token wiring:
+
+1. Wire the frontend API client to attach the Clerk session token to API requests.
+2. Confirm the existing `setAuthTokenGetter` or equivalent API client hook is used.
+3. Do not create a duplicate API client unless absolutely necessary.
+
+TASK E — Verification:
+After implementation, verify:
+
+Unauthenticated browser:
+
+* `/` loads public landing page.
+* `/documents` requires sign-in.
+* `/ask` requires sign-in.
+* `/brief` requires sign-in.
+* `/compare` requires sign-in.
+
+Unauthenticated API curl:
+
+* `GET /api/healthz` returns 200.
+* `GET /api/documents` returns 401.
+* `GET /api/documents/:id` returns 401.
+* `GET /api/documents/:id/chunks` returns 401.
+* `POST /api/documents/:id/chat` returns 401.
+* `POST /api/documents/brief` returns 401.
+* `POST /api/documents/multi-chat` returns 401.
+
+Authenticated approved user:
+
+* `/documents` loads real documents.
+* `/ask` loads.
+* `/brief` loads real documents.
+* `/compare` loads real documents.
+* API calls succeed.
+
+Authenticated unapproved user, if approved-email gate is implemented:
+
+* App access blocked or pending-access shown.
+* API calls return 403.
+
+Build checks:
+
+* TypeScript passes.
+* App builds.
+* Existing route restoration remains intact:
+
+  * `/documents`
+  * `/ask`
+  * `/activity`
+  * `/brief`
+  * `/compare`
+
+FINAL RESPONSE:
+Report:
+
+* Packages installed, if any.
+* Files changed.
+* Frontend routes protected.
+* Backend APIs protected.
+* Whether approved-email gate was implemented.
+* Exact env variable required for approved emails, if any.
+* Unauthenticated API test results.
+* Authenticated approved-user test results, if available.
+* TypeScript status.
+* Build status.
+* Confirmation that database schema, document parsing, AI routing, brief logic, compare logic, and PDF viewer logic were not changed.

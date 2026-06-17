@@ -1,8 +1,11 @@
 import { Link } from "wouter";
+import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Database, Zap, Linkedin } from "lucide-react";
+import { ArrowRight, ShieldCheck, Database, Zap, Linkedin, LogIn } from "lucide-react";
 
 export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth();
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/30">
       <header className="p-6 flex justify-between items-center border-b border-border/50">
@@ -11,7 +14,16 @@ export default function Home() {
           <Link href="/about" className="hidden sm:block hover:text-foreground transition-colors">About</Link>
           <Link href="/team" className="hidden sm:block hover:text-foreground transition-colors">Team</Link>
           <Link href="/contact" className="hidden sm:block hover:text-foreground transition-colors">Contact</Link>
-          <Link href="/documents" className="text-primary hover:text-primary/80 font-medium transition-colors">Open App</Link>
+          {isLoaded && isSignedIn ? (
+            <Link href="/documents" className="text-primary hover:text-primary/80 font-medium transition-colors">
+              Open App
+            </Link>
+          ) : (
+            <Link href="/sign-in" className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 font-medium transition-colors">
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </Link>
+          )}
         </nav>
       </header>
 
@@ -29,12 +41,22 @@ export default function Home() {
           Upload any PDF, DOCX, or text file. Ask questions. Get answers that cite exactly where they came from.
         </p>
 
-        <Link href="/documents" className="inline-block">
-          <Button size="lg" className="gap-2 h-12 px-8 group">
-            Get Started
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </Link>
+        {isLoaded && isSignedIn ? (
+          <Link href="/documents" className="inline-block">
+            <Button size="lg" className="gap-2 h-12 px-8 group">
+              Open App
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/sign-in" className="inline-block">
+            <Button size="lg" className="gap-2 h-12 px-8 group">
+              <LogIn className="w-4 h-4" />
+              Sign In
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24 text-left w-full border-t border-border pt-12">
           <div className="space-y-3">
