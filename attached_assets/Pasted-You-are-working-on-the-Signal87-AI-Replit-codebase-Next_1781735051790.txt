@@ -1,0 +1,104 @@
+You are working on the Signal87 AI Replit codebase.
+
+Next phase: mobile/app-like layout polish across the protected app.
+
+Current completed work:
+
+* Stable Clerk auth protected baseline
+* Document thumbnails
+* Document library/detail polish
+* Landing page work is paused
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not change auth behavior.
+* Do not change upload, parsing, extraction, chat, brief, compare, AI routing, or PDF viewer logic.
+* Do not redesign the landing page.
+* Do not rebuild the dashboard.
+* Do not install packages.
+* Do not replace real data with mock/static data.
+* Keep this frontend-only and focused on responsive/mobile layout.
+
+TASK:
+Make the protected Signal87 app feel more like a polished mobile app while preserving the current desktop experience.
+
+Scope:
+
+* App layout/shell
+* Sidebar/mobile navigation
+* `/documents`
+* `/ask`
+* `/brief`
+* `/compare`
+* `/activity`
+* Document detail page
+
+Mobile goals:
+
+1. Navigation
+
+* Ensure mobile users can easily move between Documents, Ask, Brief, Compare, and Activity.
+* If a bottom nav already exists, polish it.
+* If no mobile nav exists, add a simple frontend-only bottom navigation using existing routes.
+* Do not remove or materially change desktop sidebar behavior.
+
+2. Touch usability
+
+* Buttons should be easy to tap.
+* Inputs and textareas should have proper padding.
+* Text cursor/caret should not sit too close to borders.
+* Cards should stack cleanly.
+* Avoid horizontal scrolling.
+* Avoid cramped action rows.
+
+3. Documents page
+
+* Document cards should look good on mobile.
+* Thumbnails should remain visible but not dominate the screen.
+* Ask/Delete actions should remain tappable.
+* Upload action should remain accessible.
+
+4. Ask / Brief / Compare
+
+* Forms should be readable and easy to use on mobile.
+* Document selectors should not feel cramped.
+* Generate/submit buttons should remain visible and tappable.
+* Results should be readable on small screens.
+
+5. Document detail
+
+* Header/title should wrap cleanly.
+* Tabs should be usable on mobile.
+* PDF viewer/original download/actions should remain accessible.
+* Extracted text/citations/chat areas should not overflow horizontally.
+
+VERIFY:
+
+* Mobile viewport screenshots for:
+
+  * `/documents`
+  * `/ask`
+  * `/brief`
+  * `/compare`
+  * `/activity`
+  * one document detail page
+* Desktop layout remains unchanged or only minimally improved.
+* TypeScript passes.
+* App builds.
+* Unauthenticated `/api/documents` still returns 401.
+* `/api/healthz` still returns 200.
+* No backend/database/auth/API files changed.
+
+FINAL RESPONSE:
+Report:
+
+* Files changed
+* Mobile navigation behavior
+* Mobile improvements by page
+* Desktop impact
+* Route regression results
+* Auth/API protection results
+* TypeScript/build status
+* Confirmation that backend/database/auth/document parsing/AI logic were untouched

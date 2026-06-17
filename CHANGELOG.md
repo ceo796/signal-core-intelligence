@@ -2,6 +2,40 @@
 
 ---
 
+## [Signal87_Core_Mobile_Polish_v1] — 2026-06-17  *(Mobile layout polish — larger tap targets, responsive padding, smaller thumbnails, scrollable table)*
+
+### Summary
+Frontend-only mobile/app-like polish pass across all protected pages. No backend, API, DB, auth, upload, download, delete, reindex, or PDF-viewer logic changed.
+
+### Changed — `src/components/layout.tsx`
+- Bottom-nav link vertical padding: `py-2` → `py-3 md:py-2` — minimum ~44 px touch target on mobile, desktop unchanged.
+
+### Changed — `src/pages/documents.tsx`
+- **Header padding**: `px-6 py-5` → `px-4 md:px-6 py-4 md:py-5`.
+- **Toolbar**: `flex items-center gap-3 px-6` → `flex flex-wrap items-center gap-x-2 gap-y-2 px-4 md:px-6` — filters wrap to a second line on narrow screens instead of overflowing.
+- **Search input container**: removed `max-w-sm` cap (`flex-1 min-w-[160px]`) so the search bar fills available width on mobile.
+- **Grid thumbnail height**: `h-40` → `h-28` (card and skeleton) — more compact cards on all screen sizes.
+- **List table**: wrapped in `<div className="overflow-x-auto">` with `min-w-[520px]` on the table — no horizontal clipping on narrow screens.
+- **Delete button**: `h-7 w-7` → `h-8 w-8` for a larger touch target in list view.
+
+### Changed — `src/pages/document-detail.tsx`
+- All five `TabsContent` panels (preview, text, citations, history, system): `p-6` → `p-4 md:p-6`.
+
+### Changed — `src/pages/ask.tsx`
+- Main content wrapper: `p-6` → `p-4 md:p-6`.
+
+### Changed — `src/pages/activity.tsx`
+- Main content wrapper: `p-6` → `p-4 md:p-6`.
+
+### Unchanged
+- `executive-brief.tsx`, `multi-document-chat.tsx` — already use `p-4 md:p-6` throughout; no changes needed.
+- All backend routes, API contract, DB schema, auth, upload, download, delete, reindex, PDF viewer.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+
+---
+
 ## [Signal87_Core_Dark_Theme_v1] — 2026-06-17  *(Global black theme, Instrument Serif headers, transparent logos)*
 
 ### Summary

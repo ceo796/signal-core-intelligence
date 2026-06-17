@@ -33,7 +33,7 @@ export default function Ask() {
           </p>
         </header>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4 md:p-6">
           <div className="max-w-2xl mx-auto">
             {isLoading ? (
               <div className="space-y-4">

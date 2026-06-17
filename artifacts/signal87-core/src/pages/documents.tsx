@@ -117,7 +117,7 @@ function DeleteDialog({ fileName, onConfirm }: { fileName: string; onConfirm: ()
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </Button>
@@ -236,7 +236,7 @@ export default function DocumentsList() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="px-6 py-5 border-b border-border flex items-center justify-between bg-card">
+        <header className="px-4 md:px-6 py-4 md:py-5 border-b border-border flex items-center justify-between bg-card">
           <div>
             <h1 className="text-xl font-bold tracking-tight">Documents</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Your uploaded documents</p>
@@ -275,8 +275,8 @@ export default function DocumentsList() {
 
         {/* Search + filter toolbar — only shown when documents exist */}
         {!isLoading && !error && documents && documents.length > 0 && (
-          <div className="px-6 py-3 border-b border-border bg-card/60 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
+          <div className="px-4 md:px-6 py-3 border-b border-border bg-card/60 flex flex-wrap items-center gap-x-2 gap-y-2">
+            <div className="relative flex-1 min-w-[160px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search by name…"
@@ -369,7 +369,7 @@ export default function DocumentsList() {
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
                   <Card key={i} className="overflow-hidden">
-                    <Skeleton className="h-40 w-full rounded-none" />
+                    <Skeleton className="h-28 w-full rounded-none" />
                     <CardContent className="p-4 space-y-2">
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-3 w-1/2" />
@@ -445,7 +445,7 @@ export default function DocumentsList() {
                     {/* Thumbnail */}
                     <Link
                       href={`/documents/${doc.id}`}
-                      className="block h-40 w-full shrink-0 border-b border-border/50 overflow-hidden"
+                      className="block h-28 w-full shrink-0 border-b border-border/50 overflow-hidden"
                     >
                       <DocumentThumbnail
                         id={doc.id}
@@ -507,7 +507,8 @@ export default function DocumentsList() {
             /* ══════════════════════════════
                LIST VIEW — compact table
                ══════════════════════════════ */
-            <table className="w-full text-sm border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse min-w-[520px]">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
                   {(
@@ -596,6 +597,7 @@ export default function DocumentsList() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

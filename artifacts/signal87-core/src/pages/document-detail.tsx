@@ -373,7 +373,7 @@ export default function DocumentDetail() {
             </div>
 
             {/* Preview */}
-            <TabsContent value="preview" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
+            <TabsContent value="preview" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
               {isPdf ? (
                 !doc.originalFileAvailable ? (
                   <div className="flex-1 overflow-auto flex flex-col gap-4">
@@ -447,7 +447,7 @@ export default function DocumentDetail() {
             </TabsContent>
 
             {/* Extracted Text */}
-            <TabsContent value="text" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
+            <TabsContent value="text" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
               <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
                 <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground flex-wrap">
                   <Badge variant={extractionOk ? "secondary" : "destructive"} className="font-mono">
@@ -483,7 +483,7 @@ export default function DocumentDetail() {
             </TabsContent>
 
             {/* Citations / chunk inspection */}
-            <TabsContent value="citations" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
+            <TabsContent value="citations" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
               <p className="text-xs font-mono text-muted-foreground mb-4">
                 Source chunks · {chunks?.length ?? 0} indexed for retrieval
               </p>
@@ -525,7 +525,7 @@ export default function DocumentDetail() {
             </TabsContent>
 
             {/* History */}
-            <TabsContent value="history" className="flex-1 overflow-hidden p-6 m-0 flex flex-col">
+            <TabsContent value="history" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
               <p className="text-xs text-muted-foreground mb-4">
                 Chat history — prior analysis on this document
               </p>
@@ -569,7 +569,7 @@ export default function DocumentDetail() {
             </TabsContent>
 
             {/* System */}
-            <TabsContent value="system" className="flex-1 overflow-auto p-6 m-0">
+            <TabsContent value="system" className="flex-1 overflow-auto p-4 md:p-6 m-0">
               <Card className="bg-card border-border/50 max-w-2xl">
                 <CardContent className="p-5">
                   <p className="text-xs font-mono text-muted-foreground mb-3">SYSTEM_STATUS</p>
