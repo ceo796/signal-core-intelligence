@@ -1,0 +1,71 @@
+You are working on the Signal87 AI Replit codebase.
+
+The document thumbnail feature has been implemented as:
+
+`Signal87_Core_Document_Thumbnails_v1`
+
+Before moving to the next phase, create a clean checkpoint and verify the thumbnail feature in the standalone app tab.
+
+CRITICAL RULES:
+
+* Do not redesign anything.
+* Do not change backend logic.
+* Do not change database schema.
+* Do not change auth behavior.
+* Do not change upload, parsing, extraction, chunking, chat, brief, compare, AI routing, or PDF viewer logic.
+* Do not install packages.
+* Do not deploy unless explicitly asked.
+* Verification and checkpoint only.
+
+TASK:
+
+1. Create a checkpoint/commit for:
+   `Signal87_Core_Document_Thumbnails_v1`
+
+2. Verify in standalone tab, not Replit iframe:
+
+* Sign in with approved Google user.
+* `/documents` loads real documents.
+* Document cards show thumbnail/preview areas.
+* PDFs render first-page thumbnails where original files are available.
+* PDFs fall back cleanly if preview fails.
+* DOCX/TXT/XLSX/PPTX and other files show polished file-type fallback cards.
+* No broken image icons appear.
+* Document cards/actions still work.
+* “Ask a Question” still works.
+* Delete button still behaves as before.
+* Upload button still works or remains unchanged.
+
+3. Verify protected app behavior:
+
+* `/documents` remains protected.
+* Unauthenticated `/api/documents` returns 401.
+* `/api/healthz` remains public and returns 200.
+
+4. Verify route regression:
+
+* `/ask` works.
+* `/brief` works.
+* `/compare` works.
+* `/activity` works.
+
+5. Verify quality:
+
+* TypeScript passes.
+* App builds.
+* Browser console has no thumbnail-related errors.
+* No backend/database/auth/API files changed.
+
+FINAL RESPONSE:
+Report:
+
+* Checkpoint/commit created
+* Commit hash if available
+* Files included
+* Standalone-tab thumbnail verification
+* PDF thumbnail behavior
+* Non-PDF fallback behavior
+* Route regression results
+* Auth/API protection results
+* TypeScript/build status
+* Confirmation that backend/database/auth/document parsing/AI logic were untouched
