@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimalist</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --accent: #0f172a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 2rem;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-size: clamp(4rem, 12vw, 7rem);
+      font-weight: 200;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: #64748b;
+      letter-spacing: 0.02em;
+    }
+
+    /* Subtle controls for iteration (remove in production) */
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #e2e8f0;
+      border-radius: 9999px;
+      padding: 8px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 13px;
+      z-index: 10;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #64748b;
+    }
+
+    .controls input[type="range"] {
+      width: 90px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="content">
+    <h1>Minimalist</h1>
+    <p class="tagline">Precision. Restraint. Intelligence.</p>
+  </div>
+
+  <!-- Optional live controls for development (remove for production) -->
+  <div class="controls">
+    <label>
+      Speed
+      <input type="range" id="speed" min="0.2" max="2.5" step="0.1" value="1.0">
+    </label>
+    <label>
+      Attraction
+      <input type="range" id="attraction" min="0" max="0.8" step="0.05" value="0.35">
+    </label>
+    <label>
+      <input type="checkbox" id="lines" checked> Lines
+    </label>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { alpha: true });
+
+    let width, height, dpr;
+    let orbs = [];
+    let mouse = { x: 0, y: 0, active: false };
+    let animationFrame;
+    let reducedMotion = false;
+
+    // Configuration (easy to tweak)
+    const config = {
+      orbCount: 16,
+      baseSpeed: 0.35,
+      attractionStrength: 0.35,
+      showLines: true,
+      maxLineDistance: 180
+    };
+
+    // Color palette - subtle professional (white-friendly)
+    const palette = [
+      { color: '#0f172a', alpha: 0.12 },   // Deep navy
+      { color: '#334155', alpha: 0.10 },   // Slate
+      { color: '#0ea5e9', alpha: 0.08 },   // Sky blue accent
+      { color: '#64748b', alpha: 0.09 }    // Muted gray
+    ];
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(dpr, dpr);
+    }
+
+    class Orb {
+      constructor() {
+        this.reset();
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+      }
+
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.size = Math.random() * 3.5 + 1.8;
+        this.depth = Math.random() * 0.6 + 0.4; // Parallax factor
+        this.vx = (Math.random() - 0.5) * 0.6;
+        this.vy = (Math.random() - 0.5) * 0.6;
+        this.hue = palette[Math.floor(Math.random() * palette.length)];
+      }
+
+      update() {
+        // Gentle autonomous drift
+        this.x += this.vx * config.baseSpeed;
+        this.y += this.vy * config.baseSpeed;
+
+        // Very soft center bias (keeps composition cohesive)
+        const centerX = width / 2;
+        const centerY = height / 2;
+        this.vx += (centerX - this.x) * 0.000008;
+        this.vy += (centerY - this.y) * 0.000008;
+
+        // Mouse interaction (attraction)
+        if (mouse.active) {
+          const dx = mouse.x - this.x;
+          const dy = mouse.y - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const force = (config.attractionStrength * this.depth) / (dist * 0.008 + 1);
+
+          this.vx += dx * force * 0.012;
+          this.vy += dy * force * 0.012;
+        }
+
+        // Damping for silky motion
+        this.vx *= 0.982;
+        this.vy *= 0.982;
+
+        // Soft bounds
+        if (this.x < -50) this.x = width + 50;
+        if (this.x > width + 50) this.x = -50;
+        if (this.y < -50) this.y = height + 50;
+        if (this.y > height + 50) this.y = -50;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.hue.alpha;
+        ctx.fillStyle = this.hue.color;
+
+        // Soft glow
+        ctx.shadowColor = this.hue.color;
+        ctx.shadowBlur = this.size * 2.5;
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
+
+    function initOrbs() {
+      orbs = [];
+      for (let i = 0; i < config.orbCount; i++) {
+        orbs.push(new Orb());
+      }
+    }
+
+    function drawConnections() {
+      if (!config.showLines) return;
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 0.6;
+
+      for (let i = 0; i < orbs.length; i++) {
+        for (let j = i + 1; j < orbs.length; j++) {
+          const dx = orbs[i].x - orbs[j].x;
+          const dy = orbs[i].y - orbs[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < config.maxLineDistance) {
+            const alpha = (1 - dist / config.maxLineDistance) * 0.18;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.moveTo(orbs[i].x, orbs[i].y);
+            ctx.lineTo(orbs[j].x, orbs[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Update + draw orbs
+      for (const orb of orbs) {
+        orb.update();
+        orb.draw();
+      }
+
+      drawConnections();
+
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    function setupInteraction() {
+      const handleMove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+        mouse.active = true;
+      };
+
+      const handleLeave = () => {
+        mouse.active = false;
+      };
+
+      canvas.addEventListener('mousemove', handleMove);
+      canvas.addEventListener('mouseleave', handleLeave);
+
+      // Touch support (lighter interaction on mobile)
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.touches[0].clientX - rect.left;
+        mouse.y = e.touches[0].clientY - rect.top;
+        mouse.active = true;
+      }, { passive: false });
+
+      canvas.addEventListener('touchend', handleLeave);
+
+      // Reduced motion preference
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      reducedMotion = mediaQuery.matches;
+
+      mediaQuery.addEventListener('change', (e) => {
+        reducedMotion = e.matches;
+        if (reducedMotion) {
+          cancelAnimationFrame(animationFrame);
+        } else {
+          animate();
+        }
+      });
+    }
+
+    function setupControls() {
+      const speedSlider = document.getElementById('speed');
+      const attractionSlider = document.getElementById('attraction');
+      const linesToggle = document.getElementById('lines');
+
+      speedSlider.addEventListener('input', (e) => {
+        config.baseSpeed = parseFloat(e.target.value);
+      });
+
+      attractionSlider.addEventListener('input', (e) => {
+        config.attractionStrength = parseFloat(e.target.value);
+      });
+
+      linesToggle.addEventListener('change', (e) => {
+        config.showLines = e.target.checked;
+      });
+
+      // Keyboard accessibility
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '?') {
+          document.querySelector('.controls').style.display =
+            document.querySelector('.controls').style.display === 'none' ? 'flex' : 'none';
+        }
+      });
+    }
+
+    function init() {
+      resize();
+      initOrbs();
+      setupInteraction();
+      setupControls();
+
+      // Start animation unless user prefers reduced motion
+      if (!reducedMotion) {
+        animate();
+      } else {
+        // Draw static elegant state
+        ctx.clearRect(0, 0, width, height);
+        for (const orb of orbs) {
+          orb.draw();
+        }
+      }
+
+      // Handle resize
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          resize();
+          initOrbs(); // Re-seed positions on significant resize
+        }, 150);
+      });
+
+      // Pause when tab is hidden (performance)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          cancelAnimationFrame(animationFrame);
+        } else if (!reducedMotion) {
+          animate();
+        }
+      });
+
+      // Easter egg: click to respawn orbs
+      canvas.addEventListener('click', () => {
+        initOrbs();
+      });
+    }
+
+    // Boot everything
+    init();
+  </script>
+</body>
+</html>
