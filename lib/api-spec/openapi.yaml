@@ -44,50 +44,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/Document"
 
-  /documents/upload:
-    post:
-      operationId: uploadDocuments
-      tags: [documents]
-      summary: Upload one or more documents
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-              required: [files]
-      responses:
-        "200":
-          description: Upload results
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UploadBatchResponse"
-        "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "402":
-          description: Free tier limit reached
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
   /documents/{id}:
     get:
       operationId: getDocument
@@ -273,37 +229,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: One or more selected documents not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /ai/chat:
-    post:
-      operationId: aiChat
-      tags: [chat]
-      summary: Ask a question with optional grounding across the user's document library
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AiChatInput"
-      responses:
-        "200":
-          description: Answer with mode label, citations (for grounded answers), and debug info
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AiChatResult"
-        "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Server error
           content:
             application/json:
               schema:
@@ -529,7 +454,7 @@ components:
 
     ChatResponse:
       type: object
-      required: [answer, citations, debug, mode]
+      required: [answer, citations, debug]
       properties:
         answer:
           type: string
@@ -539,10 +464,6 @@ components:
             $ref: "#/components/schemas/Citation"
         debug:
           $ref: "#/components/schemas/DebugInfo"
-        mode:
-          type: string
-          enum: ["general", "document", "hybrid"]
-          description: How the query was classified and answered.
 
     MultiChatInput:
       type: object
@@ -652,74 +573,6 @@ components:
             $ref: "#/components/schemas/MultiCitation"
         debug:
           $ref: "#/components/schemas/MultiDebugInfo"
-
-    AiChatInput:
-      type: object
-      required: [question]
-      properties:
-        question:
-          type: string
-          minLength: 1
-
-    AiChatCitation:
-      type: object
-      required: [citationNumber, documentId, documentName, chunkIndex, content, relevanceScore]
-      properties:
-        citationNumber:
-          type: integer
-        documentId:
-          type: integer
-        documentName:
-          type: string
-        chunkIndex:
-          type: integer
-        content:
-          type: string
-        relevanceScore:
-          type: number
-
-    AiChatDebugInfo:
-      type: object
-      required: [route, provider, model, fallbackUsed, documentsSearched, chunksSearched, chunksRetrieved, retrievalLatencyMs, llmLatencyMs, totalLatencyMs]
-      properties:
-        route:
-          type: string
-        provider:
-          type: string
-        model:
-          type: string
-        fallbackUsed:
-          type: boolean
-        documentsSearched:
-          type: integer
-        chunksSearched:
-          type: integer
-        chunksRetrieved:
-          type: integer
-        retrievalLatencyMs:
-          type: number
-        llmLatencyMs:
-          type: number
-        totalLatencyMs:
-          type: number
-        errors:
-          type: ["string", "null"]
-
-    AiChatResult:
-      type: object
-      required: [answer, citations, mode, debug]
-      properties:
-        answer:
-          type: string
-        citations:
-          type: array
-          items:
-            $ref: "#/components/schemas/AiChatCitation"
-        mode:
-          type: string
-          enum: ["general", "document", "hybrid"]
-        debug:
-          $ref: "#/components/schemas/AiChatDebugInfo"
 
     BriefInput:
       type: object
@@ -947,44 +800,6 @@ components:
               type: integer
             overlapWords:
               type: integer
-
-    UploadBatchResponse:
-      type: object
-      required: [results]
-      properties:
-        results:
-          type: array
-          items:
-            $ref: "#/components/schemas/UploadResult"
-        summary:
-          type: object
-          required: [uploaded, failed, total]
-          properties:
-            uploaded:
-              type: integer
-            failed:
-              type: integer
-            total:
-              type: integer
-        upgradeRequired:
-          type: boolean
-
-    UploadResult:
-      type: object
-      required: [fileName, success]
-      properties:
-        fileName:
-          type: string
-        success:
-          type: boolean
-        document:
-          $ref: "#/components/schemas/Document"
-        warning:
-          type: ["string", "null"]
-        error:
-          type: ["string", "null"]
-        statusCode:
-          type: integer
 
     ErrorResponse:
       type: object

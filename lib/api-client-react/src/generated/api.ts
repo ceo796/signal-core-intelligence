@@ -21,8 +21,6 @@ import type {
 
 import type {
   AdminStats,
-  AiChatInput,
-  AiChatResult,
   BriefInput,
   BriefResult,
   ChatInput,
@@ -35,9 +33,7 @@ import type {
   MultiChatInput,
   MultiChatResult,
   ReindexResult,
-  SystemInfo,
-  UploadBatchResponse,
-  UploadDocumentsBody
+  SystemInfo
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -205,79 +201,6 @@ export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments
 
 
 
-
-export const getUploadDocumentsUrl = () => {
-
-
-
-
-  return `/api/documents/upload`
-}
-
-/**
- * @summary Upload one or more documents
- */
-export const uploadDocuments = async (uploadDocumentsBody: UploadDocumentsBody, options?: RequestInit): Promise<UploadBatchResponse> => {
-    const formData = new FormData();
-uploadDocumentsBody.files.forEach(value => formData.append(`files`, value));
-
-  return customFetch<UploadBatchResponse>(getUploadDocumentsUrl(),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body:
-      formData,
-  }
-);}
-
-
-
-
-export const getUploadDocumentsMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadDocuments>>, TError,{data: BodyType<UploadDocumentsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof uploadDocuments>>, TError,{data: BodyType<UploadDocumentsBody>}, TContext> => {
-
-const mutationKey = ['uploadDocuments'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadDocuments>>, {data: BodyType<UploadDocumentsBody>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  uploadDocuments(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UploadDocumentsMutationResult = NonNullable<Awaited<ReturnType<typeof uploadDocuments>>>
-    export type UploadDocumentsMutationBody = BodyType<UploadDocumentsBody>
-    export type UploadDocumentsMutationError = ErrorType<ErrorResponse>
-
-    /**
- * @summary Upload one or more documents
- */
-export const useUploadDocuments = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadDocuments>>, TError,{data: BodyType<UploadDocumentsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof uploadDocuments>>,
-        TError,
-        {data: BodyType<UploadDocumentsBody>},
-        TContext
-      > => {
-      return useMutation(getUploadDocumentsMutationOptions(options));
-    }
 
 export const getGetDocumentUrl = (id: number,) => {
 
@@ -791,77 +714,6 @@ export const useMultiChat = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getMultiChatMutationOptions(options));
-    }
-
-export const getAiChatUrl = () => {
-
-
-
-
-  return `/api/ai/chat`
-}
-
-/**
- * @summary Ask a question with optional grounding across the user's document library
- */
-export const aiChat = async (aiChatInput: AiChatInput, options?: RequestInit): Promise<AiChatResult> => {
-
-  return customFetch<AiChatResult>(getAiChatUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      aiChatInput,)
-  }
-);}
-
-
-
-
-export const getAiChatMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiChat>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof aiChat>>, TError,{data: BodyType<AiChatInput>}, TContext> => {
-
-const mutationKey = ['aiChat'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aiChat>>, {data: BodyType<AiChatInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  aiChat(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AiChatMutationResult = NonNullable<Awaited<ReturnType<typeof aiChat>>>
-    export type AiChatMutationBody = BodyType<AiChatInput>
-    export type AiChatMutationError = ErrorType<ErrorResponse>
-
-    /**
- * @summary Ask a question with optional grounding across the user's document library
- */
-export const useAiChat = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiChat>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof aiChat>>,
-        TError,
-        {data: BodyType<AiChatInput>},
-        TContext
-      > => {
-      return useMutation(getAiChatMutationOptions(options));
     }
 
 export const getGenerateBriefUrl = () => {

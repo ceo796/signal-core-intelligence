@@ -10,157 +10,13 @@ import {
   GetChatHistoryResponse,
 } from "@workspace/api-zod";
 import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
-import { retrieveRelevantChunks, type ScoredChunk } from "../../lib/retriever";
+import { retrieveRelevantChunks } from "../../lib/retriever";
 
 const router: IRouter = Router();
 
-/* -------------------------------------------------------------------------- */
-// Query intent classification
-/* -------------------------------------------------------------------------- */
-
-const DOCUMENT_KEYWORDS = [
-  // File / document references
-  "document", "uploaded", "file", "contract", "pdf", "brief",
-  "compare", "clause", "source", "citation", "section", "page", "term",
-  "agreement", "exhibit", "paragraph", "article",
-  // Phrase forms
-  "this document", "the document", "this contract", "the file",
-  "my document", "the agreement", "this file", "this pdf",
-  "this agreement", "this brief", "the brief", "the clause",
-  "this clause", "the term", "this term", "the section", "this section",
-  // Spec-required additions
-  "summarize this", "my uploaded file", "selected document",
-  "active document", "uploaded file",
-  // Domain analysis terms commonly used about documents
-  "risk", "risks", "liability", "obligation", "indemnif",
-];
-
-const GENERAL_KEYWORDS: string[] = [
-  "what is", "what does", "what are", "how do", "how to",
-  "define", "explain", "meaning of", "draft a", "write a",
-  "difference between", "compare", "vs", "versus", "example of",
-  "pros and cons", "advantages", "disadvantages", "types of",
-  "why is", "when should", "can you", "help me", "i need",
-  "how does", "what would", "best practices", "overview",
-  "summary of", "introduction to", "guide to", "basics",
-];
-
-type QueryMode = "general" | "document" | "hybrid";
-
-function classifyQuery(question: string, hasDocument: boolean): QueryMode {
-  const q = question.toLowerCase();
-
-  const docScore = DOCUMENT_KEYWORDS.filter((k) => q.includes(k)).length;
-  const genScore = GENERAL_KEYWORDS.filter((k) => q.includes(k)).length;
-
-  // Strong document signal (multiple doc keywords) → document mode
-  if (docScore >= 2) return "document";
-
-  // Single doc keyword, no competing general phrasing → document mode
-  if (docScore >= 1 && hasDocument && genScore === 0) return "document";
-
-  // Mixed signals (doc keyword + general phrasing) → hybrid, let retrieval decide
-  if (docScore >= 1 && hasDocument && genScore >= 1) return "hybrid";
-
-  // No document signal at all + any general phrasing → general mode
-  // (covers "What is X?", "How does Y work?", "Draft a Z" etc.)
-  if (genScore >= 1 && docScore === 0) return "general";
-
-  // Ambiguous — default to hybrid so retrieval can inform the answer
-  return "hybrid";
-}
-
-function buildDocumentPrompt(
-  docName: string,
-  contextBlocks: string,
-): string {
-  return `You are a precise document intelligence assistant. You answer questions based only on the provided document excerpts.
-
-Rules:
-1. Answer directly and concisely.
-2. ALWAYS cite your sources by referencing the chunk numbers, e.g. [Chunk 3].
-3. If the answer is not in the provided chunks, say so clearly.
-4. Do not hallucinate or add information not present in the document.
-
-Document: "${docName}"
-
-Relevant excerpts:
-${contextBlocks}`;
-}
-
-function buildGeneralPrompt(): string {
-  return `You are a knowledgeable business and legal assistant. Answer the user's question directly and concisely using your general knowledge.
-
-Rules:
-1. Answer directly and concisely.
-2. Do not cite document sources — this is a general knowledge answer.
-3. If the question is outside your expertise, say so clearly.
-4. Be helpful but factual.`;
-}
-
-function buildHybridPrompt(
-  docName: string,
-  contextBlocks: string,
-  hasRelevantChunks: boolean,
-): string {
-  if (!hasRelevantChunks || !contextBlocks.trim()) {
-    return `You are a knowledgeable assistant. The user asked a question that may relate to their document, but no relevant excerpts were found.
-
-Rules:
-1. Answer with general knowledge.
-2. After answering, clearly state: "No relevant document excerpts were found to ground this answer."
-3. Do not fabricate citations.
-
-Document: "${docName}"`;
-  }
-
-  return `You are a precise document intelligence assistant. The user asked an ambiguous question — it may be general or may relate to their document.
-
-Rules:
-1. Use the document excerpts below to answer the question if they are relevant.
-2. If the excerpts are NOT relevant, answer with general knowledge and explicitly state: "No relevant document excerpts were found — this answer is based on general knowledge."
-3. When using document excerpts, ALWAYS cite sources by referencing chunk numbers, e.g. [Chunk 3].
-4. Do not hallucinate or fabricate citations.
-
-Document: "${docName}"
-
-Relevant excerpts:
-${contextBlocks}`;
-}
-
-function isRelevantRetrieval(chunks: ScoredChunk[]): boolean {
-  if (chunks.length === 0) return false;
-  // At least one chunk must score above a moderate threshold
-  return chunks.some((c) => c.relevanceScore >= 0.3);
-}
-
-async function callLLM(
-  systemPrompt: string,
-  question: string,
-): Promise<{ answer: string; error: string | null }> {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: PROVIDER_CONFIG.model,
-      max_tokens: PROVIDER_CONFIG.maxTokens,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: question },
-      ],
-    });
-    return {
-      answer: completion.choices[0]?.message?.content ?? "No response generated.",
-      error: null,
-    };
-  } catch (err) {
-    return {
-      answer: "I was unable to generate a response. Please try again.",
-      error: err instanceof Error ? err.message : String(err),
-    };
-  }
-}
-
 router.post("/documents/:id/chat", async (req, res): Promise<void> => {
   const totalStart = Date.now();
+  // userId is guaranteed non-null by requireAuth middleware
   const { userId } = getAuth(req);
 
   const params = ChatWithDocumentParams.safeParse(req.params);
@@ -194,10 +50,12 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     .where(eq(chunksTable.documentId, id))
     .orderBy(chunksTable.chunkIndex);
 
+  // Guard: a document with no indexed chunks (or a failed extraction) cannot
+  // ground an answer. Return a clear error instead of calling OpenAI with empty
+  // or stale context (mirrors the multi-chat and brief routes, and matches the
+  // frontend "not ready" gate).
   const extractionFailed = (doc.extractionStatus ?? "").toLowerCase() === "failed";
-  const hasUsableChunks = allChunks.length > 0 && !extractionFailed;
-
-  if (!hasUsableChunks) {
+  if (allChunks.length === 0 || extractionFailed) {
     req.log.warn(
       { documentId: id, extractionStatus: doc.extractionStatus, chunkCount: allChunks.length },
       "Q&A rejected: document is not ready (no readable text)",
@@ -209,52 +67,59 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     return;
   }
 
-  // Classify the query intent
-  const mode: QueryMode = classifyQuery(question, true);
-  req.log.info({ mode, documentId: id }, "Query classified");
-
-  let retrievedChunks: ScoredChunk[] = [];
+  const retrievalStart = Date.now();
+  let retrievedChunks;
   let retrievalError: string | null = null;
-  let retrievalLatencyMs = 0;
-  let systemPrompt: string;
-  let citations: { chunkIndex: number; content: string; relevanceScore: number }[] = [];
 
-  if (mode === "general") {
-    // General mode: skip retrieval entirely
-    systemPrompt = buildGeneralPrompt();
-  } else {
-    // Document or hybrid mode: run retrieval
-    const retrievalStart = Date.now();
-    try {
-      retrievedChunks = await retrieveRelevantChunks(question, allChunks, 5);
-    } catch (err) {
-      req.log.error({ err }, "Retrieval failed");
-      retrievalError = err instanceof Error ? err.message : String(err);
-      retrievedChunks = allChunks.slice(0, 5).map((c) => ({ ...c, relevanceScore: 0 }));
-    }
-    retrievalLatencyMs = Date.now() - retrievalStart;
-
-    const hasRelevant = isRelevantRetrieval(retrievedChunks);
-    const contextBlocks = retrievedChunks
-      .map((c) => `[Chunk ${c.chunkIndex + 1}]:\n${c.content}`)
-      .join("\n\n---\n\n");
-
-    if (mode === "document") {
-      systemPrompt = buildDocumentPrompt(doc.fileName, contextBlocks);
-    } else {
-      // hybrid mode
-      systemPrompt = buildHybridPrompt(doc.fileName, contextBlocks, hasRelevant);
-    }
-
-    citations = retrievedChunks.map((c) => ({
-      chunkIndex: c.chunkIndex,
-      content: c.content.slice(0, 300),
-      relevanceScore: c.relevanceScore,
-    }));
+  try {
+    retrievedChunks = await retrieveRelevantChunks(question, allChunks, 5);
+  } catch (err) {
+    req.log.error({ err }, "Retrieval failed");
+    retrievalError = err instanceof Error ? err.message : String(err);
+    retrievedChunks = allChunks.slice(0, 5).map((c) => ({ ...c, relevanceScore: 0 }));
   }
 
+  const retrievalLatencyMs = Date.now() - retrievalStart;
+
+  const contextBlocks = retrievedChunks
+    .map((c, i) => `[Chunk ${c.chunkIndex + 1}]:\n${c.content}`)
+    .join("\n\n---\n\n");
+
+  const systemPrompt = `You are a precise document intelligence assistant. You answer questions based only on the provided document excerpts.
+
+Rules:
+1. Answer directly and concisely.
+2. ALWAYS cite your sources by referencing the chunk numbers, e.g. [Chunk 3].
+3. If the answer is not in the provided chunks, say so clearly.
+4. Do not hallucinate or add information not present in the document.
+
+Document: "${doc.fileName}"
+
+Relevant excerpts:
+${contextBlocks}`;
+
   const llmStart = Date.now();
-  const { answer, error: llmError } = await callLLM(systemPrompt, question);
+  let answer: string;
+  let llmError: string | null = null;
+  let fallbackUsed = false;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: PROVIDER_CONFIG.model,
+      max_tokens: PROVIDER_CONFIG.maxTokens,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: question },
+      ],
+    });
+    answer = completion.choices[0]?.message?.content ?? "No response generated.";
+  } catch (err) {
+    req.log.error({ err }, "LLM call failed");
+    llmError = err instanceof Error ? err.message : String(err);
+    answer = "I was unable to generate a response. Please try again.";
+    fallbackUsed = true;
+  }
+
   const llmLatencyMs = Date.now() - llmStart;
   const totalLatencyMs = Date.now() - totalStart;
 
@@ -262,7 +127,7 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     route: `POST /api/documents/${id}/chat`,
     provider: PROVIDER_CONFIG.provider,
     model: PROVIDER_CONFIG.model,
-    fallbackUsed: !!retrievalError || !!llmError,
+    fallbackUsed,
     documentId: id,
     chunksSearched: allChunks.length,
     chunksRetrieved: retrievedChunks.length,
@@ -270,8 +135,13 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     llmLatencyMs,
     totalLatencyMs,
     errors: retrievalError ?? llmError ?? null,
-    mode,
   };
+
+  const citations = retrievedChunks.map((c) => ({
+    chunkIndex: c.chunkIndex,
+    content: c.content.slice(0, 300),
+    relevanceScore: c.relevanceScore,
+  }));
 
   await db.insert(chatMessagesTable).values([
     { documentId: id, role: "user", content: question, debug: null },
@@ -279,10 +149,11 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
       documentId: id,
       role: "assistant",
       content: answer,
-      debug: JSON.stringify({ debug, citations, mode }),
+      debug: JSON.stringify({ debug, citations }),
     },
   ]);
 
+  // Structured Q&A outcome log (no question/answer content — may be sensitive).
   const qaLog = {
     documentId: id,
     provider: PROVIDER_CONFIG.provider,
@@ -290,7 +161,6 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     chunksSearched: allChunks.length,
     chunksRetrieved: retrievedChunks.length,
     totalLatencyMs,
-    mode,
   };
   if (llmError) {
     req.log.error({ ...qaLog, retrievalError, llmError }, "Q&A failed");
@@ -300,7 +170,7 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     req.log.info(qaLog, "Q&A succeeded");
   }
 
-  res.json({ answer, citations, debug, mode });
+  res.json({ answer, citations, debug });
 });
 
 router.get("/documents/:id/history", async (req, res): Promise<void> => {

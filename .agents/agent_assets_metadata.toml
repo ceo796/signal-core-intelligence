@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "yiFhFS8eGeF6PPCpZkCkX"
-uri = "file://DESIGN_QA_REPORT.md"
-type = "text"
-title = "Signal87 Design QA Report"

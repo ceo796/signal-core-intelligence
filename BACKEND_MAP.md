@@ -1,8 +1,8 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Batch_Upload_v1**
+> Checkpoint: **Signal87_Core_Stripe_Freemium_v1**
 > Last updated: 2026-06-16
-> Note: `Signal87_Core_Batch_Upload_v1` — **batch/multi-file upload**. `POST /api/documents/upload` now accepts `multipart/form-data` field `files` (array, max 10), processes each file independently, and returns `UploadBatchResponse` with per-file results + summary. Free-tier limit is checked against the total batch count before any processing. `PUT /documents/:id/original` remains single-file. No DB schema, auth, Stripe, or other route changes. Prior: `Signal87_Core_Dashboard_Redesign_v1` — frontend-only dashboard redesign. Prior: `Signal87_Core_Stripe_Freemium_v1` — Stripe freemium integration. Free tier = 3 docs; Pro = unlimited. New routes: `GET /api/stripe/subscription`, `POST /api/stripe/checkout`, `POST /api/stripe/portal`, `GET /api/stripe/products`. New `users` table in DB. Webhook at `/api/stripe/webhook`. Prior: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page. Prior: `Signal87_Core_Public_Access_v1` — per-user document isolation. Prior: earlier checkpoints.
+> Note: `Signal87_Core_Stripe_Freemium_v1` — Stripe freemium integration. Free tier = 3 docs; Pro = unlimited. New routes: `GET /api/stripe/subscription`, `POST /api/stripe/checkout` (validates `priceId` server-side via `isAllowedCheckoutPrice` — only active recurring prices on active products with amount > 0), `POST /api/stripe/portal`, `GET /api/stripe/products`. New `users` table in DB. Webhook at `/api/stripe/webhook` (before express.json). Startup backfills only products + prices (subscription state via webhook); credentials prefer `STRIPE_SECRET_KEY` env var, fall back to Replit Stripe connector. Prior: `Signal87_Core_Dashboard_v1` — authenticated dashboard home page. Prior: `Signal87_Core_Public_Access_v1` — per-user document isolation. Prior: earlier checkpoints.
 
 ---
 
@@ -32,25 +32,6 @@ Middleware stack in `app.ts` (in order):
 **New auth files:**
 - `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts` — Clerk FAPI proxy (copied from Replit-managed Clerk template)
 - `artifacts/api-server/src/middlewares/requireAuth.ts` — session guard (`getAuth(req).userId` check)
-
----
-
-## 3a. Where is `POST /api/ai/chat` defined? *(Dashboard Agent)*
-
-**`artifacts/api-server/src/routes/ai/index.ts`** — `router.post("/ai/chat", ...)`
-
-Mounted via `artifacts/api-server/src/routes/index.ts` → `app.use("/api", router)`.
-
-**What it does:**
-- Auth required (Clerk `userId`); returns `400` for empty questions, `401` if unauthenticated.
-- Fetches the user's most recent `MAX_DOCS=5` documents.
-- Classifies the question with `classifyQuery(question, hasDocuments)` — same logic as single-doc chat (self-contained copy in this file).
-- If **general** mode (or no documents): calls GPT without retrieval; returns `mode: "general"`, empty `citations`.
-- If **document/hybrid** mode: fetches chunks for all ready docs (scoped to user — uses `inArray`), calls `retrieveAcrossDocuments(question, groups, perDocTopK=3)`, builds `[Source N]`-style source blocks, calls GPT with the synthesis prompt.
-- Returns `{ answer, citations: AiChatCitation[], mode, debug: AiChatDebugInfo }`.
-- No DB persistence (ephemeral, single-turn).
-
-**OpenAPI:** `operationId: aiChat` in `lib/api-spec/openapi.yaml`. Schemas: `AiChatInput`, `AiChatResult`, `AiChatCitation`, `AiChatDebugInfo`. Generated hook: `useAiChat` in `@workspace/api-client-react`.
 
 ---
 

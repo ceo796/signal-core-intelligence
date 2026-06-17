@@ -5,7 +5,6 @@
  * Signal87 Core API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ChatResponseMode } from './chatResponseMode';
 import type { Citation } from './citation';
 import type { DebugInfo } from './debugInfo';
 
@@ -13,6 +12,4 @@ export interface ChatResponse {
   answer: string;
   citations: Citation[];
   debug: DebugInfo;
-  /** How the query was classified and answered. */
-  mode: ChatResponseMode;
 }

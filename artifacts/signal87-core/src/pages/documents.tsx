@@ -18,6 +18,9 @@ import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { format } from "date-fns";
 import {
+  FileText,
+  FileCode,
+  Table,
   Trash2,
   MessageSquare,
   AlertCircle,
@@ -27,7 +30,6 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import { fileTypeIcon, fileTypeColor } from "@/lib/file-type";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -47,7 +49,6 @@ export default function DocumentsList() {
   const reindexMutation = useReindexDocument();
   const queryClient = useQueryClient();
   const [reindexingId, setReindexingId] = useState<number | null>(null);
-  const [search, setSearch] = useState("");
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate(
@@ -81,11 +82,22 @@ export default function DocumentsList() {
     );
   };
 
-  const filteredDocs = search.trim()
-    ? (documents ?? []).filter((doc) =>
-        doc.fileName.toLowerCase().includes(search.toLowerCase())
-      )
-    : (documents ?? []);
+  const fileTypeIcon = (fileType: string) => {
+    const t = fileType.toLowerCase();
+    if (t === "pdf") return FileText;
+    if (t === "csv") return Table;
+    if (t === "docx" || t === "doc") return FileCode;
+    return FileText;
+  };
+
+  const fileTypeColor = (fileType: string) => {
+    const t = fileType.toLowerCase();
+    if (t === "pdf") return "bg-rose-50 text-rose-600 border-rose-100";
+    if (t === "csv") return "bg-emerald-50 text-emerald-600 border-emerald-100";
+    if (t === "docx" || t === "doc") return "bg-blue-50 text-blue-600 border-blue-100";
+    if (t === "txt") return "bg-amber-50 text-amber-600 border-amber-100";
+    return "bg-secondary text-muted-foreground border-border";
+  };
 
   return (
     <Layout>
@@ -107,8 +119,6 @@ export default function DocumentsList() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <input
               type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search documents..."
               className="w-full h-8 pl-8 pr-3 text-xs rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground"
             />
@@ -140,7 +150,7 @@ export default function DocumentsList() {
               <AlertCircle className="w-8 h-8" />
               <p className="text-sm">Could not load your documents</p>
             </div>
-          ) : (documents ?? []).length === 0 ? (
+          ) : documents?.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-border rounded-xl bg-card/30">
               <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mb-4">
                 <Upload className="w-7 h-7 text-primary/50" />
@@ -153,11 +163,7 @@ export default function DocumentsList() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredDocs.length === 0 ? (
-                <div className="col-span-full text-center py-10 text-sm text-muted-foreground">
-                  No documents match "{search}"
-                </div>
-              ) : filteredDocs.map((doc) => {
+              {documents?.map((doc) => {
                 const status = getDocumentStatus(doc);
                 const isReindexing = reindexingId === doc.id;
                 const Icon = fileTypeIcon(doc.fileType);

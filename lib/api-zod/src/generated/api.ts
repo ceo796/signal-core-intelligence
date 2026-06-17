@@ -38,45 +38,6 @@ export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
 
 
 /**
- * @summary Upload one or more documents
- */
-export const UploadDocumentsBody = zod.object({
-  "files": zod.array(zod.instanceof(File))
-})
-
-export const UploadDocumentsResponse = zod.object({
-  "results": zod.array(zod.object({
-  "fileName": zod.string(),
-  "success": zod.boolean(),
-  "document": zod.object({
-  "id": zod.number(),
-  "fileName": zod.string(),
-  "fileType": zod.string(),
-  "fileSize": zod.number().nullish(),
-  "uploadedAt": zod.coerce.date(),
-  "chunkCount": zod.number(),
-  "extractedTextPreview": zod.string().nullish(),
-  "extractedText": zod.string().nullish(),
-  "extractionStatus": zod.string(),
-  "extractionError": zod.string().nullish(),
-  "storageProvider": zod.string().nullish(),
-  "storageKey": zod.string().nullish(),
-  "originalFileAvailable": zod.boolean()
-}).optional(),
-  "warning": zod.string().nullish(),
-  "error": zod.string().nullish(),
-  "statusCode": zod.number().optional()
-})),
-  "summary": zod.object({
-  "uploaded": zod.number(),
-  "failed": zod.number(),
-  "total": zod.number()
-}).optional(),
-  "upgradeRequired": zod.boolean().optional()
-})
-
-
-/**
  * @summary Get a document by ID
  */
 export const GetDocumentParams = zod.object({
@@ -182,8 +143,7 @@ export const ChatWithDocumentResponse = zod.object({
   "llmLatencyMs": zod.number(),
   "totalLatencyMs": zod.number(),
   "errors": zod.string().nullish()
-}),
-  "mode": zod.enum(['general', 'document', 'hybrid']).describe('How the query was classified and answered.')
+})
 })
 
 
@@ -227,43 +187,6 @@ export const MultiChatResponse = zod.object({
   "chunksSearched": zod.number(),
   "chunksRetrieved": zod.number()
 })),
-  "retrievalLatencyMs": zod.number(),
-  "llmLatencyMs": zod.number(),
-  "totalLatencyMs": zod.number(),
-  "errors": zod.string().nullish()
-})
-})
-
-
-/**
- * @summary Ask a question with optional grounding across the user's document library
- */
-
-
-
-export const AiChatBody = zod.object({
-  "question": zod.string().min(1)
-})
-
-export const AiChatResponse = zod.object({
-  "answer": zod.string(),
-  "citations": zod.array(zod.object({
-  "citationNumber": zod.number(),
-  "documentId": zod.number(),
-  "documentName": zod.string(),
-  "chunkIndex": zod.number(),
-  "content": zod.string(),
-  "relevanceScore": zod.number()
-})),
-  "mode": zod.enum(['general', 'document', 'hybrid']),
-  "debug": zod.object({
-  "route": zod.string(),
-  "provider": zod.string(),
-  "model": zod.string(),
-  "fallbackUsed": zod.boolean(),
-  "documentsSearched": zod.number(),
-  "chunksSearched": zod.number(),
-  "chunksRetrieved": zod.number(),
   "retrievalLatencyMs": zod.number(),
   "llmLatencyMs": zod.number(),
   "totalLatencyMs": zod.number(),
