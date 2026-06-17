@@ -2,6 +2,40 @@
 
 ---
 
+## [Signal87_Core_Blue_Theme_v1] — 2026-06-17  *(Black-to-blue gradient home + blue accent)*
+
+### Summary
+Two-part visual change: (1) landing page gets a dark black-to-blue gradient background; (2) light-mode accent/primary color replaced from purple to blue throughout the app. No backend, API, DB, auth, or business logic changes.
+
+### Changed — `src/index.css`
+Replaced all light-mode purple HSL values with blue (`217 91% 60%`):
+- `--primary`, `--ring`, `--sidebar-primary`, `--sidebar-ring`: `262 83% 58%` → `217 91% 60%`
+- `--accent`, `--sidebar-accent`: `269 100% 96%` → `217 100% 96%`
+- `--accent-foreground`, `--sidebar-accent-foreground`: `262 83% 42%` → `217 91% 36%`
+
+Dark mode is untouched (uses orange/amber, not purple).
+
+### Changed — `src/pages/home.tsx`
+- Page wrapper background: `bg-background` → inline `linear-gradient(135deg, #000000 0%, #060f20 50%, #0f2554 100%)` (black → deep navy-blue).
+- All text: semantic tokens (`text-foreground`, `text-muted-foreground`, etc.) replaced with hardcoded dark-bg-safe values (`text-white`, `text-white/60`, `text-white/50`, `text-white/40`).
+- Logo: black SVG inverted to white via `filter: brightness(0) invert(1)`.
+- CTA button: explicit `bg-blue-600 hover:bg-blue-500 text-white` (bypasses any shadcn variant that might pick up the semantic primary token).
+- Feature icons: `text-primary` → `text-blue-400` (high-contrast on dark background).
+- Nav "Sign In" / "Open App" links: `text-blue-400 hover:text-blue-300`.
+- All borders: `border-border` → `border-white/10`.
+- Partners/footer logos: `opacity-80` → `opacity-70` for subtler feel on dark background.
+
+### Unchanged
+- Authenticated app shell (layout, document pages, chat, brief, compare, activity, admin).
+- Dark-mode token values.
+- Backend, API contract, DB schema, auth, upload, AI routing.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — **clean**.
+- Screenshot confirms: gradient renders correctly, white logo visible, blue CTA, blue feature icons, zero console errors.
+
+---
+
 ## [Signal87_Core_Mobile_Polish_v1] — 2026-06-17  *(Mobile / app-like layout polish)*
 
 ### Summary
