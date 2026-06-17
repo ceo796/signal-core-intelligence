@@ -9,6 +9,8 @@ import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
 import Ask from "@/pages/ask";
 import Activity from "@/pages/activity";
+import ExecutiveBrief from "@/pages/executive-brief";
+import MultiDocumentChat from "@/pages/multi-document-chat";
 import About from "@/pages/about";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />
       <Route path="/ask" component={Ask} />
+      <Route path="/brief" component={ExecutiveBrief} />
+      <Route path="/compare" component={MultiDocumentChat} />
       <Route path="/activity" component={Activity} />
       <Route path="/about" component={About} />
       <Route path="/privacy" component={Privacy} />

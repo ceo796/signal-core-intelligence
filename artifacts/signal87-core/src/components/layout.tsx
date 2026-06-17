@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { FileText, MessageSquare, Activity } from "lucide-react";
+import { FileText, MessageSquare, Activity, FileCheck, GitCompare } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,6 +12,8 @@ export function Layout({ children }: LayoutProps) {
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/ask", label: "Ask", icon: MessageSquare },
+    { href: "/brief", label: "Brief", icon: FileCheck },
+    { href: "/compare", label: "Compare", icon: GitCompare },
     { href: "/activity", label: "Activity", icon: Activity },
   ];
 
@@ -19,7 +21,9 @@ export function Layout({ children }: LayoutProps) {
     <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
       <aside className="shrink-0 w-full md:w-56 border-b md:border-b-0 md:border-r border-border bg-sidebar flex flex-row md:flex-col">
         <div className="px-4 py-3 md:p-4 md:border-b border-border flex items-center shrink-0">
-          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-8 md:h-10 w-auto" />
+          <Link href="/documents">
+            <img src="/signal87-logo-black.svg" alt="Signal87" className="h-8 md:h-10 w-auto cursor-pointer" />
+          </Link>
         </div>
         <nav className="flex-1 flex flex-row md:flex-col px-2 py-2 md:p-3 gap-0.5 items-center md:items-stretch overflow-x-auto">
           {navItems.map((item) => {

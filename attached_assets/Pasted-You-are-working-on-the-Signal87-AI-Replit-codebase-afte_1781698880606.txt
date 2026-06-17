@@ -1,0 +1,62 @@
+You are working on the Signal87 AI Replit codebase after rollback.
+
+Current observed status:
+
+* The rolled-back app appears to use a simpler layout with Documents, Ask, and Activity.
+* Replit indicates that Brief and Compare features are already built on frontend and backend, but their routes may be disconnected.
+* Replit also indicates the sidebar logo may need to be wrapped in a clickable home link.
+* Do not rebuild the full dashboard yet.
+
+TASK:
+Make only the smallest safe frontend routing fixes.
+
+Fix only:
+
+1. Re-enable Brief route/page.
+2. Re-enable Compare route/page.
+3. Make the Signal87 sidebar logo clickable and route to the correct app home.
+
+CRITICAL RULES:
+
+* Do not redesign the dashboard.
+* Do not rebuild the homepage.
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not touch auth.
+* Do not touch document upload, storage, parsing, chat, AI/model routing, PDF viewer, or existing APIs.
+* Do not install packages.
+* Do not refactor unrelated files.
+* Do not change the current app layout except for adding/wiring the missing navigation routes.
+
+IMPLEMENTATION DETAILS:
+
+* Locate the existing Brief page/component and wire it to `/brief` or the platform’s existing intended brief route.
+* Locate the existing Compare/multi-document page/component and wire it to `/compare` or the platform’s existing intended compare route.
+* Add Brief and Compare navigation items only if appropriate within the existing sidebar/nav structure.
+* Wrap the Signal87 logo in a proper internal app link.
+* The logo should route to the current app home. If the current post-rollback app treats `/documents` as the home entry point, use `/documents`. If a valid `/home` or `/dashboard` route already exists, report it before choosing.
+* Do not create fake pages if real pages already exist.
+
+ACCEPTANCE CHECKLIST:
+
+* `/brief` loads the existing brief feature.
+* `/compare` loads the existing compare feature.
+* Sidebar/navigation can reach Brief and Compare if applicable.
+* Signal87 logo is clickable.
+* Logo route works.
+* Documents page still works.
+* Ask page still works.
+* Activity page still works.
+* TypeScript passes.
+* App builds.
+* Backend/database/auth were untouched.
+
+FINAL RESPONSE:
+Report:
+
+* Files changed.
+* Routes restored.
+* Logo destination used.
+* Whether Brief and Compare were existing components or newly wired routes.
+* Confirmation that dashboard rebuild was not performed.
+* Confirmation that backend/database/auth were untouched.
