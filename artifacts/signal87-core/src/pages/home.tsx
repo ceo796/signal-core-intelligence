@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn } from "lucide-react";
 import { GridWave } from "@/components/grid-wave";
+import { AriaChatAnimation } from "@/components/aria-chat-animation";
 
 function TypedText({ text, startDelay = 0 }: { text: string; startDelay?: number }) {
   const [displayed, setDisplayed] = useState('');
@@ -115,7 +116,12 @@ export default function Home() {
           </a>
         </div>
 
-        <div id="features" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-24 text-left w-full border-t border-gray-200 pt-12">
+        {/* Chat demo */}
+        <div className="w-full mt-12 max-w-2xl">
+          <AriaChatAnimation />
+        </div>
+
+        <div id="features" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16 text-left w-full border-t border-gray-200 pt-12">
           <div className="space-y-3">
             <ShieldCheck className="w-5 h-5 text-blue-600" />
             <h3 className="font-bold text-sm text-gray-900">Verified Intelligence</h3>

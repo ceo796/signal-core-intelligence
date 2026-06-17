@@ -2,6 +2,33 @@
 
 ---
 
+## [Signal87_Core_AriaChatAnimation_v1] — 2026-06-17  *(Chat demo animation in hero CTA section)*
+
+### Summary
+Added the `AriaChatAnimation` component to the landing page hero, between the CTA buttons and the feature cards. Shows a simulated document Q&A interaction (question typing → AI answer streaming → source citations) that triggers on scroll-into-view. Frontend-only; no backend/API/DB/auth changes.
+
+### Added — `src/components/aria-chat-animation.tsx`
+- Dark-themed chat mockup panel with macOS-style chrome bar.
+- Phases: idle → question types (35 ms/char) → AI answer streams (18 ms/char, bold highlights in blue) → citations fade in with staggered delays.
+- IntersectionObserver triggers the sequence when the component enters the viewport at 20% threshold.
+- `streaming` indicator badge visible during answer phase; blinking cursor during both typing phases.
+
+### Changed — `src/index.css`
+- Added `@keyframes fadeIn` (opacity + translateY) plus `.fade-in` and `.fade-in-delayed` utility classes consumed by the citation rows.
+
+### Changed — `src/pages/home.tsx`
+- Imported `AriaChatAnimation`.
+- Added `<AriaChatAnimation />` in a `max-w-2xl mt-12` container between the CTA buttons and the feature grid.
+- Reduced feature grid top margin: `mt-24` → `mt-16` (animation fills the visual gap).
+
+### Unchanged
+- All copy, GridWave animation, feature cards, partner logos, footer, auth routing, backend.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+
+---
+
 ## [Signal87_Core_GridWave_FullPage_v1] — 2026-06-17  *(Full-page GridWave + typed feature descriptions)*
 
 ### Summary
