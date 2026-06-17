@@ -58,6 +58,7 @@ type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "ready" | "processing" | "error";
 type SortColumn = "name" | "status" | "chunks" | "uploaded";
 type SortDirection = "asc" | "desc";
+type TypeFilter = "all" | string;
 
 function getInitialView(): ViewMode {
   try {
@@ -137,8 +138,13 @@ export default function DocumentsList() {
   const [view, setView] = useState<ViewMode>(getInitialView);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [sortColumn, setSortColumn] = useState<SortColumn>("uploaded");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  const availableTypes = Array.from(
+    new Set((documents ?? []).map((d) => d.fileType.toLowerCase()).filter(Boolean))
+  ).sort();
 
   const switchView = (v: ViewMode) => {
     setView(v);
@@ -188,6 +194,7 @@ export default function DocumentsList() {
     ?.filter((doc) => {
       const nameMatch = doc.fileName.toLowerCase().includes(search.toLowerCase().trim());
       if (!nameMatch) return false;
+      if (typeFilter !== "all" && doc.fileType.toLowerCase() !== typeFilter) return false;
       if (statusFilter === "all") return true;
       const tone = getDocumentStatus(doc).tone;
       if (statusFilter === "ready") return tone === "ready" || tone === "warning";
@@ -281,6 +288,21 @@ export default function DocumentsList() {
                 <SelectItem value="error">Error</SelectItem>
               </SelectContent>
             </Select>
+            {availableTypes.length > 0 && (
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
+                <SelectTrigger className="h-8 w-32 text-sm">
+                  <SelectValue placeholder="File type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  {availableTypes.map((ft) => (
+                    <SelectItem key={ft} value={ft}>
+                      {fileTypeChip(ft).label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         )}
 
@@ -336,14 +358,16 @@ export default function DocumentsList() {
               <Search className="w-8 h-8 mb-1 opacity-40" />
               <p className="text-sm font-medium">No documents match your filters</p>
               <p className="text-xs">
-                {search && statusFilter !== "all"
-                  ? `No "${search}" results with status "${statusFilter}"`
-                  : search
-                    ? `No documents named "${search}"`
-                    : `No documents with status "${statusFilter}"`}
+                {(() => {
+                  const parts: string[] = [];
+                  if (search) parts.push(`named "${search}"`);
+                  if (typeFilter !== "all") parts.push(`of type ${fileTypeChip(typeFilter).label}`);
+                  if (statusFilter !== "all") parts.push(`with status "${statusFilter}"`);
+                  return parts.length > 0 ? `No documents ${parts.join(", ")}` : "No documents match the current filters";
+                })()}
               </p>
               <button
-                onClick={() => { setSearch(""); setStatusFilter("all"); }}
+                onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}
                 className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
               >
                 Clear filters
