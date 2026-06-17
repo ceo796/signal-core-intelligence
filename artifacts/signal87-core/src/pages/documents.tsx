@@ -68,6 +68,19 @@ function getInitialView(): ViewMode {
   return "list";
 }
 
+const SORT_COLUMNS: SortColumn[] = ["name", "status", "chunks", "uploaded"];
+
+function getInitialSort(): { column: SortColumn; direction: SortDirection } {
+  try {
+    const col = localStorage.getItem("docs-sort-col");
+    const dir = localStorage.getItem("docs-sort-dir");
+    const validCol: SortColumn = SORT_COLUMNS.includes(col as SortColumn) ? (col as SortColumn) : "uploaded";
+    const validDir: SortDirection = dir === "asc" || dir === "desc" ? dir : "desc";
+    return { column: validCol, direction: validDir };
+  } catch {}
+  return { column: "uploaded", direction: "desc" };
+}
+
 interface FileTypeChipStyle {
   bg: string;
   text: string;
@@ -139,8 +152,10 @@ export default function DocumentsList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [sortColumn, setSortColumn] = useState<SortColumn>("uploaded");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [{ column: sortColumn, direction: sortDirection }, setSortState] = useState<{
+    column: SortColumn;
+    direction: SortDirection;
+  }>(getInitialSort);
 
   const availableTypes = Array.from(
     new Set((documents ?? []).map((d) => d.fileType.toLowerCase()).filter(Boolean))
@@ -152,12 +167,13 @@ export default function DocumentsList() {
   };
 
   const handleSort = (col: SortColumn) => {
-    if (sortColumn === col) {
-      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortColumn(col);
-      setSortDirection("asc");
-    }
+    const nextDir: SortDirection =
+      sortColumn === col ? (sortDirection === "asc" ? "desc" : "asc") : "asc";
+    setSortState({ column: col, direction: nextDir });
+    try {
+      localStorage.setItem("docs-sort-col", col);
+      localStorage.setItem("docs-sort-dir", nextDir);
+    } catch {}
   };
 
   const handleDelete = (id: number) => {
