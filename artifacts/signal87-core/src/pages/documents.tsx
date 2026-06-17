@@ -470,6 +470,17 @@ export default function DocumentsList() {
             /* ══════════════════════════════
                GRID VIEW — thumbnail cards
                ══════════════════════════════ */
+            <>
+            <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground">
+              <ArrowUpDown className="w-3 h-3 shrink-0" />
+              <span>
+                Sorted by{" "}
+                <span className="text-foreground font-medium">
+                  {{ name: "Name", status: "Status", chunks: "Chunks", uploaded: "Uploaded" }[sortColumn]}
+                </span>
+                {" "}{sortDirection === "asc" ? "↑" : "↓"}
+              </span>
+            </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDocuments?.map((doc) => {
                 const status = getDocumentStatus(doc);

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn } from "lucide-react";
 import { GridWave } from "@/components/grid-wave";
 import { AriaChatAnimation } from "@/components/aria-chat-animation";
+import { CrossDocAnimation } from "@/components/cross-doc-animation";
+import { AuditTraceAnimation } from "@/components/audit-trace-animation";
 
 function TypedText({ text, startDelay = 0 }: { text: string; startDelay?: number }) {
   const [displayed, setDisplayed] = useState('');
@@ -59,7 +61,7 @@ export default function Home() {
       <GridWave />
 
       <header className="p-6 flex justify-between items-center border-b border-gray-200 relative z-10">
-        <img src="/signal87-logo-black.svg" alt="Signal87" className="h-10 w-auto" />
+        <img src="/signal87-logo-black.svg" alt="Signal87" className="h-14 w-auto" />
         <nav className="flex items-center gap-6 text-sm text-gray-500">
           <Link href="/about" className="hidden sm:block hover:text-gray-900 transition-colors">About</Link>
           <Link href="/team" className="hidden sm:block hover:text-gray-900 transition-colors">Team</Link>
@@ -121,7 +123,8 @@ export default function Home() {
           <AriaChatAnimation />
         </div>
 
-        <div id="features" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16 text-left w-full border-t border-gray-200 pt-12">
+        {/* Feature cards */}
+        <div id="features" className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-16 text-left w-full border-t border-gray-200 pt-12">
           <div className="space-y-3">
             <ShieldCheck className="w-5 h-5 text-blue-600" />
             <h3 className="font-bold text-sm text-gray-900">Verified Intelligence</h3>
@@ -139,27 +142,11 @@ export default function Home() {
             />
           </div>
           <div className="space-y-3">
-            <GitCompare className="w-5 h-5 text-blue-600" />
-            <h3 className="font-bold text-sm text-gray-900">Cross-Document Analysis</h3>
-            <TypedText
-              text="Compare files, surface contradictions, identify themes, and extract insights across an entire document set."
-              startDelay={300}
-            />
-          </div>
-          <div className="space-y-3">
-            <Search className="w-5 h-5 text-blue-600" />
-            <h3 className="font-bold text-sm text-gray-900">Audit-Ready Reasoning</h3>
-            <TypedText
-              text="See what sources were used, where the answer came from, and how the system reached its conclusion."
-              startDelay={450}
-            />
-          </div>
-          <div className="space-y-3">
             <Lock className="w-5 h-5 text-blue-600" />
             <h3 className="font-bold text-sm text-gray-900">Secure Document Workspace</h3>
             <TypedText
               text="Your files stay inside a protected workspace with authenticated access and controlled document visibility."
-              startDelay={600}
+              startDelay={300}
             />
           </div>
           <div className="space-y-3">
@@ -167,8 +154,26 @@ export default function Home() {
             <h3 className="font-bold text-sm text-gray-900">Built for Business Judgment</h3>
             <TypedText
               text="Designed for investors, operators, advisors, and teams who need to understand complex material quickly."
-              startDelay={750}
+              startDelay={450}
             />
+          </div>
+        </div>
+
+        {/* Feature demo animations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 w-full">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <GitCompare className="w-4 h-4 text-blue-600" />
+              <h3 className="font-bold text-sm text-gray-900">Cross-Document Analysis</h3>
+            </div>
+            <CrossDocAnimation />
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-blue-600" />
+              <h3 className="font-bold text-sm text-gray-900">Audit-Ready Reasoning</h3>
+            </div>
+            <AuditTraceAnimation />
           </div>
         </div>
 
