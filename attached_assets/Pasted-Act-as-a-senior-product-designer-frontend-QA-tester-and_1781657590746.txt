@@ -1,0 +1,84 @@
+Act as a senior product designer, frontend QA tester, and beta tester for Signal87 AI.
+
+Your first task is AUDIT ONLY. Do not modify files yet.
+
+Goal:
+Perform a full design consistency sweep across the Signal87 platform and identify visual, layout, responsive, and interaction inconsistencies. Treat this like a beta tester review before a production release.
+
+Strict rules:
+- Do not change backend logic.
+- Do not change authentication.
+- Do not change routing.
+- Do not change document upload logic.
+- Do not change chat logic.
+- Do not change brief generation.
+- Do not change APIs.
+- Do not change database queries.
+- Do not change environment variables.
+- Do not refactor working platform functionality.
+- Do not make speculative feature changes.
+
+Audit scope:
+Review all major user-facing pages and states, including:
+- Landing page
+- Sign in / sign up / pending access pages
+- Dashboard
+- Document upload flow
+- Document library
+- Document detail page
+- Chat / document Q&A
+- Brief generator
+- Settings or account pages if present
+- Empty states
+- Loading states
+- Error states
+- Mobile layout
+- Tablet layout
+- Desktop layout
+
+Check for:
+- inconsistent spacing
+- under-sized text
+- excessive whitespace
+- inconsistent card sizes
+- inconsistent border radius
+- inconsistent shadows
+- inconsistent button styles
+- inconsistent typography hierarchy
+- inconsistent icon sizing
+- inconsistent purple/accent color usage
+- inconsistent light/dark areas
+- poor mobile spacing
+- broken responsive layouts
+- weak hover/focus states
+- missing reduced-motion handling
+- awkward page transitions
+- visual density problems
+- anything that makes the product feel less premium or less enterprise-grade
+
+Interaction / motion review:
+Evaluate whether the interface feels modern, responsive, and polished. Identify places where subtle frontend-only motion could improve the experience, such as:
+- card hover lift
+- magnetic button hover
+- soft border glow
+- cursor-reactive background accents
+- lightweight parallax hero motion
+- loading skeletons
+- subtle page transition polish
+
+Important:
+Motion should remain restrained, lightweight, enterprise-grade, and should respect reduced-motion preferences. Do not recommend heavy WebGL unless it is isolated and performance-safe.
+
+Deliverable:
+Create a file called DESIGN_QA_REPORT.md with:
+
+1. Executive summary
+2. Priority ranking: Critical / High / Medium / Low
+3. Page-by-page findings
+4. Screenshots or route references where possible
+5. Exact recommended fixes
+6. Files likely involved
+7. Risks to avoid
+8. A proposed implementation plan broken into small safe phases
+
+After creating the report, stop and ask for approval before making any code changes.
