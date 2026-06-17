@@ -551,6 +551,7 @@ export default function DocumentsList() {
                 );
               })}
             </div>
+            </>
           ) : (
             /* ══════════════════════════════
                LIST VIEW — compact table
