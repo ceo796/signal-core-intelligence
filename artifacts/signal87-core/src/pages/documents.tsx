@@ -87,6 +87,14 @@ function getInitialTypeFilter(): string {
   return "all";
 }
 
+function getInitialSearch(): string {
+  try {
+    const stored = localStorage.getItem("docs-search");
+    if (stored) return stored;
+  } catch {}
+  return "";
+}
+
 const SORT_COLUMNS: SortColumn[] = ["name", "status", "chunks", "uploaded"];
 
 function getInitialSort(): { column: SortColumn; direction: SortDirection } {
@@ -179,7 +187,7 @@ export default function DocumentsList() {
   const queryClient = useQueryClient();
   const [reindexingId, setReindexingId] = useState<number | null>(null);
   const [view, setView] = useState<ViewMode>(getInitialView);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(getInitialSearch);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(getInitialStatusFilter);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(getInitialTypeFilter);
   const [{ column: sortColumn, direction: sortDirection }, setSortState] = useState<{
@@ -221,6 +229,14 @@ export default function DocumentsList() {
     try {
       if (v === "all") localStorage.removeItem("docs-type-filter");
       else localStorage.setItem("docs-type-filter", v);
+    } catch {}
+  };
+
+  const handleSearch = (v: string) => {
+    setSearch(v);
+    try {
+      if (v === "") localStorage.removeItem("docs-search");
+      else localStorage.setItem("docs-search", v);
     } catch {}
   };
 
@@ -276,7 +292,7 @@ export default function DocumentsList() {
   };
 
   const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
-  if (search) activeFilterChips.push({ key: "search", label: `"${search}"`, onRemove: () => setSearch("") });
+  if (search) activeFilterChips.push({ key: "search", label: `"${search}"`, onRemove: () => handleSearch("") });
   if (typeFilter !== "all") activeFilterChips.push({ key: "type", label: fileTypeChip(typeFilter).label, onRemove: () => handleTypeFilter("all") });
   if (statusFilter !== "all") {
     const statusLabel = statusFilter === "ready" ? "Ready" : statusFilter === "processing" ? "Processing" : "Error";
@@ -359,12 +375,12 @@ export default function DocumentsList() {
               <Input
                 placeholder="Search by name…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="pl-8 h-8 text-sm"
               />
               {search && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => handleSearch("")}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Clear search"
                 >
@@ -452,7 +468,7 @@ export default function DocumentsList() {
             ))}
             {activeFilterChips.length >= 2 && (
               <button
-                onClick={() => { setSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
+                onClick={() => { handleSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
                 className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors ml-1"
               >
                 Clear all
@@ -522,7 +538,7 @@ export default function DocumentsList() {
                 })()}
               </p>
               <button
-                onClick={() => { setSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
+                onClick={() => { handleSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
                 className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
               >
                 Clear filters

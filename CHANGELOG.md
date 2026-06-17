@@ -2,6 +2,26 @@
 
 ---
 
+## [Signal87_Core_SearchPersist_v1] — 2026-06-17  *(Persist search text across page visits)*
+
+### Summary
+The free-text search box in the document library now restores its last value on page reload, matching the existing localStorage persistence pattern used by view mode, sort, status filter, and type filter. Frontend-only; no backend/API/DB/auth changes.
+
+### Changed — `artifacts/signal87-core/src/pages/documents.tsx`
+- Added `getInitialSearch()` getter: reads `"docs-search"` from localStorage, returns the stored string or `""` on miss/error. Placed alongside the other `getInitial*` getters (after `getInitialTypeFilter`).
+- Changed `useState("")` → `useState(getInitialSearch)` for the `search` state (lazy initializer, consistent with the other filter states).
+- Added `handleSearch(v: string)` handler: calls `setSearch(v)`, then writes `"docs-search"` when `v !== ""` or removes the key when `v === ""` (same remove-on-default pattern as status/type filters).
+- Replaced all 5 raw `setSearch` call-sites with `handleSearch`: search input `onChange`, X-button `onClick`, filter-chip `onRemove`, "Clear all" button, "Clear filters" button.
+
+### Unchanged
+- Backend routes, database schema, auth behavior, API routes, protected app flows.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- No raw `setSearch("")` call-sites remain outside of `handleSearch` itself and the state declaration.
+
+---
+
 ## [Signal87_Core_Landing_Simplify_SubtleBG_v1] — 2026-06-17  *(Clean landing sections + subtle CSS-only animated background)*
 
 ### Summary
