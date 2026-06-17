@@ -1,6 +1,9 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Clerk_Auth_v1**
+> Checkpoint: **Signal87_Core_Document_Thumbnails_v1**
+> Last updated: 2026-06-17
+> Note (Document_Thumbnails_v1): Frontend-only change. New `DocumentThumbnail` component uses `GET /api/documents/:id/original` (existing protected endpoint) to fetch PDFs for first-page thumbnail rendering. No new routes, no schema changes, no auth changes.
+> Prior checkpoint: **Signal87_Core_Clerk_Auth_v1**
 > Last updated: 2026-06-17
 > Note: Clerk auth with approved-email gate added. All API routes (except `/healthz`) and all frontend app routes (Documents, Ask, Brief, Compare, Activity) are now protected. Public: landing, about, terms, privacy, contact, team, sign-in, sign-up. `APPROVED_EMAILS` env var controls access; `CLERK_BYPASS_AUTH` can disable auth entirely. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was changed.
 > Prior: `Signal87_Core_Reliability_Clarity_Pass_v1` is a reliability/clarity pass — **no new routes, no schema changes**. One additive contract change + targeted backend hardening: (1) `POST /documents/{id}/chat` now documents/returns `422 → ErrorResponse` and **guards before any OpenAI call** when the doc has 0 chunks _or_ `extractionStatus === "failed"`; (2) one structured Q&A outcome log per chat request (`provider`/`model`/`chunksSearched`/`chunksRetrieved`/`totalLatencyMs`) — never logs question/answer content; (3) upload emits a success log (`chunkCount`) + a `207` extraction-failed warn log; (4) the reindex "no text extracted" path now sets `extractionStatus="failed"` + `extractionError` (bookkeeping) and logs success. Re-index success/transaction mechanics, storage, upload, download, delete, and the citation/Verification-Trace payload are unchanged.

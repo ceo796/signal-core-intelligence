@@ -1,0 +1,134 @@
+You are working on the Signal87 AI Replit codebase.
+
+Current stable checkpoint:
+`55ffa0a — Stable Clerk Auth Protected Baseline`
+
+We are now doing Phase 2 only: restore document thumbnails/previews on the document library surface.
+
+CRITICAL RULES:
+
+* Do not touch backend logic unless you stop first and report why it is absolutely required.
+* Do not change database schema.
+* Do not change auth behavior.
+* Do not change protected route logic.
+* Do not change document upload, parsing, extraction, chunking, chat, brief, compare, AI routing, or PDF viewer logic.
+* Do not redesign the landing page.
+* Do not rebuild the dashboard.
+* Do not install packages unless you stop and ask first.
+* Do not replace real document data with mock/static data.
+* Keep this scoped to document thumbnails/previews and document card UI only.
+
+GOAL:
+Restore a polished thumbnail/preview experience for documents in the current document library.
+
+STEP 1 — Inspect first:
+Search the codebase for:
+
+* Existing thumbnail code
+* Existing document preview code
+* Existing PDF viewer code
+* Existing `react-pdf` or PDF rendering utilities
+* Existing document card/list components
+* Existing document original/view/download endpoints
+* Any prior dashboard/document thumbnail implementation
+
+Report what exists before implementing.
+
+STEP 2 — Safe implementation:
+If frontend-only implementation is possible, create or reuse a component such as:
+
+`DocumentThumbnail`
+
+Thumbnail behavior:
+
+1. PDF files
+
+* Show a first-page preview thumbnail if safely possible using existing PDF viewer/PDF rendering utilities.
+* Use the existing protected original-file endpoint.
+* Ensure authenticated requests include the Clerk token if required.
+* Use lazy loading so the document grid does not become slow.
+* If preview rendering fails, show a clean PDF fallback card.
+
+2. Image files, if supported
+
+* Show the actual image thumbnail using the protected file/original endpoint.
+* If loading fails, show a file-type fallback.
+
+3. DOCX, TXT, XLSX, PPTX, and other files
+
+* Do not fake screenshots.
+* Show polished file-type preview cards/icons.
+* Use only appropriate file-type colors:
+
+  * PDF red
+  * Word blue
+  * Spreadsheet green
+  * PowerPoint orange
+  * Text/document gray or violet
+* Keep the broader platform UI black/white/gray.
+
+4. Fallback behavior
+
+* Every document must render something.
+* Thumbnail failures must not block the document library.
+* Do not show broken image icons.
+* Do not expose original files publicly.
+
+WHERE TO APPLY:
+
+* Current `/documents` page document cards.
+* Any reusable document card/list item currently used by the app.
+* Do not create a new dashboard just for thumbnails.
+
+INTERACTION REQUIREMENTS:
+
+* The document card remains clickable or otherwise routes to the existing document detail/ask flow as currently designed.
+* “Ask a Question” behavior must remain unchanged.
+* Delete behavior must remain unchanged.
+* Upload behavior must remain unchanged.
+* Do not create cards that look clickable but do nothing.
+
+PERFORMANCE REQUIREMENTS:
+
+* Do not render every PDF page.
+* Render only first page for PDFs.
+* Prefer lazy loading or viewport-aware rendering if already available.
+* Keep thumbnails small and lightweight.
+* If rendering many PDFs causes performance issues, use fallback cards and report the limitation.
+
+SECURITY REQUIREMENTS:
+
+* Do not make document originals public.
+* Do not bypass Clerk auth.
+* Do not remove approved-email checks.
+* Do not add unauthenticated thumbnail endpoints.
+* If thumbnails require fetching protected files, use the existing authenticated API client/token mechanism.
+
+ACCEPTANCE CHECKLIST:
+
+* `/documents` loads real documents.
+* Document cards show thumbnail/preview area.
+* PDFs show first-page thumbnail or safe PDF fallback.
+* Non-PDF files show polished file-type preview cards.
+* Document cards/actions still work.
+* Ask, Brief, Compare, and Activity still work.
+* Auth still protects `/documents`.
+* Unauthenticated `/api/documents` still returns 401.
+* TypeScript passes.
+* App builds.
+* Backend/database/auth/API logic were untouched unless explicitly approved.
+
+FINAL RESPONSE:
+Report:
+
+* Files inspected.
+* Existing preview/thumbnail code found, if any.
+* Files changed.
+* Whether implementation was frontend-only.
+* How PDFs are handled.
+* How non-PDF files are handled.
+* Fallback behavior.
+* Performance considerations.
+* Security verification.
+* TypeScript/build status.
+* Confirmation that backend/database/auth/document parsing/AI logic were untouched.

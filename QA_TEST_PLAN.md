@@ -1,6 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Clerk_Auth_v1**
+> Checkpoint: **Signal87_Core_Document_Thumbnails_v1**
+> Last updated: 2026-06-17
+> Note (Document_Thumbnails_v1): New tests **T51–T57** cover the document thumbnail/preview experience on `/documents`. Frontend-only change — no backend, API contract, or schema changes. Auth gate, all card actions (Ask, Re-Index, Delete, click-to-detail), upload, PDF viewer (detail page), chat, brief, compare, activity, and admin are all unchanged.
+> Prior checkpoint: **Signal87_Core_Clerk_Auth_v1**
 > Last updated: 2026-06-17
 > Note (Clerk_Auth_v1): New tests **T40–T50** cover the Clerk auth with approved-email gate. All API routes (except `/healthz`) return **401** when unauthenticated and **403** when signed in but not approved. All frontend app routes (Documents, Ask, Brief, Compare, Activity) redirect to `/sign-in` when not signed in. Landing, public pages, and sign-in/sign-up remain public. The core document flows (upload, PDF viewer, chat, citations, delete) are unchanged and should be tested under a signed-in approved session.
 > Note (Ask_Activity_Tabs_v1): New tests **T36–T38** cover the two new **frontend-only** nav tabs — **Ask** (`/ask`, ready-doc picker that routes into the existing single-doc chat) and **Activity** (`/activity`, a read-only feed derived only from existing document data, no fabricated events) — plus three-tab navigation and mobile usability. **No backend, API, contract, or schema changes**; no protected flow (PDF viewer / durable storage / upload / download / delete / re-index / citation + Verification Trace) was touched.

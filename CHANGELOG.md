@@ -2,6 +2,35 @@
 
 ---
 
+## [Signal87_Core_Document_Thumbnails_v1] — 2026-06-17  *(Document library thumbnail/preview experience)*
+
+### Summary
+Restored a polished thumbnail/preview experience on the `/documents` library page. Each document card now shows a full-bleed top-area thumbnail: PDF files with a stored original render an actual first-page preview using `react-pdf`; all other file types (DOCX, CSV, XLSX, PPTX, TXT, etc.) display a color-coded file-type icon card. Thumbnails are lazy-loaded via IntersectionObserver — the PDF fetch/render only starts when the card enters (or approaches) the viewport. Failures fall back silently to the PDF icon card. All existing card actions (Ask, Re-Index, Delete), routing, auth, and every other feature are completely unchanged.
+
+### Added — Frontend only
+- **`src/components/document-thumbnail.tsx` (new):** `DocumentThumbnail` component.
+  - **PDF + stored original:** uses `react-pdf` `Document` + `Page` (page 1, no text/annotation layers) with the protected `/api/documents/:id/original` URL passed directly. Same-origin means the browser includes the Clerk `__session` cookie automatically — no token wiring needed.
+  - **PDF without original or render error:** `FileTypePlaceholder` with a red-tinted background and `PDF` badge.
+  - **All other types (DOCX/DOC → blue, XLSX/XLS/CSV → green, PPTX/PPT → orange, TXT → gray, unknown → violet):** `FileTypePlaceholder` with appropriate color.
+  - **Lazy loading:** `IntersectionObserver` with `rootMargin: "300px"` — `react-pdf` Document only mounts when the card is near the viewport. `disconnect()` after first intersection so the observer is released.
+  - **Container width measurement:** container width is read via `useRef` once the card enters view, so `react-pdf`'s `Page` fills the card width exactly.
+  - **Skeleton overlay:** visible until `onRenderSuccess` fires (first page has actually painted) or until `onRenderError` triggers the fallback.
+  - **pdfjs worker:** configured at module level (idempotent; same URL as `pdf-viewer.tsx`). Required because `documents.tsx` does not import `pdf-viewer.tsx`.
+- **`src/pages/documents.tsx`:** added thumbnail area to each document card.
+  - Thumbnail lives in a `<Link href="/documents/:id">` block above `CardContent` — full-bleed (176 px / `h-44`), `overflow-hidden`, separated from the card body by a `border-b`. `overflow-hidden` added to `Card` so the thumbnail respects the card's border radius.
+  - Skeleton loading state updated: includes matching `h-44` skeleton at the top of each placeholder card.
+  - **All existing content, actions, and routing inside `CardContent` are untouched.**
+
+### Unchanged
+- Backend, API contract, DB schema, auth middleware, upload, download, delete, re-index, PDF viewer (detail page), chat, brief, compare, activity, admin, and all other routes.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — **clean**.
+- Vite HMR confirmed in logs: `hmr update /src/pages/documents.tsx`.
+- `/documents` auth gate confirmed: redirects to sign-in when unauthenticated (401 from API, redirect from AuthGuard).
+
+---
+
 ## [Signal87_Core_Clerk_Auth_Fix_v1] — 2026-06-17  *(Auth 401 fix: canonical Clerk wiring + dev-iframe cookie diagnosis)*
 
 ### Summary

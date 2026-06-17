@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
+import { DocumentThumbnail } from "@/components/document-thumbnail";
 import { getDocumentStatus } from "@/lib/document-status";
 import { format } from "date-fns";
 import { FileText, Trash2, MessageSquare, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
@@ -85,7 +86,8 @@ export default function DocumentsList() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
-                <Card key={i} className="bg-card border-border/50">
+                <Card key={i} className="bg-card border-border/50 overflow-hidden">
+                  <Skeleton className="h-44 w-full rounded-none" />
                   <CardContent className="p-4">
                     <Skeleton className="h-5 w-3/4 mb-4" />
                     <Skeleton className="h-4 w-1/2 mb-2" />
@@ -114,7 +116,19 @@ export default function DocumentsList() {
                 const status = getDocumentStatus(doc);
                 const isReindexing = reindexingId === doc.id;
                 return (
-                  <Card key={doc.id} className="bg-card border-border/50 hover:border-primary/50 transition-colors group flex flex-col">
+                  <Card key={doc.id} className="bg-card border-border/50 hover:border-primary/50 transition-colors group flex flex-col overflow-hidden">
+                    {/* Thumbnail — full-bleed top area, links to document detail */}
+                    <Link
+                      href={`/documents/${doc.id}`}
+                      className="block h-44 w-full shrink-0 border-b border-border/50 overflow-hidden"
+                    >
+                      <DocumentThumbnail
+                        id={doc.id}
+                        fileType={doc.fileType}
+                        originalFileAvailable={doc.originalFileAvailable}
+                      />
+                    </Link>
+
                     <CardContent className="p-5 flex-1 flex flex-col">
                       <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col cursor-pointer">
                         <div className="flex items-start justify-between gap-4 mb-4">
