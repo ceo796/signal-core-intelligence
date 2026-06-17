@@ -100,6 +100,17 @@ function getInitialSort(): { column: SortColumn; direction: SortDirection } {
   return { column: "uploaded", direction: "desc" };
 }
 
+function getInitialGridSort(): { column: SortColumn; direction: SortDirection } {
+  try {
+    const col = localStorage.getItem("docs-grid-sort-col");
+    const dir = localStorage.getItem("docs-grid-sort-dir");
+    const validCol: SortColumn = SORT_COLUMNS.includes(col as SortColumn) ? (col as SortColumn) : "uploaded";
+    const validDir: SortDirection = dir === "asc" || dir === "desc" ? dir : "desc";
+    return { column: validCol, direction: validDir };
+  } catch {}
+  return { column: "uploaded", direction: "desc" };
+}
+
 interface FileTypeChipStyle {
   bg: string;
   text: string;
@@ -175,6 +186,10 @@ export default function DocumentsList() {
     column: SortColumn;
     direction: SortDirection;
   }>(getInitialSort);
+  const [{ column: gridSortColumn, direction: gridSortDirection }, setGridSortState] = useState<{
+    column: SortColumn;
+    direction: SortDirection;
+  }>(getInitialGridSort);
 
   const availableTypes = Array.from(
     new Set((documents ?? []).map((d) => d.fileType.toLowerCase()).filter(Boolean))
@@ -217,6 +232,17 @@ export default function DocumentsList() {
       localStorage.setItem("docs-sort-col", col);
       localStorage.setItem("docs-sort-dir", nextDir);
     } catch {}
+  };
+
+  const handleGridSortColumn = (col: SortColumn) => {
+    setGridSortState((prev) => ({ ...prev, column: col }));
+    try { localStorage.setItem("docs-grid-sort-col", col); } catch {}
+  };
+
+  const handleGridSortDirection = () => {
+    const nextDir: SortDirection = gridSortDirection === "asc" ? "desc" : "asc";
+    setGridSortState((prev) => ({ ...prev, direction: nextDir }));
+    try { localStorage.setItem("docs-grid-sort-dir", nextDir); } catch {}
   };
 
   const handleDelete = (id: number) => {
@@ -270,17 +296,19 @@ export default function DocumentsList() {
       return true;
     })
     .sort((a, b) => {
+      const col = view === "grid" ? gridSortColumn : sortColumn;
+      const dir = view === "grid" ? gridSortDirection : sortDirection;
       let cmp = 0;
-      if (sortColumn === "name") {
+      if (col === "name") {
         cmp = a.fileName.localeCompare(b.fileName, undefined, { sensitivity: "base" });
-      } else if (sortColumn === "status") {
+      } else if (col === "status") {
         cmp = getDocumentStatus(a).tone.localeCompare(getDocumentStatus(b).tone);
-      } else if (sortColumn === "chunks") {
+      } else if (col === "chunks") {
         cmp = a.chunkCount - b.chunkCount;
-      } else if (sortColumn === "uploaded") {
+      } else if (col === "uploaded") {
         cmp = new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
       }
-      return sortDirection === "asc" ? cmp : -cmp;
+      return dir === "asc" ? cmp : -cmp;
     });
 
   return (
@@ -374,12 +402,8 @@ export default function DocumentsList() {
               <div className="flex items-center gap-1.5 ml-auto">
                 <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 <Select
-                  value={sortColumn}
-                  onValueChange={(v) => {
-                    const col = v as SortColumn;
-                    setSortState((prev) => ({ ...prev, column: col }));
-                    try { localStorage.setItem("docs-sort-col", col); } catch {}
-                  }}
+                  value={gridSortColumn}
+                  onValueChange={(v) => handleGridSortColumn(v as SortColumn)}
                 >
                   <SelectTrigger className="h-8 w-36 text-sm">
                     <SelectValue />
@@ -392,16 +416,12 @@ export default function DocumentsList() {
                   </SelectContent>
                 </Select>
                 <button
-                  onClick={() => {
-                    const nextDir: SortDirection = sortDirection === "asc" ? "desc" : "asc";
-                    setSortState((prev) => ({ ...prev, direction: nextDir }));
-                    try { localStorage.setItem("docs-sort-dir", nextDir); } catch {}
-                  }}
+                  onClick={handleGridSortDirection}
                   className="h-8 w-8 flex items-center justify-center rounded-md border border-input bg-background hover:bg-muted transition-colors shrink-0"
-                  title={sortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
-                  aria-label={sortDirection === "asc" ? "Sort ascending" : "Sort descending"}
+                  title={gridSortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
+                  aria-label={gridSortDirection === "asc" ? "Sort ascending" : "Sort descending"}
                 >
-                  {sortDirection === "asc" ? (
+                  {gridSortDirection === "asc" ? (
                     <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
                   ) : (
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -518,9 +538,9 @@ export default function DocumentsList() {
               <span>
                 Sorted by{" "}
                 <span className="text-foreground font-medium">
-                  {{ name: "Name", status: "Status", chunks: "Chunks", uploaded: "Uploaded" }[sortColumn]}
+                  {{ name: "Name", status: "Status", chunks: "Chunks", uploaded: "Uploaded" }[gridSortColumn]}
                 </span>
-                {" "}{sortDirection === "asc" ? "↑" : "↓"}
+                {" "}{gridSortDirection === "asc" ? "↑" : "↓"}
               </span>
             </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
