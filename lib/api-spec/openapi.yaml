@@ -278,6 +278,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /ai/chat:
+    post:
+      operationId: aiChat
+      tags: [chat]
+      summary: Ask a question with optional grounding across the user's document library
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatInput"
+      responses:
+        "200":
+          description: Answer with mode label, citations (for grounded answers), and debug info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /documents/brief:
     post:
       operationId: generateBrief
@@ -621,6 +652,74 @@ components:
             $ref: "#/components/schemas/MultiCitation"
         debug:
           $ref: "#/components/schemas/MultiDebugInfo"
+
+    AiChatInput:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+
+    AiChatCitation:
+      type: object
+      required: [citationNumber, documentId, documentName, chunkIndex, content, relevanceScore]
+      properties:
+        citationNumber:
+          type: integer
+        documentId:
+          type: integer
+        documentName:
+          type: string
+        chunkIndex:
+          type: integer
+        content:
+          type: string
+        relevanceScore:
+          type: number
+
+    AiChatDebugInfo:
+      type: object
+      required: [route, provider, model, fallbackUsed, documentsSearched, chunksSearched, chunksRetrieved, retrievalLatencyMs, llmLatencyMs, totalLatencyMs]
+      properties:
+        route:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        fallbackUsed:
+          type: boolean
+        documentsSearched:
+          type: integer
+        chunksSearched:
+          type: integer
+        chunksRetrieved:
+          type: integer
+        retrievalLatencyMs:
+          type: number
+        llmLatencyMs:
+          type: number
+        totalLatencyMs:
+          type: number
+        errors:
+          type: ["string", "null"]
+
+    AiChatResult:
+      type: object
+      required: [answer, citations, mode, debug]
+      properties:
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatCitation"
+        mode:
+          type: string
+          enum: ["general", "document", "hybrid"]
+        debug:
+          $ref: "#/components/schemas/AiChatDebugInfo"
 
     BriefInput:
       type: object

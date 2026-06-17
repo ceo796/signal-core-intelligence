@@ -35,6 +35,25 @@ Middleware stack in `app.ts` (in order):
 
 ---
 
+## 3a. Where is `POST /api/ai/chat` defined? *(Dashboard Agent)*
+
+**`artifacts/api-server/src/routes/ai/index.ts`** — `router.post("/ai/chat", ...)`
+
+Mounted via `artifacts/api-server/src/routes/index.ts` → `app.use("/api", router)`.
+
+**What it does:**
+- Auth required (Clerk `userId`); returns `400` for empty questions, `401` if unauthenticated.
+- Fetches the user's most recent `MAX_DOCS=5` documents.
+- Classifies the question with `classifyQuery(question, hasDocuments)` — same logic as single-doc chat (self-contained copy in this file).
+- If **general** mode (or no documents): calls GPT without retrieval; returns `mode: "general"`, empty `citations`.
+- If **document/hybrid** mode: fetches chunks for all ready docs (scoped to user — uses `inArray`), calls `retrieveAcrossDocuments(question, groups, perDocTopK=3)`, builds `[Source N]`-style source blocks, calls GPT with the synthesis prompt.
+- Returns `{ answer, citations: AiChatCitation[], mode, debug: AiChatDebugInfo }`.
+- No DB persistence (ephemeral, single-turn).
+
+**OpenAPI:** `operationId: aiChat` in `lib/api-spec/openapi.yaml`. Schemas: `AiChatInput`, `AiChatResult`, `AiChatCitation`, `AiChatDebugInfo`. Generated hook: `useAiChat` in `@workspace/api-client-react`.
+
+---
+
 ## 3. Where is `POST /api/documents/:id/chat` defined?
 
 **`artifacts/api-server/src/routes/chat/index.ts`** — `router.post("/documents/:id/chat", ...)`

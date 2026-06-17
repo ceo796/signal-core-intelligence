@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
-import { useListDocuments } from "@workspace/api-client-react";
+import { useListDocuments, useAiChat } from "@workspace/api-client-react";
 import { FileUploadModal } from "@/components/file-upload";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -459,28 +459,131 @@ function RecentWork({
   );
 }
 
+function DashboardModeBadge({ mode }: { mode: string }) {
+  if (mode === "document") return null;
+  const text =
+    mode === "general"
+      ? "General answer — not grounded in uploaded documents"
+      : "General answer — no relevant document excerpts found";
+  return (
+    <span className="inline-block mb-2 text-[11px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border bg-[var(--s87-chip)] text-[var(--s87-muted)] border-[var(--s87-border)]">
+      {text}
+    </span>
+  );
+}
+
 function Signal87AiPanel() {
+  const [question, setQuestion] = useState("");
+  const [submittedQuestion, setSubmittedQuestion] = useState("");
+  const aiChatMutation = useAiChat();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = question.trim();
+    if (!q || aiChatMutation.isPending) return;
+    setSubmittedQuestion(q);
+    aiChatMutation.mutate({ data: { question: q } });
+    setQuestion("");
+  };
+
+  const handleReset = () => {
+    setQuestion("");
+    setSubmittedQuestion("");
+    aiChatMutation.reset();
+  };
+
+  const result = aiChatMutation.data;
+
   return (
     <section className="bg-[var(--s87-panel)] border border-[var(--s87-border)] rounded-lg overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--s87-divider)]">
-        <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
-        <span className="text-sm font-semibold text-[var(--s87-ink)]">Signal87 AI</span>
-        <span className="px-1.5 py-0.5 text-[9px] font-semibold text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded uppercase tracking-wide">
-          Beta
-        </span>
-      </div>
-      <div className="px-5 py-10 flex flex-col items-center text-center gap-2">
-        <p className="text-sm font-medium text-[var(--s87-ink)]">Ask Signal87 a question to begin.</p>
-        <p className="text-xs text-[var(--s87-muted)] max-w-xs leading-relaxed">
-          Use general AI, or ground answers in your uploaded documents when sources are available.
-        </p>
-        <Link href="/ask" className="mt-3">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-[var(--s87-btn)] text-xs font-medium text-[var(--s87-btn-fg)] hover:opacity-90 transition-opacity cursor-pointer">
-            Open Signal87 AI
-            <ArrowRight className="w-3.5 h-3.5" />
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--s87-divider)]">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
+          <span className="text-sm font-semibold text-[var(--s87-ink)]">Signal87 AI</span>
+          <span className="px-1.5 py-0.5 text-[9px] font-semibold text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded uppercase tracking-wide">
+            Beta
           </span>
-        </Link>
+        </div>
+        {(aiChatMutation.isSuccess || aiChatMutation.isError) && (
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-xs text-[var(--s87-muted)] hover:text-[var(--s87-ink)] transition-colors"
+          >
+            New question
+          </button>
+        )}
       </div>
+
+      {/* Body */}
+      <div className="min-h-[120px]">
+        {!submittedQuestion ? (
+          <div className="px-5 py-10 flex flex-col items-center text-center gap-2">
+            <p className="text-sm font-medium text-[var(--s87-ink)]">Ask Signal87 a question to begin.</p>
+            <p className="text-xs text-[var(--s87-muted)] max-w-xs leading-relaxed">
+              Use general AI, or ground answers in your uploaded documents when sources are available.
+            </p>
+          </div>
+        ) : aiChatMutation.isPending ? (
+          <div className="px-5 py-8 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--s87-ink)] animate-pulse shrink-0" />
+            <span className="text-sm text-[var(--s87-muted)] italic">Thinking…</span>
+          </div>
+        ) : aiChatMutation.isError ? (
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-[var(--s87-muted)]">Failed to get a response. Try again.</p>
+          </div>
+        ) : result ? (
+          <div className="px-5 py-4 space-y-1">
+            <p className="text-xs text-[var(--s87-muted)] italic mb-3">{submittedQuestion}</p>
+            <DashboardModeBadge mode={result.mode} />
+            <p className="text-sm text-[var(--s87-body)] leading-relaxed whitespace-pre-wrap">
+              {result.answer}
+            </p>
+            {result.mode === "document" && result.citations.length > 0 && (
+              <div className="pt-3 space-y-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--s87-muted)]">
+                  Sources
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {result.citations.map((c) => (
+                    <Link key={c.citationNumber} href={`/documents/${c.documentId}`}>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--s87-chip)] border border-[var(--s87-border)] text-xs text-[var(--s87-body)] hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer">
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--s87-ink)] text-[9px] font-bold text-[var(--s87-btn-fg)] shrink-0">
+                          {c.citationNumber}
+                        </span>
+                        <span className="truncate max-w-[140px]">{c.documentName}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Input */}
+      <form
+        onSubmit={handleSubmit}
+        className="px-5 py-4 border-t border-[var(--s87-divider)] flex items-center gap-3"
+      >
+        <input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask Signal87 a question…"
+          disabled={aiChatMutation.isPending}
+          className="flex-1 px-4 py-2.5 text-sm bg-[var(--s87-panel-2)] border border-[var(--s87-border)] rounded-lg text-[var(--s87-body)] placeholder:text-[var(--s87-faint)] focus:outline-none focus:border-[var(--s87-muted)] transition-colors disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={!question.trim() || aiChatMutation.isPending}
+          className="w-10 h-10 rounded-lg bg-[var(--s87-btn)] flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <ArrowRight className="w-4 h-4 text-[var(--s87-btn-fg)]" />
+        </button>
+      </form>
     </section>
   );
 }

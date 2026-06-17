@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UploadDocumentsBody = {
-  files: Blob[];
-};
+export interface AiChatInput {
+  /** @minLength 1 */
+  question: string;
+}

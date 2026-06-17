@@ -144,6 +144,51 @@ export interface MultiChatResult {
   debug: MultiDebugInfo;
 }
 
+export interface AiChatInput {
+  /** @minLength 1 */
+  question: string;
+}
+
+export interface AiChatCitation {
+  citationNumber: number;
+  documentId: number;
+  documentName: string;
+  chunkIndex: number;
+  content: string;
+  relevanceScore: number;
+}
+
+export interface AiChatDebugInfo {
+  route: string;
+  provider: string;
+  model: string;
+  fallbackUsed: boolean;
+  documentsSearched: number;
+  chunksSearched: number;
+  chunksRetrieved: number;
+  retrievalLatencyMs: number;
+  llmLatencyMs: number;
+  totalLatencyMs: number;
+  /** @nullable */
+  errors?: string | null;
+}
+
+export type AiChatResultMode = typeof AiChatResultMode[keyof typeof AiChatResultMode];
+
+
+export const AiChatResultMode = {
+  general: 'general',
+  document: 'document',
+  hybrid: 'hybrid',
+} as const;
+
+export interface AiChatResult {
+  answer: string;
+  citations: AiChatCitation[];
+  mode: AiChatResultMode;
+  debug: AiChatDebugInfo;
+}
+
 export type BriefInputBriefType = typeof BriefInputBriefType[keyof typeof BriefInputBriefType];
 
 

@@ -2,6 +2,51 @@
 
 ---
 
+## [Signal87_Core_Agent_Placement_v1] — 2026-06-17  *(Dashboard Agent + Document Context Agent)*
+
+### Summary
+Implements the Signal87 AI agent placement model in its first stable form across two surfaces: the dashboard hybrid assistant and the document-detail chat. No auth, database schema, upload, brief generation, environment variable, or design-token changes. Typecheck passes clean on both packages. Global Command Drawer (Cmd+K) is deferred.
+
+### Added — Backend
+
+**New route: `artifacts/api-server/src/routes/ai/index.ts`** (`POST /api/ai/chat`)
+- Requires Clerk auth. Accepts `{ question: string }`.
+- Fetches user's most recent 5 documents; classifies intent with `classifyQuery(question, hasDocuments)` (self-contained copy of the same keywords and logic from single-doc chat).
+- **General mode** (no doc signal, or no documents indexed): answers with `buildGeneralPrompt()`, no retrieval, returns `citations: []`.
+- **Document/hybrid mode**: fetches chunks scoped to user's docs via `inArray`, calls `retrieveAcrossDocuments(question, groups, perDocTopK=3)`, builds `[Source N]` source blocks, calls GPT with a library-grounded or hybrid prompt.
+- Returns `{ answer, citations: AiChatCitation[], mode: "general"|"document"|"hybrid", debug: AiChatDebugInfo }`. Ephemeral — no DB persistence.
+- Mounted in `artifacts/api-server/src/routes/index.ts`.
+
+**New OpenAPI schemas** (`lib/api-spec/openapi.yaml`): `AiChatInput`, `AiChatCitation`, `AiChatDebugInfo`, `AiChatResult`, path `POST /ai/chat` (`operationId: aiChat`).
+
+**Codegen** — generated: `AiChatBody` Zod schema in `@workspace/api-zod`; `useAiChat` React Query mutation hook + `AiChatInput`, `AiChatResult`, `AiChatCitation` TypeScript types in `@workspace/api-client-react`.
+
+**Infrastructure fix** — `lib/api-zod/tsconfig.json`: added `"noEmitOnError": false` so declaration files are emitted even when the pre-existing `File`/`Blob` browser-type errors in the Orval-generated upload schema are present. This unblocks the api-zod `dist/` from being updated after future codegens.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/pages/dashboard.tsx` — Dashboard Agent (Surface 1)**
+- Added `useAiChat` to the `@workspace/api-client-react` import.
+- New `DashboardModeBadge` component: shows mode label for non-document answers ("General answer — not grounded in uploaded documents" / "General answer — no relevant document excerpts found"); hidden for document-grounded answers.
+- `Signal87AiPanel` converted from static empty state to interactive hybrid assistant:
+  - `useState` for `question` (input value) and `submittedQuestion` (echoed above answer).
+  - Empty state (no submitted question): "Ask Signal87 a question to begin." + subtext (exact wording preserved).
+  - Pending state: animated dot + "Thinking…".
+  - Error state: "Failed to get a response. Try again."
+  - Answer state: echoed question (italic, muted) → `DashboardModeBadge` → answer text (`whitespace-pre-wrap`) → source chips for document-grounded answers (citation number badge + document name → links to `/documents/:id`).
+  - "New question" button (header right) resets state after a result.
+  - Live input at bottom; disabled + dimmed while pending.
+  - No fake content, no demo history, no hardcoded examples.
+
+**`src/pages/document-chat.tsx` — Document Context Agent (Surface 2)**
+- Input placeholder updated: `"Ask a question about this document…"` → `"Ask about this document…"`.
+- All citation, verification trace, and mode-badge logic unchanged.
+
+### Deferred
+- **Global Command Drawer** (Cmd+K): not built.
+
+---
+
 ## [Signal87_Core_Dashboard_Cleanup] — 2026-06-17  *(Remove fake/demo content from Signal87 AI panel)*
 
 ### Summary

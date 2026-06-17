@@ -41,7 +41,7 @@ export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
  * @summary Upload one or more documents
  */
 export const UploadDocumentsBody = zod.object({
-  "files": zod.array(zod.any())
+  "files": zod.array(zod.instanceof(File))
 })
 
 export const UploadDocumentsResponse = zod.object({
@@ -227,6 +227,43 @@ export const MultiChatResponse = zod.object({
   "chunksSearched": zod.number(),
   "chunksRetrieved": zod.number()
 })),
+  "retrievalLatencyMs": zod.number(),
+  "llmLatencyMs": zod.number(),
+  "totalLatencyMs": zod.number(),
+  "errors": zod.string().nullish()
+})
+})
+
+
+/**
+ * @summary Ask a question with optional grounding across the user's document library
+ */
+
+
+
+export const AiChatBody = zod.object({
+  "question": zod.string().min(1)
+})
+
+export const AiChatResponse = zod.object({
+  "answer": zod.string(),
+  "citations": zod.array(zod.object({
+  "citationNumber": zod.number(),
+  "documentId": zod.number(),
+  "documentName": zod.string(),
+  "chunkIndex": zod.number(),
+  "content": zod.string(),
+  "relevanceScore": zod.number()
+})),
+  "mode": zod.enum(['general', 'document', 'hybrid']),
+  "debug": zod.object({
+  "route": zod.string(),
+  "provider": zod.string(),
+  "model": zod.string(),
+  "fallbackUsed": zod.boolean(),
+  "documentsSearched": zod.number(),
+  "chunksSearched": zod.number(),
+  "chunksRetrieved": zod.number(),
   "retrievalLatencyMs": zod.number(),
   "llmLatencyMs": zod.number(),
   "totalLatencyMs": zod.number(),

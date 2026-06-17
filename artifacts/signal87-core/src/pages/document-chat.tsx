@@ -577,7 +577,7 @@ export default function DocumentChat() {
               onChange={(e) => setInput(e.target.value)}
               placeholder={
                 status.isReady
-                  ? "Ask a question about this document..."
+                  ? "Ask about this document..."
                   : "This document can't answer questions yet"
               }
               className="bg-background border-border flex-1 font-mono text-sm h-12"
