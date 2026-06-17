@@ -82,12 +82,14 @@ export default function Home() {
             <img
               src="/google-for-startups.jpg"
               alt="Google for Startups"
-              className="h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+              className="h-10 w-auto object-contain opacity-20 hover:opacity-50 transition-opacity"
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
             <img
               src="/nvidia-inception-badge.jpg"
               alt="NVIDIA Inception Program"
-              className="h-12 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+              className="h-12 w-auto object-contain opacity-20 hover:opacity-50 transition-opacity"
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </div>
         </div>

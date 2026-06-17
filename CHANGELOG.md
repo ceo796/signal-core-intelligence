@@ -2,6 +2,37 @@
 
 ---
 
+## [Signal87_Core_Dark_Theme_v1] — 2026-06-17  *(Global black theme, Instrument Serif headers, transparent logos)*
+
+### Summary
+Global visual overhaul: black background across the entire site, Instrument Serif for h1/h2 headings, Inter body font confirmed, and partner logos on the front page rendered as ghosted white silhouettes. No backend, API, DB, auth, or business logic changes.
+
+### Changed — `src/index.css`
+- **Google Fonts import**: added `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap')` at top of file.
+- **`--app-font-serif`**: `Georgia, serif` → `'Instrument Serif', Georgia, serif`.
+- **`:root` theme** replaced with a dark theme (was light):
+  - `--background: 0 0% 0%` (pure black), `--card: 0 0% 5%`, `--sidebar: 0 0% 3%`
+  - All foreground/foreground-variant tokens set to light grays (90%, 85%, 55%)
+  - `--border / --card-border / --sidebar-border`: 12% / 12% / 10%
+  - `--muted: 0 0% 8%`, `--input: 0 0% 13%`, `--secondary: 0 0% 10%`
+  - `--accent / --sidebar-accent`: dark blue `217 40% 12%` (was light blue 96% lightness)
+  - Shadows updated to dark-weight values (0.5 opacity, not 0.05)
+  - `--opaque-button-border-intensity: 9` (dark mode positive value)
+  - `--button-outline / --badge-outline / --elevate-*` updated to white-alpha variants
+- **`@layer base`**: added `h1, h2 { font-family: var(--font-serif); font-synthesis: none; }` — applies Instrument Serif to all page-level headings; `font-synthesis: none` prevents fake-bold since only weight 400 is available.
+
+### Changed — `src/pages/home.tsx`
+- Partner logos: added `style={{ filter: 'brightness(0) invert(1)' }}` to convert JPG colors to white silhouettes, plus `opacity-20 hover:opacity-50` for a ghosted/transparent appearance on the dark background.
+
+### Unchanged
+- Authenticated app shell structure, all page content, backend, API contract, DB schema, auth, upload, AI routing.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — **clean**.
+- Screenshot: Instrument Serif renders on hero h1, gradient background retained, zero console errors.
+
+---
+
 ## [Signal87_Core_Blue_Theme_v1] — 2026-06-17  *(Black-to-blue gradient home + blue accent)*
 
 ### Summary
