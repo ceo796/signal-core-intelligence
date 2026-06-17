@@ -350,44 +350,44 @@
 }
 
 .cl-userButtonPopoverCard {
-  background-color: hsl(var(--card)) !important;
-  border: 1px solid hsl(var(--card-border)) !important;
-  box-shadow: var(--shadow-lg) !important;
-  border-radius: var(--radius-lg) !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04) !important;
+  border-radius: 12px !important;
 }
 
 .cl-userButtonPopoverCard * {
-  color: hsl(var(--card-foreground)) !important;
+  color: #111827 !important;
 }
 
 .cl-userPreview {
-  color: hsl(var(--card-foreground)) !important;
+  color: #111827 !important;
 }
 
 .cl-userButtonPopoverActionButton {
-  color: hsl(var(--card-foreground)) !important;
-  border-radius: var(--radius-md) !important;
+  color: #111827 !important;
+  border-radius: 8px !important;
 }
 
 .cl-userButtonPopoverActionButton:hover {
-  background-color: hsl(var(--muted)) !important;
+  background-color: #f9fafb !important;
 }
 
 .cl-userButtonPopoverActionButtonText {
-  color: hsl(var(--card-foreground)) !important;
+  color: #111827 !important;
 }
 
 .cl-userButtonPopoverActionButtonIcon {
-  color: hsl(var(--muted-foreground)) !important;
+  color: #6b7280 !important;
 }
 
 .cl-userButtonPopoverFooter {
-  background-color: hsl(var(--card)) !important;
-  border-top: 1px solid hsl(var(--card-border)) !important;
+  background-color: #f9fafb !important;
+  border-top: 1px solid #e5e7eb !important;
 }
 
 .cl-userButtonPopoverFooter * {
-  color: hsl(var(--muted-foreground)) !important;
+  color: #6b7280 !important;
 }
 
 @keyframes fadeIn {
