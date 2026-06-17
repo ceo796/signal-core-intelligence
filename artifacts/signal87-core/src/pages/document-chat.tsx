@@ -214,7 +214,7 @@ function ModeBadge({ mode }: { mode: QueryMode }) {
 
   const labels: Record<QueryMode, { text: string; className: string }> = {
     general: {
-      text: "General answer — not grounded in this document",
+      text: "General answer — not grounded in uploaded documents",
       className: "bg-muted text-muted-foreground/70 border-border/50",
     },
     document: {

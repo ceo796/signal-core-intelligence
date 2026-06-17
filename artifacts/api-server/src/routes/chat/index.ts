@@ -19,15 +19,23 @@ const router: IRouter = Router();
 /* -------------------------------------------------------------------------- */
 
 const DOCUMENT_KEYWORDS = [
+  // File / document references
   "document", "uploaded", "file", "contract", "pdf", "brief",
   "compare", "clause", "source", "citation", "section", "page", "term",
-  "agreement", "exhibit", "paragraph", "article", "the document",
-  "this contract", "the file", "my document", "the agreement", "this file",
-  "this pdf", "this agreement", "this brief", "the brief", "the clause",
+  "agreement", "exhibit", "paragraph", "article",
+  // Phrase forms
+  "this document", "the document", "this contract", "the file",
+  "my document", "the agreement", "this file", "this pdf",
+  "this agreement", "this brief", "the brief", "the clause",
   "this clause", "the term", "this term", "the section", "this section",
+  // Spec-required additions
+  "summarize this", "my uploaded file", "selected document",
+  "active document", "uploaded file",
+  // Domain analysis terms commonly used about documents
+  "risk", "risks", "liability", "obligation", "indemnif",
 ];
 
-const GENERAL_KEYWORDS = [
+const GENERAL_KEYWORDS: string[] = [
   "what is", "what does", "what are", "how do", "how to",
   "define", "explain", "meaning of", "draft a", "write a",
   "difference between", "compare", "vs", "versus", "example of",
@@ -45,14 +53,20 @@ function classifyQuery(question: string, hasDocument: boolean): QueryMode {
   const docScore = DOCUMENT_KEYWORDS.filter((k) => q.includes(k)).length;
   const genScore = GENERAL_KEYWORDS.filter((k) => q.includes(k)).length;
 
-  // Strong document signal → document mode
+  // Strong document signal (multiple doc keywords) → document mode
   if (docScore >= 2) return "document";
-  if (docScore >= 1 && hasDocument) return "document";
 
-  // Strong general signal with no document references → general mode
-  if (genScore >= 2 && docScore === 0) return "general";
+  // Single doc keyword, no competing general phrasing → document mode
+  if (docScore >= 1 && hasDocument && genScore === 0) return "document";
 
-  // Ambiguous
+  // Mixed signals (doc keyword + general phrasing) → hybrid, let retrieval decide
+  if (docScore >= 1 && hasDocument && genScore >= 1) return "hybrid";
+
+  // No document signal at all + any general phrasing → general mode
+  // (covers "What is X?", "How does Y work?", "Draft a Z" etc.)
+  if (genScore >= 1 && docScore === 0) return "general";
+
+  // Ambiguous — default to hybrid so retrieval can inform the answer
   return "hybrid";
 }
 

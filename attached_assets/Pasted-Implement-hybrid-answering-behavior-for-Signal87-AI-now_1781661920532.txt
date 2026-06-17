@@ -1,0 +1,137 @@
+Implement hybrid answering behavior for Signal87 AI now that the visual token system is stable.
+
+Important preservation instructions:
+Do not alter the recent design-token cleanup in src/index.css. Do not reintroduce violet as the primary color. Do not modify the landing page CSS. Do not change the sidebar, file-type utility, dashboard color system, or recent CSS alignment work unless absolutely required for a small answer-source label.
+
+Goal:
+Signal87 AI should answer simple/general questions even when no relevant uploaded document context exists, while still using grounded document answers with citations when the user asks about uploaded files.
+
+Strict scope:
+Do not change authentication, routing, document upload, brief generation, database schema, environment variables, Clerk/Supabase/OpenAI configuration, dashboard design system, file-type utility, sidebar layout, or unrelated platform functionality.
+
+Required behavior:
+
+1. General AI mode
+   If the user asks a general question that does not require uploaded documents, answer normally without requiring citations.
+
+Examples:
+
+* What is a SAFE note?
+* What does EBITDA mean?
+* Draft a follow-up email.
+* What is the difference between Seed and Series A?
+* Explain this term.
+
+For general answers:
+
+* Do not fabricate citations.
+* Do not imply the answer came from uploaded documents.
+* Show a subtle label: “General answer — not grounded in uploaded documents.”
+
+2. Document-grounded mode
+   If the user asks about uploaded documents, selected documents, files, contracts, PDFs, summaries, comparisons, risks, clauses, citations, sources, or file contents, use the existing document retrieval and grounding system.
+
+Examples:
+
+* What does this document say?
+* Summarize the uploaded contract.
+* Compare these two PDFs.
+* What are the risks in my uploaded file?
+* Find the termination clause.
+* What do my documents say about revenue?
+
+For grounded answers:
+
+* Preserve the existing citation/source behavior.
+* Do not bypass retrieval when the user is clearly asking about uploaded files.
+* If relevant sources exist, answer from those sources.
+
+3. Hybrid mode
+   If the question is ambiguous, provide a helpful general answer first, then clearly state whether document context was available.
+
+Example:
+“Generally, this means X. I do not see enough relevant document context to answer from your uploaded files. Upload or select a document and I can ground the answer with citations.”
+
+For hybrid answers:
+
+* Do not fabricate citations.
+* Use a subtle label: “General answer. No relevant document source found.”
+* If relevant document context exists, include a short “From your documents” section with citations.
+
+Core trust rule:
+The user must always be able to tell whether the answer came from:
+
+* General AI knowledge
+* Uploaded document context
+* A hybrid fallback
+
+Implementation approach:
+Inspect the existing chat/AI routing logic, document retrieval flow, source/citation rendering, and Signal87 AI panel. Add a lightweight intent-routing layer in the safest existing location.
+
+The router should classify each query as:
+
+* general
+* document
+* hybrid
+
+Use conservative heuristics first.
+
+Document-mode triggers:
+
+* this document
+* uploaded
+* file
+* PDF
+* contract
+* agreement
+* brief
+* compare documents
+* clause
+* source
+* citation
+* summarize this
+* my document
+* my uploaded file
+* selected document context
+* active document detail context
+
+General-mode triggers:
+
+* definitions
+* explanations
+* drafting requests
+* general business/legal/finance concepts
+* questions that do not refer to uploaded content
+* questions asked when no document is selected and no document-specific language is present
+
+Hybrid mode:
+Use when the query could be either general or document-related, or when document retrieval returns no relevant context but the user still needs a useful answer.
+
+UI/UX:
+Keep answer-source labels visually quiet. Do not add a mode selector. Do not clutter the chat interface.
+
+Validation:
+Test:
+
+1. “What is a SAFE note?” with no documents.
+2. “What does EBITDA mean?” with no documents.
+3. “Draft a follow-up email after an investor meeting.”
+4. “Summarize the uploaded contract.” with a relevant document.
+5. “Find the termination clause.” with a relevant document.
+6. “What does my uploaded file say about indemnification?” with no relevant source.
+7. “What are the risks here?” as an ambiguous query.
+8. Confirm citations still work for document-grounded answers.
+9. Confirm no fake citations appear for general answers.
+10. Confirm upload, brief generation, dashboard, documents search, and routing still work.
+11. Confirm typecheck passes.
+
+Final report:
+Provide:
+
+* Files changed
+* Where routing was added
+* How general/document/hybrid mode is detected
+* How answer-source labels are displayed
+* What citation behavior was preserved
+* Tests run
+* Confirmation that no auth, database, upload, brief generation, environment configuration, landing page CSS, sidebar, or design-token system was changed

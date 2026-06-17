@@ -2,6 +2,30 @@
 
 ---
 
+## [Signal87_Core_Hybrid_Answering_v2] — 2026-06-17  *(Hybrid answering refinements — threshold fix, keyword expansion, label wording)*
+
+### Summary
+Targeted refinements to the existing `general`/`document`/`hybrid` query-intent classifier. No new endpoints, no schema changes, no auth/upload/brief/dashboard changes, no design token changes. Typecheck passes clean.
+
+### Changed — Backend (`artifacts/api-server`)
+
+**`src/routes/chat/index.ts`**
+- Expanded `DOCUMENT_KEYWORDS`: added `"this document"`, `"summarize this"`, `"my uploaded file"`, `"selected document"`, `"active document"`, `"uploaded file"`, `"risk"`, `"risks"`, `"liability"`, `"obligation"`, `"indemnif"`.
+- Revised `classifyQuery` decision tree:
+  - `docScore >= 2` → **document** (unchanged)
+  - `docScore >= 1 && genScore === 0` → **document** (unambiguous doc intent, no general phrasing)
+  - `docScore >= 1 && genScore >= 1` → **hybrid** (mixed signals — was incorrectly **document** before)
+  - `genScore >= 1 && docScore === 0` → **general** (threshold lowered from `genScore >= 2` to `>= 1`)
+  - otherwise → **hybrid**
+- Net effect: "What is a SAFE note?", "What does EBITDA mean?", "Draft a follow-up email." now correctly classify as **general** (were hybrid). "What are the risks here?" correctly stays **hybrid**.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/pages/document-chat.tsx`**
+- `ModeBadge` general label: "not grounded in *this* document" → "not grounded in *uploaded* documents".
+
+---
+
 ## [Signal87_Core_Palette_Unification] — 2026-06-17  *(Warm cream/ink palette — unify app shell with Dashboard)*
 
 ### Summary
