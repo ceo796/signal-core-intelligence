@@ -203,6 +203,32 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.5);
 }
 
+/* ── Signal87 hero animations ─────────────────────────────────────────── */
+@keyframes s87-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes s87-float {
+  0%, 100% { transform: translateY(0px) rotate(-0.3deg); }
+  50%       { transform: translateY(-10px) rotate(0.3deg); }
+}
+
+@keyframes s87-appear {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes s87-highlight {
+  0%   { background-size: 0% 100%; }
+  100% { background-size: 100% 100%; }
+}
+
+@keyframes s87-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
 @layer base {
   * {
     @apply border-border;
