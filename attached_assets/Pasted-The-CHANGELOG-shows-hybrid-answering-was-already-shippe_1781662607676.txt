@@ -1,0 +1,96 @@
+The CHANGELOG shows hybrid answering was already shipped in Signal87_Core_Hybrid_Answering_v1. Let me verify the current state of the implementation before doing any work — I want to know exactly what's there vs. what the spec asks for:
+
+
+2 actions
+The feature already exists. Let me read the actual implementation to compare it precisely against the spec's keyword lists and label text before deciding whether any gaps need closing:
+
+
+3 actions
+The feature is already live — the explorer confirmed the full classifyQuery / ModeBadge stack is implemented. Now let me do a precise gap analysis against the spec before touching anything:
+
+Gaps found:
+
+General threshold too high — genScore >= 2 means "What is a SAFE note?" (genScore=1) falls to hybrid instead of general. Spec test cases 1–3 all have genScore=1.
+Missing document keywords — spec lists "this document", "summarize this", "my uploaded file", "selected document", "active document", "risks" as doc-mode triggers; several are absent.
+Mixed-signal case not separated — currently docScore >= 1 && hasDocument always returns document even if genScore >= 1 (should be hybrid).
+Label wording — general badge says "not grounded in this document"; spec says "not grounded in uploaded documents".
+Two files need surgical edits:
+
+
+2 actions
+Now update the classifyQuery logic and the frontend label in parallel:
+
+
+2 actions
+Now fix the frontend label and run typecheck in parallel:
+
+
+3 actions
+GENERAL_KEYWORDS got dropped when I replaced the DOCUMENT_KEYWORDS block. Let me check what's in the file now and restore it:
+
+
+2 actions
+GENERAL_KEYWORDS was accidentally dropped in the edit. I need to insert it back between the two arrays:
+
+
+4 actions
+Both pass clean. Let me verify the 10 spec test cases against the new logic in my head, restart the API server, and write the CHANGELOG entry — all in parallel:
+
+Logic trace (all 10 spec cases):
+
+Query	docScore	genScore	Mode
+"What is a SAFE note?"	0	1 (what is)	general ✓
+"What does EBITDA mean?"	0	1 (what does)	general ✓
+"Draft a follow-up email."	0	1 (draft a)	general ✓
+"Summarize the uploaded contract."	2 (uploaded+contract)	0	document ✓
+"Find the termination clause."	1 (clause), genScore=0	0	document ✓
+"What does my uploaded file say about indemnification?"	3 (uploaded+file+indemnif)	1	document (≥2) ✓
+"What are the risks here?"	1 (risks)	1 (what are)	hybrid ✓
+
+4 actions
+Done. Here's the final report against every item in the spec:
+
+Files changed
+
+File	What changed
+artifacts/api-server/src/routes/chat/index.ts	Expanded DOCUMENT_KEYWORDS, revised classifyQuery logic
+artifacts/signal87-core/src/pages/document-chat.tsx	ModeBadge general label wording
+Where routing was added — Already in place from v1. classifyQuery() in chat/index.ts runs on every POST /api/documents/:id/chat before any retrieval.
+
+How general/document/hybrid is detected (updated logic):
+
+docScore ≥ 2                              → document
+docScore ≥ 1, genScore = 0                → document  (unambiguous doc intent)
+docScore ≥ 1, genScore ≥ 1                → hybrid    (was wrongly "document" before)
+genScore ≥ 1, docScore = 0                → general   (threshold lowered from ≥2 to ≥1)
+otherwise                                 → hybrid
+
+How answer-source labels are displayed — ModeBadge component in document-chat.tsx, shown above the assistant reply. document mode: no badge. general: "General answer — not grounded in uploaded documents." hybrid: "General answer — no relevant document excerpts found."
+
+Citation behavior preserved — Unchanged. document mode still runs retrieval + citation + Verification Trace. general mode still skips retrieval entirely. hybrid still runs retrieval and includes citations if relevant chunks score ≥ 0.3.
+
+Spec test cases traced:
+
+"What is a SAFE note?" → general ✓ (was hybrid before)
+"What does EBITDA mean?" → general ✓
+"Draft a follow-up email." → general ✓
+"Summarize the uploaded contract." → document ✓
+"Find the termination clause." → document ✓
+"What does my uploaded file say about indemnification?" → document (retrieval runs, no match → LLM says not found) ✓
+"What are the risks here?" → hybrid ✓ ("risks" is a doc keyword, "what are" is a gen keyword → mixed)
+8–10. Citations, upload, brief, dashboard, routing unchanged ✓
+Nothing touched: auth, Clerk, DB schema, upload, brief generation, environment variables, landing page CSS, sidebar, file-type utility, dashboard color system, design tokens.
+
+
+Checkpoint made
+6 minutes ago
+
+Worked for 5 minutes
+
+Scroll to latest
+
+Make, test, iterate…
+
+
+
+Economy
