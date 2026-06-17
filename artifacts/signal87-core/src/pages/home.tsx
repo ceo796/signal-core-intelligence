@@ -1,233 +1,14 @@
-import { useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, Database, Zap, Linkedin, LogIn } from "lucide-react";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Particle canvas — ported from the minimalist orb animation spec.
-   Runs on its own <canvas> that fills the page behind all content.
-───────────────────────────────────────────────────────────────────────────── */
-function ParticleCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
-
-    const palette = [
-      { color: "#0f172a", alpha: 0.12 },
-      { color: "#334155", alpha: 0.10 },
-      { color: "#0ea5e9", alpha: 0.08 },
-      { color: "#64748b", alpha: 0.09 },
-    ];
-
-    const config = {
-      orbCount: 18,
-      baseSpeed: 0.35,
-      attractionStrength: 0.35,
-      showLines: true,
-      maxLineDistance: 180,
-    };
-
-    let width = 0;
-    let height = 0;
-    let dpr = 1;
-    let rafId = 0;
-    const mouse = { x: 0, y: 0, active: false };
-
-    interface Orb {
-      x: number; y: number;
-      vx: number; vy: number;
-      size: number; depth: number;
-      hue: { color: string; alpha: number };
-    }
-
-    let orbs: Orb[] = [];
-
-    function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = canvas.offsetWidth;
-      height = canvas.offsetHeight;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.scale(dpr, dpr);
-    }
-
-    function makeOrb(randomPos = true): Orb {
-      return {
-        x: randomPos ? Math.random() * width : width / 2,
-        y: randomPos ? Math.random() * height : height / 2,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
-        size: Math.random() * 3.5 + 1.8,
-        depth: Math.random() * 0.6 + 0.4,
-        hue: palette[Math.floor(Math.random() * palette.length)],
-      };
-    }
-
-    function initOrbs() {
-      orbs = Array.from({ length: config.orbCount }, () => makeOrb(true));
-    }
-
-    function updateOrb(o: Orb) {
-      o.x += o.vx * config.baseSpeed;
-      o.y += o.vy * config.baseSpeed;
-
-      const cx = width / 2;
-      const cy = height / 2;
-      o.vx += (cx - o.x) * 0.000008;
-      o.vy += (cy - o.y) * 0.000008;
-
-      if (mouse.active) {
-        const dx = mouse.x - o.x;
-        const dy = mouse.y - o.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const force = (config.attractionStrength * o.depth) / (dist * 0.008 + 1);
-        o.vx += dx * force * 0.012;
-        o.vy += dy * force * 0.012;
-      }
-
-      o.vx *= 0.982;
-      o.vy *= 0.982;
-
-      if (o.x < -50) o.x = width + 50;
-      if (o.x > width + 50) o.x = -50;
-      if (o.y < -50) o.y = height + 50;
-      if (o.y > height + 50) o.y = -50;
-    }
-
-    function drawOrb(o: Orb) {
-      ctx.save();
-      ctx.globalAlpha = o.hue.alpha;
-      ctx.fillStyle = o.hue.color;
-      ctx.shadowColor = o.hue.color;
-      ctx.shadowBlur = o.size * 2.5;
-      ctx.beginPath();
-      ctx.arc(o.x, o.y, o.size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.restore();
-    }
-
-    function drawConnections() {
-      if (!config.showLines) return;
-      ctx.strokeStyle = "#0f172a";
-      ctx.lineWidth = 0.6;
-      for (let i = 0; i < orbs.length; i++) {
-        for (let j = i + 1; j < orbs.length; j++) {
-          const dx = orbs[i].x - orbs[j].x;
-          const dy = orbs[i].y - orbs[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < config.maxLineDistance) {
-            ctx.globalAlpha = (1 - dist / config.maxLineDistance) * 0.18;
-            ctx.beginPath();
-            ctx.moveTo(orbs[i].x, orbs[i].y);
-            ctx.lineTo(orbs[j].x, orbs[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
-      for (const o of orbs) { updateOrb(o); drawOrb(o); }
-      drawConnections();
-      rafId = requestAnimationFrame(animate);
-    }
-
-    // Mouse interaction
-    const onMove = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - r.left;
-      mouse.y = e.clientY - r.top;
-      mouse.active = true;
-    };
-    const onLeave = () => { mouse.active = false; };
-    const onTouch = (e: TouchEvent) => {
-      e.preventDefault();
-      const r = canvas.getBoundingClientRect();
-      mouse.x = e.touches[0].clientX - r.left;
-      mouse.y = e.touches[0].clientY - r.top;
-      mouse.active = true;
-    };
-    const onVisibility = () => {
-      if (document.hidden) { cancelAnimationFrame(rafId); }
-      else if (!prefersReduced) { animate(); }
-    };
-
-    canvas.addEventListener("mousemove", onMove);
-    canvas.addEventListener("mouseleave", onLeave);
-    canvas.addEventListener("touchmove", onTouch, { passive: false });
-    canvas.addEventListener("touchend", onLeave);
-    document.addEventListener("visibilitychange", onVisibility);
-
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let prefersReduced = mq.matches;
-    const onMqChange = (e: MediaQueryListEvent) => {
-      prefersReduced = e.matches;
-      if (prefersReduced) cancelAnimationFrame(rafId);
-      else animate();
-    };
-    mq.addEventListener("change", onMqChange);
-
-    let resizeTimer: ReturnType<typeof setTimeout>;
-    const onResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { resize(); initOrbs(); }, 150);
-    };
-    window.addEventListener("resize", onResize);
-
-    resize();
-    initOrbs();
-    if (!prefersReduced) animate();
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      canvas.removeEventListener("mousemove", onMove);
-      canvas.removeEventListener("mouseleave", onLeave);
-      canvas.removeEventListener("touchmove", onTouch);
-      canvas.removeEventListener("touchend", onLeave);
-      document.removeEventListener("visibilitychange", onVisibility);
-      mq.removeEventListener("change", onMqChange);
-      window.removeEventListener("resize", onResize);
-      clearTimeout(resizeTimer);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 0 }}
-    />
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Page
-───────────────────────────────────────────────────────────────────────────── */
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
 
   return (
-    <div
-      className="min-h-screen text-gray-900 flex flex-col font-sans selection:bg-blue-500/30 relative overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, #ffffff, #eff6ff, #e0f2fe, #ffffff)",
-        backgroundSize: "200% 200%",
-        animation: "s87-gradient 8s ease infinite",
-      }}
-    >
-      {/* Full-page particle background */}
-      <ParticleCanvas />
-
-      <header className="relative z-10 p-6 flex justify-between items-center border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans selection:bg-blue-500/30">
+      <header className="p-6 flex justify-between items-center border-b border-gray-200">
         <img src="/signal87-logo-black.svg" alt="Signal87" className="h-10 w-auto" />
         <nav className="flex items-center gap-6 text-sm text-gray-500">
           <Link href="/about" className="hidden sm:block hover:text-gray-900 transition-colors">About</Link>
@@ -246,50 +27,38 @@ export default function Home() {
         </nav>
       </header>
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
-        <div
-          className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-xs font-mono text-gray-500 border border-gray-200"
-          style={{ animation: "s87-fade-up 0.5s ease both" }}
-        >
+      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
+        <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-mono text-gray-500 border border-gray-200">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
           AI-powered · Cites every source
         </div>
 
-        <h1
-          className="text-5xl md:text-7xl font-normal tracking-tight mb-6 text-gray-900"
-          style={{ animation: "s87-fade-up 0.5s 0.12s ease both" }}
-        >
+        <h1 className="text-5xl md:text-7xl font-normal tracking-tight mb-6 text-gray-900">
           Precision Document Intelligence.
         </h1>
 
-        <p
-          className="text-lg text-gray-500 mb-10 max-w-xl text-balance"
-          style={{ animation: "s87-fade-up 0.5s 0.24s ease both" }}
-        >
+        <p className="text-lg text-gray-500 mb-10 max-w-xl text-balance">
           Upload any PDF, DOCX, or text file. Ask questions. Get answers that cite exactly where they came from.
         </p>
 
-        <div style={{ animation: "s87-fade-up 0.5s 0.36s ease both" }}>
-          {isLoaded && isSignedIn ? (
-            <Link href="/documents" className="inline-block">
-              <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
-                Open App
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/sign-in" className="inline-block">
-              <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
-                <LogIn className="w-4 h-4" />
-                Sign In
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-          )}
-        </div>
+        {isLoaded && isSignedIn ? (
+          <Link href="/documents" className="inline-block">
+            <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
+              Open App
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/sign-in" className="inline-block">
+            <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
+              <LogIn className="w-4 h-4" />
+              Sign In
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        )}
 
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 text-left w-full border-t border-gray-200 pt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24 text-left w-full border-t border-gray-200 pt-12">
           <div className="space-y-3">
             <ShieldCheck className="w-5 h-5 text-blue-600" />
             <h3 className="font-bold text-sm text-gray-900">Verified Citations</h3>
@@ -316,7 +85,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="relative z-10 border-t border-gray-200 px-6 py-12 text-xs text-gray-400 bg-white/80 backdrop-blur-sm">
+      <footer className="border-t border-gray-200 px-6 py-12 text-xs text-gray-400">
         <div className="flex flex-col sm:flex-row justify-between gap-6">
           <div className="flex flex-col gap-3">
             <span>© 2026 Signal87 AI. All rights reserved.</span>
