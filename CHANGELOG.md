@@ -2,6 +2,33 @@
 
 ---
 
+## [Signal87_Core_GridWave_FullPage_v1] — 2026-06-17  *(Full-page GridWave + typed feature descriptions)*
+
+### Summary
+Extended the GridWave animation to cover the entire page (header, hero, feature section, footer). Added a typewriter animation to all six feature card descriptions that triggers when the section scrolls into view, with staggered delays per card. Frontend-only; no backend/API/DB/auth changes.
+
+### Changed — `src/components/grid-wave.tsx`
+- Canvas height: `window.innerHeight * 0.6` → `document.documentElement.scrollHeight` (full document height).
+- Rows: 25 → 35 to maintain visual grid density over the taller canvas.
+- Added `requestAnimationFrame(resizeCanvas)` after initial mount to re-measure after React content fully renders.
+- Removed `maskImage` fade-out gradient — grid now shows at consistent opacity across the whole page.
+
+### Changed — `src/pages/home.tsx`
+- Restructured layout: `relative` added to outermost div; `<GridWave />` moved to first child of outermost div (previously inside a `flex-1` wrapper around `<main>` only).
+- Removed the intermediate `<div className="flex-1 relative overflow-hidden">` wrapper; `<main>` restored to `flex-1`.
+- `<header>` and `<footer>` now have `relative z-10` so they paint above the z-0 canvas.
+- Added `TypedText` inline component: uses `IntersectionObserver` to trigger on scroll-into-view, then types one character every 10 ms with a blinking cursor while in-progress.
+- All six feature card `<p>` descriptions replaced with `<TypedText>` with staggered `startDelay` (0 / 150 / 300 / 450 / 600 / 750 ms).
+- Added `useState`, `useEffect`, `useRef` imports.
+
+### Unchanged
+- All copy, icons, CTAs, partner logos, footer links, nav, auth routing, backend.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+
+---
+
 ## [Signal87_Core_Landing_Copy_v2] — 2026-06-17  *(Landing page copy v2 — business-decision positioning)*
 
 ### Summary

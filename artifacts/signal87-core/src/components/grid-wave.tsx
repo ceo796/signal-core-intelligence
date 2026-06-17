@@ -15,15 +15,17 @@ export const GridWave: React.FC = () => {
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight * 0.6;
+      canvas.height = document.documentElement.scrollHeight || window.innerHeight;
     };
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
+    // re-measure after content has fully rendered
+    requestAnimationFrame(resizeCanvas);
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const rows = 25;
+      const rows = 35;
       const cols = 40;
       const cellWidth = canvas.width / cols;
       const cellHeight = canvas.height / rows;
@@ -82,7 +84,6 @@ export const GridWave: React.FC = () => {
     <canvas
       ref={canvasRef}
       className="absolute top-0 left-0 w-full pointer-events-none z-0"
-      style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0))' }}
     />
   );
 };
