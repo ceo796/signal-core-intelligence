@@ -291,21 +291,21 @@
 }
 
 .s87.s87-dark {
-  --s87-bg: #0C0C0B;
-  --s87-panel: #161513;
-  --s87-panel-2: #1B1A17;
-  --s87-border: #2A2824;
-  --s87-divider: #232220;
+  --s87-bg: #000000;
+  --s87-panel: #0B0B0A;
+  --s87-panel-2: #121211;
+  --s87-border: #262420;
+  --s87-divider: #1C1B18;
   --s87-ink: #F3EFE4;
   --s87-body: #CEC9BB;
   --s87-muted: #8E8A7E;
-  --s87-faint: #5C5950;
-  --s87-active-bg: #201F1B;
-  --s87-hover-bg: #1C1B18;
+  --s87-faint: #56544C;
+  --s87-active-bg: #161513;
+  --s87-hover-bg: #131210;
   --s87-rail: #D9B47E;
   --s87-btn: #E6DCC3;
   --s87-btn-fg: #18170F;
-  --s87-chip: #201F1B;
+  --s87-chip: #18170F;
   --s87-accent: #D9B47E;
   --s87-ok: #5BBE86;
 }

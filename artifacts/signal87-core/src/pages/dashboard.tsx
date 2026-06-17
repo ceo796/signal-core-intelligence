@@ -757,9 +757,9 @@ export default function Dashboard() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     try {
-      return localStorage.getItem(THEME_KEY) === "dark";
+      return localStorage.getItem(THEME_KEY) !== "light";
     } catch {
-      return false;
+      return true;
     }
   });
 
@@ -796,7 +796,7 @@ export default function Dashboard() {
 
             {/* Welcome */}
             <div>
-              <h1 className="text-[1.75rem] font-semibold tracking-tight text-[var(--s87-ink)] leading-tight">
+              <h1 className="font-mono text-[1.7rem] font-medium tracking-tight text-[var(--s87-ink)] leading-tight">
                 {firstName ? `Welcome back, ${firstName} 👋` : "Welcome back 👋"}
               </h1>
               <p className="text-sm text-[var(--s87-muted)] mt-1">
