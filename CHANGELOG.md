@@ -2,6 +2,34 @@
 
 ---
 
+## [Signal87_Core_Landing_Copy_v2] — 2026-06-17  *(Landing page copy v2 — business-decision positioning)*
+
+### Summary
+Replaced PDF/document-focused hero copy with stronger business-document intelligence positioning. Added secondary "See how it works" CTA. Expanded feature cards from 3 to 6. Frontend-only; no backend, API, DB, auth, or AI changes.
+
+### Changed — `src/pages/home.tsx`
+- **Hero badge**: "AI-powered · Cites every source" → "AI-powered · Source-cited · Business-ready"
+- **Hero headline**: "Precision Document Intelligence." → "Turn documents into decisions."
+- **Hero subheadline**: replaced PDF-upload copy with "Signal87 converts business documents into cited answers, executive briefs, and multi-document intelligence — giving teams a faster path from source material to action."
+- **CTA layout**: primary CTA and new secondary "See how it works ↓" link (`href="#features"`) rendered side-by-side in a `flex-row` on sm+ screens.
+- **Feature grid** (`id="features"`): expanded from 3 to 6 cards in a `sm:grid-cols-2 lg:grid-cols-3` responsive grid:
+  1. Verified Intelligence (ShieldCheck)
+  2. Executive Briefs (FileText)
+  3. Cross-Document Analysis (GitCompare)
+  4. Audit-Ready Reasoning (Search)
+  5. Secure Document Workspace (Lock)
+  6. Built for Business Judgment (Users)
+- **Icon imports**: removed `Database`, `Zap`; added `FileText`, `GitCompare`, `Search`, `Lock`, `Users`.
+- GridWave animation, partner logos, footer, header, and all auth routing unchanged.
+
+### Unchanged
+- All backend routes, API contract, DB schema, auth, upload, AI routing, protected-app pages.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+
+---
+
 ## [Signal87_Core_GridWave_v1] — 2026-06-17  *(GridWave animated canvas background on home page)*
 
 ### Summary
