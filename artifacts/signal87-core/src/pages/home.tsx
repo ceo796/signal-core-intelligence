@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Database, Zap, Linkedin, LogIn, FileText, Sparkles } from "lucide-react";
+import { ArrowRight, ShieldCheck, Database, Zap, Linkedin, LogIn } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Particle canvas — ported from the minimalist orb animation spec.
@@ -210,100 +210,6 @@ function ParticleCanvas() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Animated product preview card
-───────────────────────────────────────────────────────────────────────────── */
-function HeroPreview() {
-  return (
-    <div
-      className="w-full max-w-lg mx-auto mt-14 mb-2"
-      style={{ animation: "s87-fade-up 0.6s 0.55s ease both", position: "relative", zIndex: 1 }}
-    >
-      <div
-        className="relative bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden text-left"
-        style={{ animation: "s87-float 5s ease-in-out infinite" }}
-      >
-        <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100 bg-gray-50">
-          <FileText className="w-4 h-4 text-red-500 shrink-0" />
-          <span className="text-xs font-mono text-gray-500 truncate">Q3_Risk_Assessment_Report.pdf</span>
-          <span className="ml-auto shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-[10px] font-medium text-green-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-            Ready
-          </span>
-        </div>
-
-        <div className="px-5 py-4 space-y-4">
-          <div
-            className="flex items-start gap-2.5"
-            style={{ animation: "s87-appear 0.4s 0.9s ease both", opacity: 0 }}
-          >
-            <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold text-gray-500">U</div>
-            <p className="text-sm text-gray-700">What are the key financial risks identified?</p>
-          </div>
-
-          <div
-            className="flex items-start gap-2.5"
-            style={{ animation: "s87-appear 0.4s 1.3s ease both", opacity: 0 }}
-          >
-            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                The report identifies{" "}
-                <span
-                  className="text-blue-600 font-medium"
-                  style={{
-                    background: "linear-gradient(transparent 60%, #dbeafe 60%)",
-                    backgroundSize: "0% 100%",
-                    backgroundRepeat: "no-repeat",
-                    animation: "s87-highlight 0.5s 1.9s ease both",
-                  }}
-                >
-                  market volatility and credit exposure
-                </span>{" "}
-                as primary risks.{" "}
-                <sup className="text-blue-600 font-mono text-[10px]">[1]</sup> Liquidity constraints in Q4 are flagged as material.{" "}
-                <sup className="text-blue-600 font-mono text-[10px]">[2]</sup>
-              </p>
-
-              <div className="mt-3 space-y-1.5">
-                <div
-                  className="flex items-start gap-2 text-xs p-2 rounded-lg bg-blue-50 border border-blue-100"
-                  style={{ animation: "s87-appear 0.35s 2.1s ease both", opacity: 0 }}
-                >
-                  <span className="font-mono text-blue-600 shrink-0 font-bold">[1]</span>
-                  <span className="text-gray-600 italic">"Market conditions remain volatile, with credit exposure up 14% YoY…"</span>
-                </div>
-                <div
-                  className="flex items-start gap-2 text-xs p-2 rounded-lg bg-blue-50 border border-blue-100"
-                  style={{ animation: "s87-appear 0.35s 2.45s ease both", opacity: 0 }}
-                >
-                  <span className="font-mono text-blue-600 shrink-0 font-bold">[2]</span>
-                  <span className="text-gray-600 italic">"Liquidity reserves are projected to tighten through Q4…"</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="px-5 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center gap-3 text-[10px] font-mono text-gray-400"
-          style={{ animation: "s87-appear 0.35s 2.7s ease both", opacity: 0 }}
-        >
-          <span>gpt-4o-mini</span>
-          <span>·</span>
-          <span>4 chunks read</span>
-          <span>·</span>
-          <span>1.2 s</span>
-          <span className="ml-auto text-green-600 font-medium">✓ Verified</span>
-        </div>
-      </div>
-      <div className="mx-6 h-4 bg-gray-200/50 rounded-b-2xl blur-sm" />
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
    Page
 ───────────────────────────────────────────────────────────────────────────── */
 export default function Home() {
@@ -375,7 +281,6 @@ export default function Home() {
           )}
         </div>
 
-        <HeroPreview />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 text-left w-full border-t border-gray-200 pt-12">
           <div className="space-y-3">
