@@ -2,6 +2,27 @@
 
 ---
 
+## [Signal87_Core_Landing_DocumentCategories_v1] — 2026-06-17  *(Add "Document Categories" section to landing page)*
+
+### Summary
+Added a new "Document Categories" section to the landing page based on a user-supplied design mockup, adapted to a white background to match the site style. Frontend-only; no backend/API/DB/auth changes.
+
+### Changed — `artifacts/signal87-core/src/pages/home.tsx`
+- New `CATEGORIES` data array (5 entries): CUI / LEG / FIN / STR / MED, each with a `code`, two-line `title` (via `\n` + `whitespace-pre-line`), and `description`; the STR entry has `highlight: true`.
+- New section inserted between the Features grid and the CTA, following the existing section shell (`border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto`):
+  - Mono eyebrow `03 — Document Categories` (`font-mono uppercase tracking-widest text-gray-400`).
+  - Left-aligned serif `<h2>` (Instrument Serif via global `h1,h2` rule) with "matter most." in `italic`.
+  - 5-column responsive grid (`grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`) with a top rule; each cell shows code label, two-line title, description, and a bottom arrow that turns blue and nudges right on hover. The highlighted STR cell uses `bg-gray-50 ring-1 ring-gray-200` (neutral, on-white) instead of the mockup's beige fill.
+
+### Unchanged
+- Backend routes, database schema, auth behavior, API routes, protected app flows, all other landing sections (hero/demos/features/CTA/partners/footer).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Visual check via preview: section renders on white, matches the supplied design and the site's typography/spacing.
+
+---
+
 ## [Signal87_Core_Landing_AnimatedGrid_BiggerFeatures_v1] — 2026-06-17  *(Animate background grid lines + enlarge landing feature blocks)*
 
 ### Summary

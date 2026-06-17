@@ -39,6 +39,35 @@ const FEATURES = [
   },
 ];
 
+const CATEGORIES = [
+  {
+    code: "CUI",
+    title: "Controlled\nUnclassified",
+    description: "CMMC-aligned handling. Marking-aware retrieval.",
+  },
+  {
+    code: "LEG",
+    title: "Contracts\n& legal",
+    description: "Clause-level extraction. Cross-document precedent.",
+  },
+  {
+    code: "FIN",
+    title: "Invoices\n& finance",
+    description: "Line-item parsing, vendor reconciliation.",
+  },
+  {
+    code: "STR",
+    title: "Board memos\n& strategy",
+    description: "Topic tracking across quarters and decks.",
+    highlight: true,
+  },
+  {
+    code: "MED",
+    title: "Health\nrecords",
+    description: "PHI-aware indexing. De-identification on egress.",
+  },
+];
+
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
 
@@ -200,6 +229,40 @@ export default function Home() {
                 </div>
                 <h3 className="font-semibold text-lg text-gray-900">{title}</h3>
                 <p className="text-base text-gray-500 leading-relaxed">{description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Document Categories */}
+        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
+          <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-6">
+            03 — Document Categories
+          </p>
+          <h2 className="text-4xl md:text-5xl font-normal tracking-tight text-gray-900 leading-[1.05] mb-14">
+            Built for the categories that{" "}
+            <br className="hidden md:block" />
+            <span className="italic">matter most.</span>
+          </h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 border-t border-gray-200 pt-8">
+            {CATEGORIES.map(({ code, title, description, highlight }) => (
+              <div
+                key={code}
+                className={`group flex h-full flex-col rounded-xl p-5 transition-colors ${
+                  highlight ? "bg-gray-50 ring-1 ring-gray-200" : "hover:bg-gray-50"
+                }`}
+              >
+                <p className="text-[11px] font-mono uppercase tracking-widest text-gray-400 mb-4">
+                  {code}
+                </p>
+                <h3 className="text-base font-semibold text-gray-900 leading-snug whitespace-pre-line mb-3">
+                  {title}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                  {description}
+                </p>
+                <ArrowRight className="w-4 h-4 text-gray-400 mt-auto transition-all group-hover:text-blue-600 group-hover:translate-x-1" />
               </div>
             ))}
           </div>
