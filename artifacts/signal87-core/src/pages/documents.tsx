@@ -33,6 +33,7 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
+  ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -318,6 +319,45 @@ export default function DocumentsList() {
                   ))}
                 </SelectContent>
               </Select>
+            )}
+            {view === "grid" && (
+              <div className="flex items-center gap-1.5 ml-auto">
+                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <Select
+                  value={sortColumn}
+                  onValueChange={(v) => {
+                    const col = v as SortColumn;
+                    setSortState((prev) => ({ ...prev, column: col }));
+                    try { localStorage.setItem("docs-sort-col", col); } catch {}
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-36 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                    <SelectItem value="chunks">Chunks</SelectItem>
+                    <SelectItem value="uploaded">Uploaded</SelectItem>
+                  </SelectContent>
+                </Select>
+                <button
+                  onClick={() => {
+                    const nextDir: SortDirection = sortDirection === "asc" ? "desc" : "asc";
+                    setSortState((prev) => ({ ...prev, direction: nextDir }));
+                    try { localStorage.setItem("docs-sort-dir", nextDir); } catch {}
+                  }}
+                  className="h-8 w-8 flex items-center justify-center rounded-md border border-input bg-background hover:bg-muted transition-colors shrink-0"
+                  title={sortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
+                  aria-label={sortDirection === "asc" ? "Sort ascending" : "Sort descending"}
+                >
+                  {sortDirection === "asc" ? (
+                    <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
             )}
           </div>
         )}
