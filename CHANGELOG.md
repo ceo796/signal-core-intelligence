@@ -2,6 +2,31 @@
 
 ---
 
+## [Signal87_Core_Landing_AnimatedGrid_BiggerFeatures_v1] — 2026-06-17  *(Animate background grid lines + enlarge landing feature blocks)*
+
+### Summary
+Two landing-page polish changes. (1) The previously-static background grid lines now drift slowly and seamlessly. (2) The six platform-feature blocks are enlarged into proper cards so they better fit the page's scale and style. Frontend-only; no backend/API/DB/auth changes.
+
+### Changed — `artifacts/signal87-core/src/index.css`
+- `.landing-bg::before` (gridlines): added `animation: landing-grid 28s linear infinite` and `will-change: background-position`.
+- New `@keyframes landing-grid`: animates `background-position` from `0 0` to `56px 56px` (exactly one grid cell), giving a seamless infinite diagonal drift. The static radial mask is unchanged, so the grid still fades out and never overpowers copy.
+- Extended the `prefers-reduced-motion: reduce` block to also disable `.landing-bg::before` animation (previously only `::after` was disabled).
+
+### Changed — `artifacts/signal87-core/src/pages/home.tsx`
+- Feature blocks turned into cards: wrapper now `group rounded-2xl border border-gray-200 bg-white/70 p-8 space-y-4` with a subtle `hover:border-blue-200 hover:bg-white` transition.
+- Icon container `w-8 h-8 rounded-lg` → `w-12 h-12 rounded-xl`; icon `w-4 h-4` → `w-6 h-6`.
+- Title `text-sm` → `text-lg`; description `text-sm` → `text-base`.
+- Grid gap `gap-8` → `gap-6` to balance the larger cards.
+
+### Unchanged
+- Backend routes, database schema, auth behavior, API routes, protected app flows, hero/CTA/partners/footer sections.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Visual check via preview: grid drifts subtly; feature cards render larger and on-style.
+
+---
+
 ## [Signal87_Core_SearchPersist_v1] — 2026-06-17  *(Persist search text across page visits)*
 
 ### Summary

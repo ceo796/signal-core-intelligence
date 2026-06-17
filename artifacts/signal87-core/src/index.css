@@ -399,7 +399,8 @@
   pointer-events: none;
 }
 
-/* Very subtle gridlines, masked so they fade out and never overpower copy */
+/* Very subtle gridlines, masked so they fade out and never overpower copy.
+   Drifts diagonally by exactly one cell for a seamless, slow, infinite loop. */
 .landing-bg::before {
   content: "";
   position: absolute;
@@ -410,6 +411,13 @@
   background-size: 56px 56px;
   -webkit-mask-image: radial-gradient(ellipse 95% 55% at 50% 0%, #000 30%, transparent 80%);
   mask-image: radial-gradient(ellipse 95% 55% at 50% 0%, #000 30%, transparent 80%);
+  animation: landing-grid 28s linear infinite;
+  will-change: background-position;
+}
+
+@keyframes landing-grid {
+  from { background-position: 0 0; }
+  to   { background-position: 56px 56px; }
 }
 
 /* Soft violet/gray gradient glow that drifts and pulses slowly */
@@ -435,7 +443,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-bg::after {
+  .landing-bg::after,
+  .landing-bg::before {
     animation: none;
   }
 }

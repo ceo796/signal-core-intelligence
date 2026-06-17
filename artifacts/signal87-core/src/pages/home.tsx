@@ -115,14 +115,17 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map(({ icon: Icon, title, description }) => (
-              <div key={title} className="space-y-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  <Icon className="w-4 h-4 text-blue-600" />
+              <div
+                key={title}
+                className="group rounded-2xl border border-gray-200 bg-white/70 p-8 space-y-4 transition-colors hover:border-blue-200 hover:bg-white"
+              >
+                <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="font-semibold text-sm text-gray-900">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+                <h3 className="font-semibold text-lg text-gray-900">{title}</h3>
+                <p className="text-base text-gray-500 leading-relaxed">{description}</p>
               </div>
             ))}
           </div>
