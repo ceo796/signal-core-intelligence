@@ -86,8 +86,7 @@ export default function Dashboard() {
     <div className="s87-shell">
       <header className="s87-mobile-header">
         <div className="s87-brand">
-          <div className="s87-logo">87</div>
-          <div className="s87-brand-name">Signal87</div>
+          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
         </div>
         <div className="s87-mobile-actions">
           <button type="button" onClick={() => navigate("/documents")}>
@@ -104,8 +103,7 @@ export default function Dashboard() {
 
       <aside className="s87-sidebar">
         <div className="s87-brand">
-          <div className="s87-logo">87</div>
-          <div className="s87-brand-name">Signal87</div>
+          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
           <ChevronLeft size={20} className="s87-collapse" />
         </div>
 

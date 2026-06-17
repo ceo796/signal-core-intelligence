@@ -56,7 +56,7 @@ function HeroCanvas() {
       const yBase = H * 0.5;
 
       c.beginPath();
-      c.strokeStyle = "rgba(107, 79, 232, 0.22)";
+      c.strokeStyle = "rgba(10, 20, 40, 0.22)";
       c.lineWidth = 1.2;
       for (let x = 0; x <= W; x += 2) {
         const y =
@@ -72,11 +72,11 @@ function HeroCanvas() {
       if (scanX > W + 200) scanX = -200;
 
       const grad = c.createLinearGradient(scanX - 90, 0, scanX + 90, 0);
-      grad.addColorStop(0, "rgba(107,79,232,0)");
-      grad.addColorStop(0.42, "rgba(107,79,232,0.06)");
-      grad.addColorStop(0.5, "rgba(107,79,232,0.20)");
-      grad.addColorStop(0.58, "rgba(107,79,232,0.06)");
-      grad.addColorStop(1, "rgba(107,79,232,0)");
+      grad.addColorStop(0, "rgba(10,20,40,0)");
+      grad.addColorStop(0.42, "rgba(10,20,40,0.06)");
+      grad.addColorStop(0.5, "rgba(10,20,40,0.20)");
+      grad.addColorStop(0.58, "rgba(10,20,40,0.06)");
+      grad.addColorStop(1, "rgba(10,20,40,0)");
       c.fillStyle = grad;
       c.fillRect(scanX - 90, 0, 180, H);
 
@@ -86,7 +86,7 @@ function HeroCanvas() {
         Math.sin(scanX * trace.freq * 2.4 + t * trace.speed * 1.3) * (trace.amp * 0.18);
       c.beginPath();
       c.arc(scanX, dotY, 2.5, 0, Math.PI * 2);
-      c.fillStyle = "rgba(107, 79, 232, 0.70)";
+      c.fillStyle = "rgba(10, 20, 40, 0.70)";
       c.fill();
 
       rafId = requestAnimationFrame(draw);
@@ -139,7 +139,7 @@ function MiniCanvas() {
       c.clearRect(0, 0, W, H);
       t2 += 0.012;
 
-      c.strokeStyle = "rgba(107,79,232,0.08)";
+      c.strokeStyle = "rgba(10,20,40,0.08)";
       c.lineWidth = 1;
       for (let y = 0; y < H; y += H / 7) {
         c.beginPath();
@@ -152,7 +152,7 @@ function MiniCanvas() {
         const yBase = H * seg.y;
         c.beginPath();
         const alpha = 0.10 + i * 0.04;
-        c.strokeStyle = `rgba(107, 79, 232, ${alpha})`;
+        c.strokeStyle = `rgba(10, 20, 40, ${alpha})`;
         c.lineWidth = 1;
         for (let x = 0; x <= W; x += 2) {
           const y =
@@ -167,8 +167,8 @@ function MiniCanvas() {
 
       const readX = (t2 * 38) % W;
       const lineGrad = c.createLinearGradient(readX - 40, 0, readX + 2, 0);
-      lineGrad.addColorStop(0, "rgba(107,79,232,0)");
-      lineGrad.addColorStop(1, "rgba(107,79,232,0.28)");
+      lineGrad.addColorStop(0, "rgba(10,20,40,0)");
+      lineGrad.addColorStop(1, "rgba(10,20,40,0.28)");
       c.strokeStyle = lineGrad;
       c.lineWidth = 1;
       c.beginPath();
@@ -214,13 +214,13 @@ export default function LandingPage() {
             <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M4 14 L10 8 L14 12 L18 6 L24 14"
-                stroke="#6B4FE8"
+                stroke="#0A1428"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              <circle cx="4" cy="14" r="1.5" fill="#6B4FE8" opacity="0.5" />
-              <circle cx="24" cy="14" r="1.5" fill="#6B4FE8" opacity="0.5" />
+              <circle cx="4" cy="14" r="1.5" fill="#0A1428" opacity="0.5" />
+              <circle cx="24" cy="14" r="1.5" fill="#0A1428" opacity="0.5" />
             </svg>
           </span>
           Signal87
@@ -310,10 +310,10 @@ export default function LandingPage() {
         <div className="sl-features-grid sl-reveal">
           <div className="sl-feature-cell">
             <svg className="sl-feature-icon" viewBox="0 0 36 36" fill="none">
-              <rect x="6" y="4" width="18" height="24" rx="2" stroke="#6B4FE8" strokeWidth="1.3" />
-              <path d="M10 12h10M10 16h8M10 20h6" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M22 20l8 8" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" />
-              <circle cx="26" cy="24" r="4" stroke="#6B4FE8" strokeWidth="1.3" />
+              <rect x="6" y="4" width="18" height="24" rx="2" stroke="#0A1428" strokeWidth="1.3" />
+              <path d="M10 12h10M10 16h8M10 20h6" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M22 20l8 8" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" />
+              <circle cx="26" cy="24" r="4" stroke="#0A1428" strokeWidth="1.3" />
             </svg>
             <h3 className="sl-feature-title">Document Intelligence</h3>
             <p className="sl-feature-desc">
@@ -323,9 +323,9 @@ export default function LandingPage() {
           </div>
           <div className="sl-feature-cell">
             <svg className="sl-feature-icon" viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="18" r="10" stroke="#6B4FE8" strokeWidth="1.3" />
-              <path d="M8 18h4M24 18h4M18 8v4M18 24v4" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" />
-              <circle cx="18" cy="18" r="3" fill="#6B4FE8" opacity="0.4" />
+              <circle cx="18" cy="18" r="10" stroke="#0A1428" strokeWidth="1.3" />
+              <path d="M8 18h4M24 18h4M18 8v4M18 24v4" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" />
+              <circle cx="18" cy="18" r="3" fill="#0A1428" opacity="0.4" />
             </svg>
             <h3 className="sl-feature-title">AI Brief Generation</h3>
             <p className="sl-feature-desc">
@@ -335,8 +335,8 @@ export default function LandingPage() {
           </div>
           <div className="sl-feature-cell">
             <svg className="sl-feature-icon" viewBox="0 0 36 36" fill="none">
-              <path d="M6 12h24M6 18h16M6 24h20" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M26 22l4 4-4 4" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 12h24M6 18h16M6 24h20" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M26 22l4 4-4 4" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <h3 className="sl-feature-title">Signal Timeline</h3>
             <p className="sl-feature-desc">
@@ -346,9 +346,9 @@ export default function LandingPage() {
           </div>
           <div className="sl-feature-cell">
             <svg className="sl-feature-icon" viewBox="0 0 36 36" fill="none">
-              <rect x="4" y="8" width="12" height="16" rx="2" stroke="#6B4FE8" strokeWidth="1.3" />
-              <rect x="20" y="8" width="12" height="16" rx="2" stroke="#6B4FE8" strokeWidth="1.3" />
-              <path d="M16 16h4" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" />
+              <rect x="4" y="8" width="12" height="16" rx="2" stroke="#0A1428" strokeWidth="1.3" />
+              <rect x="20" y="8" width="12" height="16" rx="2" stroke="#0A1428" strokeWidth="1.3" />
+              <path d="M16 16h4" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
             <h3 className="sl-feature-title">Due Diligence Rooms</h3>
             <p className="sl-feature-desc">
@@ -358,8 +358,8 @@ export default function LandingPage() {
           </div>
           <div className="sl-feature-cell">
             <svg className="sl-feature-icon" viewBox="0 0 36 36" fill="none">
-              <path d="M8 28V16l10-8 10 8v12" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              <rect x="14" y="20" width="8" height="8" rx="1" stroke="#6B4FE8" strokeWidth="1.3" />
+              <path d="M8 28V16l10-8 10 8v12" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <rect x="14" y="20" width="8" height="8" rx="1" stroke="#0A1428" strokeWidth="1.3" />
             </svg>
             <h3 className="sl-feature-title">Workflow Automation</h3>
             <p className="sl-feature-desc">
@@ -369,9 +369,9 @@ export default function LandingPage() {
           </div>
           <div className="sl-feature-cell">
             <svg className="sl-feature-icon" viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="12" r="5" stroke="#6B4FE8" strokeWidth="1.3" />
-              <path d="M8 28c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#6B4FE8" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M25 18l3-3M28 18h-3v-3" stroke="#6B4FE8" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="18" cy="12" r="5" stroke="#0A1428" strokeWidth="1.3" />
+              <path d="M8 28c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#0A1428" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M25 18l3-3M28 18h-3v-3" stroke="#0A1428" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <h3 className="sl-feature-title">Specialized Agents</h3>
             <p className="sl-feature-desc">

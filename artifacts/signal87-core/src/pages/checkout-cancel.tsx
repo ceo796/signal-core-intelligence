@@ -21,7 +21,7 @@ export default function CheckoutCancelPage() {
           <Button variant="outline" onClick={() => navigate("/dashboard")}>
             Back to dashboard
           </Button>
-          <Button onClick={() => navigate("/upgrade")} className="bg-violet-600 hover:bg-violet-700 text-white">
+          <Button onClick={() => navigate("/upgrade")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             View plans
           </Button>
         </div>

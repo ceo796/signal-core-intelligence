@@ -24,7 +24,7 @@ export default function CheckoutSuccessPage() {
         <p className="text-muted-foreground mb-8">
           Your subscription is active. You now have unlimited document uploads and full access to all Signal87 features.
         </p>
-        <Button onClick={() => navigate("/dashboard")} className="bg-violet-600 hover:bg-violet-700 text-white">
+        <Button onClick={() => navigate("/dashboard")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           Go to dashboard
         </Button>
       </div>

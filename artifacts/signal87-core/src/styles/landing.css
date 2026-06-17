@@ -4,9 +4,9 @@
 .signal87-landing {
   --sl-bg:          #FFFFFF;
   --sl-bg2:         #F5F6FA;
-  --sl-violet:      #6B4FE8;
-  --sl-violet-dim:  rgba(107, 79, 232, 0.08);
-  --sl-violet-line: rgba(107, 79, 232, 0.45);
+  --sl-violet:      #0A1428;
+  --sl-violet-dim:  rgba(10, 20, 40, 0.06);
+  --sl-violet-line: rgba(10, 20, 40, 0.28);
   --sl-white:       #1A1A2E;
   --sl-muted:       #4A4A6A;
   --sl-border:      rgba(26, 26, 46, 0.15);
@@ -131,7 +131,7 @@
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(107,79,232,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(10,20,40,0.08) 0%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -163,7 +163,7 @@
 .sl-hero-headline em {
   font-style: normal;
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(107,79,232,0.9);
+  -webkit-text-stroke: 1.5px rgba(10,20,40,0.9);
 }
 .sl-hero-sub {
   position: relative;
@@ -440,7 +440,7 @@
   width: 500px;
   height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(107,79,232,0.10) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(10,20,40,0.10) 0%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

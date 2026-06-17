@@ -11,7 +11,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <header className="px-6 py-4 flex justify-between items-center border-b border-border/50">
         <Link href="/">
-          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-8 w-auto cursor-pointer" />
+          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="h-8 w-auto cursor-pointer" />
         </Link>
         <nav className="flex items-center gap-6 text-sm text-muted-foreground">
           <Link href="/" className="hidden sm:block hover:text-foreground transition-colors">Home</Link>

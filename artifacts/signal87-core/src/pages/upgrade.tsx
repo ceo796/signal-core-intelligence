@@ -110,7 +110,7 @@ export default function UpgradePage() {
         </button>
 
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-violet-50 text-violet-700 text-xs font-medium px-3 py-1 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground text-xs font-medium px-3 py-1 rounded-full mb-4">
             <Zap className="w-3 h-3" />
             Upgrade to Pro
           </div>
@@ -131,8 +131,8 @@ export default function UpgradePage() {
             <ul className="space-y-3">
               {PRO_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-3 text-sm text-foreground">
-                  <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-violet-600" />
+                  <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-foreground" />
                   </div>
                   {f}
                 </li>
@@ -163,7 +163,7 @@ export default function UpgradePage() {
               displayPrices.map((price) => (
                 <div
                   key={price.id}
-                  className="bg-card border border-violet-200 rounded-2xl p-6 shadow-sm"
+                  className="bg-card border border-border rounded-2xl p-6 shadow-sm"
                 >
                   <div className="flex items-baseline gap-1 mb-1">
                     <span className="text-3xl font-bold text-foreground">
@@ -181,7 +181,7 @@ export default function UpgradePage() {
                   <Button
                     onClick={() => handleUpgrade(price.id)}
                     disabled={loadingPriceId === price.id}
-                    className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     {loadingPriceId === price.id ? (
                       <>

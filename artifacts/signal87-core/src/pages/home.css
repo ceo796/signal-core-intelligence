@@ -27,23 +27,11 @@
   gap: 12px;
 }
 
-.s87-logo {
-  width: 32px;
-  height: 32px;
-  border: 2px solid #7c5cff;
-  border-radius: 999px;
-  color: #7c5cff;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 13px;
+.s87-logo-img {
+  height: 30px;
+  width: auto;
+  display: block;
   flex-shrink: 0;
-}
-
-.s87-brand-name {
-  font-size: 21px;
-  font-weight: 750;
-  letter-spacing: -0.04em;
 }
 
 .s87-collapse {
@@ -76,8 +64,8 @@
 
 .s87-nav-item:hover,
 .s87-nav-item.active {
-  background: #f3efff;
-  color: #7c5cff;
+  background: #f3f4f6;
+  color: #0a1428;
 }
 
 .s87-account {
@@ -99,7 +87,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #7c5cff;
+  background: #0a1428;
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -193,9 +181,9 @@
   border-radius: 10px;
   display: grid;
   place-items: center;
-  color: #7c5cff;
-  background: #f3efff;
-  border: 1px solid #e7ddff;
+  color: #0a1428;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
   flex-shrink: 0;
 }
 
@@ -214,7 +202,7 @@
 }
 
 .s87-ask input:focus-visible {
-  outline: 2px solid #cfc7ff;
+  outline: 2px solid #cbd5e1;
   outline-offset: -2px;
   border-radius: 8px;
 }
@@ -224,8 +212,8 @@
   height: 38px;
   border: 0;
   border-radius: 999px;
-  background: #f3efff;
-  color: #7c5cff;
+  background: #f3f4f6;
+  color: #0a1428;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -255,8 +243,8 @@
 }
 
 .s87-actions button:hover {
-  border-color: #cfc7ff;
-  background: #fbfaff;
+  border-color: #cbd5e1;
+  background: #fafafa;
 }
 
 .s87-grid {
@@ -331,7 +319,7 @@
 }
 
 .s87-table-row:hover {
-  background: #fbfaff;
+  background: #fafafa;
 }
 
 .s87-col-updated {
@@ -362,7 +350,7 @@
 }
 
 .s87-file-icon.doc {
-  background: #7c5cff;
+  background: #64748b;
 }
 
 .s87-file-icon.word {
@@ -387,7 +375,7 @@
 .s87-table-state button {
   border: 0;
   background: transparent;
-  color: #7c5cff;
+  color: #0a1428;
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
@@ -438,25 +426,25 @@
 }
 
 .s87-status.in-progress {
-  background: #f3efff;
-  color: #7c5cff;
+  background: #e8eaee;
+  color: #0a1428;
 }
 
 .s87-status.review {
-  background: #e8f1ff;
-  color: #3b82f6;
+  background: #eef0f3;
+  color: #475569;
 }
 
 .s87-status.completed {
-  background: #e8f7ec;
-  color: #52a35e;
+  background: #e6e8ec;
+  color: #1f2937;
 }
 
 .s87-link {
   margin-top: 22px;
   border: 0;
   background: transparent;
-  color: #7c5cff;
+  color: #0a1428;
   font-size: 14px;
   font-weight: 600;
   display: inline-flex;
@@ -495,12 +483,12 @@
 }
 
 .s87-suggested-grid button:hover {
-  border-color: #cfc7ff;
-  background: #fbfaff;
+  border-color: #cbd5e1;
+  background: #fafafa;
 }
 
 .s87-suggested-icon {
-  color: #7c5cff;
+  color: #0a1428;
   display: grid;
   place-items: center;
 }
@@ -529,7 +517,7 @@
 .s87-suggested-grid button:focus-visible,
 .s87-ask button:focus-visible,
 .s87-mobile-header button:focus-visible {
-  outline: 2px solid #7c5cff;
+  outline: 2px solid #0a1428;
   outline-offset: 2px;
 }
 
@@ -569,7 +557,7 @@
   }
 
   .s87-mobile-actions button:hover {
-    color: #7c5cff;
+    color: #0a1428;
   }
 
   .s87-main {

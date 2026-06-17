@@ -151,10 +151,10 @@ const clerkAppearance = {
   options: {
     logoPlacement: "inside" as const,
     logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/signal87-logo.png`,
+    logoImageUrl: `${window.location.origin}${basePath}/signal87-logo-wordmark-white.png`,
   },
   variables: {
-    colorPrimary: "hsl(24, 100%, 50%)",
+    colorPrimary: "hsl(0, 0%, 98%)",
     colorForeground: "hsl(0, 0%, 90%)",
     colorMutedForeground: "hsl(0, 0%, 60%)",
     colorDanger: "hsl(0, 84.2%, 60.2%)",
@@ -174,10 +174,10 @@ const clerkAppearance = {
     headerSubtitle: "text-[hsl(0,0%,60%)]",
     socialButtonsBlockButtonText: "text-[hsl(0,0%,90%)]",
     formFieldLabel: "text-[hsl(0,0%,90%)]",
-    footerActionLink: "text-[hsl(24,100%,50%)]",
+    footerActionLink: "text-[hsl(0,0%,90%)]",
     footerActionText: "text-[hsl(0,0%,60%)]",
     dividerText: "text-[hsl(0,0%,60%)]",
-    identityPreviewEditButton: "text-[hsl(24,100%,50%)]",
+    identityPreviewEditButton: "text-[hsl(0,0%,90%)]",
     formFieldSuccessText: "text-[hsl(160,100%,40%)]",
     alertText: "text-[hsl(0,0%,90%)]",
     logoBox: "mb-2",
@@ -185,7 +185,7 @@ const clerkAppearance = {
     socialButtonsBlockButton:
       "border border-[hsl(0,0%,20%)] bg-[hsl(0,0%,12%)] hover:bg-[hsl(0,0%,15%)]",
     formButtonPrimary:
-      "bg-[hsl(24,100%,50%)] hover:bg-[hsl(24,100%,43%)] text-white",
+      "bg-[hsl(0,0%,98%)] hover:bg-[hsl(0,0%,88%)] text-[hsl(0,0%,8%)]",
     formFieldInput:
       "bg-[hsl(0,0%,20%)] border-[hsl(0,0%,25%)] text-[hsl(0,0%,90%)]",
     footerAction: "bg-[hsl(0,0%,6%)]",

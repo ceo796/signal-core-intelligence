@@ -1,0 +1,183 @@
+You are working on the Signal87 AI Replit codebase.
+
+The attached screenshot is the source of truth for the Home/Dashboard page design. Recreate the Home page to match the screenshot as closely as possible while preserving the existing working platform functionality.
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not run migrations.
+* Do not install new packages unless absolutely necessary.
+* Do not refactor unrelated files.
+* Do not change auth, document upload, chat, brief generation, comparison, PDF viewer, or storage logic.
+* Do not make global design changes outside what is necessary for this Home page.
+* Do not leave fake/static clickable UI.
+* Every visual section that appears interactive must either connect to a real existing route/action or have a clearly safe, intentional fallback.
+
+PRIMARY TASK:
+Recreate the Home page shown in the screenshot with high visual fidelity.
+
+The page should include:
+
+* Left sidebar with Signal87 logo/brand at top.
+* Sidebar navigation:
+
+  * Home
+  * Documents
+  * Collections
+  * Briefs
+  * Agents
+  * Workflows
+  * Settings
+* Bottom-left account/workspace card.
+* Top header area with page title:
+
+  * “Home”
+  * “Command Center”
+* Notification icon and user avatar in top-right.
+* Large command/search input card:
+
+  * Placeholder: “Ask Signal87 across your documents”
+  * Icon on the left
+  * Submit arrow button on the right
+  * Fix padding so the blinking text cursor/caret is not too close to the textbox border.
+* Quick action row:
+
+  * Upload document
+  * Create brief
+  * New agent
+  * Start workflow
+  * New collection
+* Recent documents card.
+* Recent briefs card.
+* Suggested actions section.
+
+FUNCTIONALITY REQUIREMENT:
+Every visual interactive element must be wired.
+
+Wire the elements as follows, using existing app routes/functions where available:
+
+1. Sidebar
+
+* Home routes to the Home/Dashboard page.
+* Documents routes to the existing documents/library page.
+* Briefs routes to the existing brief generator or briefs page.
+* Settings routes to existing settings page if present.
+* Collections, Agents, and Workflows should route to existing pages if present. If not present, create safe frontend-only placeholder pages or modals that say the feature is coming soon. Do not create backend logic.
+
+2. Command Center input
+
+* The input must be a real controlled input/textarea.
+* The caret must have proper left/right padding.
+* Pressing Enter or clicking the arrow should trigger the safest existing global ask/search behavior if available.
+* If no global ask route exists, route the user to the existing Ask/chat experience with the query preserved if possible.
+* Do not create a fake input that does nothing.
+
+3. Upload document
+
+* Must open or route to the existing document upload flow.
+* Do not create a second upload system.
+
+4. Create brief
+
+* Must route to the existing brief generator.
+
+5. New agent
+
+* If agents are implemented, route to existing agent creation.
+* If not implemented, show a safe frontend-only “Agents coming soon” modal or page.
+
+6. Start workflow
+
+* If workflows are implemented, route to existing workflow page.
+* If not implemented, show a safe frontend-only “Workflows coming soon” modal or page.
+
+7. New collection
+
+* If collections are implemented, route to existing collection creation.
+* If not implemented, show a safe frontend-only “Collections coming soon” modal or page.
+
+8. Recent documents
+
+* Should use real document data from the existing documents API if available.
+* Document rows should be clickable and route to the document detail page.
+* “View all” and “View all documents” should route to the documents/library page.
+* File-type colors are allowed here only: PDF red, Word blue, spreadsheet green, etc.
+
+9. Recent briefs
+
+* Should use real brief data if the platform stores briefs.
+* If briefs are not stored, use honest empty-state UI rather than fake static examples.
+* “View all” and “View all briefs” should route to the brief generator or briefs page.
+* Brief rows should be clickable only if there is a real destination.
+
+10. Suggested actions
+
+* “Summarize a collection” should route to collections if implemented, otherwise safe coming-soon fallback.
+* “Compare documents” should route to existing compare/multi-document page.
+* “Extract key insights” should route to existing Ask/chat or Intelligence page.
+* “Create a brief” should route to existing brief generator.
+
+VISUAL REQUIREMENTS:
+
+* Match the screenshot layout closely.
+* Clean white background.
+* Soft gray borders.
+* Rounded cards.
+* Minimal black/white interface.
+* Keep purple only where it appears as part of the Signal87 logo/accent in the screenshot, unless current branding requires strict black/white.
+* Preserve document file-type colors only.
+* Avoid oversized whitespace.
+* Ensure desktop layout matches screenshot proportions.
+* Ensure responsive mobile layout feels app-like and does not break the existing mobile navigation.
+
+SPECIFIC UI BUGS TO CHECK:
+
+* Text input caret too close to border.
+* Placeholder text clipped or vertically misaligned.
+* Buttons/cards that look clickable but have no click handler.
+* Placeholder hrefs such as `#`.
+* Dead icons.
+* Cards with hover states but no action.
+* Tabs or rows that visually respond but do not route.
+* Mobile nav items routing incorrectly.
+* Static copied design data replacing real platform data.
+
+IMPLEMENTATION PROCESS:
+
+1. First inspect the current Home/Dashboard components and routing.
+2. Identify the smallest set of frontend files needed.
+3. Implement the Home page only.
+4. Keep existing working app behavior intact.
+5. Do not replace functioning backend-connected components with static mockups.
+6. Where real data exists, use real data.
+7. Where a feature does not exist, use a safe frontend-only fallback that clearly informs the user.
+
+ACCEPTANCE CHECKLIST:
+Before finishing, verify:
+
+* TypeScript passes.
+* App builds.
+* Home page loads.
+* Sidebar links work.
+* Command input accepts typing and has proper padding.
+* Arrow button has a real action.
+* Upload document button opens/routes to upload.
+* Create brief routes correctly.
+* Recent document rows route to document detail.
+* View all document links route correctly.
+* Compare documents routes correctly.
+* No visible clickable element is dead.
+* No backend logic was changed.
+* No database schema was changed.
+* No unrelated files were refactored.
+
+FINAL RESPONSE:
+Report:
+
+* Files changed.
+* Routes touched.
+* Which elements are wired to real functionality.
+* Which elements use safe frontend-only fallback.
+* Any remaining gaps.
+* Confirmation that backend/database/auth were untouched.

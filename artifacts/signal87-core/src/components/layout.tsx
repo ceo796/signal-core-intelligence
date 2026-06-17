@@ -52,7 +52,7 @@ export function Layout({ children }: LayoutProps) {
       <aside className="hidden md:flex shrink-0 w-56 border-r border-border bg-sidebar flex-col">
         <div className="px-4 py-4 border-b border-border flex items-center shrink-0">
           <Link href="/">
-            <img src="/signal87-logo-black.svg" alt="Signal87" className="h-9 w-auto" />
+            <img src="/signal87-logo-wordmark.png" alt="Signal87" className="h-9 w-auto" />
           </Link>
         </div>
         <nav className="flex-1 flex flex-col px-3 py-3 gap-1 items-stretch">
@@ -88,7 +88,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile header */}
       <div className="md:hidden shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-sidebar">
         <Link href="/">
-          <img src="/signal87-logo-black.svg" alt="Signal87" className="h-7 w-auto" />
+          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="h-7 w-auto" />
         </Link>
         <button
           type="button"
