@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { DocumentThumbnail } from "@/components/document-thumbnail";
 import { getDocumentStatus } from "@/lib/document-status";
@@ -27,6 +28,8 @@ import {
   Loader2,
   LayoutGrid,
   List,
+  Search,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -40,8 +43,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ViewMode = "list" | "grid";
+type StatusFilter = "all" | "ready" | "processing" | "error";
 
 function getInitialView(): ViewMode {
   try {
@@ -119,6 +130,8 @@ export default function DocumentsList() {
   const queryClient = useQueryClient();
   const [reindexingId, setReindexingId] = useState<number | null>(null);
   const [view, setView] = useState<ViewMode>(getInitialView);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const switchView = (v: ViewMode) => {
     setView(v);
@@ -154,6 +167,17 @@ export default function DocumentsList() {
       }
     );
   };
+
+  const filteredDocuments = documents?.filter((doc) => {
+    const nameMatch = doc.fileName.toLowerCase().includes(search.toLowerCase().trim());
+    if (!nameMatch) return false;
+    if (statusFilter === "all") return true;
+    const tone = getDocumentStatus(doc).tone;
+    if (statusFilter === "ready") return tone === "ready" || tone === "warning";
+    if (statusFilter === "processing") return tone === "processing";
+    if (statusFilter === "error") return tone === "error";
+    return true;
+  });
 
   return (
     <Layout>
@@ -195,6 +219,41 @@ export default function DocumentsList() {
           </div>
         </header>
 
+        {/* Search + filter toolbar — only shown when documents exist */}
+        {!isLoading && !error && documents && documents.length > 0 && (
+          <div className="px-6 py-3 border-b border-border bg-card/60 flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search by name…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-8 text-sm"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <SelectTrigger className="h-8 w-36 text-sm">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="ready">Ready</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto">
           {/* ── Loading ── */}
           {isLoading ? (
@@ -232,7 +291,7 @@ export default function DocumentsList() {
               <p className="text-sm">Could not load your documents</p>
             </div>
           ) : documents?.length === 0 ? (
-            /* ── Empty ── */
+            /* ── Empty (no documents at all) ── */
             <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-border rounded-lg bg-card/50 m-5">
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-bold">No documents yet</h3>
@@ -241,12 +300,31 @@ export default function DocumentsList() {
               </p>
               <FileUploadModal />
             </div>
+          ) : filteredDocuments?.length === 0 ? (
+            /* ── Empty (filters produced no results) ── */
+            <div className="flex flex-col items-center justify-center text-center p-10 gap-2 text-muted-foreground">
+              <Search className="w-8 h-8 mb-1 opacity-40" />
+              <p className="text-sm font-medium">No documents match your filters</p>
+              <p className="text-xs">
+                {search && statusFilter !== "all"
+                  ? `No "${search}" results with status "${statusFilter}"`
+                  : search
+                    ? `No documents named "${search}"`
+                    : `No documents with status "${statusFilter}"`}
+              </p>
+              <button
+                onClick={() => { setSearch(""); setStatusFilter("all"); }}
+                className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
+              >
+                Clear filters
+              </button>
+            </div>
           ) : view === "grid" ? (
             /* ══════════════════════════════
                GRID VIEW — thumbnail cards
                ══════════════════════════════ */
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents?.map((doc) => {
+              {filteredDocuments?.map((doc) => {
                 const status = getDocumentStatus(doc);
                 const isReindexing = reindexingId === doc.id;
                 return (
@@ -330,7 +408,7 @@ export default function DocumentsList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {documents?.map((doc) => {
+                {filteredDocuments?.map((doc) => {
                   const status = getDocumentStatus(doc);
                   const isReindexing = reindexingId === doc.id;
                   const chip = fileTypeChip(doc.fileType);
