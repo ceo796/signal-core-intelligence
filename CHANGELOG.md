@@ -2,6 +2,24 @@
 
 ---
 
+## [Signal87_Core_Sidebar_Unify_v1] — 2026-06-17  *(Shared sidebar + dashboard polish)*
+
+### Summary
+Frontend-only: unified the app shell so the full sidebar navigation (Home, Documents, Collections, Briefs, Agents, Workflows, Settings) appears on **every** protected page, not just the dashboard. Moved the sidebar from `dashboard.tsx` into the shared `layout.tsx` so Documents, Ask, Compare, Brief, Activity, and all other protected pages inherit it automatically. Added a coming-soon modal for unimplemented nav items (Collections, Agents, Workflows, Settings). Replaced fake `SAMPLE_RECENT_BRIEFS` placeholder rows with an honest empty state. Fixed the ask-bar input caret padding. Made the Ask page read `?q=` from the URL and display a pre-filled query banner when navigating from the dashboard ask bar. Typecheck passes; no backend, API contract, schema, auth, or unrelated files touched.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+- `src/components/layout.tsx` — full rewrite: sidebar now carries all 7 nav items; coming-soon modal for null-href items; account card with sign-out; hamburger mobile menu with slide-in overlay.
+- `src/pages/dashboard.tsx` — removed own sidebar/shell; wraps in `<Layout>`; replaced fake brief placeholder data with honest empty-state copy; quick-action row updated (Compare, Ask, Activity wired); suggested-actions grid updated to 4 real routes.
+- `src/pages/home.css` — restructured to `.s87-layout-shell` (flex row, 100 vh) + `.s87-layout-main`; added `.s87-modal-overlay` / `.s87-modal` / `.s87-modal-close`; added mobile overlay sidebar styles; fixed ask-bar input `padding: 0 12px`; submit button now solid ink (#0a1428) for clear affordance.
+- `src/pages/ask.tsx` — reads `?q=` URL param on mount; shows a "Your question" banner above the document picker when a query is pre-filled from the dashboard ask bar.
+
+### Notes
+- Briefs are not persisted; the briefs card now shows honest empty state with a "Create a brief" CTA.
+- Collections, Agents, Workflows, Settings sidebar items open a dismissible "Coming soon" modal — they do not create backend routes.
+- No backend, API contract, schema, auth, upload/download/reindex/PDF viewer, chat, brief, compare, or activity logic was touched.
+
+---
+
 ## [Signal87_Core_Home_Command_Center_v1] — 2026-06-17  *(Home / Command Center dashboard redesign)*
 
 ### Summary

@@ -20,6 +20,11 @@ export default function Ask() {
   const { data: documents, isLoading, error } = useListDocuments();
   const [selectedId, setSelectedId] = useState<string>("");
 
+  const initialQuery = (() => {
+    try { return new URLSearchParams(window.location.search).get("q") ?? ""; }
+    catch { return ""; }
+  })();
+
   const readyDocs = (documents ?? []).filter((doc) => getDocumentStatus(doc).isReady);
   const selectedDoc = readyDocs.find((doc) => String(doc.id) === selectedId) ?? null;
 
@@ -60,6 +65,15 @@ export default function Ask() {
               </div>
             ) : (
               <div className="space-y-6">
+                {initialQuery && (
+                  <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60 bg-secondary/30">
+                    <MessageSquare className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground mb-0.5">Your question</p>
+                      <p className="text-sm font-medium text-foreground break-words">{initialQuery}</p>
+                    </div>
+                  </div>
+                )}
                 <Card className="bg-card border-border/50">
                   <CardContent className="p-5 space-y-4">
                     <div>

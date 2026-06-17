@@ -1,0 +1,243 @@
+You are working on the Signal87 AI Replit codebase.
+
+Before making any further UI, design, routing, backend, database, or feature changes, perform a full codebase-wide bug and consistency audit.
+
+Context:
+The platform has been redesigned using external JPEG/page references. Some pages may visually match the reference designs but may not be fully wired into the working platform. There may also be inconsistent styling, broken interactions, spacing bugs, fake clickable elements, duplicated components, placeholder routes, or copied static UI sections.
+
+This audit is required before applying any additional external JPEG designs to other pages.
+
+ABSOLUTE RULES:
+
+* Do not modify application behavior.
+* Do not redesign pages yet.
+* Do not refactor unrelated code.
+* Do not delete files.
+* Do not rename files.
+* Do not install packages.
+* Do not change backend logic.
+* Do not change database schema.
+* Do not run migrations.
+* Do not deploy.
+* Documentation and diagnosis only.
+
+PRIMARY GOAL:
+Review the entire codebase for:
+
+1. Bugs
+2. Broken or misleading UI interactions
+3. Design inconsistencies
+4. Routing inconsistencies
+5. Static copied design elements that are not connected to real platform behavior
+6. Components/pages that do not match the intended Signal87 design system
+7. Areas that could break if more external JPEG-based page designs are applied
+
+AUDIT SCOPE:
+
+1. Page-by-page audit
+   Inspect every major frontend page:
+
+* Home/Dashboard
+* Documents/library
+* Document detail
+* Ask/chat
+* Brief generator
+* Compare/multi-document page
+* Intelligence page
+* Collections
+* Agents
+* Workflows
+* Settings
+* Landing page
+* Auth pages
+* Mobile layouts
+
+For each page, document:
+
+* File path
+* Route
+* Purpose
+* Current visual style
+* Whether it matches the current Signal87 design direction
+* Whether it appears based on copied external design
+* Whether it uses real platform data or static placeholder data
+* Whether page actions are wired to real functionality
+* Bugs or inconsistencies found
+* Risk level
+
+2. Interactive element audit
+   Inspect all visible interactive elements:
+
+* Buttons
+* Cards
+* Rows
+* Inputs
+* Textareas
+* Search bars
+* Upload zones
+* Tabs
+* Menus
+* Dropdowns
+* Sidebar nav
+* Mobile nav
+* Icons
+* CTAs
+* Empty-state actions
+
+For each issue, identify:
+
+* Element
+* File path
+* Expected behavior
+* Current behavior
+* Whether it is functional, partially functional, fake/static, or broken
+* Whether it has correct hover/focus/disabled/loading states
+* Whether it works on mobile
+* Severity: Critical / High / Medium / Low
+* Safe recommended fix
+
+Specifically check for:
+
+* Buttons with no `onClick`
+* Links using `#`
+* Cards that look clickable but do nothing
+* Inputs with bad padding or caret too close to border
+* Placeholder text clipped or misaligned
+* Upload UI not connected to upload logic
+* Search bars that do not search
+* Tabs that visually switch but do not control state
+* Icons that appear actionable but are decorative
+* Rows with hover states but no route
+* Mobile navigation routes that are missing or incorrect
+
+3. Design consistency audit
+   Audit the platform’s visual system:
+
+* Logo usage
+* Sidebar layout
+* Top navigation/header
+* Typography
+* Font sizes
+* Spacing scale
+* Button styles
+* Card styles
+* Border radius
+* Border colors
+* Shadows
+* Input styling
+* Empty states
+* Loading states
+* File-type colors
+* Mobile behavior
+
+Document inconsistencies across pages.
+
+The intended style direction is:
+
+* Clean white background
+* Black and white platform UI
+* Soft gray borders
+* Rounded cards
+* Minimal premium enterprise feel
+* Purple only where part of existing Signal87 logo/accent if still present
+* Document file-type colors allowed only where appropriate, such as PDF red, Word blue, spreadsheet green, etc.
+* No random theme colors across unrelated sections
+
+4. Component reuse audit
+   Identify whether pages are using consistent shared components or duplicating similar UI.
+
+Document:
+
+* Duplicate button components
+* Duplicate card components
+* Duplicate page headers
+* Duplicate sidebar/nav implementations
+* Duplicate input/search components
+* Duplicate upload components
+* Duplicate empty-state components
+* Any component that should become shared later
+
+Do not refactor them yet. Only document.
+
+5. Routing audit
+   Audit all frontend routes and navigation paths.
+
+Document:
+
+* Route path
+* Page/component loaded
+* Sidebar/nav linkage
+* Whether route is reachable
+* Whether links point to correct destinations
+* Whether placeholder pages exist
+* Whether missing pages cause broken navigation
+* Whether protected routes behave correctly
+
+6. Backend/API safety audit
+   Without changing backend logic, inspect whether frontend pages are correctly using existing APIs.
+
+Document:
+
+* Which frontend pages call which endpoints
+* Any page using mock/static data where real API data exists
+* Any page calling an endpoint incorrectly
+* Any missing loading/error handling
+* Any stale Supabase/Lovable/Render assumptions
+* Any broad or risky ARIA/global query behavior
+
+7. External JPEG design readiness
+   Because future pages may be formatted to match external JPEG references, create a readiness assessment.
+
+Document:
+
+* Which pages are safe to restyle next
+* Which pages should not be touched until bugs are fixed
+* Which pages are backend-sensitive
+* Which pages are mostly presentational and safe for isolated UI work
+* Which components should be standardized before applying more designs
+* Recommended order for applying external JPEG-based designs
+
+8. Produce audit documentation
+   Create or update the following markdown files only inside:
+
+`/audit-snapshot/`
+
+Files:
+
+* `FULL_CODEBASE_CONSISTENCY_AUDIT.md`
+* `PAGE_BY_PAGE_AUDIT.md`
+* `INTERACTION_FUNCTIONALITY_AUDIT.md`
+* `DESIGN_SYSTEM_CONSISTENCY_REPORT.md`
+* `ROUTING_AUDIT.md`
+* `COMPONENT_REUSE_AUDIT.md`
+* `BUG_RISK_REGISTER.md`
+* `EXTERNAL_JPEG_REDESIGN_READINESS.md`
+* `RECOMMENDED_FIX_SEQUENCE.md`
+
+9. Recommended fix sequence
+   Provide a phased plan, but do not implement it.
+
+Recommended structure:
+
+* Phase 1: Critical broken interactions only
+* Phase 2: Routing and placeholder cleanup
+* Phase 3: Shared design system normalization
+* Phase 4: Page-by-page visual matching to external JPEGs
+* Phase 5: Mobile/app-like consistency pass
+* Phase 6: Final QA and production readiness
+
+FINAL RESPONSE FORMAT:
+When finished, report:
+
+* Number of files inspected
+* Number of pages audited
+* Number of routes audited
+* Number of components reviewed
+* Number of interactive issues found
+* Number of design inconsistencies found
+* Top 10 bugs/risks
+* Pages safest to restyle next
+* Pages highest risk to restyle next
+* Recommended first 5 fixes
+
+Again: this is an audit only. Do not implement fixes yet.

@@ -2,50 +2,24 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import { useListDocuments } from "@workspace/api-client-react";
+import { Layout } from "@/components/layout";
 import { FileUploadModal } from "@/components/file-upload";
 import { formatDistanceToNow } from "date-fns";
 import {
   Bell,
-  ChevronLeft,
   ChevronRight,
   ArrowRight,
-  Home as HomeIcon,
   FileText,
-  Folder,
   Layers,
-  Bot,
-  Workflow,
-  Settings,
   UploadCloud,
   Sparkles,
   Box,
-  Database,
+  Folder,
   FileSpreadsheet,
   File as FileIcon,
 } from "lucide-react";
-import "./home.css";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-// Placeholder UI data — briefs are not persisted yet. Isolated here so it can be
-// swapped for a real data hook later without touching the layout.
-const SAMPLE_RECENT_BRIEFS = [
-  { name: "Go-to-Market Plan", updated: "Updated 2h ago", status: "In Progress" },
-  { name: "Competitor Landscape", updated: "Updated yesterday", status: "Review" },
-  { name: "Q2 Executive Brief", updated: "Updated 2 days ago", status: "Completed" },
-  { name: "Investor Update", updated: "Updated 3 days ago", status: "Draft" },
-  { name: "Product Positioning", updated: "Updated 5 days ago", status: "Draft" },
-];
-
-const NAV_ITEMS: { label: string; icon: React.ElementType; href: string | null }[] = [
-  { label: "Home", icon: HomeIcon, href: "/dashboard" },
-  { label: "Documents", icon: FileText, href: "/documents" },
-  { label: "Collections", icon: Database, href: null },
-  { label: "Briefs", icon: Layers, href: "/brief" },
-  { label: "Agents", icon: Bot, href: null },
-  { label: "Workflows", icon: Workflow, href: null },
-  { label: "Settings", icon: Settings, href: null },
-];
 
 function fileMeta(fileType: string): { cls: string; Icon: React.ElementType } {
   const t = (fileType || "").toLowerCase();
@@ -56,7 +30,7 @@ function fileMeta(fileType: string): { cls: string; Icon: React.ElementType } {
 }
 
 export default function Dashboard() {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
   const { data: documents, isLoading, error } = useListDocuments();
@@ -66,14 +40,12 @@ export default function Dashboard() {
   const recentDocs = (documents ?? []).slice(0, 5);
 
   const initials = user
-    ? ((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() ||
+    ? (
+        (user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")
+      ).toUpperCase() ||
       user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
       "U"
     : "U";
-  const displayName = user?.firstName
-    ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
-    : user?.primaryEmailAddress?.emailAddress?.split("@")[0] ?? "Account";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
 
   const signOutNow = () => signOut({ redirectUrl: basePath || "/" });
 
@@ -83,60 +55,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="s87-shell">
-      <header className="s87-mobile-header">
-        <div className="s87-brand">
-          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
-        </div>
-        <div className="s87-mobile-actions">
-          <button type="button" onClick={() => navigate("/documents")}>
-            Documents
-          </button>
-          <button type="button" onClick={() => navigate("/brief")}>
-            Briefs
-          </button>
-          <button type="button" onClick={signOutNow}>
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      <aside className="s87-sidebar">
-        <div className="s87-brand">
-          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
-          <ChevronLeft size={20} className="s87-collapse" />
-        </div>
-
-        <nav className="s87-nav">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.href ? location === item.href : false;
-            return (
-              <button
-                key={item.label}
-                type="button"
-                className={`s87-nav-item${isActive ? " active" : ""}`}
-                aria-disabled={item.href ? undefined : true}
-                title={item.href ? undefined : "Coming soon"}
-                onClick={() => item.href && navigate(item.href)}
-              >
-                <Icon size={18} /> {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        <button type="button" className="s87-account" onClick={signOutNow} title="Sign out">
-          <div className="s87-account-avatar">{initials}</div>
-          <span className="s87-account-text">
-            <span className="s87-account-name">{displayName}</span>
-            <span className="s87-account-user">{email}</span>
-          </span>
-          <ChevronRight size={16} />
-        </button>
-      </aside>
-
-      <main className="s87-main">
+    <Layout>
+      <div className="s87-main">
+        {/* Top bar */}
         <header className="s87-topbar">
           <div>
             <h1>Home</h1>
@@ -148,15 +69,16 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* Ask bar */}
         <section className="s87-ask">
           <div className="s87-ask-icon">
             <Sparkles size={22} />
           </div>
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") submitQuery();
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitQuery();
             }}
             placeholder="Ask Signal87 across your documents"
           />
@@ -165,6 +87,7 @@ export default function Dashboard() {
           </button>
         </section>
 
+        {/* Quick actions */}
         <section className="s87-actions">
           <button type="button" onClick={() => setUploadOpen(true)}>
             <UploadCloud size={17} /> Upload document
@@ -172,18 +95,20 @@ export default function Dashboard() {
           <button type="button" onClick={() => navigate("/brief")}>
             <FileText size={17} /> Create brief
           </button>
-          <button type="button" aria-disabled title="Coming soon">
-            <Box size={17} /> New agent
+          <button type="button" onClick={() => navigate("/compare")}>
+            <Layers size={17} /> Compare docs
           </button>
-          <button type="button" aria-disabled title="Coming soon">
-            <Sparkles size={17} /> Start workflow
+          <button type="button" onClick={() => navigate("/ask")}>
+            <Sparkles size={17} /> Ask a question
           </button>
-          <button type="button" aria-disabled title="Coming soon">
-            <Folder size={17} /> New collection
+          <button type="button" onClick={() => navigate("/activity")}>
+            <Box size={17} /> Activity
           </button>
         </section>
 
+        {/* Cards grid */}
         <section className="s87-grid">
+          {/* Recent documents */}
           <div className="s87-card s87-documents-card">
             <div className="s87-card-header">
               <h2>Recent documents</h2>
@@ -207,7 +132,7 @@ export default function Dashboard() {
                 <div className="s87-table-state">
                   No documents yet.{" "}
                   <button type="button" onClick={() => setUploadOpen(true)}>
-                    Upload a document
+                    Upload one
                   </button>
                 </div>
               ) : (
@@ -244,54 +169,36 @@ export default function Dashboard() {
             </button>
           </div>
 
+          {/* Recent briefs — honest empty state (briefs are not persisted) */}
           <div className="s87-card">
             <div className="s87-card-header">
               <h2>Recent briefs</h2>
               <button type="button" onClick={() => navigate("/brief")}>
-                View all
+                Create brief
               </button>
             </div>
 
-            <div className="s87-brief-list">
-              {SAMPLE_RECENT_BRIEFS.map((brief) => (
-                <div className="s87-brief-row" key={brief.name}>
-                  <FileText size={21} />
-                  <div>
-                    <strong>{brief.name}</strong>
-                    <span>{brief.updated}</span>
-                  </div>
-                  <em className={`s87-status ${brief.status.toLowerCase().replaceAll(" ", "-")}`}>
-                    {brief.status}
-                  </em>
-                </div>
-              ))}
+            <div className="s87-briefs-empty">
+              <FileText size={36} />
+              <p>No saved briefs yet.</p>
+              <p style={{ fontSize: 13 }}>
+                Briefs are generated on demand and not stored — create one now.
+              </p>
             </div>
 
             <button className="s87-link" type="button" onClick={() => navigate("/brief")}>
-              View all briefs <ArrowRight size={15} />
+              Create a brief <ArrowRight size={15} />
             </button>
           </div>
         </section>
 
+        {/* Suggested actions */}
         <section className="s87-card s87-suggested">
           <h2>Suggested actions</h2>
 
           <div className="s87-suggested-grid">
-            <button type="button" onClick={() => navigate("/ask")}>
-              <span className="s87-suggested-icon">
-                <FileText size={17} />
-              </span>
-              <span className="s87-suggested-body">
-                <strong>Summarize a collection</strong>
-                <span className="s87-suggested-desc">Get a summary of key insights</span>
-              </span>
-              <ChevronRight size={17} />
-            </button>
-
             <button type="button" onClick={() => navigate("/compare")}>
-              <span className="s87-suggested-icon">
-                <FileText size={17} />
-              </span>
+              <span className="s87-suggested-icon"><FileText size={17} /></span>
               <span className="s87-suggested-body">
                 <strong>Compare documents</strong>
                 <span className="s87-suggested-desc">Find similarities and differences</span>
@@ -300,9 +207,7 @@ export default function Dashboard() {
             </button>
 
             <button type="button" onClick={() => navigate("/ask")}>
-              <span className="s87-suggested-icon">
-                <FileText size={17} />
-              </span>
+              <span className="s87-suggested-icon"><Sparkles size={17} /></span>
               <span className="s87-suggested-body">
                 <strong>Extract key insights</strong>
                 <span className="s87-suggested-desc">Identify themes and takeaways</span>
@@ -311,20 +216,27 @@ export default function Dashboard() {
             </button>
 
             <button type="button" onClick={() => navigate("/brief")}>
-              <span className="s87-suggested-icon">
-                <FileText size={17} />
-              </span>
+              <span className="s87-suggested-icon"><Layers size={17} /></span>
               <span className="s87-suggested-body">
                 <strong>Create a brief</strong>
-                <span className="s87-suggested-desc">Generate a draft brief instantly</span>
+                <span className="s87-suggested-desc">Generate a structured brief</span>
+              </span>
+              <ChevronRight size={17} />
+            </button>
+
+            <button type="button" onClick={() => navigate("/documents")}>
+              <span className="s87-suggested-icon"><Folder size={17} /></span>
+              <span className="s87-suggested-body">
+                <strong>Browse documents</strong>
+                <span className="s87-suggested-desc">View and manage your library</span>
               </span>
               <ChevronRight size={17} />
             </button>
           </div>
         </section>
-      </main>
+      </div>
 
       <FileUploadModal open={uploadOpen} onOpenChange={setUploadOpen} />
-    </div>
+    </Layout>
   );
 }

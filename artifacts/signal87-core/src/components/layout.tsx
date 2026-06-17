@@ -1,7 +1,19 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { FileText, MessageSquare, Activity, LogOut, Menu, X, BookOpen, GitCompare } from "lucide-react";
+import { useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
+import {
+  Home as HomeIcon,
+  FileText,
+  Database,
+  Layers,
+  Bot,
+  Workflow,
+  Settings,
+  ChevronRight,
+  Menu,
+  X,
+} from "lucide-react";
+import "../pages/home.css";
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,128 +21,145 @@ interface LayoutProps {
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+const NAV_ITEMS: { label: string; icon: React.ElementType; href: string | null }[] = [
+  { label: "Home",       icon: HomeIcon,  href: "/dashboard" },
+  { label: "Documents",  icon: FileText,  href: "/documents" },
+  { label: "Collections",icon: Database,  href: null },
+  { label: "Briefs",     icon: Layers,    href: "/brief"     },
+  { label: "Agents",     icon: Bot,       href: null         },
+  { label: "Workflows",  icon: Workflow,  href: null         },
+  { label: "Settings",   icon: Settings,  href: null         },
+];
+
 export function Layout({ children }: LayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [comingSoon, setComingSoon] = useState<string | null>(null);
 
-  const navItems = [
-    { href: "/documents", label: "Documents", icon: FileText },
-    { href: "/ask", label: "Ask", icon: MessageSquare },
-    { href: "/compare", label: "Compare", icon: GitCompare },
-    { href: "/brief", label: "Brief", icon: BookOpen },
-    { href: "/activity", label: "Activity", icon: Activity },
-  ];
+  const initials = user
+    ? (
+        (user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")
+      ).toUpperCase() ||
+      user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
+      "U"
+    : "U";
+  const displayName = user?.firstName
+    ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
+    : user?.primaryEmailAddress?.emailAddress?.split("@")[0] ?? "Account";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
 
-  const navLinks = (
+  const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
+    setMobileOpen(false);
+    if (item.href) {
+      navigate(item.href);
+    } else {
+      setComingSoon(item.label);
+    }
+  };
+
+  const SidebarContent = () => (
     <>
-      {navItems.map((item) => {
-        const isActive = location.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all whitespace-nowrap ${
-              isActive
-                ? "bg-primary/10 text-primary font-medium shadow-sm shadow-primary/5"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <item.icon className="w-4 h-4 shrink-0" />
-            {item.label}
-          </Link>
-        );
-      })}
+      <div className="s87-brand">
+        <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
+      </div>
+
+      <nav className="s87-nav">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.href
+            ? item.href === "/dashboard"
+              ? location === item.href
+              : location.startsWith(item.href)
+            : false;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              className={`s87-nav-item${isActive ? " active" : ""}`}
+              aria-disabled={item.href ? undefined : true}
+              title={item.href ? undefined : `${item.label} — coming soon`}
+              onClick={() => handleNavClick(item)}
+            >
+              <Icon size={18} />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      <button
+        type="button"
+        className="s87-account"
+        onClick={() => signOut({ redirectUrl: basePath || "/" })}
+        title="Sign out"
+      >
+        <div className="s87-account-avatar">{initials}</div>
+        <span className="s87-account-text">
+          <span className="s87-account-name">{displayName}</span>
+          <span className="s87-account-user">{email}</span>
+        </span>
+        <ChevronRight size={16} />
+      </button>
     </>
   );
 
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex shrink-0 w-56 border-r border-border bg-sidebar flex-col">
-        <div className="px-4 py-4 border-b border-border flex items-center shrink-0">
-          <Link href="/">
-            <img src="/signal87-logo-wordmark.png" alt="Signal87" className="h-9 w-auto" />
-          </Link>
-        </div>
-        <nav className="flex-1 flex flex-col px-3 py-3 gap-1 items-stretch">
-          {navLinks}
-        </nav>
-        {user && (
-          <div className="flex flex-col px-3 py-3 border-t border-border gap-2 mt-auto">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-                {user.firstName?.[0] ?? user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? "U"}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground truncate leading-tight">
-                  {user.firstName} {user.lastName}
-                </p>
-                <p className="text-[10px] text-muted-foreground truncate leading-tight">
-                  {user.primaryEmailAddress?.emailAddress}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => signOut({ redirectUrl: basePath || "/" })}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit"
-            >
-              <LogOut className="w-3 h-3" />
-              Sign out
-            </button>
-          </div>
-        )}
-      </aside>
-
+    <div className="s87-layout-shell">
       {/* Mobile header */}
-      <div className="md:hidden shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-sidebar">
-        <Link href="/">
-          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="h-7 w-auto" />
-        </Link>
+      <header className="s87-mobile-header">
+        <div className="s87-brand">
+          <img src="/signal87-logo-wordmark.png" alt="Signal87" className="s87-logo-img" />
+        </div>
         <button
           type="button"
+          className="s87-mobile-menu-btn"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-md hover:bg-muted transition-colors"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
         >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
-      </div>
+      </header>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile sidebar overlay */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col pt-14">
-          <nav className="flex flex-col px-4 py-4 gap-1">
-            {navLinks}
-          </nav>
-          {user && (
-            <div className="mt-auto px-4 py-4 border-t border-border flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                  {user.firstName?.[0] ?? "U"}
-                </div>
-                <div>
-                  <p className="text-xs font-medium">{user.firstName} {user.lastName}</p>
-                  <p className="text-[10px] text-muted-foreground">{user.primaryEmailAddress?.emailAddress}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => signOut({ redirectUrl: basePath || "/" })}
-                className="p-2 rounded-md hover:bg-muted transition-colors"
-              >
-                <LogOut className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-          )}
+        <div className="s87-mobile-overlay" onClick={() => setMobileOpen(false)}>
+          <aside
+            className="s87-sidebar s87-mobile-sidebar"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SidebarContent />
+          </aside>
         </div>
       )}
 
-      <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+      {/* Desktop sidebar */}
+      <aside className="s87-sidebar">
+        <SidebarContent />
+      </aside>
+
+      {/* Main content area — children control their own scroll/padding */}
+      <div className="s87-layout-main">
         {children}
-      </main>
+      </div>
+
+      {/* Coming-soon modal */}
+      {comingSoon && (
+        <div className="s87-modal-overlay" onClick={() => setComingSoon(null)}>
+          <div className="s87-modal" onClick={(e) => e.stopPropagation()}>
+            <strong>{comingSoon}</strong>
+            <p>This feature is coming soon.</p>
+            <button
+              type="button"
+              className="s87-modal-close"
+              onClick={() => setComingSoon(null)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
