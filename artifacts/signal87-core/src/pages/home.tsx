@@ -7,19 +7,19 @@ export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
 
   return (
-    <div className="min-h-screen text-white flex flex-col font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #000000 0%, #060f20 50%, #0f2554 100%)' }}>
-      <header className="p-6 flex justify-between items-center border-b border-white/10">
-        <img src="/signal87-logo-black.svg" alt="Signal87" className="h-10 w-auto" style={{ filter: 'brightness(0) invert(1)' }} />
-        <nav className="flex items-center gap-6 text-sm text-white/50">
-          <Link href="/about" className="hidden sm:block hover:text-white transition-colors">About</Link>
-          <Link href="/team" className="hidden sm:block hover:text-white transition-colors">Team</Link>
-          <Link href="/contact" className="hidden sm:block hover:text-white transition-colors">Contact</Link>
+    <div className="min-h-screen text-gray-900 flex flex-col font-sans selection:bg-blue-500/30 bg-white">
+      <header className="p-6 flex justify-between items-center border-b border-gray-200">
+        <img src="/signal87-logo-black.svg" alt="Signal87" className="h-10 w-auto" />
+        <nav className="flex items-center gap-6 text-sm text-gray-500">
+          <Link href="/about" className="hidden sm:block hover:text-gray-900 transition-colors">About</Link>
+          <Link href="/team" className="hidden sm:block hover:text-gray-900 transition-colors">Team</Link>
+          <Link href="/contact" className="hidden sm:block hover:text-gray-900 transition-colors">Contact</Link>
           {isLoaded && isSignedIn ? (
-            <Link href="/documents" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+            <Link href="/documents" className="text-blue-600 hover:text-blue-500 font-medium transition-colors">
               Open App
             </Link>
           ) : (
-            <Link href="/sign-in" className="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-medium transition-colors">
+            <Link href="/sign-in" className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-500 font-medium transition-colors">
               <LogIn className="w-4 h-4" />
               Sign In
             </Link>
@@ -28,16 +28,16 @@ export default function Home() {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
-        <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 text-xs font-mono text-white/60 border border-white/10">
+        <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-mono text-gray-500 border border-gray-200">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
           AI-powered · Cites every source
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6 text-white">
+        <h1 className="text-5xl md:text-7xl font-normal tracking-tight mb-6 text-gray-900">
           Precision Document Intelligence.
         </h1>
 
-        <p className="text-lg text-white/60 mb-10 max-w-xl text-balance">
+        <p className="text-lg text-gray-500 mb-10 max-w-xl text-balance">
           Upload any PDF, DOCX, or text file. Ask questions. Get answers that cite exactly where they came from.
         </p>
 
@@ -58,44 +58,42 @@ export default function Home() {
           </Link>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24 text-left w-full border-t border-white/10 pt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24 text-left w-full border-t border-gray-200 pt-12">
           <div className="space-y-3">
-            <ShieldCheck className="w-5 h-5 text-blue-400" />
-            <h3 className="font-bold text-sm text-white">Verified Citations</h3>
-            <p className="text-xs text-white/50">Every answer cites the exact passages it came from, so you can verify any claim.</p>
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <h3 className="font-bold text-sm text-gray-900">Verified Citations</h3>
+            <p className="text-xs text-gray-500">Every answer cites the exact passages it came from, so you can verify any claim.</p>
           </div>
           <div className="space-y-3">
-            <Database className="w-5 h-5 text-blue-400" />
-            <h3 className="font-bold text-sm text-white">Verification Trace</h3>
-            <p className="text-xs text-white/50">See which AI model answered, how long it took, and which sections of your document it read.</p>
+            <Database className="w-5 h-5 text-blue-600" />
+            <h3 className="font-bold text-sm text-gray-900">Verification Trace</h3>
+            <p className="text-xs text-gray-500">See which AI model answered, how long it took, and which sections of your document it read.</p>
           </div>
           <div className="space-y-3">
-            <Zap className="w-5 h-5 text-blue-400" />
-            <h3 className="font-bold text-sm text-white">Rapid Analysis</h3>
-            <p className="text-xs text-white/50">Works with PDFs, Word documents, spreadsheets, and plain text files.</p>
+            <Zap className="w-5 h-5 text-blue-600" />
+            <h3 className="font-bold text-sm text-gray-900">Rapid Analysis</h3>
+            <p className="text-xs text-gray-500">Works with PDFs, Word documents, spreadsheets, and plain text files.</p>
           </div>
         </div>
 
-        <div className="w-full border-t border-white/10 mt-16 pt-12">
-          <p className="text-xs text-white/40 uppercase tracking-widest mb-8 font-medium">Partners &amp; Accelerators</p>
+        <div className="w-full border-t border-gray-200 mt-16 pt-12">
+          <p className="text-xs text-gray-400 uppercase tracking-widest mb-8 font-medium">Partners &amp; Accelerators</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-10">
             <img
               src="/google-for-startups.jpg"
               alt="Google for Startups"
-              className="h-10 w-auto object-contain opacity-20 hover:opacity-50 transition-opacity"
-              style={{ filter: 'brightness(0) invert(1)' }}
+              className="h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
             />
             <img
               src="/nvidia-inception-badge.jpg"
               alt="NVIDIA Inception Program"
-              className="h-12 w-auto object-contain opacity-20 hover:opacity-50 transition-opacity"
-              style={{ filter: 'brightness(0) invert(1)' }}
+              className="h-12 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
             />
           </div>
         </div>
       </main>
 
-      <footer className="border-t border-white/10 px-6 py-12 text-xs text-white/40">
+      <footer className="border-t border-gray-200 px-6 py-12 text-xs text-gray-400">
         <div className="flex flex-col sm:flex-row justify-between gap-6">
           <div className="flex flex-col gap-3">
             <span>© 2026 Signal87 AI. All rights reserved.</span>
@@ -105,7 +103,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Signal87 AI on LinkedIn"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 <Linkedin className="w-4 h-4" />
               </a>
@@ -113,18 +111,18 @@ export default function Home() {
                 href="https://theresanaiforthat.com/ai/signal87-ai/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition-colors"
+                className="hover:text-gray-900 transition-colors"
               >
                 There's An AI For That ↗
               </a>
             </div>
           </div>
           <nav className="flex items-center gap-4 flex-wrap">
-            <Link href="/about" className="hover:text-white transition-colors">About</Link>
-            <Link href="/team" className="hover:text-white transition-colors">Team</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Use</Link>
-            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+            <Link href="/about" className="hover:text-gray-900 transition-colors">About</Link>
+            <Link href="/team" className="hover:text-gray-900 transition-colors">Team</Link>
+            <Link href="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-900 transition-colors">Terms of Use</Link>
+            <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
           </nav>
         </div>
       </footer>
