@@ -2,6 +2,32 @@
 
 ---
 
+## [Signal87_Core_Palette_Unification] — 2026-06-17  *(Warm cream/ink palette — unify app shell with Dashboard)*
+
+### Summary
+Remaps all shadcn CSS variable tokens (`:root` and `.dark`) from the cold white/violet system to the same warm cream/ink palette used by the Dashboard. No layout, component, or API changes — pure CSS token swap. The landing page is unaffected (it uses its own scoped `.signal87-landing` CSS).
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/index.css`**
+- `:root` `--background` → `42 22% 94%` (warm cream ≈ `#F6F4EE`); was cold `0 0% 98%`.
+- `:root` `--foreground` → `36 8% 10%` (warm ink ≈ `#1B1A17`); was cold `0 0% 10%`.
+- `:root` `--border` → `40 20% 87%` (warm border ≈ `#E7E2D6`); was cold `0 0% 85%`.
+- `:root` `--card` / `--card-border` → warm panel `42 25% 98%` / `40 20% 87%`.
+- `:root` `--sidebar` → `42 20% 93%` (slightly deeper cream); was identical to background.
+- `:root` `--sidebar-primary` → `36 8% 10%` (ink); was violet `262 83% 58%`.
+- `:root` `--sidebar-accent` / `--accent` → `40 18% 91%` (warm chip ≈ `#F0ECE1`); was violet tint.
+- `:root` `--primary` → `36 8% 10%` (ink — buttons, active rail, focus ring); was violet `262 83% 58%`.
+- `:root` `--primary-foreground` → `42 22% 94%` (cream on ink).
+- `:root` `--secondary` → `40 22% 91%` (warm chip); was cold grey.
+- `:root` `--muted` / `--muted-foreground` → warm `40 20% 93%` / `36 6% 52%`; was cold grey.
+- `:root` `--input` / `--ring` → warm `40 20% 86%` / `36 8% 30%`; was cold grey / violet.
+- `.dark` backgrounds/borders → warm equivalents (`36 8% 5%` near-black, `36 8% 16%` border); was pure grey.
+- `.dark` `--foreground` → `40 22% 90%` (warm cream-light); was cold `0 0% 90%`.
+- `.dark` `--primary` / `--ring` → `36 100% 50%` warm orange; was `24 100% 50%`.
+
+---
+
 ## [Signal87_Core_Design_QA_Phase1_Phase2] — 2026-06-17  *(Design QA sweep — sidebar, status tokens, shared file-type utility, page header normalization)*
 
 ### Summary
