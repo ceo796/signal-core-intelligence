@@ -207,6 +207,14 @@ export default function DocumentsList() {
     );
   };
 
+  const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
+  if (search) activeFilterChips.push({ key: "search", label: `"${search}"`, onRemove: () => setSearch("") });
+  if (typeFilter !== "all") activeFilterChips.push({ key: "type", label: fileTypeChip(typeFilter).label, onRemove: () => setTypeFilter("all") });
+  if (statusFilter !== "all") {
+    const statusLabel = statusFilter === "ready" ? "Ready" : statusFilter === "processing" ? "Processing" : "Error";
+    activeFilterChips.push({ key: "status", label: statusLabel, onRemove: () => setStatusFilter("all") });
+  }
+
   const filteredDocuments = documents
     ?.filter((doc) => {
       const nameMatch = doc.fileName.toLowerCase().includes(search.toLowerCase().trim());
@@ -358,6 +366,35 @@ export default function DocumentsList() {
                   )}
                 </button>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Active filter chips row */}
+        {!isLoading && !error && documents && documents.length > 0 && activeFilterChips.length > 0 && (
+          <div className="px-6 py-2 border-b border-border bg-muted/30 flex items-center gap-2 flex-wrap">
+            {activeFilterChips.map((f) => (
+              <span
+                key={f.key}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary"
+              >
+                {f.label}
+                <button
+                  onClick={f.onRemove}
+                  className="ml-0.5 hover:text-primary/70 transition-colors"
+                  aria-label={`Remove ${f.label} filter`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            {activeFilterChips.length >= 2 && (
+              <button
+                onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}
+                className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors ml-1"
+              >
+                Clear all
+              </button>
             )}
           </div>
         )}
