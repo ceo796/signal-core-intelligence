@@ -34,7 +34,15 @@ import {
   ChevronDown,
   ChevronsUpDown,
   ArrowUpDown,
+  SlidersHorizontal,
+  RotateCcw,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -261,6 +269,30 @@ export default function DocumentsList() {
     try { localStorage.setItem("docs-grid-sort-dir", nextDir); } catch {}
   };
 
+  const PREF_KEYS = [
+    "docs-view",
+    "docs-sort-col",
+    "docs-sort-dir",
+    "docs-status-filter",
+    "docs-type-filter",
+    "docs-grid-sort-col",
+    "docs-grid-sort-dir",
+    "docs-search",
+  ] as const;
+
+  const handleResetPreferences = () => {
+    try {
+      PREF_KEYS.forEach((k) => localStorage.removeItem(k));
+    } catch {}
+    setView("list");
+    setSearch("");
+    setStatusFilter("all");
+    setTypeFilter("all");
+    setSortState({ column: "uploaded", direction: "desc" });
+    setGridSortState({ column: "uploaded", direction: "desc" });
+    toast.success("Preferences reset to defaults");
+  };
+
   const handleDelete = (id: number) => {
     deleteMutation.mutate(
       { id },
@@ -363,6 +395,27 @@ export default function DocumentsList() {
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
+            {/* Preferences overflow menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-1.5 rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
+                  title="Preferences"
+                  aria-label="Preferences"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={handleResetPreferences}
+                  className="gap-2 text-sm cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                  Reset to defaults
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <FileUploadModal />
           </div>
         </header>
