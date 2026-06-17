@@ -1,0 +1,53 @@
+Tighten and professionalize the Signal87 Documents page layout.
+
+This is a frontend-only visual cleanup. Do not touch authentication, backend APIs, document ingestion, chat endpoints, brief generation, database schema, storage, Clerk config, or any existing working routes.
+
+Problem:
+The current Documents page makes individual documents appear too large and visually heavy. The page should feel more like a polished enterprise document workspace: compact, scannable, clean, and native to the rest of the Signal87 app.
+
+Scope:
+Only update the Documents page UI and related frontend styling/components. Preserve all existing functionality.
+
+Requirements:
+
+1. Reduce the visual size of document cards/list rows.
+2. Tighten vertical spacing, padding, and row height.
+3. Make document titles readable but not oversized.
+4. Keep file-type icons/thumbnails smaller and cleaner.
+5. Preserve all existing document actions:
+    * Open/view document
+    * Analyze/ask
+    * Compare/preselect
+    * Download original
+    * Re-index
+    * Delete
+6. Do not remove any working functionality.
+7. Do not change API calls or data structures.
+8. Do not create fake data.
+9. Do not redesign the entire platform.
+10. Keep the white minimalist Signal87 style consistent with the Home page.
+
+Preferred layout:
+
+* Use a compact table/list or tight card grid.
+* If the current page uses large cards, convert them into smaller rows or compact cards.
+* Each document should show:
+    * File icon/type
+    * Document name
+    * Upload date or updated date
+    * Status
+    * Chunk count if already available
+    * Compact action buttons/menu
+* Avoid oversized empty boxes.
+* Avoid large thumbnails unless the file preview is genuinely useful.
+
+Verification:
+
+* Confirm existing documents still load.
+* Confirm clicking a document still opens the detail page.
+* Confirm all existing actions still work.
+* Confirm no console errors.
+* Confirm no backend files changed.
+* Confirm the page is visually more compact than before.
+
+Stop and report before making changes if the Documents page is tightly coupled to backend behavior or if the current component structure is unclear.
