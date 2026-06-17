@@ -1,0 +1,102 @@
+You are working on the Signal87 AI Replit codebase.
+
+Task:
+Simplify the landing page feature section into normal clean content sections.
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not change auth behavior.
+* Do not change protected app routes.
+* Do not change documents, upload, Ask, Brief, Compare, Activity, AI, or API logic.
+* Do not rebuild the dashboard.
+* Do not install packages.
+* Keep this limited to the public landing page.
+
+Current issue:
+The landing page feature area is overdesigned with a grid background and product mockup cards. Replace it with normal, professional landing-page sections that explain the product clearly.
+
+Remove:
+
+* Fake product mockups
+* Complex grid background
+* Overly decorative cards
+* Any black box that does not match the rest of the site
+* Any dead clickable elements
+* Any placeholder links
+
+Create a clean feature section with normal content blocks.
+
+Suggested structure:
+
+Section heading:
+Built for high-stakes document work.
+
+Section subheading:
+Signal87 helps teams move from source material to verified insight without losing traceability.
+
+Feature blocks:
+
+1. Verified Intelligence
+   Every answer is tied back to the source material, so teams can move quickly without losing confidence.
+
+2. Executive Briefs
+   Generate structured summaries, risk briefs, diligence notes, and decision memos from one document or many.
+
+3. Cross-Document Analysis
+   Compare files, surface contradictions, identify themes, and extract insights across an entire document set.
+
+4. Audit-Ready Reasoning
+   See what sources were used, where the answer came from, and how the system reached its conclusion.
+
+5. Secure Document Workspace
+   Your files stay inside a protected workspace with authenticated access and controlled document visibility.
+
+6. Built for Business Judgment
+   Designed for investors, operators, advisors, and teams who need to understand complex material quickly.
+
+Design direction:
+
+* White background
+* Black text
+* Soft gray borders
+* Simple icons if already available
+* Restrained violet accent only
+* No heavy animation
+* No fake platform rendering
+* Normal responsive layout
+* Desktop: 2-column or 3-column feature grid
+* Mobile: single-column stacked sections
+
+CTA section below features:
+Headline:
+Ready to turn documents into decisions?
+
+Buttons:
+
+* Primary: Get started → `/sign-up`
+* Secondary: Sign in → `/sign-in`
+* If signed in: Open App → `/documents`
+
+Verification:
+
+* Landing page loads publicly.
+* CTA links work.
+* `/sign-in` works.
+* `/sign-up` works if present.
+* `/documents` remains protected.
+* Unauthenticated `/api/documents` returns 401.
+* TypeScript passes.
+* App builds.
+* No backend/database/auth/API files changed.
+
+Final response:
+Report:
+
+* Files changed
+* Sections created
+* Copy used
+* CTA behavior
+* TypeScript/build status
+* Confirmation that backend/database/auth/protected app logic were untouched
