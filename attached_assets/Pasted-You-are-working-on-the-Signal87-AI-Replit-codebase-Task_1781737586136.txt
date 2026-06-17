@@ -1,0 +1,129 @@
+You are working on the Signal87 AI Replit codebase.
+
+Task:
+Simplify the landing page feature section into normal professional content sections, but include a subtle animated background treatment.
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not change auth behavior.
+* Do not change protected app routes.
+* Do not change documents, upload, Ask, Brief, Compare, Activity, AI, or API logic.
+* Do not rebuild the dashboard.
+* Do not install packages.
+* Keep this limited to the public landing page.
+* Do not add heavy animation libraries.
+* Do not add Spline yet.
+* Use lightweight CSS animation only.
+
+CURRENT ISSUE:
+The landing page feature area is overdesigned with grid background and fake product mockup cards. Replace it with normal, clean feature sections while keeping a subtle, premium animated background.
+
+REMOVE:
+
+* Fake product mockups
+* Heavy UI renderings
+* Black box treatment that does not match the site
+* Dead clickable elements
+* Placeholder links
+* Overly complex decorative cards
+
+CREATE:
+A clean landing page section with subtle animated background.
+
+BACKGROUND DIRECTION:
+
+* White or near-white background.
+* Very subtle gridlines, low opacity.
+* Soft violet/gray gradient glow, low opacity.
+* Optional slow-moving background pulse or drift.
+* Animation should be CSS-only and lightweight.
+* Animation should feel premium and calm, not flashy.
+* Respect reduced-motion preferences using `prefers-reduced-motion`.
+* Gridlines should not overpower the copy.
+* No rainbow gradients.
+* No particle effects.
+* No heavy canvas/WebGL.
+
+CONTENT STRUCTURE:
+
+Section heading:
+Built for high-stakes document work.
+
+Section subheading:
+Signal87 helps teams move from source material to verified insight without losing traceability.
+
+Feature blocks:
+
+1. Verified Intelligence
+   Every answer is tied back to the source material, so teams can move quickly without losing confidence.
+
+2. Executive Briefs
+   Generate structured summaries, risk briefs, diligence notes, and decision memos from one document or many.
+
+3. Cross-Document Analysis
+   Compare files, surface contradictions, identify themes, and extract insights across an entire document set.
+
+4. Audit-Ready Reasoning
+   See what sources were used, where the answer came from, and how the system reached its conclusion.
+
+5. Secure Document Workspace
+   Your files stay inside a protected workspace with authenticated access and controlled document visibility.
+
+6. Built for Business Judgment
+   Designed for investors, operators, advisors, and teams who need to understand complex material quickly.
+
+DESIGN:
+
+* Normal responsive feature grid.
+* Desktop: 2-column or 3-column grid.
+* Mobile: single-column stacked.
+* White cards or transparent sections with soft gray borders.
+* Black text.
+* Soft gray supporting text.
+* Restrained violet accent only.
+* Icons may be used if already available.
+* No fake screenshots or platform renderings.
+
+CTA SECTION BELOW FEATURES:
+Headline:
+Ready to turn documents into decisions?
+
+Buttons:
+
+* Primary signed-out: Get started → `/sign-up`
+* Secondary signed-out: Sign in → `/sign-in`
+* Signed-in: Open App → `/documents`
+
+CTA styling:
+
+* Avoid black box styling if it clashes with the rest of the site.
+* Use white/gray/violet styling consistent with the landing page.
+
+VERIFY:
+
+* Landing page loads publicly.
+* Background animation is subtle and performant.
+* Reduced-motion preference is respected.
+* CTA links work.
+* `/sign-in` works.
+* `/sign-up` works if present.
+* `/documents` remains protected.
+* Unauthenticated `/api/documents` returns 401.
+* `/api/healthz` returns 200.
+* TypeScript passes.
+* App builds.
+* No backend/database/auth/API files changed.
+
+FINAL RESPONSE:
+Report:
+
+* Files changed
+* Sections created
+* Copy used
+* Background animation approach
+* Whether reduced-motion is supported
+* CTA behavior
+* TypeScript/build status
+* Confirmation that backend/database/auth/protected app logic were untouched

@@ -40,9 +40,11 @@ export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans selection:bg-blue-500/30">
+    <div className="relative min-h-screen bg-white text-gray-900 flex flex-col font-sans selection:bg-blue-500/30">
+      <div className="landing-bg" aria-hidden="true" />
+
       {/* Header */}
-      <header className="px-6 py-5 flex justify-between items-center border-b border-gray-200">
+      <header className="relative z-10 px-6 py-5 flex justify-between items-center border-b border-gray-200">
         <img src="/signal87-logo-black.svg" alt="Signal87" className="h-14 w-auto" />
         <nav className="flex items-center gap-6 text-sm text-gray-500">
           <Link href="/about" className="hidden sm:block hover:text-gray-900 transition-colors">About</Link>
@@ -61,7 +63,7 @@ export default function Home() {
         </nav>
       </header>
 
-      <main className="flex-1">
+      <main className="relative z-10 flex-1">
         {/* Hero */}
         <section className="px-6 py-24 text-center max-w-3xl mx-auto">
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-mono text-gray-500 border border-gray-200">
@@ -175,7 +177,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 px-6 py-12 text-xs text-gray-400">
+      <footer className="relative z-10 border-t border-gray-200 px-6 py-12 text-xs text-gray-400">
         <div className="flex flex-col sm:flex-row justify-between gap-6">
           <div className="flex flex-col gap-3">
             <span>© 2026 Signal87 AI. All rights reserved.</span>

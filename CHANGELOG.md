@@ -2,6 +2,36 @@
 
 ---
 
+## [Signal87_Core_Landing_Simplify_SubtleBG_v1] — 2026-06-17  *(Clean landing sections + subtle CSS-only animated background)*
+
+### Summary
+Simplified the public landing page into clean, professional content sections and added a subtle, premium, CSS-only animated background. Removed all fake product mockups, the canvas grid animation, and typewriter effects. Frontend-only; no backend/API/DB/auth changes.
+
+### Removed — `src/components/`
+- Deleted `grid-wave.tsx` (canvas grid animation), `aria-chat-animation.tsx`, `cross-doc-animation.tsx`, `audit-trace-animation.tsx` — all orphaned after the landing page rewrite (no remaining imports).
+
+### Changed — `src/pages/home.tsx`
+- Stateless page (only `useAuth`); removed `useState`/`useEffect`/`useRef`, `TypedText`, `GridWave`, and all three demo-animation components.
+- Structure: Hero → Features (heading "Built for high-stakes document work." + subheading + responsive 6-block grid: 3-col desktop / 2-col tablet / 1-col mobile, each icon + title + description) → CTA ("Ready to turn documents into decisions?", gray-50 surface) → Partners → Footer.
+- Added a `<div className="landing-bg" aria-hidden="true" />` background layer as the first child of the outer `relative` container; `header`/`main`/`footer` set to `relative z-10` to paint above it.
+- CTA behavior: signed-out → "Get started" (`/sign-up`) + "Sign in" (`/sign-in`); signed-in → "Open App" (`/documents`).
+
+### Changed — `src/index.css`
+- Replaced the now-unused `@keyframes fadeIn` / `.fade-in` / `.fade-in-delayed` block with `.landing-bg` styles:
+  - `::before` — very subtle gridlines (`rgba(15,23,42,0.04)`, 56px cells) with a radial mask so they fade out and never overpower the copy.
+  - `::after` — soft violet/gray gradient glow (violet `rgba(139,92,246,0.14)` + gray `rgba(148,163,184,0.12)`), blurred, with a slow 22s `landing-drift` translate/scale/opacity pulse.
+  - `@media (prefers-reduced-motion: reduce)` disables the drift animation.
+
+### Unchanged
+- Backend routes, database schema, auth behavior, protected app routes, documents/upload/Ask/Brief/Compare/Activity/AI/API logic, partner logos, footer links, nav.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- `curl localhost:80/api/healthz` → 200; `curl localhost:80/api/documents` (unauth) → 401.
+- Landing page loads publicly; CTA links resolve to `/sign-up`, `/sign-in`, `/documents`.
+
+---
+
 ## [Signal87_Core_AriaChatAnimation_v1] — 2026-06-17  *(Chat demo animation in hero CTA section)*
 
 ### Summary
