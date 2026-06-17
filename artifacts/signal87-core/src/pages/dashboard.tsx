@@ -25,6 +25,7 @@ import {
   MoreHorizontal,
   Sun,
   Moon,
+  Search,
 } from "lucide-react";
 import { fileTypeIcon, fileTypeGlyph } from "@/lib/file-type";
 
@@ -80,21 +81,36 @@ function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => vo
   );
 }
 
+function GlobalSearch({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`flex items-center gap-2.5 h-10 px-3.5 rounded-lg border border-[var(--s87-border)] bg-[var(--s87-panel-2)] transition-colors focus-within:border-[var(--s87-muted)] ${className}`}
+    >
+      <Search className="w-4 h-4 text-[var(--s87-faint)] shrink-0" />
+      <input
+        type="search"
+        placeholder="Search documents, briefs, collections, and more…"
+        className="flex-1 bg-transparent text-sm text-[var(--s87-body)] placeholder:text-[var(--s87-faint)] focus:outline-none min-w-0"
+      />
+      <div className="hidden sm:flex items-center gap-0.5 shrink-0">
+        <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded">⌘</kbd>
+        <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded">K</kbd>
+      </div>
+    </div>
+  );
+}
+
 function CommandBar({ className = "" }: { className?: string }) {
   return (
     <Link href="/ask">
       <div
-        className={`flex items-center gap-3 h-11 px-3.5 rounded-lg border border-[var(--s87-border)] bg-[var(--s87-panel-2)] hover:border-[var(--s87-muted)] transition-colors cursor-text ${className}`}
+        className={`flex items-center gap-3 h-12 px-4 rounded-lg border border-[var(--s87-border)] bg-[var(--s87-panel)] hover:border-[var(--s87-muted)] transition-colors cursor-text shadow-sm ${className}`}
       >
-        <Sparkles className="w-4 h-4 text-[var(--s87-muted)] shrink-0" />
+        <Sparkles className="w-4 h-4 text-[var(--s87-ink)] shrink-0" />
         <span className="flex-1 text-sm text-[var(--s87-muted)] truncate">
-          Ask Signal87 anything across your documents...
+          Ask Signal87 anything across your documents…
         </span>
-        <div className="hidden sm:flex items-center gap-0.5">
-          <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded">⌘</kbd>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded">K</kbd>
-        </div>
-        <div className="w-7 h-7 rounded-md bg-[var(--s87-btn)] flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-md bg-[var(--s87-btn)] flex items-center justify-center shrink-0">
           <ArrowRight className="w-4 h-4 text-[var(--s87-btn-fg)]" />
         </div>
       </div>
@@ -307,22 +323,32 @@ function MobileNav({ isDark, onToggle }: { isDark: boolean; onToggle: () => void
 function TopBar() {
   const { user } = useUser();
   const initials = initialsFor(user);
+  const displayName = user?.firstName
+    ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
+    : user?.primaryEmailAddress?.emailAddress?.split("@")[0] ?? "";
 
   return (
-    <div className="hidden md:flex h-16 items-center gap-4 px-6 border-b border-[var(--s87-border)] bg-[var(--s87-bg)] shrink-0">
-      <div className="flex-1 max-w-2xl">
-        <CommandBar />
+    <div className="hidden md:flex h-14 items-center gap-4 px-5 border-b border-[var(--s87-border)] bg-[var(--s87-bg)] shrink-0">
+      <div className="flex-1 max-w-xl">
+        <GlobalSearch />
       </div>
-      <div className="flex items-center gap-3 ml-auto">
+      <div className="flex items-center gap-2.5 ml-auto shrink-0">
         <button
           type="button"
-          className="w-9 h-9 flex items-center justify-center rounded-md text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)] hover:text-[var(--s87-ink)] transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--s87-muted)] hover:bg-[var(--s87-hover-bg)] hover:text-[var(--s87-ink)] transition-colors"
           aria-label="Notifications"
         >
-          <Bell className="w-[18px] h-[18px]" />
+          <Bell className="w-[17px] h-[17px]" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-[var(--s87-chip)] border border-[var(--s87-border)] flex items-center justify-center text-[var(--s87-ink)] text-sm font-semibold cursor-default select-none">
-          {initials}
+        <div className="flex items-center gap-2 pl-1">
+          <div className="w-8 h-8 rounded-full bg-[var(--s87-chip)] border border-[var(--s87-border)] flex items-center justify-center text-[var(--s87-ink)] text-xs font-semibold cursor-default select-none shrink-0">
+            {initials}
+          </div>
+          {displayName && (
+            <span className="text-sm font-medium text-[var(--s87-ink)] whitespace-nowrap hidden lg:block">
+              {displayName}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -764,19 +790,22 @@ export default function Dashboard() {
         <TopBar />
 
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+            {/* Search — mobile only (desktop lives in the TopBar) */}
+            <GlobalSearch className="md:hidden" />
+
             {/* Welcome */}
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-[var(--s87-ink)] leading-tight">
-                {firstName ? `Welcome back, ${firstName}.` : "Welcome back."}
+              <h1 className="text-[1.75rem] font-semibold tracking-tight text-[var(--s87-ink)] leading-tight">
+                {firstName ? `Welcome back, ${firstName} 👋` : "Welcome back 👋"}
               </h1>
-              <p className="text-sm text-[var(--s87-muted)] mt-1.5">
+              <p className="text-sm text-[var(--s87-muted)] mt-1">
                 Your AI workspace for documents, insights, and execution.
               </p>
             </div>
 
-            {/* Command bar — desktop lives in the top bar; this is the mobile-stack copy */}
-            <CommandBar className="md:hidden" />
+            {/* AI command bar — visible on all sizes */}
+            <CommandBar />
 
             {/* Quick actions */}
             <QuickActions onUpload={() => setUploadOpen(true)} />

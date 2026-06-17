@@ -2,6 +2,37 @@
 
 ---
 
+## [Signal87_Core_Home_v1] — 2026-06-17  *(Home workspace)*
+
+### Summary
+Converts the authenticated landing page from a "Dashboard" framing to a clean Home workspace. UI/UX and naming refinement only — no auth, database, API, upload, brief generation, environment variable, or design-token changes. Typecheck passes clean.
+
+### Changed — Frontend only (`artifacts/signal87-core/src/pages/dashboard.tsx`)
+
+**TopBar** — replaced the AI command bar with a global search bar:
+- New `GlobalSearch` component: search input with placeholder "Search documents, briefs, collections, and more…", ⌘K kbd hint, focus-ring border highlight.
+- TopBar right side: bell → avatar → name (name visible at `lg:` breakpoint).
+- TopBar height tightened from `h-16` to `h-14` to match reference.
+
+**AI command bar** — moved into the page body, visible on all screen sizes:
+- Previously `md:hidden`; now always rendered below the welcome header.
+- Slightly taller (`h-12`) with a subtle shadow to give it visual priority as the primary intelligence entry point.
+
+**Mobile search** — `GlobalSearch` added above the welcome header (`md:hidden`) so the mobile stack is: search → welcome → AI command bar → quick actions → content.
+
+**Welcome header** — emoji wave `👋` added; font size refined to `text-[1.75rem]` from `text-3xl`; spacing tightened.
+
+**"Dashboard" language removed** — no "Dashboard" text was user-visible on the page (sidebar already showed "Home"); the route `/dashboard` is preserved. `THEME_KEY` localStorage string is internal and unchanged.
+
+### Nothing changed
+- Route `/dashboard` (still the canonical authenticated home; `HomeRedirect` still redirects there)
+- Auth, DB, APIs, upload, brief generation, Clerk config, OpenAI config, environment variables
+- `index.css` / CSS custom properties
+- `components/layout.tsx` (used by other pages, untouched)
+- All other pages
+
+---
+
 ## [Signal87_Core_Agent_Placement_v1] — 2026-06-17  *(Dashboard Agent + Document Context Agent)*
 
 ### Summary
