@@ -26,9 +26,9 @@ export default function Ask() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="p-6 border-b border-border bg-card">
-          <h1 className="text-2xl font-bold tracking-tight">Ask</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <header className="p-4 md:p-6 border-b border-border bg-card">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Ask</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Ask questions about your uploaded documents and get answers with cited sources.
           </p>
         </header>

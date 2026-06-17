@@ -2,6 +2,49 @@
 
 ---
 
+## [Signal87_Core_Mobile_Polish_v1] — 2026-06-17  *(Mobile / app-like layout polish)*
+
+### Summary
+Frontend-only mobile polish pass across the protected app shell and all protected pages. No backend, API, DB schema, auth, upload, PDF viewer, chat, brief, compare, or AI logic changed.
+
+### Changed — `src/components/layout.tsx`
+- **Bottom nav on mobile:** moved `<main>` before `<aside>` in DOM order. On desktop, `md:order-first` on the aside restores the left-sidebar position unchanged. On mobile (`flex-col`), the aside now sits at the **bottom** of the viewport as a compact icon + label nav bar — thumb-reachable, no horizontal scroll.
+- **Logo + UserButton:** hidden on mobile (`hidden md:flex`); logo only shown on desktop sidebar.
+- **UserButton on mobile:** appears as a small avatar at the far-right of the bottom bar (`md:hidden`, separated by a border-l divider).
+- **Nav items mobile shape:** `flex-col` (icon above label) with `flex-1` so all 5 items share the bar width evenly. Icons scale `w-5 h-5` on mobile vs `w-4 h-4` on desktop. Labels `text-[10px]` on mobile, `text-sm` on desktop.
+- Desktop sidebar layout: **completely unchanged** (width, colors, logo, UserButton position, active state).
+
+### Changed — `src/pages/document-detail.tsx`
+- Header: `p-6` → `p-4 md:p-6`; vertical spacing `space-y-4` → `space-y-3 md:space-y-4`.
+- h1: `text-2xl` → `text-xl md:text-2xl` — no overflow on narrow screens.
+- Tab bar: wrapped in `overflow-x-auto` container so 5 tabs scroll horizontally on narrow screens instead of overflowing. `TabsList` gains `w-max` to allow natural expansion.
+- Tab content padding: `p-6` on tab content areas — not changed (they already scroll).
+
+### Changed — `src/pages/activity.tsx`
+- Header: `p-6` → `p-4 md:p-6`; h1 `text-2xl` → `text-xl md:text-2xl`.
+- Activity row timestamp: responsive — `<span class="hidden sm:inline">` shows `MMM d, yyyy` on ≥640 px; `<span class="sm:hidden">` shows `MMM d` on mobile. Prevents tight text overflow in the title-date flex row.
+
+### Changed — `src/pages/ask.tsx`
+- Header: `p-6` → `p-4 md:p-6`; h1 `text-2xl` → `text-xl md:text-2xl`. Content area already mobile-friendly (max-w-2xl centered card).
+
+### Changed — `src/pages/executive-brief.tsx`
+- Header: `p-6` → `p-4 md:p-6`; h1 `text-2xl` → `text-xl md:text-2xl`. Scroll area already uses `p-4 md:p-6`; document/brief-type selectors already use `grid-cols-1 sm:grid-cols-2`.
+
+### Changed — `src/pages/multi-document-chat.tsx`
+- Header: `p-6` → `p-4 md:p-6`; h1 `text-2xl` → `text-xl md:text-2xl`. Scroll area already uses `p-4 md:p-6`; document selectors already use `grid-cols-1 sm:grid-cols-2`.
+
+### Unchanged
+- `documents.tsx` — already polished in previous pass (sm:grid-cols-2, etc.).
+- Backend, API contract, DB schema, auth, upload, download, PDF viewer, chat, brief, compare, activity, admin, AI routing.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — **clean**.
+- Vite HMR: all 6 files hot-updated successfully; final state zero browser console errors.
+- API: `/api/healthz` → 200; unauthenticated `/api/documents` → 401.
+- Authenticated document list + thumbnail fetches confirmed in API logs from standalone tab.
+
+---
+
 ## [Signal87_Core_Document_Library_Polish_v1] — 2026-06-17  *(Document library + detail UI polish pass)*
 
 ### Summary

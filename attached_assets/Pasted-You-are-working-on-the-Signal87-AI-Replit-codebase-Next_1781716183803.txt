@@ -1,0 +1,93 @@
+You are working on the Signal87 AI Replit codebase.
+
+Next phase: mobile/app-like layout polish across the protected app.
+
+Current stable work completed:
+
+* Clerk auth protected baseline
+* Document thumbnails
+* Document library/detail polish
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not change auth behavior.
+* Do not change upload, parsing, extraction, chat, brief, compare, AI routing, or PDF viewer logic.
+* Do not redesign the landing page.
+* Do not rebuild the dashboard.
+* Do not install packages.
+* Do not replace real data with mock/static data.
+* Keep this frontend-only and focused on responsive/mobile layout.
+
+TASK:
+Make the protected app feel more app-like on mobile while preserving the current desktop layout.
+
+Scope:
+
+* App shell/layout
+* Sidebar/mobile navigation
+* `/documents`
+* `/ask`
+* `/brief`
+* `/compare`
+* `/activity`
+* Document detail page
+
+Mobile goals:
+
+1. Navigation
+
+* Ensure mobile users can easily move between Documents, Ask, Brief, Compare, and Activity.
+* If a bottom nav already exists, polish it.
+* If no mobile nav exists, add a simple frontend-only bottom navigation using existing routes.
+* Do not remove desktop sidebar behavior.
+
+2. Touch usability
+
+* Buttons should be easy to tap.
+* Cards should stack cleanly.
+* Inputs should not be cramped.
+* Textareas should have proper padding and caret placement.
+* Avoid horizontal scrolling.
+
+3. Document experience
+
+* Document cards should look good on mobile.
+* Thumbnails should remain performant and not dominate the screen.
+* Document detail page should be readable on mobile.
+* Tabs/actions should remain accessible.
+
+4. Protected app behavior
+
+* Auth/UserButton should remain intact.
+* Protected routes must remain protected.
+* No public exposure of documents.
+
+VERIFY:
+
+* Mobile viewport screenshots for:
+
+  * `/documents`
+  * `/ask`
+  * `/brief`
+  * `/compare`
+  * `/activity`
+  * one document detail page
+* Desktop layout remains unchanged or minimally affected.
+* TypeScript passes.
+* App builds.
+* Unauthenticated `/api/documents` still returns 401.
+* `/api/healthz` still returns 200.
+* No backend/database/auth/API files changed.
+
+FINAL RESPONSE:
+Report:
+
+* Files changed
+* Mobile navigation behavior
+* Mobile improvements by page
+* Desktop impact
+* Auth/API protection verification
+* TypeScript/build status
+* Confirmation that backend/database/auth/document parsing/AI logic were untouched

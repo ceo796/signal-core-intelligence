@@ -465,12 +465,12 @@ export default function ExecutiveBrief() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
-        <header className="p-6 border-b border-border bg-card shrink-0">
+        <header className="p-4 md:p-6 border-b border-border bg-card shrink-0">
           <div className="flex items-center gap-2">
             <ScrollText className="w-5 h-5 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">Executive Brief</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">Executive Brief</h1>
           </div>
-          <p className="text-sm text-muted-foreground font-mono mt-1">
+          <p className="text-sm text-muted-foreground font-mono mt-0.5">
             BRIEF_GENERATOR // SELECT 1–5 DOCUMENTS
           </p>
         </header>

@@ -109,9 +109,9 @@ export default function Activity() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="p-6 border-b border-border bg-card">
-          <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <header className="p-4 md:p-6 border-b border-border bg-card">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Activity</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Recent upload and indexing activity for your documents.
           </p>
         </header>
@@ -153,7 +153,8 @@ export default function Activity() {
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-medium truncate">{ev.title}</p>
                             <span className="text-xs text-muted-foreground shrink-0 font-mono">
-                              {format(new Date(ev.timestamp), "yyyy-MM-dd HH:mm")}
+                              <span className="hidden sm:inline">{format(new Date(ev.timestamp), "MMM d, yyyy")}</span>
+                              <span className="sm:hidden">{format(new Date(ev.timestamp), "MMM d")}</span>
                             </span>
                           </div>
                           <p className="text-xs font-medium text-foreground/80 truncate" title={ev.fileName}>

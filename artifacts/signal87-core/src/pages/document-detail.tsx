@@ -255,7 +255,7 @@ export default function DocumentDetail() {
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header */}
-        <header className="p-6 border-b border-border bg-card space-y-4">
+        <header className="p-4 md:p-6 border-b border-border bg-card space-y-3 md:space-y-4">
           <Link href="/documents">
             <button className="inline-flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-3 h-3" />
@@ -269,7 +269,7 @@ export default function DocumentDetail() {
                 <FileText className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold tracking-tight break-words" title={doc.fileName}>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight break-words" title={doc.fileName}>
                   {doc.fileName}
                 </h1>
                 <div className="flex items-center gap-3 mt-2 flex-wrap text-xs font-mono text-muted-foreground">
@@ -360,14 +360,16 @@ export default function DocumentDetail() {
         {/* Tabs */}
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs defaultValue="preview" className="flex-1 flex flex-col overflow-hidden">
-            <div className="px-6 pt-4 border-b border-border bg-card">
-              <TabsList className="font-mono text-xs">
+            <div className="border-b border-border bg-card">
+              <div className="px-4 md:px-6 pt-3 md:pt-4 overflow-x-auto">
+              <TabsList className="font-mono text-xs w-max">
                 <TabsTrigger value="preview">Preview</TabsTrigger>
                 <TabsTrigger value="text">Extracted Text</TabsTrigger>
                 <TabsTrigger value="citations">Citations</TabsTrigger>
                 <TabsTrigger value="history">History</TabsTrigger>
                 <TabsTrigger value="system">System</TabsTrigger>
               </TabsList>
+              </div>
             </div>
 
             {/* Preview */}
