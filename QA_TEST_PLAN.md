@@ -7,6 +7,7 @@
 > Note (Reliability_Clarity_Pass_v1): New tests **T29–T35** cover document status labels, list-level Re-Index for failed/0-chunk docs, the chat not-ready gate (frontend) + `422` guard (backend), upload validation + server-error surfacing, citation "Section N" labels + the no-citations note, and structured Q&A/upload logging. No protected flow (PDF viewer / durable storage / upload / download / delete / re-index mechanics / citation + Verification Trace payload) was changed.
 > Scope note (Core_Flow_Simplification_v1): The Multi-document Comparison (`/compare`), Executive Brief (`/brief`), and Admin Stats (`/admin`) features are now **hidden from the UI** — their nav items, routes, and the document-detail Compare/Generate-Brief buttons were removed. Tests that begin by navigating to `/compare`, `/brief`, or `/admin` in the UI (e.g. T13a–T13h, T18/admin, and the detail-page "Compare"/"Generate Brief" steps in T22) are **N/A for this build**; those routes now resolve to NotFound. The backend endpoints remain and can still be exercised directly (e.g. `POST /api/documents/brief`). All core-flow tests (upload → list → detail → PDF preview → single-doc chat → citations/trace → delete) remain in force.
 > Note: Answer Rendering Polish (T28) is a frontend-only change — shared `MarkdownAnswer` component replaces `whitespace-pre-wrap` plain text in all three answer surfaces; no API, retrieval, or citation payload changes. The Executive Brief generator (T13e–T13h) adds one additive route (`POST /api/documents/brief`) + a new `/brief` page; it duplicates the multi-chat retrieval/citation pattern and does not modify multi-chat. T13i–T13m cover the quality polish pass (prompt tightening, Copy Brief footer, Risk Assessment honesty, Exec Summary de-duplication, Trace note + section renames) — frontend + prompt-only changes, no API contract or retrieval changes. The PDF viewer (T27) is frontend-only. The detail page (T22–T26) is frontend + one additive read-only backend field; all other backend tests (T01–T10, T16–T21) are unchanged.
+> Note (Home_Command_Center_v1): The Home route (`/dashboard`) was visually redesigned (**frontend-only**) into a "Command Center" layout. **No backend, API, contract, schema, or protected flow** (auth / upload / download / delete / re-index / PDF viewer / chat / brief / citation + Verification Trace) was touched. New test **T40** covers the redesigned Home; existing nav/routes are unchanged. Recent documents uses real data; Recent briefs is placeholder UI (briefs are not persisted).
 
 ---
 
@@ -798,6 +799,31 @@ To test manually today:
 
 ---
 
+## T40 — Home / Command Center dashboard (frontend-only redesign)
+
+**Goal:** Verify the redesigned Home route (`/dashboard`) renders the Command Center layout, uses real user + document data, routes correctly, and regresses nothing.
+
+**Steps:**
+1. Sign in and open `/dashboard`.
+2. Inspect the sidebar account card and top-right avatar (initials / name / email).
+3. With 0 documents and with ≥1 document, view **Recent documents**.
+4. Type a question in the Ask bar and press Enter (and click the arrow button).
+5. Click each routed control: Documents, Briefs, Compare documents, Create brief, Upload document, and the Suggested actions.
+6. Click the account card (and, on a narrow viewport, the mobile "Sign out").
+7. View at a narrow viewport (~402px).
+
+**Expected:**
+- Layout matches the reference: sidebar (87 / Signal87 + nav), top "Home / Command Center" bar with Bell + avatar, Ask bar, 5 action buttons, Recent documents + Recent briefs cards, Suggested actions panel. Welcome emoji absent.
+- Account card / top avatar show the signed-in user's initials, name, and email from Clerk.
+- **Recent documents** shows up to 5 real documents (correct file-type icon + relative "last updated"); empty state offers "Upload a document"; a load failure shows "Could not load your documents." **Recent briefs** shows placeholder rows (not persisted).
+- Ask (Enter or arrow) navigates to `/ask?q=<encoded>`; empty input goes to `/ask`.
+- Documents→`/documents`, Briefs / Create brief→`/brief`, Compare→`/compare`, Summarize / Extract→`/ask`, Upload→upload modal. Collections / Agents / Workflows / Settings and New agent / Start workflow / New collection are inert (`aria-disabled`, "Coming soon").
+- Account card and the mobile "Sign out" sign the user out.
+- Below 1100px the sidebar collapses and a mobile header (brand + Documents / Briefs / Sign out) keeps navigation reachable.
+- All other routes and protected flows are unchanged.
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -869,3 +895,4 @@ To test manually today:
 - [ ] T37 Activity tab: real upload/extraction events only (no fabrication), labels match status, empty state, no internals leaked
 - [ ] T38 Nav shows Documents \| Ask \| Activity; active state + mobile usable; core Documents flow unchanged
 - [x] T39 Malformed-PDF stabilization smoke: failed doc inspected (malformed PDF, 0 chunks, original preserved); Q&A on failed doc → 422 (no OpenAI call); improved extraction-failed message shown and wraps in Activity; known-good PDF full lifecycle (upload 201 / extraction success / 3 chunks / preview renders / Q&A 200 + citations / delete 204); Activity accurate with no stale entries; no orphan chunks; all test docs deleted
+- [ ] T40 Home /dashboard Command Center: layout matches reference; real user + Recent documents (icons/empty/error); Recent briefs placeholder; Ask → /ask?q=; routed vs inert controls; sign-out; mobile header < 1100px; no regressions

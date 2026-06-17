@@ -2,6 +2,23 @@
 
 ---
 
+## [Signal87_Core_Home_Command_Center_v1] — 2026-06-17  *(Home / Command Center dashboard redesign)*
+
+### Summary
+Frontend-only redesign of the Home route (`/dashboard`) to match the provided "Command Center" reference design — a clean white layout with a left sidebar, a top "Home / Command Center" bar, an Ask bar, quick-action buttons, Recent documents + Recent briefs cards, and a Suggested actions panel. Adapted from a react-router-dom + plain-CSS spec to this stack (wouter, Clerk, React Query). No backend, API, contract, schema, auth, or protected document flow was touched. Typecheck passes.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+- `src/pages/dashboard.tsx` — rewritten Home page. Real Clerk user (initials / name / email; account card + mobile "Sign out" call `signOut`). Real documents via `useListDocuments` (loading / empty / error states) for **Recent documents**; **Recent briefs** uses isolated placeholder data (`SAMPLE_RECENT_BRIEFS`) since briefs are not persisted. Ask bar routes to `/ask?q=<encoded>` (Enter or button). Sidebar/action controls route only to existing pages.
+- `src/pages/home.css` — new scoped stylesheet (`.s87-*` classes) carrying the reference's exact px values (icon / font / spacing) for pixel fidelity. Adds `:focus-visible` keyboard styles and a mobile header (shown < 1100px) so navigation + sign-out stay reachable when the sidebar collapses.
+
+### Notes / known limitations
+- **Routed controls:** Home→`/dashboard`, Documents→`/documents`, Briefs→`/brief`, Compare documents→`/compare`, Summarize / Extract→`/ask`, Create brief→`/brief`, Upload document→upload modal.
+- **No-op by design:** sidebar items without routes (Collections / Agents / Workflows / Settings) and the New agent / Start workflow / New collection buttons are kept for visual parity but marked `aria-disabled` + `title="Coming soon"` (no such features exist; out of scope).
+- **Ask query:** the typed question is preserved in the URL (`/ask?q=…`); the existing `/ask` page is an unchanged document picker and does not yet pre-fill from `q`.
+- Welcome emoji remains removed. Existing nav/routes and every protected flow (auth, upload, download, delete, re-index, PDF viewer, chat, brief, citations + Verification Trace) are unchanged. `BACKEND_MAP.md` unchanged (frontend-only).
+
+---
+
 ## [Signal87_Core_Stripe_Freemium_v1] — 2026-06-16  *(Stripe freemium integration)*
 
 ### Summary
