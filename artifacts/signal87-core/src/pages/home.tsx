@@ -2,6 +2,9 @@ import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn, UserPlus } from "lucide-react";
+import AriaChatAnimation from "@/components/aria-chat-animation";
+import CrossDocAnimation from "@/components/cross-doc-animation";
+import AuditTraceAnimation from "@/components/audit-trace-animation";
 
 const FEATURES = [
   {
@@ -101,6 +104,77 @@ export default function Home() {
                 </Link>
               </>
             )}
+          </div>
+        </section>
+
+        {/* Demos */}
+        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 mb-4">
+              See it in action.
+            </h2>
+            <p className="text-base text-gray-500 max-w-xl mx-auto">
+              Three core capabilities, each grounded in your source documents.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Document Q&A */}
+            <div className="flex flex-col gap-4">
+              <AriaChatAnimation />
+              <div className="text-center">
+                <p className="text-xs text-gray-400 mb-2">Ask questions, get cited answers</p>
+                <Link
+                  href={
+                    isLoaded && isSignedIn
+                      ? "/documents"
+                      : "/sign-in?redirect_url=/documents"
+                  }
+                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  Try it
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Cross-doc compare */}
+            <div className="flex flex-col gap-4">
+              <CrossDocAnimation />
+              <div className="text-center">
+                <p className="text-xs text-gray-400 mb-2">Compare multiple documents at once</p>
+                <Link
+                  href={
+                    isLoaded && isSignedIn
+                      ? "/compare"
+                      : "/sign-in?redirect_url=/compare"
+                  }
+                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  Open Compare
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Verification trace */}
+            <div className="flex flex-col gap-4">
+              <AuditTraceAnimation />
+              <div className="text-center">
+                <p className="text-xs text-gray-400 mb-2">Generate briefs with full audit trail</p>
+                <Link
+                  href={
+                    isLoaded && isSignedIn
+                      ? "/brief"
+                      : "/sign-in?redirect_url=/brief"
+                  }
+                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  Open Brief
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
