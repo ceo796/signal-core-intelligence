@@ -269,7 +269,7 @@ export default function DocumentDetail() {
                 <FileText className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold tracking-tight break-all" title={doc.fileName}>
+                <h1 className="text-2xl font-bold tracking-tight break-words" title={doc.fileName}>
                   {doc.fileName}
                 </h1>
                 <div className="flex items-center gap-3 mt-2 flex-wrap text-xs font-mono text-muted-foreground">

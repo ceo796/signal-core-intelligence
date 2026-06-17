@@ -1,0 +1,89 @@
+You are working on the Signal87 AI Replit codebase.
+
+Current checkpoint:
+`68be0dbb — Signal87_Core_Document_Thumbnails_v1`
+
+We are now doing a narrow frontend-only polish pass on the document library and document detail experience.
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not change auth behavior.
+* Do not change upload, parsing, extraction, chunking, chat, brief, compare, AI routing, or PDF viewer logic.
+* Do not redesign the landing page.
+* Do not rebuild the dashboard.
+* Do not install packages.
+* Do not replace real data with mock/static data.
+* Keep this scoped to `/documents`, document cards, and document detail UI only.
+
+TASK:
+Polish the document library and document detail experience now that thumbnails are working.
+
+Focus areas:
+
+1. Document cards
+
+* Improve spacing, alignment, and hierarchy.
+* Make thumbnails feel integrated into the card design.
+* Keep file-type colors limited to appropriate document badges/icons.
+* Ensure document title, file type, status, chunk count, and upload date are readable.
+* Preserve existing Ask, Delete, and document-detail behavior.
+* Avoid dead clickable areas.
+
+2. Document grid
+
+* Ensure the grid feels balanced on desktop.
+* Ensure it adapts well on tablet/mobile.
+* Avoid excessive empty space.
+* Do not make the cards too tall or visually heavy.
+
+3. Document detail page
+
+* Confirm the selected document detail route still works.
+* Polish header spacing, document metadata, and action buttons if needed.
+* Preserve PDF viewer/original download behavior.
+* Preserve citations, extracted text, chat, and re-index/delete behavior if present.
+
+4. Interaction QA
+
+* Clicking thumbnail/title/card routes correctly.
+* Ask a Question still routes correctly.
+* Delete still behaves as before.
+* Upload still works.
+* No card looks clickable unless it is clickable.
+* No broken image icons.
+* No console errors.
+
+5. Mobile polish
+
+* Cards should stack cleanly.
+* Buttons should remain tappable.
+* Sidebar/mobile navigation should not break.
+
+VERIFY:
+
+* `/documents` loads real documents.
+* Document thumbnails still render or fall back safely.
+* Document detail opens.
+* Ask still works.
+* Upload still works.
+* `/ask`, `/brief`, `/compare`, `/activity` still work.
+* Unauthenticated `/api/documents` still returns 401.
+* `/api/healthz` still returns 200.
+* TypeScript passes.
+* App builds.
+* No backend/database/auth/API files changed.
+
+FINAL RESPONSE:
+Report:
+
+* Files changed.
+* What visual polish was applied.
+* Document card behavior.
+* Document detail behavior.
+* Mobile behavior.
+* Route regression results.
+* Auth/API protection results.
+* TypeScript/build status.
+* Confirmation that backend/database/auth/document parsing/AI logic were untouched.

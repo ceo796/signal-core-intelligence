@@ -2,6 +2,39 @@
 
 ---
 
+## [Signal87_Core_Document_Library_Polish_v1] — 2026-06-17  *(Document library + detail UI polish pass)*
+
+### Summary
+Narrow frontend-only polish pass on the document library and document detail pages. No backend, API, DB schema, auth, or business logic changes.
+
+### Changed — `src/pages/documents.tsx`
+- **Removed redundant file-type icon box** from card body — the thumbnail already signals file type; the card body now leads cleanly with the filename.
+- **Title rendering:** `truncate` → `line-clamp-2` so long filenames wrap to a second line rather than truncating; `font-medium text-base` → `font-semibold text-sm leading-snug` for tighter, crisper hierarchy.
+- **Grid breakpoint added:** `sm:grid-cols-2` for tablet — cards stack 2-up at 640 px instead of jumping from 1-col to 3-col. Reduces visual void on iPad.
+- **Thumbnail height:** `h-44` → `h-40` — slightly less visual weight; cards feel less tall.
+- **CardContent padding:** `p-5` → `p-4` — tighter body without feeling cramped.
+- **Meta spacing:** `space-y-2` → `space-y-1.5`; action separator `mt-6 pt-4` → `mt-4 pt-3`.
+- **Upload date format:** `yyyy-MM-dd HH:mm` → `MMM d, yyyy` (e.g. "Jun 17, 2026") — more readable at a glance.
+- **Type badge text:** `text-xs` → `text-[11px]` — visually consistent with status badge.
+- **Header:** `p-6` → `px-6 py-5`, heading `text-2xl` → `text-xl`, subtitle `text-sm mt-1` → `text-xs mt-0.5` — slightly reduced weight.
+- **Skeleton placeholders** updated to match new layout (h-40 thumbnail, tighter body).
+- All card actions (Ask, Re-Index, Delete), routing, and AlertDialog behavior are **untouched**.
+
+### Changed — `src/pages/document-detail.tsx`
+- **h1 word-break:** `break-all` → `break-words` — filenames with spaces wrap naturally rather than splitting at any character.
+
+### Unchanged
+- `document-thumbnail.tsx` — no changes.
+- Backend, API contract, DB schema, auth, upload, download, PDF viewer, chat, brief, compare, activity, admin, AI routing.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — **clean**.
+- Vite HMR: both `documents.tsx` and `document-detail.tsx` hot-updated; browser console **zero errors**.
+- API: `/api/healthz` → 200; unauthenticated `/api/documents` → 401.
+- Thumbnail fetches (`/api/documents/:id/original`) confirmed in API logs from standalone tab.
+
+---
+
 ## [Signal87_Core_Document_Thumbnails_v1] — 2026-06-17  *(Document library thumbnail/preview experience)*
 
 ### Summary

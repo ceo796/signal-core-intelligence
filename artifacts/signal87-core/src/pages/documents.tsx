@@ -49,7 +49,7 @@ export default function DocumentsList() {
         },
         onError: () => {
           toast.error("Failed to delete document");
-        }
+        },
       }
     );
   };
@@ -74,24 +74,27 @@ export default function DocumentsList() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="p-6 border-b border-border flex items-center justify-between bg-card">
+        <header className="px-6 py-5 border-b border-border flex items-center justify-between bg-card">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Documents</h1>
-            <p className="text-sm text-muted-foreground mt-1">Your uploaded documents</p>
+            <h1 className="text-xl font-bold tracking-tight">Documents</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Your uploaded documents</p>
           </div>
           <FileUploadModal />
         </header>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-5">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="bg-card border-border/50 overflow-hidden">
-                  <Skeleton className="h-44 w-full rounded-none" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-5 w-3/4 mb-4" />
-                    <Skeleton className="h-4 w-1/2 mb-2" />
-                    <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-40 w-full rounded-none" />
+                  <CardContent className="p-4 space-y-3">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <div className="pt-2 space-y-2">
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-2/3" />
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -111,16 +114,19 @@ export default function DocumentsList() {
               <FileUploadModal />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {documents?.map((doc) => {
                 const status = getDocumentStatus(doc);
                 const isReindexing = reindexingId === doc.id;
                 return (
-                  <Card key={doc.id} className="bg-card border-border/50 hover:border-primary/50 transition-colors group flex flex-col overflow-hidden">
-                    {/* Thumbnail — full-bleed top area, links to document detail */}
+                  <Card
+                    key={doc.id}
+                    className="bg-card border-border/50 hover:border-primary/40 transition-colors group flex flex-col overflow-hidden"
+                  >
+                    {/* Thumbnail — full-bleed, links to document detail */}
                     <Link
                       href={`/documents/${doc.id}`}
-                      className="block h-44 w-full shrink-0 border-b border-border/50 overflow-hidden"
+                      className="block h-40 w-full shrink-0 border-b border-border/50 overflow-hidden"
                     >
                       <DocumentThumbnail
                         id={doc.id}
@@ -129,28 +135,26 @@ export default function DocumentsList() {
                       />
                     </Link>
 
-                    <CardContent className="p-5 flex-1 flex flex-col">
-                      <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col cursor-pointer">
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                          <div className="flex items-start gap-3 overflow-hidden">
-                            <div className="p-2 bg-secondary rounded text-primary shrink-0">
-                              <FileText className="w-4 h-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <h3 className="font-medium text-base truncate group-hover:text-primary transition-colors" title={doc.fileName}>
-                                {doc.fileName}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                <span className="text-xs font-mono px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded">
-                                  {doc.fileType.toUpperCase()}
-                                </span>
-                                <DocumentStatusBadge doc={doc} />
-                              </div>
-                            </div>
+                    <CardContent className="p-4 flex-1 flex flex-col">
+                      {/* Title + badges — links to document detail */}
+                      <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col">
+                        <div className="mb-3">
+                          <h3
+                            className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors"
+                            title={doc.fileName}
+                          >
+                            {doc.fileName}
+                          </h3>
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            <span className="text-[11px] font-mono px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded">
+                              {doc.fileType.toUpperCase()}
+                            </span>
+                            <DocumentStatusBadge doc={doc} />
                           </div>
                         </div>
 
-                        <div className="mt-auto space-y-2 text-xs font-mono text-muted-foreground">
+                        {/* Meta — pushed to bottom of clickable area */}
+                        <div className="mt-auto space-y-1.5 text-[11px] font-mono text-muted-foreground">
                           <div className="flex justify-between">
                             <span>Chunks</span>
                             <span className="text-foreground">{doc.chunkCount}</span>
@@ -158,13 +162,14 @@ export default function DocumentsList() {
                           <div className="flex justify-between">
                             <span>Uploaded</span>
                             <span className="text-foreground">
-                              {format(new Date(doc.uploadedAt), "yyyy-MM-dd HH:mm")}
+                              {format(new Date(doc.uploadedAt), "MMM d, yyyy")}
                             </span>
                           </div>
                         </div>
                       </Link>
 
-                      <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border/50">
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/50">
                         {status.canReindex ? (
                           <Button
                             variant="secondary"
@@ -200,7 +205,11 @@ export default function DocumentsList() {
 
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive border-border/50">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="shrink-0 text-muted-foreground hover:text-destructive border-border/50"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </AlertDialogTrigger>
