@@ -662,7 +662,7 @@ export default function Dashboard() {
             {/* Page header */}
             <div>
               <h1 className="text-2xl font-bold text-slate-900">
-                {firstName ? `Welcome back, ${firstName} 👋` : "Welcome back 👋"}
+                {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
               </h1>
               <p className="text-sm text-slate-400 mt-0.5">
                 Your AI workspace for documents, insights, and execution.
