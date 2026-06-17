@@ -1,0 +1,73 @@
+You are working on the Signal87 AI Replit codebase.
+
+Task:
+Update the public landing page copy only. Do not redesign the page yet.
+
+CRITICAL RULES:
+
+* Do not touch backend logic.
+* Do not touch database schema.
+* Do not change auth behavior.
+* Do not change protected app routes.
+* Do not change documents, upload, Ask, Brief, Compare, Activity, AI, or API logic.
+* Do not rebuild the dashboard.
+* Do not install packages.
+* Keep this limited to public landing page content/copy.
+
+Replace the current weak document/PDF-focused hero copy with stronger business-document intelligence positioning.
+
+Use this copy:
+
+Hero badge:
+AI-powered · Source-cited · Business-ready
+
+Hero headline:
+Turn documents into decisions.
+
+Hero subheadline:
+Signal87 converts business documents into cited answers, executive briefs, and multi-document intelligence — giving teams a faster path from source material to action.
+
+Primary CTA:
+Open App
+
+Secondary CTA:
+See how it works
+
+Feature cards:
+
+Verified Intelligence
+Every answer is tied back to the source material, so teams can move quickly without losing confidence.
+
+Executive Briefs
+Generate structured summaries, risk briefs, diligence notes, and decision memos from one document or many.
+
+Cross-Document Analysis
+Compare files, surface contradictions, identify themes, and extract insights across an entire document set.
+
+Audit-Ready Reasoning
+See what sources were used, where the answer came from, and how the system reached its conclusion.
+
+Secure Document Workspace
+Your files stay inside a protected workspace with authenticated access and controlled document visibility.
+
+Built for Business Judgment
+Designed for investors, operators, advisors, and teams who need to understand complex material quickly.
+
+Verification:
+
+* Landing page loads publicly.
+* CTA to Open App routes to `/documents`.
+* Sign-in behavior remains intact.
+* Protected routes remain protected.
+* TypeScript passes.
+* App builds.
+* No backend/database/auth/API files changed.
+
+Final response:
+Report:
+
+* Files changed
+* Copy updated
+* CTA behavior
+* TypeScript/build status
+* Confirmation that backend/database/auth/protected app logic were untouched

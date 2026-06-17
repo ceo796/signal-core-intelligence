@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, Database, Zap, Linkedin, LogIn } from "lucide-react";
+import { GridWave } from "@/components/grid-wave";
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -27,7 +28,9 @@ export default function Home() {
         </nav>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
+      <div className="flex-1 relative overflow-hidden">
+      <GridWave />
+      <main className="flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full relative z-10">
         <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-mono text-gray-500 border border-gray-200">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
           AI-powered · Cites every source
@@ -84,6 +87,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      </div>
 
       <footer className="border-t border-gray-200 px-6 py-12 text-xs text-gray-400">
         <div className="flex flex-col sm:flex-row justify-between gap-6">

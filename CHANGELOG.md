@@ -2,6 +2,31 @@
 
 ---
 
+## [Signal87_Core_GridWave_v1] — 2026-06-17  *(GridWave animated canvas background on home page)*
+
+### Summary
+Added a `GridWave` React canvas component as a perspective-grid wave animation behind the home page hero. Frontend-only; no backend, API, DB, auth, or AI changes.
+
+### Added — `src/components/grid-wave.tsx`
+- New `GridWave` component: canvas-based animation that draws a 25×40 perspective grid with sinusoidal wave offsets per cell.
+- Canvas resizes to `window.innerWidth × window.innerHeight * 0.6` on mount and window resize; listener is cleaned up on unmount.
+- Grid lines: `rgba(59, 130, 246, 0.15)` (subtle blue, 1 px). Fades to transparent at the bottom via CSS `maskImage` gradient.
+- Component is `pointer-events-none z-0 absolute top-0 left-0` — purely decorative, does not block any interaction.
+
+### Changed — `src/pages/home.tsx`
+- Imported `GridWave` from `@/components/grid-wave`.
+- Wrapped the `<main>` hero section in a `flex-1 relative overflow-hidden` div so the absolutely-positioned canvas is contained and full-width.
+- `<GridWave />` rendered as first child of that wrapper (z-0); `<main>` is `relative z-10` so hero text/buttons sit above the canvas.
+
+### Unchanged
+- All hero copy, CTA buttons, features grid, partner logos, footer, header.
+- All backend routes, API contract, DB schema, auth, upload, AI routing.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+
+---
+
 ## [Signal87_Core_Mobile_Polish_v1] — 2026-06-17  *(Mobile layout polish — larger tap targets, responsive padding, smaller thumbnails, scrollable table)*
 
 ### Summary
