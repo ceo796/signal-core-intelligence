@@ -2,6 +2,26 @@
 
 ---
 
+## [Signal87_Core_Dashboard_Cleanup] — 2026-06-17  *(Remove fake/demo content from Signal87 AI panel)*
+
+### Summary
+Frontend-only cleanup of the Dashboard page. No backend, API, auth, DB, upload, brief, or environment changes. Typecheck passes clean.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/pages/dashboard.tsx`**
+- Removed `EXAMPLE_QUESTION` constant (hardcoded fake query string).
+- Removed `followUps` array (hardcoded fake follow-up suggestion strings).
+- Removed `CircleDot` and `Paperclip` from lucide imports (only used by the removed fake UI).
+- Replaced the entire body of `Signal87AiPanel` (fake example answer, fake numbered list, fake citation chips for "Q2 Market Research.pdf" / "Competitive Analysis.docx" / "Customer Interviews.pdf", fake follow-up suggestion pills, disconnected `readOnly` follow-up input) with a clean empty state:
+  - Header row: Sparkles icon + "Signal87 AI" + Beta badge (kept).
+  - Removed fake "Sources connected · Manage" status row.
+  - Empty state: "Ask Signal87 a question to begin." / "Use general AI, or ground answers in your uploaded documents when sources are available."
+  - Single "Open Signal87 AI →" button linking to `/ask` (real page).
+- `RecentWork`, `RecentActivity`, `SuggestedActions`, `QuickActions`, `CommandBar` — all unchanged. All three `suggestedActions` link to real pages (`/compare`, `/brief`, `/ask`).
+
+---
+
 ## [Signal87_Core_Hybrid_Answering_v2] — 2026-06-17  *(Hybrid answering refinements — threshold fix, keyword expansion, label wording)*
 
 ### Summary

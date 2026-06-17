@@ -21,10 +21,8 @@ import {
   LogOut,
   Menu,
   X,
-  CircleDot,
   Clock,
   MoreHorizontal,
-  Paperclip,
   Sun,
   Moon,
 } from "lucide-react";
@@ -57,14 +55,6 @@ const suggestedActions = [
   { icon: TrendingUp, label: "Extract key risks & opportunities", desc: "From your documents", href: "/ask" },
 ];
 
-const followUps = [
-  "Show market sizing for these opportunities",
-  "What risks should we watch?",
-  "Compare vs last quarter",
-];
-
-const EXAMPLE_QUESTION =
-  "What are the top 3 growth opportunities for Q2 based on our latest research?";
 
 function initialsFor(user: ReturnType<typeof useUser>["user"]) {
   if (!user) return "U";
@@ -472,113 +462,24 @@ function RecentWork({
 function Signal87AiPanel() {
   return (
     <section className="bg-[var(--s87-panel)] border border-[var(--s87-border)] rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-5 pt-5 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
-          <span className="text-sm font-semibold text-[var(--s87-ink)]">Signal87 AI</span>
-          <span className="px-1.5 py-0.5 text-[9px] font-semibold text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded uppercase tracking-wide">
-            Beta
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-[var(--s87-muted)]">
-          <CircleDot className="w-3 h-3" style={{ color: "var(--s87-ok)" }} />
-          <span>Sources connected</span>
-          <span className="text-[var(--s87-faint)]">·</span>
-          <span className="text-[var(--s87-ink)] hover:opacity-70 cursor-pointer font-medium transition-opacity">
-            Manage
-          </span>
-        </div>
+      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--s87-divider)]">
+        <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
+        <span className="text-sm font-semibold text-[var(--s87-ink)]">Signal87 AI</span>
+        <span className="px-1.5 py-0.5 text-[9px] font-semibold text-[var(--s87-muted)] bg-[var(--s87-chip)] border border-[var(--s87-border)] rounded uppercase tracking-wide">
+          Beta
+        </span>
       </div>
-      <p className="px-5 mt-2 text-xs text-[var(--s87-muted)]">
-        I can answer questions across your uploaded documents.
-      </p>
-
-      {/* Example question chip */}
-      <div className="px-5 mt-4">
-        <Link href="/ask">
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-[var(--s87-chip)] border border-[var(--s87-border)] text-xs text-[var(--s87-body)] hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer max-w-full">
-            <span className="truncate">{EXAMPLE_QUESTION}</span>
-          </div>
-        </Link>
-      </div>
-
-      {/* AI answer */}
-      <div className="px-5 mt-4">
-        <div className="flex gap-3">
-          <div className="w-7 h-7 rounded-md bg-[var(--s87-chip)] flex items-center justify-center shrink-0 mt-1">
-            <Sparkles className="w-4 h-4 text-[var(--s87-ink)]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="inline-block mb-1.5 text-[10px] font-medium uppercase tracking-wide text-[var(--s87-muted)]">
-              Example answer
-            </span>
-            <div className="bg-[var(--s87-panel-2)] border border-[var(--s87-border)] rounded-lg p-4 text-sm text-[var(--s87-body)] leading-relaxed">
-              <p className="mb-3">
-                Based on your Q2 market research and competitive analysis, the top 3 growth opportunities are:
-              </p>
-              <ol className="space-y-2 mb-3 list-decimal list-inside">
-                <li>Expand into mid-market segment with simplified onboarding.</li>
-                <li>Increase wallet share through integrations and workflow automation.</li>
-                <li>Differentiate on pricing transparency and ROI reporting.</li>
-              </ol>
-              <p className="text-[var(--s87-muted)]">
-                These are supported by trends in market demand, competitive gaps, and customer feedback.
-              </p>
-            </div>
-
-            {/* Citations */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {["Q2 Market Research.pdf", "Competitive Analysis.docx", "Customer Interviews.pdf"].map(
-                (src, i) => (
-                  <span
-                    key={src}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--s87-chip)] border border-[var(--s87-border)] text-xs text-[var(--s87-body)]"
-                  >
-                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--s87-ink)] text-[9px] font-bold text-[var(--s87-btn-fg)]">
-                      {i + 1}
-                    </span>
-                    {src}
-                  </span>
-                ),
-              )}
-            </div>
-
-            {/* Follow-up suggestions */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {followUps.map((q) => (
-                <Link key={q} href="/ask">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-[var(--s87-border)] bg-[var(--s87-panel-2)] text-xs text-[var(--s87-muted)] hover:text-[var(--s87-ink)] hover:bg-[var(--s87-hover-bg)] transition-colors cursor-pointer">
-                    {q}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Follow-up input */}
-      <div className="px-5 py-5 mt-2">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative flex items-center">
-            <Paperclip className="absolute left-3 w-4 h-4 text-[var(--s87-faint)] pointer-events-none" />
-            <input
-              type="text"
-              readOnly
-              placeholder="Ask a follow-up..."
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-[var(--s87-panel-2)] border border-[var(--s87-border)] rounded-lg text-[var(--s87-body)] placeholder:text-[var(--s87-faint)] focus:outline-none focus:border-[var(--s87-muted)] cursor-text transition-colors"
-            />
-          </div>
-          <Link href="/ask">
-            <div className="w-10 h-10 rounded-lg bg-[var(--s87-btn)] flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer shrink-0">
-              <ArrowRight className="w-4 h-4 text-[var(--s87-btn-fg)]" />
-            </div>
-          </Link>
-        </div>
-        <p className="text-[10px] text-[var(--s87-muted)] mt-2 text-center">
-          AI can make mistakes. Verify important information.
+      <div className="px-5 py-10 flex flex-col items-center text-center gap-2">
+        <p className="text-sm font-medium text-[var(--s87-ink)]">Ask Signal87 a question to begin.</p>
+        <p className="text-xs text-[var(--s87-muted)] max-w-xs leading-relaxed">
+          Use general AI, or ground answers in your uploaded documents when sources are available.
         </p>
+        <Link href="/ask" className="mt-3">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-[var(--s87-btn)] text-xs font-medium text-[var(--s87-btn-fg)] hover:opacity-90 transition-opacity cursor-pointer">
+            Open Signal87 AI
+            <ArrowRight className="w-3.5 h-3.5" />
+          </span>
+        </Link>
       </div>
     </section>
   );
