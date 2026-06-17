@@ -2,6 +2,61 @@
 
 ---
 
+## [Signal87_Core_Design_QA_Phase1_Phase2] — 2026-06-17  *(Design QA sweep — sidebar, status tokens, shared file-type utility, page header normalization)*
+
+### Summary
+Frontend-only design QA cleanup across the app shell and all main pages. No backend, auth, API, or DB changes. Introduces a shared `@/lib/file-type` utility to eliminate four copies of the same `fileTypeIcon`/`fileTypeColor` functions. Introduces CSS variable tokens for file-type badges (`--ft-*`) and document status badges (`--status-*`) with full dark-mode variants — replacing hardcoded Tailwind color strings scattered across the app. The sidebar is aligned to 208 px with a left rail active indicator matching the Dashboard design system. All page headers normalized to `text-xl font-semibold`. Client-side document search wired. Upgrade page wrapped in `<Layout>`. All typechecks pass.
+
+### Changed — Frontend (`artifacts/signal87-core`)
+
+**`src/index.css`**
+- Added `--ft-pdf-*`, `--ft-csv-*`, `--ft-doc-*`, `--ft-txt-*` file-type badge tokens to `:root` (light) and `.dark`.
+- Added `--status-ready-*`, `--status-processing-*`, `--status-warning-*` document status tokens to `:root` and `.dark`.
+
+**`src/lib/file-type.ts`** *(new)*
+- `fileTypeIcon(fileType)` — returns the correct Lucide icon component.
+- `fileTypeColor(fileType)` — returns CSS-variable-backed badge classes (dark-mode safe).
+- `fileTypeGlyph(fileType)` — returns foreground glyph color class for icon-only contexts.
+
+**`src/components/document-status-badge.tsx`**
+- Replaced hardcoded `bg-green-50 text-green-700`, `bg-blue-50 text-blue-700`, `bg-amber-50 text-amber-700` with `--status-*` CSS variable classes.
+
+**`src/components/layout.tsx`**
+- Sidebar width `w-56` (224 px) → `w-52` (208 px) to match Dashboard.
+- Logo `h-9` → `h-7` (matching Dashboard sidebar logo).
+- Active nav item: replaced `bg-primary/10 text-primary` fill with subtle `bg-primary/8 text-foreground` + left rail indicator (`w-0.5 rounded-full bg-primary`), matching Dashboard nav style.
+- Icon size `w-4 h-4` → `w-[18px] h-[18px]`.
+- Nav gap `gap-1` → `gap-0.5`; padding `px-3` with `py-3` fine-tuned.
+
+**`src/pages/documents.tsx`**
+- Removed local `fileTypeIcon`/`fileTypeColor` functions; now uses shared `@/lib/file-type`.
+- Client-side search: `search` state wires the search input; `filteredDocs` filters by `fileName`; shows "No documents match" when filtered list is empty.
+
+**`src/pages/activity.tsx`**
+- Header: `text-2xl font-bold p-6` → `text-xl font-semibold px-6 py-5 shrink-0` (normalized).
+- Tone badge classes use `--status-*` CSS variables instead of hardcoded Tailwind greens/blues.
+- Timestamp format: `"yyyy-MM-dd HH:mm"` → `"MMM d 'at' h:mm a"` (human-readable).
+
+**`src/pages/upgrade.tsx`**
+- Wrapped in `<Layout>` (previously a bare `min-h-screen` div with no sidebar).
+- Removed "Back to dashboard" button (navigation provided by Layout sidebar).
+- Replaced hardcoded `bg-violet-*`/`bg-slate-*` classes with token equivalents (`bg-primary/10`, `bg-secondary/50`, `border-primary/20`).
+
+**`src/pages/compare.tsx`**
+- Removed local `fileTypeIcon`/`fileTypeColor` functions and `FileText, FileCode, Table` imports; uses shared `@/lib/file-type`.
+
+**`src/pages/brief.tsx`**
+- Same as compare.tsx — shared utility.
+
+**`src/pages/dashboard.tsx`**
+- Removed local `fileTypeIcon`/`fileGlyphColor` functions and `FileCode, Table` imports; uses shared `@/lib/file-type` (`fileTypeIcon`, `fileTypeGlyph`).
+
+**`src/pages/document-chat.tsx`**
+- `ModeBadge` font: `text-[10px]` → `text-[11px]` for legibility.
+- Footer note: `text-[10px]` → `text-[11px]`.
+
+---
+
 ## [Signal87_Core_Hybrid_Answering_v1] — 2026-06-16  *(Hybrid answering — general knowledge without document citations)*
 
 ### Summary

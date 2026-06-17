@@ -32,13 +32,16 @@ export function Layout({ children }: LayoutProps) {
             key={item.href}
             href={item.href}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all whitespace-nowrap ${
               isActive
-                ? "bg-primary/10 text-primary font-medium shadow-sm shadow-primary/5"
+                ? "bg-primary/8 text-foreground font-medium"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
-            <item.icon className="w-4 h-4 shrink-0" />
+            {isActive && (
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-primary" />
+            )}
+            <item.icon className="w-[18px] h-[18px] shrink-0" />
             {item.label}
           </Link>
         );
@@ -49,22 +52,22 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex shrink-0 w-56 border-r border-border bg-sidebar flex-col">
+      <aside className="hidden md:flex shrink-0 w-52 border-r border-border bg-sidebar flex-col">
         <div className="px-4 py-4 border-b border-border flex items-center shrink-0">
           <Link href="/">
-            <img src="/signal87-logo-black.svg" alt="Signal87" className="h-9 w-auto" />
+            <img src="/signal87-logo-black.svg" alt="Signal87" className="h-7 w-auto" />
           </Link>
         </div>
-        <nav className="flex-1 flex flex-col px-3 py-3 gap-1 items-stretch">
+        <nav className="flex-1 flex flex-col px-2.5 py-3 gap-0.5 items-stretch">
           {navLinks}
         </nav>
         {user && (
-          <div className="flex flex-col px-3 py-3 border-t border-border gap-2 mt-auto">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col px-2.5 py-3 border-t border-border gap-2 mt-auto">
+            <div className="flex items-center gap-2.5 p-2 rounded-md hover:bg-muted transition-colors">
               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                 {user.firstName?.[0] ?? user.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? "U"}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-foreground truncate leading-tight">
                   {user.firstName} {user.lastName}
                 </p>
@@ -76,7 +79,7 @@ export function Layout({ children }: LayoutProps) {
             <button
               type="button"
               onClick={() => signOut({ redirectUrl: basePath || "/" })}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit px-2"
             >
               <LogOut className="w-3 h-3" />
               Sign out

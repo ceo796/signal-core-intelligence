@@ -150,6 +150,34 @@
   --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* File-type badge tokens */
+  --ft-pdf-bg: #fff1f2;
+  --ft-pdf-fg: #e11d48;
+  --ft-pdf-border: #fecdd3;
+  --ft-csv-bg: #ecfdf5;
+  --ft-csv-fg: #059669;
+  --ft-csv-border: #a7f3d0;
+  --ft-doc-bg: #eff6ff;
+  --ft-doc-fg: #2563eb;
+  --ft-doc-border: #bfdbfe;
+  --ft-txt-bg: #fffbeb;
+  --ft-txt-fg: #d97706;
+  --ft-txt-border: #fde68a;
+
+  /* Document status badge tokens */
+  --status-ready-bg: #ecfdf5;
+  --status-ready-fg: #15803d;
+  --status-ready-border: #bbf7d0;
+  --status-ready-dot: #22c55e;
+  --status-processing-bg: #eff6ff;
+  --status-processing-fg: #1d4ed8;
+  --status-processing-border: #bfdbfe;
+  --status-processing-dot: #3b82f6;
+  --status-warning-bg: #fffbeb;
+  --status-warning-fg: #b45309;
+  --status-warning-border: #fde68a;
+  --status-warning-dot: #f59e0b;
 }
 
 .dark {
@@ -202,6 +230,34 @@
   --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.5), 0px 4px 6px -1px hsl(0 0% 0% / 0.5);
   --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.5), 0px 8px 10px -1px hsl(0 0% 0% / 0.5);
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.5);
+
+  /* File-type badge tokens (dark) */
+  --ft-pdf-bg: rgba(225, 29, 72, 0.12);
+  --ft-pdf-fg: #fda4af;
+  --ft-pdf-border: rgba(225, 29, 72, 0.22);
+  --ft-csv-bg: rgba(5, 150, 105, 0.12);
+  --ft-csv-fg: #6ee7b7;
+  --ft-csv-border: rgba(5, 150, 105, 0.22);
+  --ft-doc-bg: rgba(37, 99, 235, 0.12);
+  --ft-doc-fg: #93c5fd;
+  --ft-doc-border: rgba(37, 99, 235, 0.22);
+  --ft-txt-bg: rgba(217, 119, 6, 0.12);
+  --ft-txt-fg: #fcd34d;
+  --ft-txt-border: rgba(217, 119, 6, 0.22);
+
+  /* Document status badge tokens (dark) */
+  --status-ready-bg: rgba(34, 197, 94, 0.12);
+  --status-ready-fg: #86efac;
+  --status-ready-border: rgba(34, 197, 94, 0.22);
+  --status-ready-dot: #22c55e;
+  --status-processing-bg: rgba(59, 130, 246, 0.12);
+  --status-processing-fg: #93c5fd;
+  --status-processing-border: rgba(59, 130, 246, 0.22);
+  --status-processing-dot: #3b82f6;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-warning-fg: #fcd34d;
+  --status-warning-border: rgba(245, 158, 11, 0.22);
+  --status-warning-dot: #f59e0b;
 }
 
 /* ---------------------------------------------------------------------------

@@ -10,9 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import {
-  FileText,
-  FileCode,
-  Table,
   AlertCircle,
   Send,
   Loader2,
@@ -26,26 +23,10 @@ import {
   User,
   Bot,
 } from "lucide-react";
+import { fileTypeIcon, fileTypeColor } from "@/lib/file-type";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MarkdownAnswer } from "@/components/markdown-answer";
-
-const fileTypeIcon = (fileType: string) => {
-  const t = fileType.toLowerCase();
-  if (t === "pdf") return FileText;
-  if (t === "csv") return Table;
-  if (t === "docx" || t === "doc") return FileCode;
-  return FileText;
-};
-
-const fileTypeColor = (fileType: string) => {
-  const t = fileType.toLowerCase();
-  if (t === "pdf") return "bg-rose-50 text-rose-600 border-rose-100";
-  if (t === "csv") return "bg-emerald-50 text-emerald-600 border-emerald-100";
-  if (t === "docx" || t === "doc") return "bg-blue-50 text-blue-600 border-blue-100";
-  if (t === "txt") return "bg-amber-50 text-amber-600 border-amber-100";
-  return "bg-secondary text-muted-foreground border-border";
-};
 
 function TracePanel({ debug }: { debug: NonNullable<ReturnType<typeof useMultiChat>['data']>['debug'] }) {
   const [open, setOpen] = useState(false);

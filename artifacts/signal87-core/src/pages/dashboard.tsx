@@ -16,8 +16,6 @@ import {
   Sparkles,
   Upload,
   ArrowRight,
-  FileCode,
-  Table,
   GitCompare,
   TrendingUp,
   LogOut,
@@ -30,26 +28,10 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { fileTypeIcon, fileTypeGlyph } from "@/lib/file-type";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const THEME_KEY = "s87-dashboard-theme";
-
-const fileTypeIcon = (fileType: string) => {
-  const t = fileType.toLowerCase();
-  if (t === "pdf") return FileText;
-  if (t === "csv" || t === "xlsx" || t === "xls") return Table;
-  if (t === "docx" || t === "doc") return FileCode;
-  return FileText;
-};
-
-const fileGlyphColor = (fileType: string) => {
-  const t = fileType.toLowerCase();
-  if (t === "pdf") return "text-rose-500";
-  if (t === "csv" || t === "xlsx" || t === "xls") return "text-emerald-600";
-  if (t === "docx" || t === "doc") return "text-blue-500";
-  if (t === "txt") return "text-amber-500";
-  return "text-[var(--s87-muted)]";
-};
 
 const sidebarNav = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -453,7 +435,7 @@ function RecentWork({
     <div className="divide-y divide-[var(--s87-divider)]">
       {docs.map((doc) => {
         const Icon = fileTypeIcon(doc.fileType);
-        const glyph = fileGlyphColor(doc.fileType);
+        const glyph = fileTypeGlyph(doc.fileType);
         const updatedAt = doc.uploadedAt
           ? formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })
           : "—";

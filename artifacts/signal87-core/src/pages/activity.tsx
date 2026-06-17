@@ -27,9 +27,9 @@ interface ActivityEvent {
 
 const toneClasses: Record<Tone, string> = {
   neutral: "bg-secondary text-foreground",
-  ready: "bg-green-50 text-green-700",
+  ready: "bg-[var(--status-ready-bg)] text-[var(--status-ready-fg)]",
   error: "bg-destructive/10 text-destructive",
-  processing: "bg-blue-50 text-blue-700",
+  processing: "bg-[var(--status-processing-bg)] text-[var(--status-processing-fg)]",
 };
 
 function iconFor(tone: Tone) {
@@ -109,9 +109,9 @@ export default function Activity() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="p-6 border-b border-border bg-card">
-          <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <header className="px-6 py-5 border-b border-border bg-card shrink-0">
+          <h1 className="text-xl font-semibold tracking-tight">Activity</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Recent upload and indexing activity for your documents.
           </p>
         </header>
@@ -152,8 +152,8 @@ export default function Activity() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-medium truncate">{ev.title}</p>
-                            <span className="text-xs text-muted-foreground shrink-0 font-mono">
-                              {format(new Date(ev.timestamp), "yyyy-MM-dd HH:mm")}
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              {format(new Date(ev.timestamp), "MMM d 'at' h:mm a")}
                             </span>
                           </div>
                           <p className="text-xs font-medium text-foreground/80 truncate" title={ev.fileName}>

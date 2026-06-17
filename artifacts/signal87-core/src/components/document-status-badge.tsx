@@ -1,16 +1,16 @@
 import { getDocumentStatus, type DocumentStatusInput, type DocumentStatusTone } from "@/lib/document-status";
 
 const toneClasses: Record<DocumentStatusTone, string> = {
-  ready: "bg-green-50 text-green-700 border-green-200",
-  processing: "bg-blue-50 text-blue-700 border-blue-200",
-  warning: "bg-amber-50 text-amber-700 border-amber-200",
+  ready: "bg-[var(--status-ready-bg)] text-[var(--status-ready-fg)] border-[var(--status-ready-border)]",
+  processing: "bg-[var(--status-processing-bg)] text-[var(--status-processing-fg)] border-[var(--status-processing-border)]",
+  warning: "bg-[var(--status-warning-bg)] text-[var(--status-warning-fg)] border-[var(--status-warning-border)]",
   error: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
 const dotClasses: Record<DocumentStatusTone, string> = {
-  ready: "bg-green-500",
-  processing: "bg-blue-500 animate-pulse",
-  warning: "bg-amber-500",
+  ready: "bg-[var(--status-ready-dot)]",
+  processing: "bg-[var(--status-processing-dot)] animate-pulse",
+  warning: "bg-[var(--status-warning-dot)]",
   error: "bg-destructive",
 };
 

@@ -230,7 +230,7 @@ function ModeBadge({ mode }: { mode: QueryMode }) {
   const { text, className } = labels[mode];
   return (
     <span
-      className={`inline-block text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${className} mb-2`}
+      className={`inline-block text-[11px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${className} mb-2`}
       title="How Signal87 answered this question"
     >
       {text}
@@ -591,7 +591,7 @@ export default function DocumentChat() {
               <Send className="w-4 h-4" />
             </Button>
           </form>
-          <div className="text-center mt-2 text-[10px] text-muted-foreground">
+          <div className="text-center mt-2 text-[11px] text-muted-foreground">
             Answers grounded in your document
           </div>
         </div>
