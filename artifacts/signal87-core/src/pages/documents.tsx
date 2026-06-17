@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { FileUploadModal } from "@/components/file-upload";
@@ -67,6 +67,24 @@ function getInitialView(): ViewMode {
     if (stored === "grid" || stored === "list") return stored;
   } catch {}
   return "list";
+}
+
+const STATUS_FILTER_VALUES: StatusFilter[] = ["all", "ready", "processing", "error"];
+
+function getInitialStatusFilter(): StatusFilter {
+  try {
+    const stored = localStorage.getItem("docs-status-filter");
+    if (stored && STATUS_FILTER_VALUES.includes(stored as StatusFilter)) return stored as StatusFilter;
+  } catch {}
+  return "all";
+}
+
+function getInitialTypeFilter(): string {
+  try {
+    const stored = localStorage.getItem("docs-type-filter");
+    if (stored) return stored;
+  } catch {}
+  return "all";
 }
 
 const SORT_COLUMNS: SortColumn[] = ["name", "status", "chunks", "uploaded"];
@@ -151,8 +169,8 @@ export default function DocumentsList() {
   const [reindexingId, setReindexingId] = useState<number | null>(null);
   const [view, setView] = useState<ViewMode>(getInitialView);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(getInitialStatusFilter);
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>(getInitialTypeFilter);
   const [{ column: sortColumn, direction: sortDirection }, setSortState] = useState<{
     column: SortColumn;
     direction: SortDirection;
@@ -162,9 +180,33 @@ export default function DocumentsList() {
     new Set((documents ?? []).map((d) => d.fileType.toLowerCase()).filter(Boolean))
   ).sort();
 
+  useEffect(() => {
+    if (!documents) return;
+    if (typeFilter !== "all" && !availableTypes.includes(typeFilter)) {
+      setTypeFilter("all");
+      try { localStorage.removeItem("docs-type-filter"); } catch {}
+    }
+  }, [documents, availableTypes, typeFilter]);
+
   const switchView = (v: ViewMode) => {
     setView(v);
     try { localStorage.setItem("docs-view", v); } catch {}
+  };
+
+  const handleStatusFilter = (v: StatusFilter) => {
+    setStatusFilter(v);
+    try {
+      if (v === "all") localStorage.removeItem("docs-status-filter");
+      else localStorage.setItem("docs-status-filter", v);
+    } catch {}
+  };
+
+  const handleTypeFilter = (v: TypeFilter) => {
+    setTypeFilter(v);
+    try {
+      if (v === "all") localStorage.removeItem("docs-type-filter");
+      else localStorage.setItem("docs-type-filter", v);
+    } catch {}
   };
 
   const handleSort = (col: SortColumn) => {
@@ -209,10 +251,10 @@ export default function DocumentsList() {
 
   const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
   if (search) activeFilterChips.push({ key: "search", label: `"${search}"`, onRemove: () => setSearch("") });
-  if (typeFilter !== "all") activeFilterChips.push({ key: "type", label: fileTypeChip(typeFilter).label, onRemove: () => setTypeFilter("all") });
+  if (typeFilter !== "all") activeFilterChips.push({ key: "type", label: fileTypeChip(typeFilter).label, onRemove: () => handleTypeFilter("all") });
   if (statusFilter !== "all") {
     const statusLabel = statusFilter === "ready" ? "Ready" : statusFilter === "processing" ? "Processing" : "Error";
-    activeFilterChips.push({ key: "status", label: statusLabel, onRemove: () => setStatusFilter("all") });
+    activeFilterChips.push({ key: "status", label: statusLabel, onRemove: () => handleStatusFilter("all") });
   }
 
   const filteredDocuments = documents
@@ -302,7 +344,7 @@ export default function DocumentsList() {
                 </button>
               )}
             </div>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+            <Select value={statusFilter} onValueChange={(v) => handleStatusFilter(v as StatusFilter)}>
               <SelectTrigger className="h-8 w-36 text-sm">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -314,7 +356,7 @@ export default function DocumentsList() {
               </SelectContent>
             </Select>
             {availableTypes.length > 0 && (
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
+              <Select value={typeFilter} onValueChange={(v) => handleTypeFilter(v as TypeFilter)}>
                 <SelectTrigger className="h-8 w-32 text-sm">
                   <SelectValue placeholder="File type" />
                 </SelectTrigger>
@@ -390,7 +432,7 @@ export default function DocumentsList() {
             ))}
             {activeFilterChips.length >= 2 && (
               <button
-                onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}
+                onClick={() => { setSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
                 className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors ml-1"
               >
                 Clear all
@@ -460,7 +502,7 @@ export default function DocumentsList() {
                 })()}
               </p>
               <button
-                onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}
+                onClick={() => { setSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
                 className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
               >
                 Clear filters
