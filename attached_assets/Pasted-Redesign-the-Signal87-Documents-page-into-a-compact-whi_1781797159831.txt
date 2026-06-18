@@ -1,0 +1,99 @@
+Redesign the Signal87 Documents page into a compact white document archive.
+
+This is a frontend-only visual/layout task. Do not touch backend APIs, authentication, Clerk config, database schema, document ownership enforcement, storage, upload ingestion, extraction, chat, brief generation, hybrid agent, OpenAPI/codegen, or working routes.
+
+Goal:
+Make the Documents page feel like a premium enterprise document archive: compact, white, polished, and scannable. Use the attached white dashboard concept as inspiration, but keep Signal87 branding and the existing shared app shell/sidebar.
+
+Visual direction:
+
+* White / near-white background.
+* Refined, enterprise layout.
+* Compact cards or compact list/grid.
+* Borders and subtle surfaces, not heavy shadows.
+* Neutral black/charcoal text.
+* Restrained Signal87 accent color.
+* File-type badges for PDF, DOCX, XLSX, CSV, TXT.
+* Do not use fake categories or fake documents.
+
+Page structure:
+
+1. Header
+
+* Eyebrow: Archive
+* Title: Your documents.
+* Upload button on the right
+* Search input
+* Sort controls
+* Optional grid/list toggle if low-risk
+
+2. Filters
+   Use real data only.
+   Preferred filters:
+
+* All
+* PDF
+* DOCX
+* XLSX
+* CSV
+* TXT
+
+3. Stats row
+   Show only real available data:
+
+* Total documents
+* Storage used, if available
+* File types count, if available
+* Processed/indexed documents, if available
+  Omit unavailable stats rather than faking them.
+
+4. Document cards/list rows
+   Each document should show:
+
+* File icon or preview glyph
+* File type badge
+* Document name
+* Upload/update date
+* File size, if available
+* Chunk count/status, if available
+* Compact actions menu preserving existing actions
+
+Preserve all existing functionality:
+
+* Open/view document
+* Upload
+* Download original
+* Re-index
+* Delete
+* Ask/analyze
+* Compare/preselect, if already present
+
+Spreadsheet awareness:
+
+* XLSX/CSV files should display correctly as spreadsheet file types.
+* Do not fake spreadsheet previews.
+* Use real spreadsheet extraction/status data only if already available.
+
+Verification:
+
+* Documents page loads with real owner-scoped documents.
+* Empty state works.
+* Search/filter/sort works if already supported.
+* Upload still works.
+* PDF and XLSX uploads still work.
+* Detail navigation works.
+* Download original works.
+* Re-index works.
+* Delete works.
+* No console errors.
+* Frontend typecheck passes.
+* No backend files changed.
+* No auth/storage/schema/OpenAPI/codegen files changed.
+
+Final report:
+
+* Files changed
+* Layout changes made
+* What data is real vs omitted
+* Verification results
+* Any limitations

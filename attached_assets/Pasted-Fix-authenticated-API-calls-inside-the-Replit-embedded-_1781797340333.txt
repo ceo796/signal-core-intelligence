@@ -1,0 +1,97 @@
+Fix authenticated API calls inside the Replit embedded preview without changing Signal87’s auth/security model.
+
+This is a narrow reliability fix. Do not redesign. Do not refactor broadly. Do not change document ownership rules. Do not weaken Clerk auth. Do not bypass the approved-email gate. Do not touch document ingestion, storage, upload backend behavior, chat, brief generation, hybrid agent logic, OpenAPI/codegen, or database schema unless absolutely required by the auth transport fix.
+
+Problem:
+Authenticated workflows work in a standalone browser tab, but fail inside the Replit embedded preview iframe because Clerk’s session cookie is not reliably available there. This makes protected API calls such as `/api/documents` and `/api/documents/upload` return 401 in the preview, creating the appearance that upload/documents are broken.
+
+Goal:
+Make the frontend send Clerk’s authenticated token with API requests so the embedded preview can authenticate protected API calls, while preserving the existing Clerk security model and owner-scoped backend behavior.
+
+Required approach:
+
+1. Inspect the existing frontend API client/custom fetch layer.
+
+2. Inspect current Clerk frontend setup.
+
+3. Inspect backend Clerk middleware and `requireApprovedEmail`.
+
+4. Determine whether the backend already accepts Clerk bearer tokens through the standard Clerk middleware.
+
+5. If safe, update the centralized frontend API fetch layer so same-origin `/api/*` requests include:
+
+   `Authorization: Bearer <Clerk token>`
+
+   using Clerk’s official frontend token method from the current signed-in session.
+
+6. This must be centralized. Do not manually patch individual pages.
+
+7. Do not trust any userId/email sent from the client body, query string, or headers other than Clerk’s verified token.
+
+8. Do not disable cookies; standalone browser behavior must continue working.
+
+9. Do not remove or weaken the approved-email gate.
+
+10. Do not remove or weaken owner_user_id filtering.
+
+11. Do not introduce a custom auth system.
+
+Stop conditions:
+Stop and report before coding if:
+
+* Clerk bearer tokens are not accepted by the existing backend middleware.
+* The approved-email gate cannot securely resolve the user/email from the bearer token.
+* Implementing this would require weakening auth, bypassing approved-email checks, or trusting client-provided identity.
+* The fix would require broad auth architecture changes.
+
+Verification:
+After implementation, verify all of the following:
+
+Embedded Replit preview:
+
+* Sign in.
+* `/api/documents` returns 200, not 401.
+* Documents page loads.
+* Upload button opens modal.
+* Upload succeeds.
+* Uploaded document appears in list.
+* Download original works.
+* Re-index works.
+* Single-document chat works.
+* Hybrid agent can access the uploaded document.
+* Delete test upload works.
+
+Standalone tab:
+
+* Sign in.
+* Documents page still loads.
+* Upload still works.
+* Chat still works.
+* Hybrid agent still works.
+* No regressions from the token header change.
+
+Security:
+
+* Unauthenticated requests still return 401.
+* Signed-in but unapproved users still return 403.
+* Another user’s document ID still returns 404.
+* New uploads are still stamped with owner_user_id.
+* Owner-scoped list/detail/download/re-index/delete/chat/brief/hybrid routes still work.
+* No cross-user document leakage.
+
+Performance:
+
+* React Query still does not retry 4xx responses.
+* No slow retry loop returns.
+* No console errors.
+
+Final report:
+
+* Root cause
+* Files changed
+* Exact auth transport change made
+* Whether backend already accepted bearer tokens
+* Embedded preview verification results
+* Standalone tab verification results
+* Security verification results
+* Whether the platform is now usable in Replit preview and safe in production
