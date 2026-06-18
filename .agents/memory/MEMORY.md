@@ -10,3 +10,4 @@
 - [Ownership-model exceptions](ownership-model-exceptions.md) — /demo/qa, /admin/stats, /system/info deliberately read globally; not ownership bugs.
 - [Public endpoint protected-store leak](public-endpoint-protected-data.md) — a public/no-auth route reading a protected table must anonymize identifying fields (e.g. real filenames); select only non-identifying columns.
 - [customFetch blob downloads](customfetch-blob-download.md) — file downloads must call customFetch with explicit `responseType:"blob"`; generated ops mis-parse text/plain & text/csv as strings.
+- [Hybrid answer grounding signal](hybrid-answer-grounding-signal.md) — documentsUsed/citations = retrieval scope, not answer grounding; detect `[Source N]` in `answer` to know if docs were actually used.

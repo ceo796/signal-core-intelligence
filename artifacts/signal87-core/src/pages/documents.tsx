@@ -42,6 +42,8 @@ import {
   Download,
   GitCompare,
   ScrollText,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -647,6 +649,21 @@ export default function DocumentsList() {
               </button>
             )}
           </div>
+        )}
+
+        {/* AI Chat discovery CTA — only when documents exist */}
+        {!isLoading && !error && documents && documents.length > 0 && (
+          <Link
+            href="/agents/hybrid"
+            className="group mx-4 md:mx-6 mt-3 flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
+          >
+            <Sparkles className="w-4 h-4 text-primary shrink-0" />
+            <span className="font-medium text-foreground">Ask a question across your documents</span>
+            <span className="text-muted-foreground hidden sm:inline">
+              — grounded answers with citations, powered by GPT
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-primary ml-auto shrink-0 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         )}
 
         <div className="flex-1 overflow-auto">

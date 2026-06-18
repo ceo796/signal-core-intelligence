@@ -33,6 +33,7 @@ A document-intelligence PoC: upload documents, then query them with an LLM that 
 - **Contract-first:** every endpoint is defined in OpenAPI first; never hand-write client hooks or Zod schemas. Avoid naming a schema `<OperationIdPascal>Response`/`Body` (collides with Orval auto-symbols).
 - **Retrieval:** cosine similarity over OpenAI `text-embedding-3-small` chunks; chat uses `gpt-4o-mini`. Single-doc and multi-doc retrieval live in `lib/retriever.ts`.
 - **Citations + Verification Trace:** every LLM answer returns global `[Source N]` citations plus a debug trace (provider/model/chunk stats/latencies). This is a core product invariant — preserve it on any new LLM feature.
+- **Hybrid AI Chat is GPT-only:** answers combine document context (cosine retrieval + `[Source N]` citations) with the configured OpenAI GPT model's own reasoning (clearly labeled in-answer, never implied as web/external research). No second provider, no provider fallback; fail clearly if the OpenAI key/model is unavailable. The future web pathway exists **only** as a visibly disabled placeholder (no external calls). UI source labels: `document_context`, `gpt_reasoning`, `web_context_placeholder_disabled`.
 - **Ephemeral LLM features:** multi-chat and brief results are not persisted (only single-doc chat history is).
 - **Feature duplication over coupling:** the Executive Brief duplicates the multi-chat retrieval/citation pattern rather than refactoring multi-chat, to avoid regressing it.
 
@@ -43,7 +44,8 @@ A document-intelligence PoC: upload documents, then query them with an LLM that 
 - **Multi-document comparison** (`/compare`): one question across 2–5 documents with grouped citations.
 - **Executive Brief** (`/brief`): generate a structured brief (Executive Summary / Risk / Diligence / Contract Review / Comparison) over 1–5 documents, with an optional focus instruction, citations, and a trace. Comparison requires ≥2 documents.
 - **Admin stats** (`/admin`).
-- **Navigation tabs:** Documents | **Ask** (`/ask`, pick one ready document and jump into the existing single-doc chat) | **Activity** (`/activity`, read-only upload/extraction feed derived from existing document data — no separate activity store).
+- **Hybrid AI Chat** (`/agents/hybrid`): the prominent cross-document assistant (**"AI Chat"**, 2nd nav item). Ask one question across all (or selected) documents; answers are grounded in your documents with `[Source N]` citations and supplemented by the OpenAI GPT model's own reasoning — **no web research**. Each answer shows source labels (`document_context` / `gpt_reasoning` / disabled `web_context_placeholder_disabled`); a future web pathway is present only as a visibly disabled placeholder.
+- **Navigation tabs:** Documents | **AI Chat** (`/agents/hybrid`, the prominent Hybrid AI Chat — 2nd in the nav) | **Ask** (`/ask`, pick one ready document and jump into the existing single-doc chat) | Brief | Compare | **Activity** (`/activity`, read-only upload/extraction feed derived from existing document data — no separate activity store).
 
 ## User preferences
 

@@ -2,6 +2,28 @@
 
 ---
 
+## [Signal87_Hybrid_AI_Chat_GPT_Only_v1] — 2026-06-18  *(Make the Hybrid AI page easy to find, position it as "Hybrid AI Chat", and make its GPT-only behavior explicit; nav + page UI + one hybrid-agent prompt change)*
+
+### Summary
+The cross-document Hybrid AI was buried in the nav as **"Agent"** (Bot icon, 5th of 6). It is now a prominent **"AI Chat"** tab (Sparkles icon) in the **2nd** position, right after Documents, and the page is positioned as **"Hybrid AI Chat"** with a one-line explainer: *grounded answers from your documents (with citations), supplemented by GPT reasoning — no web research*. We also made the **GPT-only** behavior explicit and honest. Every answer now shows three **source labels** — `document_context` ("Document context", active only when your documents contributed), `gpt_reasoning` ("GPT reasoning", always active), and `web_context_placeholder_disabled` ("Web context", always shown **disabled / "Coming soon"**). A matching **visibly-disabled** "Web context" placeholder control sits in the form (future pathway, **no external calls**). The one backend change is a **hybrid-agent prompt** tweak so the assistant MAY supplement document context with the configured OpenAI GPT model's own reasoning when the documents fall short — clearly labeled and never implying web/external sources — while document-derived claims still cite `[Source N]`. The Documents dashboard gains a subtle CTA pointing to AI Chat when at least one document exists.
+
+### Provider discipline
+- **OpenAI/GPT only** (`gpt-4o-mini` + `text-embedding-3-small`, `lib/ai-provider.ts`). No second provider, no provider fallback. Server throws at startup if `OPENAI_API_KEY` is unset (fails clearly, never silently switches). Repo scanned — **no** Gemini/Anthropic/Claude/web-search/scraping/external-retrieval references exist, and none were added.
+
+### Changed — backend (prompt only)
+- **`artifacts/api-server/src/routes/agent/index.ts`** — softened the `auto` mode prompt (dropped "ONLY the provided source excerpts") and appended a shared `GROUNDING_REASONING_POLICY` to every mode's system prompt (prioritize + cite sources; no web/real-time access; MAY add clearly-labeled general GPT reasoning when docs fall short; say so plainly otherwise). **No** route, request/response, OpenAPI/codegen, schema, auth, or storage change; the `{ answer, mode, documentsUsed, citations, trace }` payload + Verification Trace are unchanged.
+
+### Changed — frontend
+- **`artifacts/signal87-core/src/components/layout.tsx`** — nav item `/agents/hybrid` renamed **"Agent" → "AI Chat"**, moved to **2nd** position, icon **Bot → Sparkles**.
+- **`artifacts/signal87-core/src/pages/hybrid-agent.tsx`** — page title **"Hybrid Agent" → "Hybrid AI Chat"** + explainer; new **SourceBadges** row (document_context / gpt_reasoning / disabled web placeholder) on every answer; new **visibly-disabled "Web context — Coming soon"** placeholder control in the form (non-interactive, no calls); "Agent Answer" → "AI Answer", "Ask Agent" → "Ask". Citations + Verification Trace rendering unchanged.
+- **`artifacts/signal87-core/src/pages/documents.tsx`** — subtle **"Ask a question across your documents"** CTA linking to `/agents/hybrid`, shown only when ≥1 document exists (not on empty/loading).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` and `pnpm --filter @workspace/api-server run typecheck` — both clean.
+- Source labels are derived client-side from the existing `documentsUsed`/`citations` (no contract change); the disabled web placeholder makes no network calls; auth, upload, storage, download, delete, reindex, PDF viewer, single-doc chat, brief, and compare are untouched.
+
+---
+
 ## [Signal87_Upload_Drag_And_Drop_v1] — 2026-06-18  *(Drag & drop files onto the upload dialog; frontend-only)*
 
 ### Summary

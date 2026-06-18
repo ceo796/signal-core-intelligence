@@ -29,13 +29,14 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
-  Bot,
+  Sparkles,
   Send,
   FileText,
   ShieldCheck,
   Terminal,
   ChevronDown,
   ChevronRight,
+  Globe,
 } from "lucide-react";
 
 const MODES = [
@@ -45,6 +46,54 @@ const MODES = [
   { value: "extract", label: "Extract", description: "Facts, figures, and data" },
   { value: "diligence", label: "Diligence", description: "Risks, obligations, red flags" },
 ];
+
+// Internal source labels surfaced on each answer. This assistant is OpenAI/GPT-only:
+// it grounds answers in your documents (document_context, with citations) and may add the
+// GPT model's own reasoning (gpt_reasoning). Web context is a disabled future placeholder.
+const SOURCE_LABELS = {
+  document_context: "Document context",
+  gpt_reasoning: "GPT reasoning",
+  web_context_placeholder_disabled: "Web context",
+} as const;
+
+function SourceBadges({ usedDocuments }: { usedDocuments: boolean }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-xs text-muted-foreground mr-0.5">Answer sources:</span>
+      <span
+        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
+          usedDocuments
+            ? "bg-primary/10 text-primary border-primary/20"
+            : "bg-muted text-muted-foreground border-border/50"
+        }`}
+        title={
+          usedDocuments
+            ? "Your documents were used and are cited below"
+            : "No document context was used for this answer"
+        }
+      >
+        <FileText className="w-3 h-3 shrink-0" />
+        {SOURCE_LABELS.document_context}
+        {!usedDocuments && <span className="opacity-70">· not used</span>}
+      </span>
+      <span
+        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/20"
+        title="Produced by the configured OpenAI GPT model's reasoning — not web research"
+      >
+        <Sparkles className="w-3 h-3 shrink-0" />
+        {SOURCE_LABELS.gpt_reasoning}
+      </span>
+      <span
+        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-dashed border-border/60 bg-muted text-muted-foreground opacity-70"
+        title="Web context is not available yet — no external web research is performed"
+      >
+        <Globe className="w-3 h-3 shrink-0" />
+        {SOURCE_LABELS.web_context_placeholder_disabled}
+        <span className="opacity-80">· Coming soon</span>
+      </span>
+    </div>
+  );
+}
 
 function CitationCard({
   citation,
@@ -154,8 +203,16 @@ function ResultView({ result }: { result: HybridAgentResult }) {
   const toggleCitation = (n: number) =>
     setExpandedCitation((prev) => (prev === n ? null : n));
 
+  // "Document context" is active only when the answer actually cites the documents
+  // ([Source N] present), not merely when chunks were retrieved — so a GPT-only /
+  // general-reasoning answer honestly shows Document context as "not used".
+  const answerCitesDocuments =
+    result.citations.length > 0 && /\[Source\s+\d+\]/.test(result.answer);
+
   return (
     <div className="space-y-5">
+      <SourceBadges usedDocuments={answerCitesDocuments} />
+
       {result.documentsUsed.length > 0 && (
         <div className="flex flex-wrap gap-1.5 items-center">
           <span className="text-xs text-muted-foreground mr-0.5">Searched:</span>
@@ -174,8 +231,8 @@ function ResultView({ result }: { result: HybridAgentResult }) {
       <Card className="bg-card border-border/50">
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Bot className="w-4 h-4 text-primary shrink-0" />
-            <span className="text-sm font-medium text-primary">Agent Answer</span>
+            <Sparkles className="w-4 h-4 text-primary shrink-0" />
+            <span className="text-sm font-medium text-primary">AI Answer</span>
             <span className="ml-auto text-xs text-muted-foreground font-mono uppercase tracking-wider">
               {result.mode}
             </span>
@@ -255,12 +312,12 @@ export default function HybridAgent() {
         <header className="p-4 md:p-6 border-b border-border bg-card shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-              <Bot className="w-5 h-5 text-primary" />
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">Hybrid Agent</h1>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight">Hybrid AI Chat</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Ask one question across all your documents — or pick specific ones to focus on.
+                Grounded answers from your documents (with citations), supplemented by GPT reasoning. No web research.
               </p>
             </div>
           </div>
@@ -286,6 +343,22 @@ export default function HybridAgent() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="flex items-start gap-3 rounded-md border border-dashed border-border/60 bg-muted/30 px-3 py-2.5 opacity-80">
+                    <Globe className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">Web context</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-border/60 text-muted-foreground">
+                          Coming soon
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Answers currently use your documents and GPT reasoning only — no web research.
+                      </p>
+                    </div>
+                    <Checkbox checked={false} disabled aria-label="Web context (coming soon, disabled)" />
                   </div>
 
                   {docsLoading ? (
@@ -369,7 +442,7 @@ export default function HybridAgent() {
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        Ask Agent
+                        Ask
                       </>
                     )}
                   </Button>

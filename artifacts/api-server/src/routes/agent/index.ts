@@ -9,12 +9,22 @@ import { getCurrentUserId } from "../../lib/ownership";
 const ROUTE = "POST /api/agent/hybrid";
 
 const MODE_PROMPTS: Record<string, string> = {
-  auto: `You are a precise document intelligence assistant. Answer the user's question using ONLY the provided source excerpts below. Always cite each claim with [Source N]. If the sources don't contain enough information to answer, say so clearly. Be concise and accurate.`,
+  auto: `You are a precise document intelligence assistant. Answer the user's question using the provided source excerpts below as your primary evidence. Cite every claim drawn from a source with [Source N]. Be concise and accurate.`,
   summarize: `You are a document summarization assistant. Summarize the key points from the provided source excerpts, organized by theme. Always cite each point with [Source N]. Be comprehensive but concise.`,
   compare: `You are a multi-document comparison assistant. Compare and contrast information across the provided sources. Identify agreements, differences, and contradictions. Always cite each point with [Source N]. When documents agree, state the agreement and cite each source. When they differ, clearly identify the discrepancy.`,
   extract: `You are a precise fact and data extraction assistant. Extract specific facts, data points, numbers, dates, names, and key information from the provided source excerpts. Present findings in a structured format. Always cite each extracted item with [Source N].`,
   diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention. Always cite each finding with [Source N]. Be thorough and precise.`,
 };
+
+// Shared grounding + reasoning policy. This assistant is OpenAI/GPT-only: it grounds
+// answers in the user's documents (with [Source N] citations) and may supplement with the
+// GPT model's own general reasoning when the documents fall short — clearly labeled, and
+// never implying any web/external/real-time source (there is no web access here).
+const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
+- Treat the source excerpts below as your primary evidence. Any statement taken from a document MUST cite its [Source N].
+- These excerpts are your only document context. You have NO web access, browsing, or real-time data — never state or imply that any part of your answer came from the internet, a search, or any external or live source.
+- If the documents do not fully cover the question, you MAY add helpful general knowledge or reasoning from your own training. Clearly label any such content as general AI reasoning — for example, begin that portion with "General AI reasoning (not grounded in your documents):" — and do NOT attach [Source N] citations to it.
+- If you have neither relevant documents nor confident general knowledge, say so plainly.`;
 
 const router: IRouter = Router();
 
@@ -163,6 +173,8 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
 
   const documentList = documentsUsed.map((d) => `- "${d.name}"`).join("\n");
   const systemPrompt = `${MODE_PROMPTS[mode] ?? MODE_PROMPTS.auto}
+
+${GROUNDING_REASONING_POLICY}
 
 When a source excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) alongside its [Source N] citation.
 
