@@ -446,6 +446,35 @@ export default function DocumentsList() {
       return dir === "asc" ? cmp : -cmp;
     });
 
+  const visibleSelectableIds = (filteredDocuments ?? []).slice(0, MAX_SELECT).map((d) => d.id);
+  const allVisibleSelected =
+    visibleSelectableIds.length > 0 && visibleSelectableIds.every((id) => selectedIds.has(id));
+  const someVisibleSelected = visibleSelectableIds.some((id) => selectedIds.has(id));
+  const headerCheckboxState: boolean | "indeterminate" = allVisibleSelected
+    ? true
+    : someVisibleSelected
+    ? "indeterminate"
+    : false;
+
+  const handleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        visibleSelectableIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of visibleSelectableIds) {
+          if (next.size >= MAX_SELECT) break;
+          next.add(id);
+        }
+        return next;
+      });
+    }
+  };
+
   const selectionCount = selectedIds.size;
   const showActionBar = selectionCount >= 2;
 
@@ -705,6 +734,15 @@ export default function DocumentsList() {
                 </span>
                 {" "}{gridSortDirection === "asc" ? "↑" : "↓"}
               </span>
+              {visibleSelectableIds.length > 0 && (
+                <button
+                  onClick={handleSelectAll}
+                  className="ml-auto text-[11px] font-mono text-primary hover:underline underline-offset-2 transition-colors"
+                  aria-label={allVisibleSelected ? "Deselect all" : "Select all visible (up to 5)"}
+                >
+                  {allVisibleSelected ? "Deselect all" : `Select all${visibleSelectableIds.length < (filteredDocuments?.length ?? 0) ? ` (top ${visibleSelectableIds.length})` : ""}`}
+                </button>
+              )}
             </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredDocuments?.map((doc) => {
@@ -821,8 +859,17 @@ export default function DocumentsList() {
             <table className="w-full text-sm border-collapse min-w-[520px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  {/* Checkbox column header */}
-                  <th className="pl-4 pr-2 py-2.5 w-8" aria-label="Select" />
+                  {/* Checkbox column header — select all (up to 5) */}
+                  <th className="pl-4 pr-2 py-2.5 w-8" aria-label="Select all">
+                    {visibleSelectableIds.length > 0 && (
+                      <Checkbox
+                        checked={headerCheckboxState}
+                        onCheckedChange={handleSelectAll}
+                        aria-label={allVisibleSelected ? "Deselect all" : "Select all visible (up to 5)"}
+                        className="w-4 h-4"
+                      />
+                    )}
+                  </th>
                   {(
                     [
                       { col: "name" as SortColumn, label: "Name", align: "left", className: "px-3 py-2.5 w-[40%]" },
