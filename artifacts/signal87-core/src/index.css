@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -129,7 +128,7 @@
   --chart-5: 27 87% 67%;
 
   --app-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --app-font-serif: 'Instrument Serif', Georgia, serif;
+  --app-font-serif: var(--app-font-sans);
   --app-font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Menlo', monospace;
   --radius: 0.75rem;
 
