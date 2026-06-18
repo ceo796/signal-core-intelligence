@@ -17,6 +17,20 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * Public (no auth). Returns a curated Q&A exchange for the landing-page Document Q&A animation. When the system has at least one successfully indexed document, the citation is grounded in that real document (its name and a real chunk index); otherwise a fully curated citation is returned. The frontend falls back to its own hardcoded content if this endpoint is unavailable.
+
+ * @summary Curated landing-page Q&A demo, grounded in a real stored document when available
+ */
+export const GetDemoQaResponse = zod.object({
+  "question": zod.string(),
+  "answer": zod.string(),
+  "citationLabel": zod.string().describe('Display text for the citation chip (e.g. \"Acme MSA · Chunk 2\").'),
+  "sourceDocument": zod.string().nullish().describe('Real document file name when the citation is grounded, else null.'),
+  "grounded": zod.boolean().describe('True when the citation comes from a real stored document.')
+})
+
+
+/**
  * @summary List all documents
  */
 export const ListDocumentsResponseItem = zod.object({

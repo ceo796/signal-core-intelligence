@@ -2,6 +2,35 @@
 
 ---
 
+## [Signal87_Core_Landing_DemoQA_GroundedData_v1] — 2026-06-18  *(Ground the landing "Document Q&A" demo panel in a real stored document)*
+
+### Summary
+The animated "Document Q&A" demo panel on the landing page now pulls its content from a real stored document instead of being purely hardcoded. A new lightweight **public** (no-auth) endpoint serves a curated demo answer whose **citation is grounded in an actual indexed document** (real file name + chunk). The panel falls back to the existing hardcoded copy if the endpoint is unavailable, so the landing page never breaks.
+
+### Added — API contract (`lib/api-spec/openapi.yaml`)
+- New `demo` tag and `GET /demo/qa` (operationId `getDemoQa`) → `DemoQa` schema: `{ question, answer, citationLabel, sourceDocument (nullable), grounded }`.
+- Ran `pnpm --filter @workspace/api-spec run codegen` → generated zod `GetDemoQaResponse`, hooks `useGetDemoQa` / `getDemoQa`, and the `DemoQa` type.
+
+### Added — backend (`artifacts/api-server/src/routes/demo/index.ts`)
+- Public `GET /demo/qa`. Finds the most-recent successfully-indexed document and its lowest-index non-empty chunk; if found, returns a curated question/answer with a **grounded** citation (`grounded: true`).
+- **Privacy:** the citation is grounded in a real chunk *ordinal* (`Demo document · Chunk N`), but the query selects **only** the chunk index — never the filename or content — so this unauthenticated endpoint never discloses protected document names (which can contain client / deal / employee names). `sourceDocument` is an anonymized `"Demo document"` label, not a real file name.
+- If no ready document exists (or anything throws), returns the curated fallback (`grounded: false`, `sourceDocument: null`). The route never 500s.
+- Mounted in `artifacts/api-server/src/routes/index.ts` **before** `requireApprovedEmail` (public, alongside `healthRouter`).
+
+### Changed — frontend (`artifacts/signal87-core/src/components/aria-chat-animation.tsx`)
+- Fetches via `useGetDemoQa` (`retry: false`, `staleTime: Infinity`, `refetchOnWindowFocus: false`); derives question/answer/citation from the response, falling back to the existing hardcoded constants.
+- The typing animation re-runs when the live content loads. Fixed a latent timer leak: inner typing intervals are now tracked and cleared on cleanup / cycle restart.
+
+### Unchanged
+- All protected flows (upload / download / delete / re-index / PDF viewer / durable storage / single-doc chat / citations + Verification Trace), the approved-email auth gate (verified: `GET /api/documents` still `401`), DB schema, and all other landing sections.
+
+### Verification
+- `curl localhost:80/api/demo/qa` → `200` with `grounded: true` and an anonymized `sourceDocument` (`"Demo document"`, no real filename); `GET /api/documents` still `401` (auth gate intact).
+- `pnpm --filter @workspace/api-server run typecheck` and `pnpm --filter @workspace/signal87-core run typecheck` — both clean.
+- Visual check via preview: panel animates the Q&A on the landing page.
+
+---
+
 ## [Signal87_Core_Landing_HowItWorks_v1] — 2026-06-17  *(Add "How it works" 3-step walkthrough to landing page)*
 
 ### Summary

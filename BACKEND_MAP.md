@@ -1,6 +1,9 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Core_Document_Thumbnails_v1**
+> Checkpoint: **Signal87_Core_Landing_DemoQA_GroundedData_v1**
+> Last updated: 2026-06-18
+> Note (Landing_DemoQA_GroundedData_v1): Added one **public** (no-auth) route, `GET /api/demo/qa` (`artifacts/api-server/src/routes/demo/index.ts`), mounted **before** `requireApprovedEmail` (alongside `healthRouter`). It serves a curated demo Q&A whose **citation is grounded in a real indexed chunk** (most-recent successfully-indexed doc → its lowest-index non-empty chunk → `grounded: true`). **Privacy-critical:** the query selects **only the chunk ordinal** — never the filename or content — so this unauthenticated endpoint never leaks protected document names. The citation/`sourceDocument` are anonymized (`Demo document · Chunk N` / `"Demo document"`). Falls back to curated content (`grounded: false`, `sourceDocument: null`) when no ready doc exists or on any error; **never 500s**. Read-only: no writes, no schema changes. All protected flows and the auth gate are unchanged (`GET /api/documents` still `401` unauthenticated).
+> Prior checkpoint: **Signal87_Core_Document_Thumbnails_v1**
 > Last updated: 2026-06-17
 > Note (Document_Thumbnails_v1): Frontend-only change. New `DocumentThumbnail` component uses `GET /api/documents/:id/original` (existing protected endpoint) to fetch PDFs for first-page thumbnail rendering. No new routes, no schema changes, no auth changes.
 > Prior checkpoint: **Signal87_Core_Clerk_Auth_v1**

@@ -1,59 +1,96 @@
 import { useEffect, useState } from "react";
+import { useGetDemoQa, getGetDemoQaQueryKey } from "@workspace/api-client-react";
 
 type Phase = "idle" | "question" | "typing" | "answer";
 
-const QUESTION = "What are the key financial risks in this agreement?";
-const ANSWER =
+// Fallback content, used until the public demo endpoint responds (or if it is
+// unavailable). The live endpoint grounds the citation in a real stored
+// document; this keeps the panel coherent offline.
+const FALLBACK_QUESTION = "What are the key financial risks in this agreement?";
+const FALLBACK_ANSWER =
   "The agreement carries three primary financial risks: uncapped liability exposure in §4.2, a mandatory arbitration clause that limits recovery, and an auto-renewal provision that extends the term without notice.";
-const CITATION = "Source 2, §4.2";
+const FALLBACK_CITATION = "Source 2, §4.2";
 
 const CYCLE_MS = 6000;
 
 export default function AriaChatAnimation() {
+  // Public, no-auth endpoint. Never retry / refetch — this is a non-critical
+  // landing-page widget that gracefully falls back to the hardcoded copy.
+  const { data } = useGetDemoQa({
+    query: {
+      queryKey: getGetDemoQaQueryKey(),
+      retry: false,
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  const question = data?.question ?? FALLBACK_QUESTION;
+  const answer = data?.answer ?? FALLBACK_ANSWER;
+  const citation = data?.citationLabel ?? FALLBACK_CITATION;
+
   const [phase, setPhase] = useState<Phase>("idle");
   const [questionText, setQuestionText] = useState("");
   const [answerText, setAnswerText] = useState("");
 
+  // Re-runs when the demo content loads so the animation plays the real Q&A.
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
+    const cycleTimers: Array<ReturnType<typeof setTimeout>> = [];
+    const cycleIntervals: Array<ReturnType<typeof setInterval>> = [];
+
+    function clearCycle() {
+      cycleTimers.forEach(clearTimeout);
+      cycleIntervals.forEach(clearInterval);
+      cycleTimers.length = 0;
+      cycleIntervals.length = 0;
+    }
 
     function run() {
+      clearCycle();
       setPhase("idle");
       setQuestionText("");
       setAnswerText("");
 
-      timer = setTimeout(() => {
-        setPhase("question");
-        let i = 0;
-        const typeQ = setInterval(() => {
-          i++;
-          setQuestionText(QUESTION.slice(0, i));
-          if (i >= QUESTION.length) {
-            clearInterval(typeQ);
-            timer = setTimeout(() => {
-              setPhase("typing");
-              timer = setTimeout(() => {
-                setPhase("answer");
-                let j = 0;
-                const typeA = setInterval(() => {
-                  j += 3;
-                  setAnswerText(ANSWER.slice(0, j));
-                  if (j >= ANSWER.length) clearInterval(typeA);
-                }, 18);
-              }, 1200);
-            }, 400);
-          }
-        }, 28);
-      }, 800);
+      cycleTimers.push(
+        setTimeout(() => {
+          setPhase("question");
+          let i = 0;
+          const typeQ = setInterval(() => {
+            i++;
+            setQuestionText(question.slice(0, i));
+            if (i >= question.length) {
+              clearInterval(typeQ);
+              cycleTimers.push(
+                setTimeout(() => {
+                  setPhase("typing");
+                  cycleTimers.push(
+                    setTimeout(() => {
+                      setPhase("answer");
+                      let j = 0;
+                      const typeA = setInterval(() => {
+                        j += 3;
+                        setAnswerText(answer.slice(0, j));
+                        if (j >= answer.length) clearInterval(typeA);
+                      }, 18);
+                      cycleIntervals.push(typeA);
+                    }, 1200),
+                  );
+                }, 400),
+              );
+            }
+          }, 28);
+          cycleIntervals.push(typeQ);
+        }, 800),
+      );
     }
 
     run();
     const loop = setInterval(run, CYCLE_MS + 2000);
     return () => {
-      clearTimeout(timer);
       clearInterval(loop);
+      clearCycle();
     };
-  }, []);
+  }, [question, answer]);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden select-none">
@@ -77,7 +114,7 @@ export default function AriaChatAnimation() {
           <div className="flex justify-end">
             <div className="bg-blue-600 text-white text-xs rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%]">
               {questionText || "\u00a0"}
-              {phase === "question" && questionText.length < QUESTION.length && (
+              {phase === "question" && questionText.length < question.length && (
                 <span className="inline-block w-0.5 h-3 bg-white/80 ml-0.5 animate-pulse align-middle" />
               )}
             </div>
@@ -110,14 +147,14 @@ export default function AriaChatAnimation() {
             <div className="bg-gray-100 text-gray-700 text-xs rounded-2xl rounded-tl-sm px-3 py-2 max-w-[90%] space-y-1.5">
               <p className="leading-relaxed">
                 {answerText}
-                {answerText.length < ANSWER.length && (
+                {answerText.length < answer.length && (
                   <span className="inline-block w-0.5 h-3 bg-gray-400 ml-0.5 animate-pulse align-middle" />
                 )}
               </p>
-              {answerText.length >= ANSWER.length && (
+              {answerText.length >= answer.length && (
                 <div className="pt-0.5">
                   <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-mono rounded px-1.5 py-0.5">
-                    ↗ {CITATION}
+                    ↗ {citation}
                   </span>
                 </div>
               )}

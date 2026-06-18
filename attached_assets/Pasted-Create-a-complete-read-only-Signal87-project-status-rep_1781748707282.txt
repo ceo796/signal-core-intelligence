@@ -1,0 +1,132 @@
+Create a complete read-only Signal87 project status report.
+
+This is an audit/reporting task only. Do not edit files. Do not refactor. Do not install packages. Do not modify backend APIs, auth, database schema, storage, AI provider logic, routes, UI, or environment variables.
+
+Goal:
+I need a clear current-state map of the Signal87 codebase so we can continue development safely without duplicating work or polluting the clean build.
+
+Please inspect the project and produce a structured report with the following sections:
+
+1. Executive Summary
+
+* What is currently built
+* What appears stable
+* What appears incomplete
+* What should not be touched without caution
+
+2. Frontend Architecture
+
+* Main frontend framework and routing structure
+* List all major pages/routes
+* Identify the shared layout/app shell/sidebar structure
+* Identify any duplicated sidebar/layout implementations
+* Identify current Home page implementation
+* Identify current Documents page implementation
+* Identify current Briefs/Compare/Ask/Agents/Workflows pages, if present
+
+3. Backend Architecture
+
+* Main server entry point
+* All API route groups
+* What each route does
+* Which routes require auth
+* Which routes are public, if any
+* Any duplicated, stale, or confusing route handlers
+
+4. Authentication and User Isolation
+
+* Current auth provider and middleware
+* How protected routes work
+* How user ownership/isolation is enforced
+* Whether document queries are scoped to the current user
+* Any visible risks
+
+5. Document Pipeline
+
+* Upload flow
+* File storage/original-file handling
+* Text extraction
+* Chunking
+* Re-indexing
+* Download original
+* Delete behavior
+* Document detail behavior
+* Any known fragility or cleanup needs
+
+6. AI / Chat / Briefing Layer
+
+* AI provider abstraction
+* Single-document chat flow
+* Multi-document comparison flow, if present
+* Executive brief generation flow, if present
+* Citation/verification trace behavior
+* Any duplicated prompt logic or service code
+
+7. Current Data Model
+
+* Tables/models used by the app
+* Document fields
+* Chunk fields
+* User ownership fields
+* Any migrations or schema files
+* Any stale/unused fields
+
+8. Frontend UI Issues Observed
+
+* Documents page density problem
+* Home/sidebar inconsistency
+* Any fake placeholder UI
+* Any nonfunctional buttons/cards
+* Mobile layout concerns
+* Any styling duplication
+
+9. Backend Cleanliness Assessment
+
+* Dead files
+* Duplicated utilities
+* Overgrown route files
+* Mixed concerns
+* Hardcoded demo data
+* Inconsistent error handling
+* Areas where code should be split into services
+* Areas that should be left alone because they are working
+
+10. Hybrid Cross-Document Agent Readiness
+    Evaluate whether the current codebase is ready for a clean hybrid agent that can operate across documents.
+
+Specifically report:
+
+* Existing pieces we can reuse
+* What should become a new service
+* What should become a new endpoint
+* What should not be duplicated
+* Recommended endpoint shape
+* Recommended internal flow
+* Risks to avoid
+
+Preferred hybrid agent concept:
+query → identify relevant user-owned documents → retrieve relevant chunks → synthesize answer → cite source documents/chunks → optionally recommend next action.
+
+11. Recommended Next Three Implementation Steps
+    Rank the next steps in safest order:
+
+* Documents page density cleanup
+* Backend cleanup/refactor, if needed
+* Hybrid cross-document agent implementation
+
+For each step, include:
+
+* Risk level
+* Files likely involved
+* Files that should not be touched
+* Verification checklist
+
+12. Final “Do Not Break” Checklist
+    Create a checklist of existing working features that must be regression-tested after any future change.
+
+Output format:
+Use clear headings.
+Be specific with filenames and route names.
+Do not make changes.
+If something is unclear, say “unclear” and explain what needs inspection.
+Do not guess.

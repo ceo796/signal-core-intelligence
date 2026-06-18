@@ -7,3 +7,4 @@
 - [pdf-parse test fixtures](pdf-parse-test-fixtures.md) — pdf-parse@1.1.1 rejects hand-rolled PDFs (`bad XRef entry`) even with correct offsets; for a known-good test PDF, re-upload a real one from `/original`.
 - [Document readiness invariant](document-readiness-invariant.md) — "answerable" needs chunks>0 AND extractionStatus==success; a failed reindex leaves stale chunks, so chunk-count alone is not a safe gate.
 - [Clerk dev cookie in iframe](clerk-dev-iframe-cookie.md) — signed-in frontend but backend 401 (cookie present, userId null) = dev session cookie can't refresh in preview iframe; test in a standalone tab.
+- [Public endpoint protected-store leak](public-endpoint-protected-data.md) — a public/no-auth route reading a protected table must anonymize identifying fields (e.g. real filenames); select only non-identifying columns.

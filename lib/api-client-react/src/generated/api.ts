@@ -27,6 +27,7 @@ import type {
   ChatMessage,
   ChatResponse,
   Chunk,
+  DemoQa,
   Document,
   ErrorResponse,
   HealthStatus,
@@ -113,6 +114,85 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetDemoQaUrl = () => {
+
+
+
+
+  return `/api/demo/qa`
+}
+
+/**
+ * Public (no auth). Returns a curated Q&A exchange for the landing-page Document Q&A animation. When the system has at least one successfully indexed document, the citation is grounded in that real document (its name and a real chunk index); otherwise a fully curated citation is returned. The frontend falls back to its own hardcoded content if this endpoint is unavailable.
+
+ * @summary Curated landing-page Q&A demo, grounded in a real stored document when available
+ */
+export const getDemoQa = async ( options?: RequestInit): Promise<DemoQa> => {
+
+  return customFetch<DemoQa>(getGetDemoQaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDemoQaQueryKey = () => {
+    return [
+    `/api/demo/qa`
+    ] as const;
+    }
+
+
+export const getGetDemoQaQueryOptions = <TData = Awaited<ReturnType<typeof getDemoQa>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDemoQa>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDemoQaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDemoQa>>> = ({ signal }) => getDemoQa({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDemoQa>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDemoQaQueryResult = NonNullable<Awaited<ReturnType<typeof getDemoQa>>>
+export type GetDemoQaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Curated landing-page Q&A demo, grounded in a real stored document when available
+ */
+
+export function useGetDemoQa<TData = Awaited<ReturnType<typeof getDemoQa>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDemoQa>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDemoQaQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

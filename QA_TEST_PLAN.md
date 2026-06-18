@@ -802,6 +802,38 @@ To test manually today:
 
 ---
 
+## T58 — Public demo Q&A endpoint (no auth, grounded)
+
+**Goal:** Verify `GET /api/demo/qa` is public, returns the `DemoQa` shape, and grounds its citation in a real indexed document when one exists.
+
+**Steps:**
+1. With **no** session cookie, run `curl localhost:80/api/demo/qa`.
+2. Confirm at least one successfully-indexed document exists in the current DB.
+
+**Expected:**
+- HTTP `200` (no `401`/`403`) — the route is mounted before `requireApprovedEmail`.
+- Body matches `DemoQa`: `{ question, answer, citationLabel, sourceDocument, grounded }`.
+- When a ready document exists: `grounded: true`, `citationLabel` is `Demo document · Chunk N`, and `sourceDocument` is the anonymized `"Demo document"`.
+- **Privacy:** the response **never** contains a real uploaded document's filename — protected document names must not leak to this unauthenticated endpoint.
+- The auth gate is unaffected: `GET /api/documents` (no cookie) still returns `401`.
+
+---
+
+## T59 — Landing demo panel uses live content + falls back gracefully
+
+**Goal:** Verify the landing "Document Q&A" panel animates content from the live endpoint and never breaks if the endpoint is unavailable.
+
+**Steps:**
+1. Load the landing page (`/`) and watch the "Document Q&A" demo panel cycle.
+2. (Fallback) Simulate the endpoint being unavailable (e.g. stop the API server) and reload the landing page.
+
+**Expected:**
+- With the endpoint up: the panel types out the question, then the grounded answer, and shows the citation chip from the response (real document).
+- With the endpoint down: the panel falls back to the hardcoded question/answer/citation — no error, no blank panel, no console crash (`retry: false`, so no retry storms).
+- The animation has no timer leaks: navigating away/reloading does not accumulate runaway typing intervals.
+
+---
+
 ## Known behaviour — not bugs
 
 | Scenario | Expected behaviour |
@@ -884,3 +916,5 @@ To test manually today:
 - [ ] T48 Auth — Frontend: UserButton shows in sidebar when signed in; clicking opens account popover
 - [ ] T49 Auth — Frontend: Landing page CTA shows "Sign In" when not signed in, "Open App" when signed in
 - [ ] T50 Auth — Backend: `CLERK_BYPASS_AUTH=true` allows all requests through (emergency override)
+- [ ] T58 Public demo Q&A: `GET /api/demo/qa` → 200 (no auth), `DemoQa` shape, grounded citation from a real doc; `GET /api/documents` still 401
+- [ ] T59 Landing demo panel: animates live grounded Q&A; falls back to hardcoded copy if endpoint down (no crash, no retry storms, no timer leaks)

@@ -19,6 +19,7 @@ export * from './chatResponse';
 export * from './chunk';
 export * from './citation';
 export * from './debugInfo';
+export * from './demoQa';
 export * from './docTypeCount';
 export * from './document';
 export * from './errorResponse';

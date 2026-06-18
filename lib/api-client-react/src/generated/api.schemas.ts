@@ -9,6 +9,20 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface DemoQa {
+  question: string;
+  answer: string;
+  /** Display text for the citation chip (e.g. "Acme MSA · Chunk 2"). */
+  citationLabel: string;
+  /**
+     * Real document file name when the citation is grounded, else null.
+     * @nullable
+     */
+  sourceDocument?: string | null;
+  /** True when the citation comes from a real stored document. */
+  grounded: boolean;
+}
+
 export interface Document {
   id: number;
   fileName: string;

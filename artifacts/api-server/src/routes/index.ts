@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import demoRouter from "./demo";
 import documentsRouter from "./documents";
 import chatRouter from "./chat";
 import multiChatRouter from "./multi-chat";
@@ -8,8 +9,9 @@ import { requireApprovedEmail } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
-// Health check is always public
+// Health check and public landing-page demo content are always public
 router.use(healthRouter);
+router.use(demoRouter);
 
 // All other routes require approved-email auth
 router.use(requireApprovedEmail);
