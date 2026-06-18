@@ -1,6 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Embedded_Preview_Auth_Transport_v1**
+> Checkpoint: **Signal87_Print_Documents_v1**
+> Last updated: 2026-06-18
+> Note (Print_Documents_v1): New tests **T68–T68d** cover the new **Print** feature — a labelled Print button in the Document Detail action bar and a compact printer-icon button in the Documents dashboard list rows + grid cards, both via one reusable `PrintDocumentButton`. Real PDFs with a stored original print the original file (authenticated `GET /api/documents/:id/original` blob → hidden iframe); everything else (TXT/DOCX/CSV/XLSX, and PDFs without an original) prints a clean extracted-text view fetched from the owner-scoped `GET /api/documents/:id`. **Frontend-only** — no backend, auth/Clerk, owner, DB schema, OpenAPI/codegen, upload, storage, extraction, chat, brief, agent, or routing changes; no new public URLs. Both paths reuse the existing authenticated, owner-scoped transport (unauth **401**, cross-owner **404**); Download Original, Re-Index, Delete, the PDF viewer, and the citations + Verification Trace payload are all unchanged.
+> Prior checkpoint: **Signal87_Embedded_Preview_Auth_Transport_v1**
 > Last updated: 2026-06-18
 > Note (Embedded_Preview_Auth_Transport_v1): New tests **T64–T67** cover the centralized Clerk **bearer-token transport** that makes authenticated `/api/*` calls work inside the embedded preview iframe (where the dev session cookie can't establish, so calls previously 401'd). T64 = signed-in approved reads return **200/304** in the iframe (were 401); T65 = Download Original via authenticated blob; T66 = upload via the authenticated transport (207 warning UX preserved); T67 = security gates still enforced (**401** unauth, **403** unapproved, **404** cross-user `owner_user_id` filtering). Frontend-only — no backend, OpenAPI/codegen, DB schema, storage, or UI-redesign changes; cookie auth still works in a standalone tab and production.
 > Prior checkpoint: **Signal87_Spreadsheet_Excel_Readability_v1**
@@ -31,6 +34,77 @@
    - `PRIVATE_OBJECT_DIR: "set"`
    - `fileStorageConfig.bucketConfigured: true`
    - `fileStorageConfig.originalFilesStored: true`
+
+---
+
+## T68 — Print: Document Detail page (stored PDF original)
+
+**Goal:** The detail page exposes a clearly visible Print button that prints the stored PDF original, without affecting Download Original.
+
+**Steps:**
+1. Signed in as approved (`ceo@signal87.ai`), open a Ready PDF document that has an available original (`/documents/:id`).
+2. In the header action bar, locate **Print** (printer icon + "Print") between **Download Original** and **Re-Index**.
+3. Click **Print**.
+
+**Expected:**
+- Print shows a brief loading spinner, then opens the browser print dialog for the original PDF (in headless e2e the native dialog is a no-op — assert no error instead).
+- `GET /api/documents/:id/original` returns **200/304** (authenticated blob).
+- **No error toast.** Download Original, Re-Index, Ask a Question, and Delete all remain present and functional.
+
+---
+
+## T68a — Print: extracted-text view (TXT / DOCX / CSV / XLSX)
+
+**Goal:** Non-PDF documents (and PDFs without a stored original) print a clean extracted-text view.
+
+**Steps:**
+1. Open a Ready non-PDF document (TXT, DOCX, CSV, or XLSX) detail page.
+2. Click **Print**.
+
+**Expected:**
+- `GET /api/documents/:id` returns **200/304**; the print view renders the document name, a metadata line (type · size · uploaded · chunk count), and the readable extracted text. Spreadsheets show the sheet/row context already encoded in the extracted text.
+- **No error toast.**
+
+---
+
+## T68b — Print: Documents dashboard list rows + grid cards
+
+**Goal:** A compact Print action appears (and works) in both dashboard views.
+
+**Steps:**
+1. Go to `/documents` (list view). Locate the compact printer-icon button in each document's action row, just before Delete; click it on a Ready PDF row.
+2. Switch to grid view; locate the same printer-icon button on each card beside Delete; click it on a PDF card.
+
+**Expected:**
+- Both views show the Print icon; existing Ask/Re-Index and Delete remain.
+- Clicking the Print icon does **not** navigate to the detail page (the click is stopped), fires the correct authenticated request (PDF → `/original`), and produces **no error toast**.
+
+---
+
+## T68c — Print: nothing-printable gate
+
+**Goal:** Print is disabled (and never silently no-ops) when there is nothing to print.
+
+**Steps:**
+1. Find a document whose extraction **failed** and that has **no stored original** (e.g. a failed/0-chunk non-PDF).
+
+**Expected:**
+- The Print button is **disabled** (`canPrintDocument` returns false).
+- If invoked with stale data (text empty despite status), `printDocument` throws and surfaces a toast ("No printable content available for this document.") rather than doing nothing.
+
+---
+
+## T68d — Print: security (owner scope preserved, no public URL)
+
+**Goal:** Printing never bypasses auth/owner checks and adds no public URL.
+
+**Steps:**
+1. Unauthenticated `GET /api/documents/:id/original` and `GET /api/documents/:id`.
+2. Signed in as a different (approved) user, attempt to print another user's document id.
+
+**Expected:**
+- Unauthenticated → **401**; cross-owner → **404** (unchanged — print reuses the existing authenticated, owner-scoped transport).
+- No new public/static print URL exists; printing is entirely client-side over authenticated fetches.
 
 ---
 

@@ -32,6 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PdfViewer } from "@/components/pdf-viewer";
+import { PrintDocumentButton } from "@/components/print-document-button";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
@@ -311,6 +312,7 @@ export default function DocumentDetail() {
                 Download Original
               </Button>
             )}
+            <PrintDocumentButton document={doc} />
             <Button
               variant="outline"
               className="text-sm gap-2 border-border/50"

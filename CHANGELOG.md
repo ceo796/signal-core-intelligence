@@ -2,6 +2,30 @@
 
 ---
 
+## [Signal87_Print_Documents_v1] — 2026-06-18  *(Print any document — the stored PDF original, or a clean extracted-text view for everything else — from the detail page and the documents dashboard; frontend-only)*
+
+### Summary
+Adds a **Print** action so a signed-in owner can print any of their documents. Two surfaces share one reusable `PrintDocumentButton`: a clearly visible **labelled Print button** in the Document Detail action bar (between **Download Original** and **Re-Index**), and a **compact printer-icon button** in every Documents dashboard **list row** and **grid card** (just before Delete). **Real PDFs with a stored original print the original file**; **everything else (TXT / DOCX / CSV / XLSX, and PDFs with no stored original) prints a clean, readable extracted-text view** with the document name + metadata. **Frontend-only:** no backend, auth/Clerk, owner, DB schema, OpenAPI/codegen, upload, storage, extraction, chat, brief, agent, or routing changes; **no new public URLs**. Both print paths go through the **existing authenticated, owner-scoped** API transport, so unauthenticated still **401**s and cross-owner still **404**s, and **Download Original is untouched**.
+
+### Added — frontend
+- **`artifacts/signal87-core/src/lib/print-document.ts`** *(new)* — the print engine:
+  - `PrintableDocument` (minimal `{ id, fileName, fileType, originalFileAvailable, extractionStatus? }`) + `canPrintDocument(doc)` gate: a PDF is printable if it has a **stored original or** a **successful extraction**; a non-PDF is printable only on **successful extraction**.
+  - `printDocument(doc)` — PDF-with-original → fetch `GET /api/documents/:id/original` as an **authenticated blob** via `customFetch(..., { responseType: "blob" })` → object URL → hidden iframe → browser print → **revoke**. Otherwise → fetch `GET /api/documents/:id` (full `extractedText` from the owner-scoped detail endpoint) → hidden iframe `srcdoc` with a print-optimized HTML view → print. Throws on failure (incl. "nothing printable") so callers can toast.
+  - All user-controlled content (`fileName`, metadata, `extractedText`) is **HTML-escaped** before it enters `srcdoc` (no injection). The hidden-iframe lifecycle is **idempotently** cleaned up (revoke object URL + remove iframe) on `onafterprint`, with a 60s fallback if it never fires.
+- **`artifacts/signal87-core/src/components/print-document-button.tsx`** *(new)* — reusable `PrintDocumentButton`: `variant="button"` (labelled outline, detail page) and `variant="icon"` (compact ghost printer icon, dashboard rows/cards). Printer icon, `Loader2` spinner while preparing, `sonner` error toast on failure, **auto-disabled** via `canPrintDocument`, and `preventDefault()/stopPropagation()` so clicking inside a clickable row/card never navigates.
+
+### Changed — frontend (additive wiring only)
+- **`artifacts/signal87-core/src/pages/document-detail.tsx`** — `<PrintDocumentButton document={doc} />` added to the header action bar **after Download Original** (Download Original / Re-Index / Delete / Ask all unchanged).
+- **`artifacts/signal87-core/src/pages/documents.tsx`** — `<PrintDocumentButton variant="icon" />` added to the grid-card actions and the list-row actions (`h-7 w-7` in the list), placed **just before Delete**; existing Ask/Re-Index/Delete and the list⇄grid view toggle unchanged.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- **e2e (signed-in, approved `ceo@signal87.ai`):** list view + grid view show the compact Print button before Delete; the PDF detail page shows the labelled **Print** alongside Download Original / Re-Index / Ask / Delete. Clicking Print on a PDF fires `GET /api/documents/:id/original` (**200/304**) with **no error toast**; clicking Print on a Ready **TXT** document fires `GET /api/documents/:id` (**200/304**) with **no error toast**; **Download Original** still works (no regression).
+- **Security:** both print paths reuse the existing authenticated transport — unauth → **401**, cross-owner → **404**; approved-email gate unchanged; **no new public URLs**.
+- **Architecture review:** passed — correctness, iframe print lifecycle / leak, `srcdoc` XSS escaping, `canPrintDocument` gating, and Download-Original regression all clear.
+
+---
+
 ## [Signal87_Embedded_Preview_Auth_Transport_v1] — 2026-06-18  *(Authenticated `/api/*` calls now work inside the embedded preview iframe — attach Clerk's verified session token as a Bearer header, centralized in the API fetch layer)*
 
 ### Summary

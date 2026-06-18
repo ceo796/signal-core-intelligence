@@ -1,0 +1,98 @@
+Add Print buttons to Signal87 documents.
+
+This is a controlled frontend-first feature. Do not redesign the app. Do not refactor broadly. Do not change authentication, Clerk config, document ownership enforcement, database schema, upload ingestion, storage behavior, extraction logic, chat, brief generation, hybrid agent, OpenAPI/codegen, or routing unless absolutely necessary.
+
+Goal:
+Users should be able to print documents from:
+
+1. The Document Viewer / Document Detail page.
+2. The Documents dashboard/list/card view.
+
+Requirements:
+
+* Add a clearly visible Print button in the document viewer header/action area.
+* Add a compact Print action in the Documents dashboard for each document, preferably in the existing actions menu or card actions.
+* Use the existing owner-scoped document/original download endpoint if available.
+* Do not create a new backend route unless there is no safe existing way to access the printable document.
+* Do not bypass owner checks.
+* Do not expose document files publicly.
+* Do not trust client-side document IDs without backend owner enforcement.
+
+Preferred behavior:
+
+1. PDF files:
+
+   * Fetch the existing original file through the authenticated, owner-scoped original/download endpoint.
+   * Open the PDF in a new browser tab or hidden iframe/object URL.
+   * Trigger the browser print dialog.
+   * Revoke object URLs after use where applicable.
+
+2. TXT / extracted text fallback:
+
+   * If original printing is not supported, open a clean print view using extracted text.
+   * Include document name and basic metadata.
+   * Use readable print CSS.
+
+3. DOCX / XLSX / CSV:
+
+   * If browser-native original print is not reliable, print the readable extracted preview instead.
+   * For spreadsheets, preserve sheet names and row-range context in the print output.
+   * Do not pretend to offer a full Excel editor or perfect spreadsheet formatting.
+
+UX requirements:
+
+* Print button should use a printer icon if icon set already exists.
+* Show loading state while preparing print.
+* Show a clear error toast/message if printing cannot be prepared.
+* Do not block existing Download Original behavior.
+* Keep the interface compact and consistent with Signal87 styling.
+
+Security requirements:
+
+* Print must only work for documents owned by the authenticated current user.
+* Unowned/nonexistent documents should continue to return 404.
+* Unauthenticated print attempts should return 401 through existing protected routes.
+* Do not create public file URLs.
+* Do not weaken existing owner_user_id enforcement.
+
+Implementation guidance:
+
+* Prefer creating a reusable helper/component, such as `PrintDocumentButton`, used by both:
+
+  * Document detail/viewer page
+  * Documents dashboard cards/list rows
+* Reuse existing document data and existing API client/fetch layer.
+* Avoid duplicating fetch/auth logic.
+* Do not add hardcoded sample documents.
+* Do not change backend response shapes.
+
+Verification:
+Test in a standalone browser tab, not only the embedded Replit preview.
+
+Verify:
+
+1. Print button appears in Document Viewer.
+2. Print action appears in Documents dashboard.
+3. PDF print opens the browser print flow.
+4. XLSX/CSV print uses readable extracted preview if original print is not supported.
+5. DOCX/TXT print fallback works or fails gracefully with a clear message.
+6. Download Original still works.
+7. Document detail still works.
+8. Upload still works.
+9. Re-index still works.
+10. Delete still works.
+11. Owner-scoped access remains enforced.
+12. Unauthenticated protected routes still return 401.
+13. Frontend typecheck passes.
+14. No backend files changed unless explicitly justified.
+15. No auth/storage/schema/OpenAPI/codegen files changed.
+16. No console errors.
+
+Final report:
+
+* Files changed
+* Whether implementation was frontend-only
+* How PDF printing works
+* How non-PDF printing works
+* Any limitations
+* Verification results

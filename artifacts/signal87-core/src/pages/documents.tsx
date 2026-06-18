@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { DocumentThumbnail } from "@/components/document-thumbnail";
+import { PrintDocumentButton } from "@/components/print-document-button";
 import { getDocumentStatus } from "@/lib/document-status";
 import { format } from "date-fns";
 import {
@@ -701,6 +702,7 @@ export default function DocumentsList() {
                             Ask
                           </Button>
                         )}
+                        <PrintDocumentButton document={doc} variant="icon" />
                         <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
                       </div>
                     </CardContent>
@@ -795,6 +797,7 @@ export default function DocumentsList() {
                               Ask
                             </Button>
                           )}
+                          <PrintDocumentButton document={doc} variant="icon" className="h-7 w-7" />
                           <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
                         </div>
                       </td>
