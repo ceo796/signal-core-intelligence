@@ -2,6 +2,20 @@
 
 ---
 
+## [Signal87_Multi_Document_Upload_v1] — 2026-06-18  *(Upload several documents at once from one dialog, each with its own status; frontend-only)*
+
+### Summary
+The **Upload** dialog now accepts **multiple files at once**. The user can select (or repeatedly add) several files; each is shown as a row with its size, a remove control, and per-file validation. On submit, files are uploaded **one at a time through the existing `POST /api/documents/upload` endpoint** (client-side fan-out) — so every file goes through the exact same proven extraction / chunking / object-storage / owner-scoping / `207`-warning path, unchanged. Each row updates live (queued → uploading → success / no-text warning / error), and a summary toast reports how many succeeded vs. failed. On full success the dialog closes; on partial failure it stays open so the user can review and **retry just the failed files**. **Frontend-only:** no backend, multer, auth/Clerk, DB schema, OpenAPI/codegen, storage, or extraction changes — the server still handles **one file per request** exactly as before.
+
+### Changed — frontend
+- **`artifacts/signal87-core/src/components/file-upload.tsx`** — `FileUploadModal` reworked from a single-file picker to a multi-file queue. The `<Input type="file">` gains `multiple`; selections accumulate (de-duplicated by name+size+lastModified) into a list of `UploadItem`s with independent status. Upload runs the existing single-file `customFetch("/api/documents/upload")` call **sequentially** per file (avoids hammering embeddings/rate limits), tracks `Uploading X of Y…` progress, folds each file's `warning` (207) / error into its row, invalidates the documents query once at the end, and shows a combined summary toast. Failed files can be retried without re-selecting; the trigger/title now read **"Upload Documents"**. Per-file size/type validation (PDF/DOCX/TXT/CSV/XLSX/XLS, ≤20 MB) is unchanged.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Each file reuses the existing authenticated, owner-scoped upload transport (unauth → **401**), so security/ownership are unchanged; the backend, storage, and citations + Verification Trace payload are untouched.
+
+---
+
 ## [Signal87_Document_Workspace_AI_Panel_v1] — 2026-06-18  *(Two-column Document Workspace: existing document detail on the left, an embedded Hybrid AI Agent on the right that defaults to "Across all my documents"; frontend-only)*
 
 ### Summary

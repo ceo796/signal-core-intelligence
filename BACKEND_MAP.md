@@ -1,5 +1,7 @@
 # Signal87 Core — Backend Map
 
+> Note (Signal87_Multi_Document_Upload_v1, 2026-06-18): **No backend change.** Multi-file upload is a **client-side fan-out**: the frontend uploads each selected file with a separate `POST /api/documents/upload` request (still `multer` `upload.single("file")`, one file per request). The server's validation, object-storage write, `extractAndChunk`, owner-scoping, and `success`/`failed` (`207`) bookkeeping are all the existing per-file behavior, unchanged. If a true batched endpoint is ever wanted, it would need `upload.array(...)` + an OpenAPI spec entry (the upload route is currently spec-less and called via `customFetch`).
+>
 > Note (Signal87_Document_Workspace_AI_Panel_v1, 2026-06-18): **No backend change.** The new embedded Hybrid AI Agent panel on the Document Detail page (`/documents/:id`) is a **second frontend consumer** of the existing **`POST /api/agent/hybrid`** route — it defaults to omitting `documentIds` (backend auto-selects relevant owned docs) and otherwise sends `[currentId]` (this-doc) or a user-selected id set. Owner-scoping, auto-select, citations, and the Verification Trace payload are all the existing, unchanged behavior (see Hybrid_Agent_v1 + Per_User_Document_Ownership_v1 below).
 >
 > Checkpoint: **Signal87_Spreadsheet_Excel_Readability_v1**
