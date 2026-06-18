@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { UploadCloud, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
-const ALLOWED_EXTENSIONS = ["pdf", "docx", "txt", "csv"];
+const ALLOWED_EXTENSIONS = ["pdf", "docx", "txt", "csv", "xlsx", "xls"];
 const MAX_SIZE_MB = 20;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 function validateFile(f: File): string | null {
   const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return `Unsupported file type${ext ? ` ".${ext}"` : ""}. Allowed types: PDF, DOCX, TXT, CSV.`;
+    return `Unsupported file type${ext ? ` ".${ext}"` : ""}. Allowed types: PDF, DOCX, TXT, CSV, XLSX, XLS.`;
   }
   if (f.size > MAX_SIZE_BYTES) {
     return `File is too large (${(f.size / 1024 / 1024).toFixed(1)} MB). Maximum is ${MAX_SIZE_MB} MB.`;
@@ -104,7 +104,7 @@ export function FileUploadModal() {
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Upload Document</DialogTitle>
           <DialogDescription className="text-muted-foreground text-xs">
-            Accepted types: PDF, DOCX, TXT, CSV · Maximum size: {MAX_SIZE_MB} MB.
+            Accepted types: PDF, DOCX, TXT, CSV, XLSX, XLS · Maximum size: {MAX_SIZE_MB} MB.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -117,7 +117,7 @@ export function FileUploadModal() {
               type="file"
               onChange={handleFileChange}
               className="text-sm bg-background border-border"
-              accept=".pdf,.docx,.txt,.csv"
+              accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
             />
             {validationError ? (
               <div className="flex items-start gap-2 text-xs text-destructive">

@@ -126,6 +126,7 @@ export default function DocumentDetail() {
   const deleteMutation = useDeleteDocument();
 
   const isPdf = doc?.fileType?.toLowerCase() === "pdf";
+  const isSpreadsheet = ["xlsx", "xls"].includes(doc?.fileType?.toLowerCase() ?? "");
   const originalAvailable = doc?.originalFileAvailable ?? false;
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -432,7 +433,9 @@ export default function DocumentDetail() {
                 <Card className="bg-card border-border/50 flex-1 overflow-auto">
                   <CardContent className="p-5">
                     <p className="text-xs text-muted-foreground mb-3">
-                      Extracted text (original format not embeddable)
+                      {isSpreadsheet
+                        ? "Spreadsheet contents (sheet-by-sheet readable view)"
+                        : "Extracted text (original format not embeddable)"}
                     </p>
                     <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
                       {doc.extractedText}

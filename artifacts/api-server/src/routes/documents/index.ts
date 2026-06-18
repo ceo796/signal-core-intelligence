@@ -11,8 +11,7 @@ import {
   GetDocumentResponse,
   GetDocumentChunksResponse,
 } from "@workspace/api-zod";
-import { extractText, getFileType, type SupportedFileType } from "../../lib/text-extractor";
-import { chunkText } from "../../lib/chunker";
+import { extractAndChunk, getFileType, type SupportedFileType } from "../../lib/text-extractor";
 import * as fileStore from "../../lib/file-store";
 
 const router: IRouter = Router();
@@ -91,7 +90,9 @@ router.post(
 
     const fileType = getFileType(file.mimetype, file.originalname);
     if (!fileType) {
-      res.status(400).json({ error: "Unsupported file type. Allowed: PDF, DOCX, TXT, CSV" });
+      res
+        .status(400)
+        .json({ error: "Unsupported file type. Allowed: PDF, DOCX, TXT, CSV, XLSX, XLS" });
       return;
     }
 
@@ -113,13 +114,19 @@ router.post(
       return;
     }
 
-    // ── 2. Extract text ───────────────────────────────────────────────────────
+    // ── 2. Extract text + chunks ──────────────────────────────────────────────
     let extractedText: string | null = null;
+    let extractedChunks: string[] = [];
     let extractionStatus = "failed";
     let extractionError: string | null = null;
 
     try {
-      extractedText = await extractText(file.buffer, fileType);
+      const extraction = await extractAndChunk(file.buffer, fileType, file.originalname);
+      extractedText = extraction.text;
+      extractedChunks = extraction.chunks;
+      for (const warning of extraction.warnings) {
+        req.log.warn({ fileName: file.originalname, fileType, warning }, "Spreadsheet extraction limit applied");
+      }
       if (!extractedText.trim()) {
         extractionError = "No text could be extracted from the file";
       } else {
@@ -149,14 +156,11 @@ router.post(
         })
         .returning();
 
-      if (extractionStatus === "success" && extractedText) {
-        const chunks = chunkText(extractedText);
-        if (chunks.length > 0) {
-          await db.insert(chunksTable).values(
-            chunks.map((content, i) => ({ documentId: doc.id, chunkIndex: i, content }))
-          );
-          chunkCount = chunks.length;
-        }
+      if (extractionStatus === "success" && extractedChunks.length > 0) {
+        await db.insert(chunksTable).values(
+          extractedChunks.map((content, i) => ({ documentId: doc.id, chunkIndex: i, content }))
+        );
+        chunkCount = extractedChunks.length;
       }
     } catch (err) {
       req.log.error({ err }, "Failed to persist document — removing orphaned file from storage");
@@ -449,10 +453,20 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
     return;
   }
 
-  // Re-extract text
+  // Re-extract text + chunks
   let extractedText: string;
+  let chunks: string[];
   try {
-    extractedText = await extractText(fileBuffer, doc.fileType as SupportedFileType);
+    const extraction = await extractAndChunk(
+      fileBuffer,
+      doc.fileType as SupportedFileType,
+      doc.fileName,
+    );
+    extractedText = extraction.text;
+    chunks = extraction.chunks;
+    for (const warning of extraction.warnings) {
+      req.log.warn({ documentId: id, fileType: doc.fileType, warning }, "Spreadsheet extraction limit applied");
+    }
   } catch (err) {
     req.log.error({ err }, "Re-extraction failed");
     await db
@@ -474,8 +488,7 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
     return;
   }
 
-  // Delete old chunks, re-chunk, and update document atomically
-  const chunks = chunkText(extractedText);
+  // Delete old chunks, replace, and update document atomically
   await db.transaction(async (tx) => {
     await tx.delete(chunksTable).where(eq(chunksTable.documentId, id));
     if (chunks.length > 0) {

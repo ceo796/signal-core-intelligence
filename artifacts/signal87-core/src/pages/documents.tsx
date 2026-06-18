@@ -598,7 +598,7 @@ export default function DocumentsList() {
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-bold">No documents yet</h3>
               <p className="text-sm text-muted-foreground max-w-md mt-2 mb-6">
-                Upload a PDF, DOCX, TXT, or CSV file to get started. Ask questions and get cited answers.
+                Upload a PDF, DOCX, TXT, CSV, or Excel (XLSX/XLS) file to get started. Ask questions and get cited answers.
               </p>
               <FileUploadModal />
             </div>

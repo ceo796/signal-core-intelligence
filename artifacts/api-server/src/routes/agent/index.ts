@@ -164,6 +164,8 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
   const documentList = documentsUsed.map((d) => `- "${d.name}"`).join("\n");
   const systemPrompt = `${MODE_PROMPTS[mode] ?? MODE_PROMPTS.auto}
 
+When a source excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) alongside its [Source N] citation.
+
 Documents searched:
 ${documentList}
 

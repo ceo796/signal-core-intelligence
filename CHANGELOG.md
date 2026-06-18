@@ -2,6 +2,43 @@
 
 ---
 
+## [Signal87_Spreadsheet_Excel_Readability_v1] — 2026-06-18  *(Excel spreadsheet ingestion — upload, preview, chat, hybrid-agent, and brief over .xlsx/.xls with sheet/row-aware citations)*
+
+### Summary
+Extends the existing ingestion pipeline so Excel workbooks (`.xlsx` — required; `.xls` — also supported) are first-class documents: they upload, store, extract to readable text, chunk, preview, and flow through single-doc chat, the hybrid agent, and the executive brief — each chunk carrying **sheet name + row range** provenance so citations are spreadsheet-aware. CSV ingestion is **unchanged** (still parsed as plain text). **No DB schema change, no OpenAPI/codegen change, no auth/ownership/storage change, no UI redesign** — `fileType` is already a free string and `chunks.content` is free text, so all sheet/row context lives inside the chunk text.
+
+### Added — spreadsheet module (`artifacts/api-server/src/lib/spreadsheet.ts`)
+- `extractSpreadsheet(buffer, fileType, fileName)` → `{ text, chunks, warnings }` using SheetJS (`xlsx`).
+  - **`text`** (for `extracted_text` + preview): a workbook header (`Workbook: <name> — N sheet(s): ...`) followed by, per sheet, a `Sheet: <name> (R data rows × C columns)` line, a `Columns: A=<header>, B=<header>, …` line, and one `Row <n>: Col=val; Col=val` line per non-empty row (1-based row numbers matching Excel; blank cells and fully blank rows skipped, but row numbers preserved).
+  - **`chunks`** (for retrieval): self-contained, each prefixed `Sheet: <name> | Rows a–b` + the `Columns:` line so every retrieved chunk carries its own sheet/row provenance. Header-only sheets still emit one `… | Header row` chunk so column-level questions stay answerable.
+  - **`warnings`**: non-fatal truncation notices (never silently dropped) — surfaced to the caller and logged via `req.log.warn`.
+  - Limits: `MAX_SHEETS=30`, `MAX_ROWS_PER_SHEET=2000`, `MAX_COLS=200`, `MAX_CELL_CHARS=500`, `ROWS_PER_CHUNK=40`, `MAX_CHUNK_CHARS=4000`. Prefers SheetJS formatted text (`cell.w`, handles dates/number formats), falling back to raw value. A workbook with no usable content returns `text: ""` so the caller's existing empty-extraction path marks the document `failed`.
+
+### Added — dependency / build
+- `xlsx` (SheetJS) added to `artifacts/api-server` deps and to `build.mjs` `external[]` so it is **not** inlined into the esbuild bundle (loaded from `node_modules` at runtime, same pattern as `pdf-parse` / `mammoth`).
+
+### Changed — backend ingestion (behavior identical for existing types)
+- **`lib/text-extractor.ts`** — `xlsx`/`xls` added to `SupportedFileType` and `getFileType` (extension + MIME; CSV is matched **before** `.xls` so `text/csv` never mis-routes). New `extractAndChunk()` orchestrator routes spreadsheets to `extractSpreadsheet` and everything else through the existing extract-then-`chunkText` path, returning a uniform `{ text, chunks, warnings }`.
+- **`lib/file-store.ts`** — `getMimeType` now returns the correct content types for `.xlsx`/`.xls` (so download/preview of the original serves the right MIME).
+- **`routes/documents/index.ts`** — `POST /documents/upload` and `POST /documents/:id/reindex` now call `extractAndChunk`; any extraction warnings are logged via `req.log.warn`; the unsupported-file-type message now lists `XLSX`/`XLS`. Ownership, storage, transaction mechanics, and the `success`/`failed` (`207`) bookkeeping are unchanged.
+
+### Changed — citation prompts (one sentence each; `[Chunk N]`/`[Source N]` preserved)
+- **`routes/chat/index.ts`**, **`routes/agent/index.ts`** (hybrid), **`routes/brief/index.ts`** — each system prompt gains a single instruction: when a source is a spreadsheet excerpt, reference the **sheet name and row range** shown in the chunk. No other prompt or retrieval change.
+
+### Changed — frontend (no redesign)
+- **`components/file-upload.tsx`** — `accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"`, allowed-extensions list, validation message, and dialog copy now include Excel.
+- **`pages/documents.tsx`**, **`pages/about.tsx`** — supported-format copy mentions Excel.
+- **`pages/document-detail.tsx`** — spreadsheets use the non-PDF text preview with a sheet-aware label (the readable sheet-by-sheet rendering).
+
+### Unchanged
+- DB schema, OpenAPI spec + generated Zod/React-Query client, auth/approved-email gate, per-user ownership, durable storage, download/delete/reindex mechanics, the PDF viewer, CSV ingestion, and the citations + Verification Trace payload shape.
+
+### Verification
+- `pnpm run typecheck` — clean.
+- End-to-end with a real 2-sheet `.xlsx` (Sales + Risks) via the documented dev auth bypass (reverted after): **upload** → `fileType: "xlsx"`, chunks > 0, `extractionStatus: "success"`, preview renders sheet-by-sheet; **single-doc chat**, **hybrid agent**, and **executive brief** all returned grounded answers whose citations show `Sheet: <name> | Rows a–b` and preserved `[Chunk N]`/`[Source N]`. Test document deleted and bypass env vars removed afterward (`GET /api/documents` back to `401`).
+
+---
+
 ## [Signal87_Per_User_Document_Ownership_v1] — 2026-06-18  *(Per-user document ownership — every document read/write is now scoped to the signed-in user)*
 
 ### Summary

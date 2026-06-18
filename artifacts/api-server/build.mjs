@@ -31,6 +31,7 @@ async function buildAll() {
       "*.node",
       "pdf-parse",
       "mammoth",
+      "xlsx",
       "sharp",
       "better-sqlite3",
       "sqlite3",

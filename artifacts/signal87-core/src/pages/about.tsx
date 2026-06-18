@@ -29,7 +29,7 @@ export default function About() {
             <h2 className="text-base font-semibold">What you can do</h2>
             <ul className="space-y-2 text-muted-foreground">
               {[
-                "Upload PDF, DOCX, TXT, or CSV files",
+                "Upload PDF, DOCX, TXT, CSV, or Excel (XLSX/XLS) files",
                 "Preview PDFs directly in the browser",
                 "Ask questions and receive answers grounded in your document",
                 "View cited source passages alongside every response",

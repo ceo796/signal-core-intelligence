@@ -1,6 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Core_Document_Thumbnails_v1**
+> Checkpoint: **Signal87_Spreadsheet_Excel_Readability_v1**
+> Last updated: 2026-06-18
+> Note (Spreadsheet_Excel_Readability_v1): New tests **T58–T63** cover Excel (`.xlsx`/`.xls`) ingestion — upload, sheet-by-sheet readable preview, single-doc chat, hybrid agent, executive brief, and the empty-workbook failure path — all with **sheet/row-aware citations** (`Sheet: <name> | Rows a–b`, `[Chunk N]`/`[Source N]` preserved). CSV ingestion (T05) is **unchanged**. No DB schema, OpenAPI/codegen, auth/ownership, storage, or UI-redesign changes; PDF viewer, download/delete/reindex, and the citations + Verification Trace payload are unchanged.
+> Prior checkpoint: **Signal87_Core_Document_Thumbnails_v1**
 > Last updated: 2026-06-17
 > Note (Document_Thumbnails_v1): New tests **T51–T57** cover the document thumbnail/preview experience on `/documents`. Frontend-only change — no backend, API contract, or schema changes. Auth gate, all card actions (Ask, Re-Index, Delete, click-to-detail), upload, PDF viewer (detail page), chat, brief, compare, activity, and admin are all unchanged.
 > Prior checkpoint: **Signal87_Core_Clerk_Auth_v1**
@@ -25,6 +28,88 @@
    - `PRIVATE_OBJECT_DIR: "set"`
    - `fileStorageConfig.bucketConfigured: true`
    - `fileStorageConfig.originalFilesStored: true`
+
+---
+
+## T58 — Spreadsheet Upload (.xlsx)
+
+**Goal:** Verify Excel workbook upload, storage, extraction, and sheet-aware chunking.
+
+**Steps:**
+1. Navigate to `/documents`
+2. Click `UPLOAD_DOCUMENT`; confirm the picker accepts `.xlsx` (and the dialog/validation copy lists Excel)
+3. Upload a multi-sheet `.xlsx` (e.g. a `Sales` sheet + a `Risks` sheet, each with a header row)
+4. Submit
+
+**Expected:**
+- Document card appears with an `XLSX` badge; `CHUNKS:` ≥ 1
+- API response: `fileType: "xlsx"`, `extractionStatus: "success"`, `originalFileAvailable: true`, `storageProvider: "replit-object-storage"`
+- `extractedTextPreview` begins `Workbook: <name> — N sheet(s): ...`
+
+---
+
+## T59 — Spreadsheet Preview (sheet-by-sheet readable text)
+
+**Goal:** Verify the detail-page preview renders spreadsheets readably.
+
+**Steps:**
+1. Open the `.xlsx` from T58 → detail page → Extracted Text / Preview tab
+
+**Expected:**
+- Non-PDF text preview with a sheet-aware label
+- Per sheet: `Sheet: <name> (R data rows × C columns)`, a `Columns: A=<header>, B=<header>, …` line, then `Row <n>: Col=val; Col=val` lines (1-based row numbers matching Excel; blank cells/rows skipped)
+
+---
+
+## T60 — Spreadsheet Single-Doc Chat (sheet/row citations)
+
+**Goal:** Verify chatting with a spreadsheet returns grounded, sheet/row-aware citations.
+
+**Steps:**
+1. From the `.xlsx` detail page, ask a value-lookup question (e.g. "Which product had the highest sale and in which region?")
+
+**Expected:**
+- Grounded answer with `[Chunk N]` citation(s)
+- Citation excerpt(s) start `Sheet: <name> | Rows a–b` followed by the `Columns:` line and matching `Row <n>:` lines
+- Verification Trace present (provider/model/chunk stats/latencies)
+
+---
+
+## T61 — Spreadsheet Hybrid Agent
+
+**Goal:** Verify the hybrid agent handles spreadsheet sources.
+
+**Steps:**
+1. `POST /api/agent/hybrid` with `{ query, documentIds: [<xlsx id>], mode: "auto" }` (or via the `/agents/hybrid` page)
+
+**Expected:**
+- Grounded answer with `[Source N]` citations whose excerpts carry `Sheet: <name> | Rows a–b` provenance
+- `documentsUsed`, `citations`, and `trace` present
+
+---
+
+## T62 — Spreadsheet Executive Brief
+
+**Goal:** Verify the executive brief works over a spreadsheet.
+
+**Steps:**
+1. `POST /api/documents/brief` with `{ documentIds: [<xlsx id>], briefType: "risk", focus: "..." }` (any single-doc brief type; `comparison` still requires ≥ 2 docs)
+
+**Expected:**
+- Structured brief with sections and ≥ 1 citation grounded in the spreadsheet's sheet/row chunks
+- No regression to existing PDF/DOCX/TXT brief behavior
+
+---
+
+## T63 — Spreadsheet Edge Cases (.xls, empty workbook, CSV unchanged)
+
+**Goal:** Verify secondary spreadsheet paths and that CSV is untouched.
+
+**Steps & Expected:**
+- **`.xls`:** upload a legacy `.xls` → `fileType: "xls"`, chunks > 0, same sheet/row preview + citations
+- **Empty workbook:** upload an `.xlsx` with no data rows → `extractionStatus: "failed"` (empty extraction marks the doc failed; original still stored so re-index can be attempted)
+- **CSV regression:** upload a `.csv` (see T05) → still parsed as plain text, behavior unchanged (no sheet/row prefixes)
+- **Large workbook (optional):** a sheet with > 2000 rows → only the first 2000 indexed; a truncation note appears in the preview and a warning is logged server-side
 
 ---
 

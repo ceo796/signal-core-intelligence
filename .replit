@@ -40,5 +40,7 @@ externalPort = 3000
 [userenv.shared]
 APPROVED_EMAILS = "ceo@signal87.ai"
 
+[userenv.development]
+
 [nix]
 channel = "stable-25_05"

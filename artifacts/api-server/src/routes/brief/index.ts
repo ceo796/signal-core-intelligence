@@ -197,7 +197,8 @@ Rules:
 4. Be concise, precise, professional, and evidence-based; write for a senior decision-maker.
 5. Do NOT use marketing fluff or unsupported evaluative adjectives. Avoid words like "innovative", "powerful", "cutting-edge", "robust", "seamless", "user engagement", and similar promotional language unless that exact concept is explicitly stated in the selected documents. Describe what the sources say, not how impressive it is.
 6. Any recommendation you make must trace back to a specific cited finding from the sources. If the sources do not support a recommendation, omit it rather than inventing generic advice.
-7. ${template.instructions}
+7. When a source excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) alongside its [Source N] citation.
+8. ${template.instructions}
 
 Use these section headings, in this order (omit a section only if no source supports it): ${template.sections.join(", ")}.
 

@@ -95,6 +95,7 @@ Rules:
 2. ALWAYS cite your sources by referencing the chunk numbers, e.g. [Chunk 3].
 3. If the answer is not in the provided chunks, say so clearly.
 4. Do not hallucinate or add information not present in the document.
+5. When an excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) in your answer alongside the [Chunk N] citation.
 
 Document: "${doc.fileName}"
 
