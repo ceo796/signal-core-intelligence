@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { FileUploadModal } from "@/components/file-upload";
@@ -153,6 +153,32 @@ function fileTypeChip(fileType: string): FileTypeChipStyle {
     default:
       return { bg: "bg-violet-50 border-violet-200", text: "text-violet-700", label: (fileType || "FILE").toUpperCase() };
   }
+}
+
+function highlightMatch(text: string, query: string) {
+  const q = query.toLowerCase().trim();
+  if (!q) return text;
+  const lower = text.toLowerCase();
+  const segments: ReactNode[] = [];
+  let cursor = 0;
+  let matchIndex = lower.indexOf(q, cursor);
+  let key = 0;
+  while (matchIndex !== -1) {
+    if (matchIndex > cursor) {
+      segments.push(text.slice(cursor, matchIndex));
+    }
+    segments.push(
+      <mark key={key++} className="bg-yellow-200 text-inherit rounded-[2px] px-0.5">
+        {text.slice(matchIndex, matchIndex + q.length)}
+      </mark>
+    );
+    cursor = matchIndex + q.length;
+    matchIndex = lower.indexOf(q, cursor);
+  }
+  if (cursor < text.length) {
+    segments.push(text.slice(cursor));
+  }
+  return segments;
 }
 
 function DeleteDialog({ fileName, onConfirm }: { fileName: string; onConfirm: () => void }) {
@@ -639,7 +665,7 @@ export default function DocumentsList() {
                           className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1.5"
                           title={doc.fileName}
                         >
-                          {doc.fileName}
+                          {highlightMatch(doc.fileName, search)}
                         </h3>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <DocumentStatusBadge doc={doc} />
@@ -736,7 +762,7 @@ export default function DocumentsList() {
                             {chip.label}
                           </span>
                           <span className="truncate font-medium text-sm group-hover:text-primary transition-colors" title={doc.fileName}>
-                            {doc.fileName}
+                            {highlightMatch(doc.fileName, search)}
                           </span>
                         </Link>
                       </td>
