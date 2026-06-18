@@ -1,0 +1,89 @@
+Run a Signal87 platform stabilization audit.
+
+This is verification-only. Do not add features. Do not redesign. Do not refactor. Do not change backend APIs, auth, schema, storage, OpenAPI/codegen, UI, or routing unless explicitly told later.
+
+Goal:
+Confirm the platform is stable before any new work on Excel readability, document UI redesign, or color/theme changes.
+
+Audit the current committed code and live/dev behavior.
+
+Check the following:
+
+1. Git / checkpoint status
+
+* Confirm working tree status.
+* Confirm latest checkpoint/commit hash.
+* Confirm no unrelated files, screenshots, binary assets, or generated artifacts are pending.
+* Confirm CHANGELOG and BACKEND_MAP reflect the current state.
+
+2. Type safety
+
+* Run frontend typecheck.
+* Run backend typecheck.
+* Run library/typecheck if applicable.
+* Confirm OpenAPI/codegen has no pending diff.
+
+3. Auth and ownership
+
+* Confirm protected API routes return 401 unauthenticated.
+* Confirm document reads/writes are owner-scoped.
+* Confirm unowned and nonexistent documents both return 404 after authentication.
+* Confirm new uploads stamp owner_user_id.
+* Confirm hybrid agent, brief generation, multi-chat, single-doc chat, download, re-index, delete, chunks, and chat history are owner-scoped.
+
+4. Production alignment
+
+* Confirm production is serving the latest intended code.
+* Confirm production schema matches dev for documents.owner_user_id.
+* Confirm production ownerless document count.
+* Confirm public routes behave as expected.
+* Confirm protected production routes return 401 unauthenticated.
+* Clearly state whether production is safe for public authenticated users.
+
+5. Core feature smoke tests
+
+* Login works in standalone tab.
+* Documents page loads.
+* Upload works.
+* Download original works.
+* Re-index works.
+* Delete works.
+* Document detail page works.
+* Single-document chat works.
+* Multi-document comparison works.
+* Executive brief generation works.
+* Hybrid agent works.
+* Home/sidebar navigation works.
+* Replit embedded preview limitation is documented and does not cause slow retries.
+
+6. Performance/loading
+
+* Confirm React Query does not retry 4xx errors.
+* Confirm failed auth errors surface quickly.
+* Confirm normal authenticated document loading is not slowed by the fix.
+* Confirm upload/delete/re-index still invalidate document queries.
+
+7. Known exceptions
+   List all deliberate exceptions, including:
+
+* /api/healthz
+* /api/demo/qa
+* /api/admin/stats
+* /api/system/info
+  Explain why each is safe or what risk remains.
+
+8. Stoplight result
+   Return one of:
+
+* GREEN: safe to continue feature work.
+* YELLOW: safe for limited frontend-only work, but backend changes should wait.
+* RED: stop all feature work until blockers are fixed.
+
+Final report:
+
+* Overall status
+* Current safe checkpoint
+* Critical blockers
+* Non-critical cleanup items
+* Recommended next step
+* Features that should not be touched yet
