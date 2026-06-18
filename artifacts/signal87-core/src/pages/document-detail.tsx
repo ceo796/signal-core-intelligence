@@ -36,6 +36,7 @@ import { PrintDocumentButton } from "@/components/print-document-button";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
+import { DocumentAiPanel } from "@/components/document-ai-panel";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -258,8 +259,12 @@ export default function DocumentDetail() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Workspace: document (left, 60–65%) + Hybrid AI Agent (right, 35–40%) */}
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+          {/* Left column: breadcrumbs / title / badges / actions / preview / tabs */}
+          <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
         {/* Header */}
-        <header className="p-4 md:p-6 border-b border-border bg-card space-y-3 md:space-y-4">
+        <header className="shrink-0 p-4 md:p-6 border-b border-border bg-card space-y-3 md:space-y-4">
           <Link href="/documents">
             <button className="inline-flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-3 h-3" />
@@ -364,8 +369,7 @@ export default function DocumentDetail() {
           )}
         </header>
 
-        {/* Tabs */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Tabs */}
           <Tabs defaultValue="preview" className="flex-1 flex flex-col overflow-hidden">
             <div className="border-b border-border bg-card">
               <div className="px-4 md:px-6 pt-3 md:pt-4 overflow-x-auto">
@@ -606,6 +610,11 @@ export default function DocumentDetail() {
               </Card>
             </TabsContent>
           </Tabs>
+          </div>
+          {/* Right column: embedded Hybrid AI Agent */}
+          <aside className="shrink-0 flex flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-muted/10 w-full lg:w-[38%] lg:min-w-[360px] lg:max-w-[520px] h-[60vh] lg:h-auto">
+            <DocumentAiPanel currentDocumentId={doc.id} currentDocumentName={doc.fileName} />
+          </aside>
         </div>
       </div>
     </Layout>

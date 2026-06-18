@@ -2,6 +2,23 @@
 
 ---
 
+## [Signal87_Document_Workspace_AI_Panel_v1] — 2026-06-18  *(Two-column Document Workspace: existing document detail on the left, an embedded Hybrid AI Agent on the right that defaults to "Across all my documents"; frontend-only)*
+
+### Summary
+Turns the Document Detail page (`/documents/:id`) into a **two-column workspace**. The **left column** keeps the existing document experience untouched (header, action bar, and the Preview / Extracted Text / Citations / History / System tabs). The **right column** embeds a self-contained **Hybrid AI Agent** panel headed **"Ask across all your documents."** The panel **defaults to cross-document reasoning**: it calls the existing **`POST /api/agent/hybrid`** with **no `documentIds`**, letting the backend auto-select relevant owned documents. A **Scope** selector lets the user narrow to **This document only** (`documentIds: [currentId]`), **Selected documents** (a checkbox picker of indexed docs → `documentIds: [...]`), or back to **All documents** (default, no ids). Answers render with the standard **per-source citations** (showing which documents were used) and the full **Verification Trace** (provider/model/documents-considered/chunks-considered/latency/fallback). **Frontend-only:** no backend, auth/Clerk, owner-scoping, DB schema, OpenAPI/codegen, storage, or routing changes — owner-scoping is already enforced by the existing endpoint. The standalone `/agents/hybrid` page is **left untouched** (presentational pieces were duplicated, not refactored, per the project's feature-duplication-over-coupling convention).
+
+### Added — frontend
+- **`artifacts/signal87-core/src/components/document-ai-panel.tsx`** *(new)* — `DocumentAiPanel({ currentDocumentId, currentDocumentName })`. Self-contained panel: Scope selector (**All documents** default / This document only / Selected documents), conditional ready-doc checkbox picker (current doc flagged "(this doc)"), Mode selector (auto/summarize/compare/extract/diligence), question textarea (Cmd/Ctrl+Enter to submit), and a results view. Calls `usePostAgentHybrid` with `documentIds` resolved from scope (`all` → `undefined`; `current` → `[currentDocumentId]`; `selected` → chosen ids). Reuses `MarkdownAnswer`; duplicates the `CitationCard` / `TracePanel` / `ResultView` presentation from the standalone agent page so it can't regress it. Submit is disabled until there's a question and (in Selected mode) at least one document.
+
+### Changed — frontend (additive layout only)
+- **`artifacts/signal87-core/src/pages/document-detail.tsx`** — the post-header content is now a responsive row (`flex-col lg:flex-row`): the existing Tabs block is wrapped as the left column (`flex-1`), and the new `<DocumentAiPanel />` is mounted as a right `<aside>` (≈38% width on `lg+`, `lg:min-w-[360px] lg:max-w-[520px]`; stacks below on smaller screens). The header, action bar, all five tabs, the PDF viewer, and every existing action (Ask / Download / Print / Re-Index / Delete) are unchanged.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- The panel reuses the proven `usePostAgentHybrid` hook and citation/trace components from the working `/agents/hybrid` page; owner-scoping is enforced server-side by the existing endpoint (unchanged).
+
+---
+
 ## [Signal87_Landing_Trust_Section_v1] — 2026-06-18  *(New "Trusted AI, grounded in your documents." trust section on the public landing page; frontend-only, content/UI only)*
 
 ### Summary

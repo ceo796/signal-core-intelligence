@@ -38,7 +38,7 @@ A document-intelligence PoC: upload documents, then query them with an LLM that 
 
 ## Product
 
-- **Document library:** upload (PDF/DOCX/TXT/CSV), list, detail page with tabbed Preview (in-platform PDF viewer) / Extracted Text / Citations / History / System, download original, re-index, delete.
+- **Document library:** upload (PDF/DOCX/TXT/CSV), list, detail page with tabbed Preview (in-platform PDF viewer) / Extracted Text / Citations / History / System, download original, re-index, delete. The detail page is a **two-column workspace**: document info/tabs on the left, an embedded **Hybrid AI Agent** panel on the right ("Ask across all your documents.") that defaults to all-document scope and can be narrowed to this-document / selected-documents (reuses `POST /api/agent/hybrid`; citations + Verification Trace preserved).
 - **Single-document chat:** ask questions about one document; persisted history; grounded citations + trace.
 - **Multi-document comparison** (`/compare`): one question across 2–5 documents with grouped citations.
 - **Executive Brief** (`/brief`): generate a structured brief (Executive Summary / Risk / Diligence / Contract Review / Comparison) over 1–5 documents, with an optional focus instruction, citations, and a trace. Comparison requires ≥2 documents.
