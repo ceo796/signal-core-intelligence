@@ -4,6 +4,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { PostAgentHybridBody } from "@workspace/api-zod";
 import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
+import { getCurrentUserId } from "../../lib/ownership";
 
 const ROUTE = "POST /api/agent/hybrid";
 
@@ -19,6 +20,12 @@ const router: IRouter = Router();
 
 router.post("/agent/hybrid", async (req, res): Promise<void> => {
   const totalStart = Date.now();
+
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
 
   const body = PostAgentHybridBody.safeParse(req.body);
   if (!body.success) {
@@ -39,7 +46,7 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
     const fetched = await db
       .select({ id: documentsTable.id, fileName: documentsTable.fileName })
       .from(documentsTable)
-      .where(inArray(documentsTable.id, uniqueIds));
+      .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId)));
 
     if (fetched.length !== uniqueIds.length) {
       const found = new Set(fetched.map((d) => d.id));
@@ -52,7 +59,7 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
     docs = await db
       .select({ id: documentsTable.id, fileName: documentsTable.fileName })
       .from(documentsTable)
-      .where(eq(documentsTable.extractionStatus, "success"))
+      .where(and(eq(documentsTable.extractionStatus, "success"), eq(documentsTable.ownerUserId, userId)))
       .orderBy(desc(documentsTable.uploadedAt))
       .limit(maxDocuments);
 

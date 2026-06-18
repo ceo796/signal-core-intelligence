@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable, chatMessagesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { getCurrentUserId } from "../../lib/ownership";
 import {
   ChatWithDocumentParams,
   ChatWithDocumentBody,
@@ -15,6 +16,12 @@ const router: IRouter = Router();
 
 router.post("/documents/:id/chat", async (req, res): Promise<void> => {
   const totalStart = Date.now();
+
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
 
   const params = ChatWithDocumentParams.safeParse(req.params);
   if (!params.success) {
@@ -31,7 +38,10 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
   const { id } = params.data;
   const { question } = body.data;
 
-  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -167,9 +177,24 @@ ${contextBlocks}`;
 });
 
 router.get("/documents/:id/history", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const params = GetChatHistoryParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  // Only the document's owner may read its chat history.
+  const [doc] = await db
+    .select({ id: documentsTable.id })
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+  if (!doc) {
+    res.status(404).json({ error: "Document not found" });
     return;
   }
 
@@ -190,9 +215,24 @@ router.get("/documents/:id/history", async (req, res): Promise<void> => {
 });
 
 router.delete("/documents/:id/history", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const params = ClearChatHistoryParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  // Only the document's owner may clear its chat history.
+  const [doc] = await db
+    .select({ id: documentsTable.id })
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+  if (!doc) {
+    res.status(404).json({ error: "Document not found" });
     return;
   }
 

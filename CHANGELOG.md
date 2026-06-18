@@ -2,6 +2,42 @@
 
 ---
 
+## [Signal87_Core_Document_Ownership_v1] — 2026-06-18  *(Per-user document ownership — every document read/write is now scoped to the signed-in user)*
+
+### Summary
+Closes a multi-tenant data-isolation gap: until now any **approved** user could read/modify **every** document (the only trust boundary was the approved-email gate). Adds a per-document owner and enforces it on every document read and write so a user can only ever see and act on documents they uploaded. Documents that exist but belong to another user are indistinguishable from documents that do not exist (both return `404` — no existence disclosure). **No UI, no API contract, and no codegen changes** (owner is never exposed in any response and no request shape changed).
+
+### Added — DB schema (`lib/db/src/schema/documents.ts`)
+- `documents.owner_user_id text` (nullable). Holds the Clerk user id of the uploader. Chunks and chat messages inherit ownership transitively via `document_id` (no new column on those tables). Applied with `pnpm --filter @workspace/db run push`.
+
+### Added — backend helper (`artifacts/api-server/src/lib/ownership.ts`)
+- `getCurrentUserId(req)` → the Clerk `userId` (`getAuth(req).userId`). When `CLERK_BYPASS_AUTH=true` (dev only, no Clerk session) it falls back to `DEV_USER_ID` if set, else `null`. Returning `null` makes every caller **fail closed** with `401` rather than leak across users.
+
+### Changed — backend (ownership enforced; all behavior otherwise identical)
+- **`routes/documents/index.ts`** — `GET /documents` lists only the caller's docs; `POST /documents/upload` stamps `ownerUserId`; `GET/DELETE /documents/:id`, `GET /documents/:id/original`, `PUT /documents/:id/original`, `POST /documents/:id/reindex` all add `owner_user_id = caller` to the lookup → `404` when not owned; `GET /documents/:id/chunks` now does an owner-checked document lookup first (previously fetched chunks with **no** document/ownership check) → `404` when not owned.
+- **`routes/chat/index.ts`** — `POST /documents/:id/chat` owner-scopes the document lookup; `GET` and `DELETE /documents/:id/history` now verify document ownership first (previously read/deleted chat messages by `document_id` with **no** ownership check) → `404` when not owned.
+- **`routes/multi-chat/index.ts`**, **`routes/brief/index.ts`** — the multi-document fetch is owner-scoped; any id not owned by the caller drops out of the result and trips the existing length-mismatch `404` (no existence disclosure).
+- **`routes/agent/index.ts`** (hybrid) — both the provided-`documentIds` fetch and the auto-select branch (`extractionStatus='success'`) are owner-scoped; unowned ids → existing `404`.
+- All handlers also short-circuit `401` when `getCurrentUserId` is `null` (defense-in-depth behind the existing `requireApprovedEmail` gate).
+
+### Data — backfill
+- Legacy rows (uploaded before this column existed → `owner_user_id IS NULL`) were assigned to the admin account **mbenezra@erezcapital.io** (`user_3FFNmOxc5P4v8P6aKFLmUeYJgEh`, resolved as the single Clerk user for that email). Rows already owned by real users were left untouched.
+
+### Deliberate exceptions (left global — documented)
+- `GET /api/admin/stats` and `GET /api/system/info` remain global aggregates (counts/route inventory only, no document content or per-document access). They were outside the enumerated scope; scope them later if per-user dashboards are desired.
+- `GET /api/demo/qa` (the **public**, unauthenticated landing-page demo) still reads the global indexed corpus, **by design**: it has no signed-in user to scope to, and it only ever returns an **anonymized chunk ordinal** (`grounded` + `Chunk N`) — never a filename, content, or document id. Owner-scoping it would either break the public demo or require auth (a feature change). Left unchanged as an explicit exception; the separate "demo panel real-data" follow-up tracks any future change to its data sourcing.
+
+### Unchanged
+- OpenAPI spec, generated Zod/React-Query client, all frontend code, the approved-email auth gate, durable storage, upload/download/delete/reindex, PDF viewer, citations + Verification Trace, and the public health/demo routes. The demo route was already privacy-safe (anonymized, never leaks filenames).
+
+### Verification
+- `pnpm run typecheck:libs` + `pnpm --filter @workspace/api-server run typecheck` — clean.
+- Unauthenticated `GET /api/documents`, `/api/documents/1`, `/api/documents/1/chunks` → `401`.
+- Cross-user isolation (data layer): a document owned by another user is **not** returned by an owner-scoped query as the admin (→ `404` in-route); admin sees exactly its own document set.
+- Backfill confirmed: `UPDATE 5`; no `owner_user_id IS NULL` rows remain.
+
+---
+
 ## [Signal87_Core_Hybrid_Agent_v1] — 2026-06-18  *(Hybrid cross-document agent — POST /api/agent/hybrid + /agents/hybrid page)*
 
 ### Summary

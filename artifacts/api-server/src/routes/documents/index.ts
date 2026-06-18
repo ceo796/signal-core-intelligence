@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import multer from "multer";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { eq, count, sql } from "drizzle-orm";
+import { eq, and, count, inArray, sql } from "drizzle-orm";
+import { getCurrentUserId } from "../../lib/ownership";
 import {
   GetDocumentParams,
   DeleteDocumentParams,
@@ -40,13 +41,27 @@ function docToResponse(
 }
 
 router.get("/documents", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   try {
-    const docs = await db.select().from(documentsTable).orderBy(documentsTable.uploadedAt);
+    const docs = await db
+      .select()
+      .from(documentsTable)
+      .where(eq(documentsTable.ownerUserId, userId))
+      .orderBy(documentsTable.uploadedAt);
 
-    const chunksCountResult = await db
-      .select({ documentId: chunksTable.documentId, cnt: count(chunksTable.id) })
-      .from(chunksTable)
-      .groupBy(chunksTable.documentId);
+    // Scope the chunk-count query to the caller's own documents.
+    const docIds = docs.map((d) => d.id);
+    const chunksCountResult = docIds.length
+      ? await db
+          .select({ documentId: chunksTable.documentId, cnt: count(chunksTable.id) })
+          .from(chunksTable)
+          .where(inArray(chunksTable.documentId, docIds))
+          .groupBy(chunksTable.documentId)
+      : [];
 
     const chunkMap = new Map(chunksCountResult.map((r) => [r.documentId, r.cnt]));
     const result = docs.map((doc) => docToResponse(doc, chunkMap.get(doc.id) ?? 0));
@@ -62,6 +77,12 @@ router.post(
   "/documents/upload",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
+    const userId = getCurrentUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized." });
+      return;
+    }
+
     const file = (req as Request & { file?: Express.Multer.File }).file;
     if (!file) {
       res.status(400).json({ error: "No file uploaded" });
@@ -116,6 +137,7 @@ router.post(
       [doc] = await db
         .insert(documentsTable)
         .values({
+          ownerUserId: userId,
           fileName: file.originalname,
           fileType,
           fileSize: file.size,
@@ -168,13 +190,21 @@ router.post(
 );
 
 router.get("/documents/:id", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const params = GetDocumentParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, params.data.id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -189,6 +219,11 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/documents/:id", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const params = DeleteDocumentParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -198,7 +233,7 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(eq(documentsTable.id, params.data.id));
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
 
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
@@ -224,9 +259,24 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/documents/:id/chunks", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const params = GetDocumentChunksParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  // Verify the document belongs to the current user before exposing its chunks.
+  const [doc] = await db
+    .select({ id: documentsTable.id })
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+  if (!doc) {
+    res.status(404).json({ error: "Document not found" });
     return;
   }
 
@@ -241,13 +291,21 @@ router.get("/documents/:id/chunks", async (req, res): Promise<void> => {
 
 // ── GET /documents/:id/original — download the stored original file ──────────
 router.get("/documents/:id/original", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid document ID" });
     return;
   }
 
-  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -280,6 +338,11 @@ router.put(
   "/documents/:id/original",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
+    const userId = getCurrentUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized." });
+      return;
+    }
     const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) {
       res.status(400).json({ error: "Invalid document ID" });
@@ -292,7 +355,10 @@ router.put(
       return;
     }
 
-    const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
+    const [doc] = await db
+      .select()
+      .from(documentsTable)
+      .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
     if (!doc) {
       res.status(404).json({ error: "Document not found" });
       return;
@@ -349,13 +415,21 @@ router.put(
 
 // ── POST /documents/:id/reindex — re-extract and re-chunk from stored file ───
 router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid document ID" });
     return;
   }
 
-  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;

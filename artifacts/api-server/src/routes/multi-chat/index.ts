@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { inArray } from "drizzle-orm";
+import { inArray, and, eq } from "drizzle-orm";
 import { MultiChatBody } from "@workspace/api-zod";
+import { getCurrentUserId } from "../../lib/ownership";
 import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 
@@ -12,6 +13,12 @@ const router: IRouter = Router();
 
 router.post("/documents/multi-chat", async (req, res): Promise<void> => {
   const totalStart = Date.now();
+
+  const userId = getCurrentUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
 
   const body = MultiChatBody.safeParse(req.body);
   if (!body.success) {
@@ -38,7 +45,7 @@ router.post("/documents/multi-chat", async (req, res): Promise<void> => {
   const docs = await db
     .select()
     .from(documentsTable)
-    .where(inArray(documentsTable.id, uniqueIds));
+    .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId)));
 
   if (docs.length !== uniqueIds.length) {
     const found = new Set(docs.map((d) => d.id));
