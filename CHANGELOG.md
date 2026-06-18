@@ -2,6 +2,24 @@
 
 ---
 
+## [Signal87_Document_Load_Lag_Fix_v1] — 2026-06-18  *(Kill the multi-second "loading" lag before a failed document fetch surfaces; clearer fast failure)*
+
+### Summary
+Fixes the **significant lag** before the Documents/Ask pages showed "Could not load your documents." The React Query client was created with `new QueryClient()` (defaults), so any failed `GET /api/documents` was retried **3× with exponential backoff (~7s)** before the error finally rendered — most visibly a `401` when the Clerk dev **session cookie can't establish inside the embedded preview iframe** (a browser third-party-cookie limitation, not a code bug; the app loads normally in a standalone tab / production). **Frontend-only change; no auth, API, or backend change.**
+
+### Changed — frontend
+- **`artifacts/signal87-core/src/App.tsx`** — `QueryClient` now sets `defaultOptions.queries`:
+  - `retry`: never retry `4xx` (a `401`/`403`/`404` won't succeed on retry); retry transient errors (5xx/network) at most twice. Errors now surface **immediately** instead of after the default backoff.
+  - `refetchOnWindowFocus: false` and `staleTime: 30_000` to cut refetch churn so navigating between Documents/Ask reuses cached data. Upload/delete/reindex still call `invalidateQueries`, which refetches regardless of `staleTime`, so lists stay correct.
+
+### Note (environment, not a code bug)
+- "Could not load documents" inside the **embedded preview/canvas iframe** is the known Clerk dev session-cookie staleness (`401`, `userId: null` despite `isSignedIn`). Open the app in a **standalone browser tab** to use it in dev; production is unaffected (first-party cookies, top-level origin).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+
+---
+
 ## [Signal87_Spreadsheet_Excel_Readability_v1] — 2026-06-18  *(Excel spreadsheet ingestion — upload, preview, chat, hybrid-agent, and brief over .xlsx/.xls with sheet/row-aware citations)*
 
 ### Summary

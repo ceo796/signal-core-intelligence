@@ -17,3 +17,5 @@ description: Why a signed-in user gets backend 401s in the Replit preview/canvas
 - No `__session` cookie on the request ⇒ user not actually signed in, or cookie not being sent.
 - Still fails in a standalone tab ⇒ a real key/instance mismatch or middleware-order bug — then debug the code, not the transport.
 - Don't chase cookie-present-but-unverifiable as a backend verification bug when keys exist and middleware order is correct; the transport (iframe) is the issue.
+
+**Perceived "lag" pairing:** a multi-second "loading…" hang *before* the iframe-401 error finally shows is almost always the React Query client retrying the 401. A bare `new QueryClient()` uses the default `retry: 3` with exponential backoff (~7s) — pointless on a 4xx. Gate `defaultOptions.queries.retry` to return `false` for 4xx (the generated `ApiError` exposes a numeric `.status`) so auth/client errors surface instantly; only retry 5xx/network.

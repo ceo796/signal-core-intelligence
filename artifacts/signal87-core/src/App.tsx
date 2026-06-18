@@ -24,7 +24,26 @@ import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 import { SignIn, SignUp } from "@clerk/react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Never retry client errors (4xx). A 401 — e.g. when the Clerk session
+      // cookie can't establish inside the embedded preview iframe — will never
+      // succeed on retry; the default 3 retries with exponential backoff just
+      // add several seconds of "loading" lag before the error finally surfaces.
+      retry: (failureCount, error) => {
+        const status = (error as { status?: number } | null)?.status;
+        if (typeof status === "number" && status >= 400 && status < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      // Avoid refetch churn; navigating between pages reuses cached data.
+      refetchOnWindowFocus: false,
+      staleTime: 30_000,
+    },
+  },
+});
 
 const publicRoutes = [
   "/",
