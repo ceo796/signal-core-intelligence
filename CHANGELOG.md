@@ -2,6 +2,20 @@
 
 ---
 
+## [Signal87_Landing_Trust_Section_v1] — 2026-06-18  *(New "Trusted AI, grounded in your documents." trust section on the public landing page; frontend-only, content/UI only)*
+
+### Summary
+Adds a dedicated **trust** section to the public landing page (`/`), placed directly **after the hero** and **before "How it works."** It leads with the heading **"Trusted AI, grounded in your documents."**, a supporting paragraph, and **three cards** — **Grounded Responses**, **Verification Trace**, and **Model Transparency** — reusing the existing card styling (rounded border, `bg-white/70`, blue icon chip). **Frontend-only, additive content:** no backend, auth, DB, OpenAPI/codegen, or routing changes; the existing hero ("Turn documents into decisions.") and all other sections are untouched.
+
+### Changed — frontend
+- **`artifacts/signal87-core/src/pages/home.tsx`** — added a `TRUST` data array and a new `{/* Trust */}` `<section>` between the hero and the "How it works" section; imported `Anchor`, `Fingerprint`, and `Eye` icons (lucide) for the three cards. No other sections modified.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Visual check at `/` (public, no auth): the trust section renders below the hero with all three cards and correct copy/icons; hero and downstream sections unchanged; no new console errors.
+
+---
+
 ## [Signal87_Print_Documents_v1] — 2026-06-18  *(Print any document — the stored PDF original, or a clean extracted-text view for everything else — from the detail page and the documents dashboard; frontend-only)*
 
 ### Summary

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn, UserPlus, Upload, MessageSquare, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn, UserPlus, Upload, MessageSquare, CheckCircle2, Anchor, Fingerprint, Eye } from "lucide-react";
 import AriaChatAnimation from "@/components/aria-chat-animation";
 import CrossDocAnimation from "@/components/cross-doc-animation";
 import AuditTraceAnimation from "@/components/audit-trace-animation";
@@ -36,6 +36,24 @@ const FEATURES = [
     icon: Users,
     title: "Built for Business Judgment",
     description: "Designed for investors, operators, advisors, and teams who need to understand complex material quickly.",
+  },
+];
+
+const TRUST = [
+  {
+    icon: Anchor,
+    title: "Grounded Responses",
+    description: "Answers are generated from your uploaded documents, not generic web assumptions.",
+  },
+  {
+    icon: Fingerprint,
+    title: "Verification Trace",
+    description: "See which documents and chunks informed each answer.",
+  },
+  {
+    icon: Eye,
+    title: "Model Transparency",
+    description: "Signal87 can expose the model/provider used for each AI response where available.",
   },
 ];
 
@@ -154,6 +172,33 @@ export default function Home() {
                 </Link>
               </>
             )}
+          </div>
+        </section>
+
+        {/* Trust */}
+        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900 mb-4">
+              Trusted AI, grounded in your documents.
+            </h2>
+            <p className="text-base text-gray-500 leading-relaxed">
+              Signal87 uses advanced language models to reason across your files, but every response is anchored to your source material with citations, document references, and verification traces.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TRUST.map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="group rounded-2xl border border-gray-200 bg-white/70 p-8 space-y-4 transition-colors hover:border-blue-200 hover:bg-white"
+              >
+                <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-semibold text-lg text-gray-900">{title}</h3>
+                <p className="text-base text-gray-500 leading-relaxed">{description}</p>
+              </div>
+            ))}
           </div>
         </section>
 

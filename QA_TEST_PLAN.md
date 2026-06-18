@@ -1141,3 +1141,4 @@ To test manually today:
 - [ ] T50 Auth — Backend: `CLERK_BYPASS_AUTH=true` allows all requests through (emergency override)
 - [ ] T58 Public demo Q&A: `GET /api/demo/qa` → 200 (no auth), `DemoQa` shape, grounded citation from a real doc; `GET /api/documents` still 401
 - [ ] T59 Landing demo panel: animates live grounded Q&A; falls back to hardcoded copy if endpoint down (no crash, no retry storms, no timer leaks)
+- [ ] T69 Landing trust section: on `/` (public), "Trusted AI, grounded in your documents." section renders below the hero and above "How it works." with three cards (Grounded Responses / Verification Trace / Model Transparency), correct icons, and no console errors
