@@ -5,6 +5,7 @@ import documentsRouter from "./documents";
 import chatRouter from "./chat";
 import multiChatRouter from "./multi-chat";
 import briefRouter from "./brief";
+import agentRouter from "./agent";
 import { requireApprovedEmail } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -18,6 +19,7 @@ router.use(requireApprovedEmail);
 router.use(documentsRouter);
 router.use(multiChatRouter);
 router.use(briefRouter);
+router.use(agentRouter);
 router.use(chatRouter);
 
 export default router;

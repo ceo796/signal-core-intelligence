@@ -16,6 +16,8 @@ tags:
     description: Document chat and Q&A
   - name: demo
     description: Public, unauthenticated landing-page demo content
+  - name: agent
+    description: Hybrid cross-document agent queries
 
 paths:
   /healthz:
@@ -346,6 +348,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminStats"
+
+  /agent/hybrid:
+    post:
+      operationId: postAgentHybrid
+      tags: [agent]
+      summary: Hybrid cross-document agent query
+      description: >
+        Authenticated. Runs a single query across one or more documents,
+        retrieves relevant chunks via embedding similarity, synthesizes an
+        answer grounded in the retrieved context, and returns citations and a
+        verification trace. If documentIds are omitted the agent auto-selects
+        from all indexed documents (up to maxDocuments). All documents are
+        shared across the authenticated user pool (no per-user ownership).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HybridAgentInput"
+      responses:
+        "200":
+          description: Agent answer with citations and verification trace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HybridAgentResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: One or more specified documents not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -840,6 +882,96 @@ components:
               type: integer
             overlapWords:
               type: integer
+
+    HybridAgentInput:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        documentIds:
+          type: array
+          items:
+            type: integer
+          maxItems: 10
+        mode:
+          type: string
+          enum: [auto, summarize, compare, extract, diligence]
+          default: auto
+        maxDocuments:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        maxChunks:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 12
+
+    HybridAgentDocumentRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    HybridAgentCitation:
+      type: object
+      required: [citationNumber, documentId, documentName, chunkIndex, excerpt, relevanceScore]
+      properties:
+        citationNumber:
+          type: integer
+        documentId:
+          type: integer
+        documentName:
+          type: string
+        chunkIndex:
+          type: integer
+        excerpt:
+          type: string
+        relevanceScore:
+          type: number
+
+    HybridAgentTrace:
+      type: object
+      required: [provider, model, documentsConsidered, chunksConsidered, latencyMs, fallbackUsed]
+      properties:
+        provider:
+          type: string
+        model:
+          type: string
+        documentsConsidered:
+          type: integer
+        chunksConsidered:
+          type: integer
+        latencyMs:
+          type: number
+        fallbackUsed:
+          type: boolean
+
+    HybridAgentResult:
+      type: object
+      required: [answer, mode, documentsUsed, citations, trace]
+      properties:
+        answer:
+          type: string
+        mode:
+          type: string
+        documentsUsed:
+          type: array
+          items:
+            $ref: "#/components/schemas/HybridAgentDocumentRef"
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/HybridAgentCitation"
+        trace:
+          $ref: "#/components/schemas/HybridAgentTrace"
 
     ErrorResponse:
       type: object

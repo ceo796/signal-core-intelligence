@@ -2,6 +2,45 @@
 
 ---
 
+## [Signal87_Core_Hybrid_Agent_v1] — 2026-06-18  *(Hybrid cross-document agent — POST /api/agent/hybrid + /agents/hybrid page)*
+
+### Summary
+Adds the **Signal87 Hybrid Cross-Document Agent**: a single-query endpoint that retrieves relevant chunks across one or more documents, synthesises an LLM answer grounded in the retrieved context, and returns per-source citations and a Verification Trace. A new `/agents/hybrid` frontend page surfaces the full feature with mode selection, optional document filter, answer display (MarkdownAnswer), expandable citation cards, and a collapsible trace panel. All existing flows are unaffected.
+
+### Added — API contract (`lib/api-spec/openapi.yaml`)
+- New `agent` tag.
+- `POST /agent/hybrid` (operationId `postAgentHybrid`) with schemas `HybridAgentInput`, `HybridAgentDocumentRef`, `HybridAgentCitation`, `HybridAgentTrace`, `HybridAgentResult`.
+- Ran `pnpm --filter @workspace/api-spec run codegen` → generated Zod `PostAgentHybridBody` / `PostAgentHybridResponse`, React Query hook `usePostAgentHybrid`, and TypeScript types `HybridAgentInput` / `HybridAgentResult` / `HybridAgentCitation` / `HybridAgentTrace` / `HybridAgentInputMode`.
+
+### Added — backend (`artifacts/api-server/src/routes/agent/index.ts`)
+- `POST /api/agent/hybrid` — validates with `PostAgentHybridBody` (Zod); if `documentIds` provided, verifies existence and fetches those docs; otherwise auto-selects up to `maxDocuments` (default 5) most-recently-indexed docs (`extractionStatus='success'`).
+- Fetches chunks, builds `DocumentGroup[]`, calls `retrieveAcrossDocuments` with `perDocTopK = ceil(maxChunks / numDocs)`; on retrieval failure falls back to first-K deterministic selection (`fallbackUsed: true`).
+- Flattens all retrieved chunks, sorts globally by relevance, slices to `maxChunks`; assigns 1-based `citationNumber`.
+- Mode-aware system prompts for: `auto | summarize | compare | extract | diligence`.
+- Response shape matches `HybridAgentResult`: `{ answer, mode, documentsUsed, citations, trace }`.
+- Mounted in `routes/index.ts` after `requireApprovedEmail` (authenticated-only).
+
+### Added — frontend (`artifacts/signal87-core/src/pages/hybrid-agent.tsx`)
+- New `/agents/hybrid` page with `Layout`, Clerk `AuthGuard`, `useListDocuments` for checkbox doc-selector (ready docs only), mode `Select`, `Textarea` query input (Cmd+Enter submit).
+- Result view: `MarkdownAnswer` for the answer, document-used pill badges, `CitationCard` (expandable excerpt + relevance score), `TracePanel` (collapsible Verification Trace).
+- Uses `usePostAgentHybrid` mutation from `@workspace/api-client-react`.
+
+### Changed
+- `artifacts/signal87-core/src/App.tsx` — added `Route path="/agents/hybrid"` for `HybridAgent`.
+- `artifacts/signal87-core/src/components/layout.tsx` — added **Agent** nav item (`Bot` icon, href `/agents/hybrid`) between Compare and Activity.
+- `artifacts/api-server/src/routes/index.ts` — mounted `agentRouter`.
+
+### Unchanged
+- All existing routes (health, demo, documents, chat, multi-chat, brief), the approved-email auth gate, DB schema, durable storage, upload/download/delete/reindex, PDF viewer, single-doc chat history, and multi-doc comparison and brief flows.
+
+### Verification
+- `curl -X POST localhost:80/api/agent/hybrid -H "Content-Type: application/json" -d '{"query":"test"}'` → `401` (auth gate intact).
+- `pnpm --filter @workspace/api-server run typecheck` — clean.
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Both workflows running; **Agent** nav item visible in sidebar (between Compare and Activity).
+
+---
+
 ## [Signal87_Core_Landing_DemoQA_GroundedData_v1] — 2026-06-18  *(Ground the landing "Document Q&A" demo panel in a real stored document)*
 
 ### Summary

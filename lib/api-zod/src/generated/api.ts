@@ -339,3 +339,55 @@ export const GetAdminStatsResponse = zod.object({
 })
 
 
+/**
+ * Authenticated. Runs a single query across one or more documents, retrieves relevant chunks via embedding similarity, synthesizes an answer grounded in the retrieved context, and returns citations and a verification trace. If documentIds are omitted the agent auto-selects from all indexed documents (up to maxDocuments). All documents are shared across the authenticated user pool (no per-user ownership).
+
+ * @summary Hybrid cross-document agent query
+ */
+export const postAgentHybridBodyQueryMax = 2000;
+
+export const postAgentHybridBodyDocumentIdsMax = 10;
+
+export const postAgentHybridBodyModeDefault = `auto`;
+export const postAgentHybridBodyMaxDocumentsDefault = 5;
+export const postAgentHybridBodyMaxDocumentsMax = 10;
+
+export const postAgentHybridBodyMaxChunksDefault = 12;
+export const postAgentHybridBodyMaxChunksMax = 30;
+
+
+
+export const PostAgentHybridBody = zod.object({
+  "query": zod.string().min(1).max(postAgentHybridBodyQueryMax),
+  "documentIds": zod.array(zod.number()).max(postAgentHybridBodyDocumentIdsMax).optional(),
+  "mode": zod.enum(['auto', 'summarize', 'compare', 'extract', 'diligence']).default(postAgentHybridBodyModeDefault),
+  "maxDocuments": zod.number().min(1).max(postAgentHybridBodyMaxDocumentsMax).default(postAgentHybridBodyMaxDocumentsDefault),
+  "maxChunks": zod.number().min(1).max(postAgentHybridBodyMaxChunksMax).default(postAgentHybridBodyMaxChunksDefault)
+})
+
+export const PostAgentHybridResponse = zod.object({
+  "answer": zod.string(),
+  "mode": zod.string(),
+  "documentsUsed": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+})),
+  "citations": zod.array(zod.object({
+  "citationNumber": zod.number(),
+  "documentId": zod.number(),
+  "documentName": zod.string(),
+  "chunkIndex": zod.number(),
+  "excerpt": zod.string(),
+  "relevanceScore": zod.number()
+})),
+  "trace": zod.object({
+  "provider": zod.string(),
+  "model": zod.string(),
+  "documentsConsidered": zod.number(),
+  "chunksConsidered": zod.number(),
+  "latencyMs": zod.number(),
+  "fallbackUsed": zod.boolean()
+})
+})
+
+

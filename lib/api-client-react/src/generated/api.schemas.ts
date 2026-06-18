@@ -273,6 +273,69 @@ export interface SystemInfo {
   chunkConfig: SystemInfoChunkConfig;
 }
 
+export type HybridAgentInputMode = typeof HybridAgentInputMode[keyof typeof HybridAgentInputMode];
+
+
+export const HybridAgentInputMode = {
+  auto: 'auto',
+  summarize: 'summarize',
+  compare: 'compare',
+  extract: 'extract',
+  diligence: 'diligence',
+} as const;
+
+export interface HybridAgentInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  query: string;
+  /** @maxItems 10 */
+  documentIds?: number[];
+  mode?: HybridAgentInputMode;
+  /**
+     * @minimum 1
+     * @maximum 10
+     */
+  maxDocuments?: number;
+  /**
+     * @minimum 1
+     * @maximum 30
+     */
+  maxChunks?: number;
+}
+
+export interface HybridAgentDocumentRef {
+  id: number;
+  name: string;
+}
+
+export interface HybridAgentCitation {
+  citationNumber: number;
+  documentId: number;
+  documentName: string;
+  chunkIndex: number;
+  excerpt: string;
+  relevanceScore: number;
+}
+
+export interface HybridAgentTrace {
+  provider: string;
+  model: string;
+  documentsConsidered: number;
+  chunksConsidered: number;
+  latencyMs: number;
+  fallbackUsed: boolean;
+}
+
+export interface HybridAgentResult {
+  answer: string;
+  mode: string;
+  documentsUsed: HybridAgentDocumentRef[];
+  citations: HybridAgentCitation[];
+  trace: HybridAgentTrace;
+}
+
 export interface ErrorResponse {
   error: string;
 }

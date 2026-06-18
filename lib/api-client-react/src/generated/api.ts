@@ -31,6 +31,8 @@ import type {
   Document,
   ErrorResponse,
   HealthStatus,
+  HybridAgentInput,
+  HybridAgentResult,
   MultiChatInput,
   MultiChatResult,
   ReindexResult,
@@ -1167,4 +1169,77 @@ export function useGetAdminStats<TData = Awaited<ReturnType<typeof getAdminStats
 
 
 
+
+export const getPostAgentHybridUrl = () => {
+
+
+
+
+  return `/api/agent/hybrid`
+}
+
+/**
+ * Authenticated. Runs a single query across one or more documents, retrieves relevant chunks via embedding similarity, synthesizes an answer grounded in the retrieved context, and returns citations and a verification trace. If documentIds are omitted the agent auto-selects from all indexed documents (up to maxDocuments). All documents are shared across the authenticated user pool (no per-user ownership).
+
+ * @summary Hybrid cross-document agent query
+ */
+export const postAgentHybrid = async (hybridAgentInput: HybridAgentInput, options?: RequestInit): Promise<HybridAgentResult> => {
+
+  return customFetch<HybridAgentResult>(getPostAgentHybridUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      hybridAgentInput,)
+  }
+);}
+
+
+
+
+export const getPostAgentHybridMutationOptions = <TError = ErrorType<ErrorResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAgentHybrid>>, TError,{data: BodyType<HybridAgentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAgentHybrid>>, TError,{data: BodyType<HybridAgentInput>}, TContext> => {
+
+const mutationKey = ['postAgentHybrid'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAgentHybrid>>, {data: BodyType<HybridAgentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAgentHybrid(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAgentHybridMutationResult = NonNullable<Awaited<ReturnType<typeof postAgentHybrid>>>
+    export type PostAgentHybridMutationBody = BodyType<HybridAgentInput>
+    export type PostAgentHybridMutationError = ErrorType<ErrorResponse | void>
+
+    /**
+ * @summary Hybrid cross-document agent query
+ */
+export const usePostAgentHybrid = <TError = ErrorType<ErrorResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAgentHybrid>>, TError,{data: BodyType<HybridAgentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAgentHybrid>>,
+        TError,
+        {data: BodyType<HybridAgentInput>},
+        TContext
+      > => {
+      return useMutation(getPostAgentHybridMutationOptions(options));
+    }
 
