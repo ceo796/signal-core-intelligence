@@ -16,12 +16,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
-import { DocumentThumbnail } from "@/components/document-thumbnail";
 import { PrintDocumentButton } from "@/components/print-document-button";
 import { getDocumentStatus } from "@/lib/document-status";
 import { format } from "date-fns";
 import {
   FileText,
+  FileSpreadsheet,
   Trash2,
   MessageSquare,
   AlertCircle,
@@ -154,6 +154,27 @@ function fileTypeChip(fileType: string): FileTypeChipStyle {
     default:
       return { bg: "bg-violet-50 border-violet-200", text: "text-violet-700", label: (fileType || "FILE").toUpperCase() };
   }
+}
+
+function FileTypeIcon({ fileType, className }: { fileType: string; className?: string }) {
+  const ft = fileType.toLowerCase();
+  const colorMap: Record<string, string> = {
+    pdf:  "text-red-500",
+    docx: "text-blue-500",
+    doc:  "text-blue-500",
+    xlsx: "text-green-600",
+    xls:  "text-green-600",
+    csv:  "text-green-600",
+    pptx: "text-orange-500",
+    ppt:  "text-orange-500",
+    txt:  "text-gray-400",
+  };
+  const color = colorMap[ft] ?? "text-violet-500";
+  const cls = `${color} ${className ?? ""}`;
+  if (ft === "xlsx" || ft === "xls" || ft === "csv") {
+    return <FileSpreadsheet className={cls} />;
+  }
+  return <FileText className={cls} />;
 }
 
 function highlightMatch(text: string, query: string) {
@@ -563,11 +584,15 @@ export default function DocumentsList() {
             view === "grid" ? (
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <Skeleton className="h-28 w-full rounded-none" />
+                  <Card key={i} className="overflow-hidden border-gray-200">
+                    <div className="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100">
+                      <Skeleton className="h-7 w-7 rounded shrink-0" />
+                      <Skeleton className="h-5 w-10 rounded" />
+                    </div>
                     <CardContent className="p-4 space-y-2">
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-3 w-1/3 mt-3" />
                     </CardContent>
                   </Card>
                 ))}
@@ -626,7 +651,7 @@ export default function DocumentsList() {
             </div>
           ) : view === "grid" ? (
             /* ══════════════════════════════
-               GRID VIEW — thumbnail cards
+               GRID VIEW — compact icon cards
                ══════════════════════════════ */
             <>
             <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground">
@@ -639,45 +664,43 @@ export default function DocumentsList() {
                 {" "}{gridSortDirection === "asc" ? "↑" : "↓"}
               </span>
             </div>
-            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredDocuments?.map((doc) => {
                 const status = getDocumentStatus(doc);
                 const isReindexing = reindexingId === doc.id;
+                const chip = fileTypeChip(doc.fileType);
                 return (
                   <Card
                     key={doc.id}
-                    className="bg-card border-border/50 hover:border-primary/40 transition-colors group flex flex-col overflow-hidden"
+                    className="bg-white border border-gray-200 hover:border-primary/30 hover:shadow-sm transition-all group flex flex-col overflow-hidden"
                   >
-                    {/* Thumbnail */}
+                    {/* Compact icon header — replaces the old h-28 thumbnail block */}
                     <Link
                       href={`/documents/${doc.id}`}
-                      className="block h-28 w-full shrink-0 border-b border-border/50 overflow-hidden"
+                      className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100"
                     >
-                      <DocumentThumbnail
-                        id={doc.id}
-                        fileType={doc.fileType}
-                        originalFileAvailable={doc.originalFileAvailable}
-                      />
+                      <FileTypeIcon fileType={doc.fileType} className="w-7 h-7 shrink-0" />
+                      <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
+                        {chip.label}
+                      </span>
                     </Link>
 
                     <CardContent className="p-4 flex-1 flex flex-col">
                       <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col min-w-0">
                         <h3
-                          className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1.5"
+                          className="font-medium text-[13px] leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2"
                           title={doc.fileName}
                         >
                           {highlightMatch(doc.fileName, search)}
                         </h3>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <DocumentStatusBadge doc={doc} />
-                        </div>
+                        <DocumentStatusBadge doc={doc} />
                         <div className="mt-auto pt-3 flex justify-between text-[11px] font-mono text-muted-foreground">
                           <span>{doc.chunkCount} chunks</span>
                           <span>{format(new Date(doc.uploadedAt), "MMM d, yyyy")}</span>
                         </div>
                       </Link>
 
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
                         {status.canReindex ? (
                           <Button
                             variant="secondary"
@@ -718,7 +741,7 @@ export default function DocumentsList() {
             <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse min-w-[520px]">
               <thead>
-                <tr className="border-b border-border bg-muted/40">
+                <tr className="border-b border-gray-200 bg-gray-50">
                   {(
                     [
                       { col: "name" as SortColumn, label: "Name", align: "left", className: "px-6 py-2.5 w-[40%]" },
@@ -751,15 +774,16 @@ export default function DocumentsList() {
                   <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-gray-100">
                 {filteredDocuments?.map((doc) => {
                   const status = getDocumentStatus(doc);
                   const isReindexing = reindexingId === doc.id;
                   const chip = fileTypeChip(doc.fileType);
                   return (
-                    <tr key={doc.id} className="group hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-3">
-                        <Link href={`/documents/${doc.id}`} className="flex items-center gap-2.5 min-w-0">
+                    <tr key={doc.id} className="group hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-2.5">
+                        <Link href={`/documents/${doc.id}`} className="flex items-center gap-2 min-w-0">
+                          <FileTypeIcon fileType={doc.fileType} className="w-4 h-4 shrink-0" />
                           <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
                             {chip.label}
                           </span>
@@ -768,16 +792,16 @@ export default function DocumentsList() {
                           </span>
                         </Link>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap">
                         <DocumentStatusBadge doc={doc} />
                       </td>
-                      <td className="px-3 py-3 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                      <td className="px-3 py-2.5 text-right font-mono text-xs text-muted-foreground tabular-nums">
                         {doc.chunkCount}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-xs text-muted-foreground">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
                         {format(new Date(doc.uploadedAt), "MMM d, yyyy")}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         <div className="flex items-center justify-end gap-1.5">
                           {status.canReindex ? (
                             <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2.5" onClick={() => handleReindex(doc.id)} disabled={isReindexing}>
