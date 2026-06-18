@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn, UserPlus } from "lucide-react";
+import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn, UserPlus, Upload, MessageSquare, CheckCircle2 } from "lucide-react";
 import AriaChatAnimation from "@/components/aria-chat-animation";
 import CrossDocAnimation from "@/components/cross-doc-animation";
 import AuditTraceAnimation from "@/components/audit-trace-animation";
@@ -36,6 +36,27 @@ const FEATURES = [
     icon: Users,
     title: "Built for Business Judgment",
     description: "Designed for investors, operators, advisors, and teams who need to understand complex material quickly.",
+  },
+];
+
+const STEPS = [
+  {
+    icon: Upload,
+    step: "01",
+    label: "Upload your documents",
+    description: "Add PDFs, Word files, text, or CSVs to your secure workspace.",
+  },
+  {
+    icon: MessageSquare,
+    step: "02",
+    label: "Ask a question or request a brief",
+    description: "Query a single document, compare several at once, or generate an executive brief.",
+  },
+  {
+    icon: CheckCircle2,
+    step: "03",
+    label: "Get a cited, verifiable answer",
+    description: "Every response is grounded in your sources with citations and a full verification trace.",
   },
 ];
 
@@ -133,6 +154,33 @@ export default function Home() {
                 </Link>
               </>
             )}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 mb-4">
+              How it works.
+            </h2>
+            <p className="text-base text-gray-500 max-w-xl mx-auto">
+              From raw documents to a cited answer in three steps.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {STEPS.map(({ icon: Icon, step, label, description }) => (
+              <div key={step} className="flex flex-col items-center text-center md:items-start md:text-left">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <span className="text-xs font-mono text-gray-400">{step}</span>
+                </div>
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">{label}</h3>
+                <p className="text-base text-gray-500 leading-relaxed">{description}</p>
+              </div>
+            ))}
           </div>
         </section>
 

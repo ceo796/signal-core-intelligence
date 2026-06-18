@@ -2,6 +2,26 @@
 
 ---
 
+## [Signal87_Core_Landing_HowItWorks_v1] — 2026-06-17  *(Add "How it works" 3-step walkthrough to landing page)*
+
+### Summary
+Added a numbered "How it works" walkthrough section to the landing page, placed between the hero and the demos, so first-time visitors see the upload → ask → cited-answer flow before the product demos. Frontend-only; no backend/API/DB/auth changes.
+
+### Changed — `artifacts/signal87-core/src/pages/home.tsx`
+- New `STEPS` data array (3 entries): 01 "Upload your documents", 02 "Ask a question or request a brief", 03 "Get a cited, verifiable answer" — each with an `icon`, `step` number, `label`, and one-sentence `description`.
+- Added the icons `Upload`, `MessageSquare`, `CheckCircle2` to the existing `lucide-react` import.
+- New section inserted between the hero `</section>` and the `{/* Demos */}` section, reusing the existing section shell (`border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto`) and the standard centered heading block (serif `<h2>` "How it works." + gray subtitle).
+- 3-column responsive grid (`grid-cols-1 md:grid-cols-3 gap-8`); each step shows a blue icon badge (`w-11 h-11 rounded-xl bg-blue-50 border border-blue-100`), a mono step number, a bold `text-lg` label, and a `text-base` description. Centered on mobile, left-aligned on `md+`.
+
+### Unchanged
+- Backend routes, database schema, auth behavior, API routes, protected app flows, all other landing sections (hero/demos/features/categories/CTA/partners/footer).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Visual check via preview: section renders between hero and demos and matches the landing aesthetic.
+
+---
+
 ## [Signal87_Core_Landing_DocumentCategories_v1] — 2026-06-17  *(Add "Document Categories" section to landing page)*
 
 ### Summary
