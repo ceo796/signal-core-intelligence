@@ -1,0 +1,124 @@
+Create a Signal87 Document Workspace layout with the Hybrid AI Agent embedded on the right.
+
+This is primarily a frontend/product layout task. Do not redesign the entire platform. Do not refactor broadly. Do not change authentication, Clerk config, document ownership enforcement, database schema, upload ingestion, storage, extraction, OpenAPI/codegen, or existing backend behavior unless strictly necessary.
+
+Goal:
+Update the Document Detail / Viewer experience to match the attached reference layout:
+
+* Left side: document information, preview/content, metadata, extracted text, related actions.
+* Right side: persistent AI Agent panel powered by the existing Signal87 Hybrid Agent.
+* The user should be able to ask questions about the current document and, optionally, across related/selected documents.
+
+Important:
+The right panel must use the existing Hybrid Agent infrastructure, not a fake static analysis panel.
+
+Backend:
+
+* Prefer using the existing `POST /api/agent/hybrid` endpoint.
+* For document-specific questions, call the hybrid agent with `documentIds: [currentDocumentId]`.
+* For broader questions, allow an “Across my documents” mode that omits `documentIds` or uses selected documents.
+* Do not create a new backend route unless the current hybrid endpoint is insufficient.
+* Do not weaken owner-scoping. Current document and selected documents must remain owner-checked.
+
+Layout requirements:
+
+1. App shell/sidebar remains consistent with the rest of Signal87.
+2. Main document workspace should use a two-column layout:
+
+   * Left column: 60–65%
+   * Right AI panel: 35–40%
+3. Left column should include:
+
+   * Breadcrumbs: Documents / file type or collection / document name
+   * Document title
+   * File type badge
+   * Status
+   * Last updated/uploaded date
+   * File size
+   * Chunk count / extraction status if available
+   * Tabs such as Overview, Content, Metadata, History, if already available
+   * Existing document preview/extracted text
+   * Existing actions: Download, Print, Re-index, Delete, Ask, Compare if present
+4. Right column should be titled:
+
+   * “AI Agent” or “Hybrid AI Agent”
+5. Right AI panel should include:
+
+   * Query input
+   * Mode selector: Auto, Summarize, Compare, Extract, Diligence
+   * Toggle or selector for:
+
+     * This document only
+     * Across selected documents
+     * Across all my documents
+   * Submit button
+   * Loading state
+   * Answer area using existing MarkdownAnswer if available
+   * Citations/source cards
+   * Verification Trace panel
+   * Clear error and empty states
+
+Functional requirements:
+
+* When the user asks from the document page, default to the current document only.
+* If the user selects “Across all my documents,” use the existing Hybrid Agent auto-select behavior.
+* Citations must show document name and chunk/sheet/row context when available.
+* For XLSX/CSV documents, citations should preserve spreadsheet sheet/row provenance if already available.
+* Do not create fake AI summary cards.
+* Do not hardcode sample document data.
+* Do not remove existing document detail functionality.
+
+Visual requirements:
+
+* Match the attached reference’s structure, but keep Signal87’s white minimalist style.
+* Clean, compact, enterprise-grade.
+* Light borders, soft surfaces, small icons.
+* Do not make document icons large.
+* No oversized document thumbnails.
+* The right AI panel should feel powerful but not cluttered.
+* Avoid dark theme.
+
+Safety requirements:
+
+* No auth changes.
+* No ownership changes.
+* No schema changes.
+* No storage changes.
+* No ingestion changes.
+* No OpenAPI/codegen changes unless absolutely required by an existing typed client mismatch.
+* No unrelated UI redesign.
+
+Verification:
+Use a standalone browser tab for authenticated testing.
+
+Verify:
+
+1. Document detail page loads.
+2. Existing PDF document preview/detail still works.
+3. Existing XLSX document readable content still works.
+4. Download original still works.
+5. Print still works, if implemented.
+6. Re-index still works.
+7. Delete still works.
+8. Hybrid Agent panel can answer using current document only.
+9. Hybrid Agent panel can answer across all owned documents.
+10. Hybrid Agent panel returns citations.
+11. Verification Trace renders.
+12. Owner-scoped access remains enforced.
+13. Unauthenticated protected routes still return 401.
+14. Another user’s document ID still returns 404.
+15. No console errors.
+16. Frontend typecheck passes.
+17. Backend typecheck passes if any backend file was touched.
+18. No unrelated files changed.
+
+Final report:
+
+* Files changed
+* Whether backend was touched
+* How the AI panel calls the hybrid agent
+* Current-document-only behavior
+* Across-documents behavior
+* Citation behavior
+* Verification results
+* Any limitations
