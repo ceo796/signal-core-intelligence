@@ -1,0 +1,84 @@
+Fix or reconcile Signal87 Hybrid Agent user isolation before any further feature work.
+
+This is a security and correctness pass. Do not redesign the UI. Do not add new features. Do not polish the Documents page. Do not refactor unrelated backend code.
+
+Context:
+Hybrid Agent v1 was implemented at POST /api/agent/hybrid and /agents/hybrid. Verification passed typechecks and codegen, but the final report identified a critical limitation: documents/chunks may not have per-user ownership fields, so “user-owned documents” may currently mean all documents visible to any authenticated/approved user.
+
+This must be resolved before proceeding.
+
+Step 1 — Reconcile current schema and code reality:
+Inspect the actual current codebase and database/schema/migration files.
+
+Determine whether the project currently has:
+
+* documents.owner_user_id
+* chunks.owner_user_id
+* any Clerk userId ownership mapping
+* any existing ownership enforcement in document list/detail/chat/upload/delete/re-index/download routes
+* any legacy nullable owner fields
+* any approved-email gate acting as the only access boundary
+
+Important:
+Prior project notes suggested per-user document isolation existed. The hybrid verification report now says it does not. Resolve this contradiction based only on current code and schema. Do not guess.
+
+Step 2 — Stop and report if ownership does not exist:
+If documents do not currently have owner_user_id or equivalent ownership enforcement, stop before coding and report:
+
+* Exact current schema
+* Exact document access rules
+* Which routes are affected
+* Whether this is currently safe only as a single-tenant/internal prototype
+* Recommended minimum fix
+
+Step 3 — If ownership fields already exist:
+If owner_user_id or equivalent ownership exists, update POST /api/agent/hybrid so it uses the same ownership enforcement as the existing document routes.
+
+Requirements:
+
+* Auto-selected documents must be scoped to the authenticated current user.
+* Provided documentIds must be verified against the authenticated current user.
+* Retrieved chunks must belong only to documents owned by the authenticated current user.
+* No cross-user document or chunk leakage.
+* Use the same auth/user extraction method already used by existing document routes.
+* Do not create a separate inconsistent ownership mechanism.
+
+Step 4 — If ownership fields do not exist but can be added safely:
+Do not automatically migrate without reporting first.
+
+Report the minimal migration plan:
+
+* documents.owner_user_id field
+* backfill strategy for existing documents
+* upload route owner assignment
+* all document routes owner filtering
+* hybrid route owner filtering
+* treatment of ownerless legacy docs
+* testing plan
+
+Wait for approval before implementing schema changes.
+
+Step 5 — Confirm unrelated binary revert:
+Confirm artifacts/signal87-core/public/opengraph.jpg matches the parent/original blob and is not included as an unrelated hybrid feature change.
+Confirm working tree is clean.
+
+Verification required:
+
+* Unauthenticated /api/agent/hybrid returns 401.
+* Authenticated user cannot access another user’s documents by passing documentIds.
+* Auto-selection only selects current-user documents.
+* Chunk retrieval only uses current-user documents.
+* Existing documents list/detail/chat/download/re-index/delete routes preserve their current behavior.
+* Typechecks pass.
+* Codegen remains current.
+* No unrelated files changed.
+
+Final report:
+Provide:
+
+* Whether true per-user ownership exists
+* Whether hybrid agent is now user-isolated
+* Files changed, if any
+* Whether schema changes are required
+* Verification results
+* Whether it is safe to proceed to Documents page density polish
