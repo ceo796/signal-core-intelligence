@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { PrintDocumentButton } from "@/components/print-document-button";
 import { getDocumentStatus } from "@/lib/document-status";
+import { downloadOriginal } from "@/lib/download-original";
 import { format } from "date-fns";
 import {
   FileText,
@@ -37,6 +38,7 @@ import {
   ArrowUpDown,
   SlidersHorizontal,
   RotateCcw,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -725,6 +727,24 @@ export default function DocumentsList() {
                             Ask
                           </Button>
                         )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                          disabled={!doc.originalFileAvailable}
+                          title="Download original"
+                          aria-label={`Download ${doc.fileName}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            downloadOriginal(doc.id, doc.fileName).catch(() =>
+                              toast.error("Download failed")
+                            );
+                          }}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
                         <PrintDocumentButton document={doc} variant="icon" />
                         <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
                       </div>
@@ -821,6 +841,24 @@ export default function DocumentsList() {
                               Ask
                             </Button>
                           )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                            disabled={!doc.originalFileAvailable}
+                            title="Download original"
+                            aria-label={`Download ${doc.fileName}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              downloadOriginal(doc.id, doc.fileName).catch(() =>
+                                toast.error("Download failed")
+                              );
+                            }}
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </Button>
                           <PrintDocumentButton document={doc} variant="icon" className="h-7 w-7" />
                           <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
                         </div>
