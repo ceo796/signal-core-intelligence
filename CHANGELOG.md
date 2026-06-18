@@ -2,6 +2,20 @@
 
 ---
 
+## [Signal87_Upload_Drag_And_Drop_v1] — 2026-06-18  *(Drag & drop files onto the upload dialog; frontend-only)*
+
+### Summary
+The **Upload** dialog now accepts **drag-and-dropped files** in addition to click-to-browse. The single-file `<Input>` is replaced by a dashed **drop zone** with an upload icon and a "Drag & drop files here, or browse" prompt (the hidden `<input type="file" multiple>` is still triggered by the "browse" link, so the existing picker flow is unchanged). Dropped files run through the **exact same** add-to-queue path as picked files — the de-dupe (name+size+lastModified), per-file validation (PDF/DOCX/TXT/CSV/XLSX/XLS, ≤20 MB), and per-file status rows are all shared via a new `addFiles()` helper. While a drag is over the zone it shows an **active hover state** (primary border/tint + "Drop files to add them"). Drops are ignored while an upload is in progress. **Frontend-only:** no backend, auth/Clerk, DB schema, OpenAPI/codegen, storage, or extraction changes — each dropped file still uploads one-at-a-time via the existing `POST /api/documents/upload`.
+
+### Changed — frontend
+- **`artifacts/signal87-core/src/components/file-upload.tsx`** — extracted the de-dupe + validation + queue-append logic out of `handleFileChange` into a shared `addFiles(File[])` used by both the input `onChange` and the new drop handler. Added `isDragging` state and a `dragDepth` ref (counter to handle nested dragenter/dragleave so the hover state doesn't flicker). Added `onDragEnter/onDragOver/onDragLeave/onDrop` handlers on the drop zone; `dropEffect="copy"`; all drag handlers no-op while `isUploading`. The visible file `<Input>` became a `sr-only` hidden input triggered by an in-zone "browse" button.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- No transport change: dropped files reuse the existing authenticated, owner-scoped `customFetch("/api/documents/upload")` path; backend, storage, and the citations + Verification Trace payload are untouched.
+
+---
+
 ## [Signal87_Multi_Document_Upload_v1] — 2026-06-18  *(Upload several documents at once from one dialog, each with its own status; frontend-only)*
 
 ### Summary

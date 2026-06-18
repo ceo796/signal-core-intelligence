@@ -53,6 +53,8 @@ export function FileUploadModal() {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragDepth = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -77,29 +79,63 @@ export function FileUploadModal() {
     );
   };
 
+  const addFiles = (picked: File[]) => {
+    if (picked.length === 0) return;
+    setItems((prev) => {
+      const existingKeys = new Set(prev.map((it) => fileKey(it.file)));
+      const additions: UploadItem[] = [];
+      for (const f of picked) {
+        const key = fileKey(f);
+        if (existingKeys.has(key)) continue;
+        existingKeys.add(key);
+        const validationError = validateFile(f);
+        additions.push({
+          id: crypto.randomUUID(),
+          file: f,
+          status: validationError ? "invalid" : "pending",
+          message: validationError ?? undefined,
+        });
+      }
+      return [...prev, ...additions];
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = Array.from(e.target.files ?? []);
-    if (picked.length > 0) {
-      setItems((prev) => {
-        const existingKeys = new Set(prev.map((it) => fileKey(it.file)));
-        const additions: UploadItem[] = [];
-        for (const f of picked) {
-          const key = fileKey(f);
-          if (existingKeys.has(key)) continue;
-          existingKeys.add(key);
-          const validationError = validateFile(f);
-          additions.push({
-            id: crypto.randomUUID(),
-            file: f,
-            status: validationError ? "invalid" : "pending",
-            message: validationError ?? undefined,
-          });
-        }
-        return [...prev, ...additions];
-      });
-    }
+    addFiles(Array.from(e.target.files ?? []));
     // Reset so re-selecting the same file (after removal) fires onChange again.
     if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isUploading) return;
+    dragDepth.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isUploading) return;
+    e.dataTransfer.dropEffect = "copy";
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isUploading) return;
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = 0;
+    setIsDragging(false);
+    if (isUploading) return;
+    addFiles(Array.from(e.dataTransfer.files ?? []));
   };
 
   const removeItem = (id: string) => {
@@ -201,10 +237,37 @@ export function FileUploadModal() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="file" className="text-muted-foreground text-xs">
-              Select files
-            </Label>
+          <div
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`flex flex-col items-center gap-2 rounded-md border border-dashed px-4 py-6 text-center transition-colors ${
+              isDragging
+                ? "border-primary bg-primary/5"
+                : "border-border bg-background"
+            } ${isUploading ? "opacity-60" : ""}`}
+          >
+            <UploadCloud
+              className={`w-6 h-6 ${isDragging ? "text-primary" : "text-muted-foreground"}`}
+            />
+            <p className="text-xs text-muted-foreground">
+              {isDragging ? (
+                <span className="text-primary font-medium">Drop files to add them</span>
+              ) : (
+                <>
+                  Drag &amp; drop files here, or{" "}
+                  <button
+                    type="button"
+                    onClick={() => inputRef.current?.click()}
+                    disabled={isUploading}
+                    className="text-primary font-medium hover:underline disabled:opacity-60"
+                  >
+                    browse
+                  </button>
+                </>
+              )}
+            </p>
             <Input
               id="file"
               ref={inputRef}
@@ -212,7 +275,7 @@ export function FileUploadModal() {
               multiple
               onChange={handleFileChange}
               disabled={isUploading}
-              className="text-sm bg-background border-border"
+              className="sr-only"
               accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
             />
           </div>
