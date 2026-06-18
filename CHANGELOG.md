@@ -2,7 +2,7 @@
 
 ---
 
-## [Signal87_Core_Document_Ownership_v1] — 2026-06-18  *(Per-user document ownership — every document read/write is now scoped to the signed-in user)*
+## [Signal87_Per_User_Document_Ownership_v1] — 2026-06-18  *(Per-user document ownership — every document read/write is now scoped to the signed-in user)*
 
 ### Summary
 Closes a multi-tenant data-isolation gap: until now any **approved** user could read/modify **every** document (the only trust boundary was the approved-email gate). Adds a per-document owner and enforces it on every document read and write so a user can only ever see and act on documents they uploaded. Documents that exist but belong to another user are indistinguishable from documents that do not exist (both return `404` — no existence disclosure). **No UI, no API contract, and no codegen changes** (owner is never exposed in any response and no request shape changed).
