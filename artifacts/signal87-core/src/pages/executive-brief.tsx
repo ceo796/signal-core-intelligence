@@ -388,7 +388,12 @@ export default function ExecutiveBrief() {
 
   const [selected, setSelected] = useState<number[]>(() => {
     if (typeof window === "undefined") return [];
-    const preselect = new URLSearchParams(window.location.search).get("preselect");
+    const params = new URLSearchParams(window.location.search);
+    const idsParam = params.get("ids");
+    if (idsParam) {
+      return idsParam.split(",").map(Number).filter((n) => Number.isFinite(n) && n > 0);
+    }
+    const preselect = params.get("preselect");
     const presetId = preselect ? Number(preselect) : NaN;
     return Number.isFinite(presetId) ? [presetId] : [];
   });

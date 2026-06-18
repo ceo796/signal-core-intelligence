@@ -1,5 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { FileUploadModal } from "@/components/file-upload";
 import {
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { PrintDocumentButton } from "@/components/print-document-button";
 import { getDocumentStatus } from "@/lib/document-status";
@@ -39,6 +40,8 @@ import {
   SlidersHorizontal,
   RotateCcw,
   Download,
+  GitCompare,
+  ScrollText,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -71,6 +74,8 @@ type StatusFilter = "all" | "ready" | "processing" | "error";
 type SortColumn = "name" | "status" | "chunks" | "uploaded";
 type SortDirection = "asc" | "desc";
 type TypeFilter = "all" | string;
+
+const MAX_SELECT = 5;
 
 function getInitialView(): ViewMode {
   try {
@@ -243,6 +248,7 @@ export default function DocumentsList() {
   const deleteMutation = useDeleteDocument();
   const reindexMutation = useReindexDocument();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const [reindexingId, setReindexingId] = useState<number | null>(null);
   const [view, setView] = useState<ViewMode>(getInitialView);
   const [search, setSearch] = useState(getInitialSearch);
@@ -256,6 +262,8 @@ export default function DocumentsList() {
     column: SortColumn;
     direction: SortDirection;
   }>(getInitialGridSort);
+
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const availableTypes = Array.from(
     new Set((documents ?? []).map((d) => d.fileType.toLowerCase()).filter(Boolean))
@@ -349,6 +357,7 @@ export default function DocumentsList() {
       {
         onSuccess: () => {
           toast.success("Document deleted");
+          setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
           queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
         },
         onError: () => toast.error("Failed to delete document"),
@@ -371,6 +380,34 @@ export default function DocumentsList() {
         onSettled: () => setReindexingId(null),
       }
     );
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (next.size >= MAX_SELECT) {
+          toast.error(`You can select at most ${MAX_SELECT} documents.`);
+          return prev;
+        }
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleCompare = () => {
+    const ids = Array.from(selectedIds).join(",");
+    navigate(`/compare?ids=${ids}`);
+  };
+
+  const handleBrief = () => {
+    const ids = Array.from(selectedIds).join(",");
+    navigate(`/brief?ids=${ids}`);
   };
 
   const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
@@ -408,6 +445,9 @@ export default function DocumentsList() {
       }
       return dir === "asc" ? cmp : -cmp;
     });
+
+  const selectionCount = selectedIds.size;
+  const showActionBar = selectionCount >= 2;
 
   return (
     <Layout>
@@ -671,21 +711,40 @@ export default function DocumentsList() {
                 const status = getDocumentStatus(doc);
                 const isReindexing = reindexingId === doc.id;
                 const chip = fileTypeChip(doc.fileType);
+                const isSelected = selectedIds.has(doc.id);
                 return (
                   <Card
                     key={doc.id}
-                    className="bg-white border border-gray-200 hover:border-primary/30 hover:shadow-sm transition-all group flex flex-col overflow-hidden"
+                    className={`bg-white border hover:shadow-sm transition-all group flex flex-col overflow-hidden ${
+                      isSelected
+                        ? "border-primary/50 ring-1 ring-primary/30"
+                        : "border-gray-200 hover:border-primary/30"
+                    }`}
                   >
-                    {/* Compact icon header — replaces the old h-28 thumbnail block */}
-                    <Link
-                      href={`/documents/${doc.id}`}
-                      className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100"
-                    >
-                      <FileTypeIcon fileType={doc.fileType} className="w-7 h-7 shrink-0" />
-                      <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
-                        {chip.label}
-                      </span>
-                    </Link>
+                    {/* Compact icon header */}
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 relative">
+                      {/* Checkbox — top-left, visible on hover or when checked */}
+                      <div
+                        className={`shrink-0 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSelect(doc.id); }}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelect(doc.id)}
+                          aria-label={`Select ${doc.fileName}`}
+                          className="w-4 h-4"
+                        />
+                      </div>
+                      <Link
+                        href={`/documents/${doc.id}`}
+                        className="flex items-center gap-2 flex-1 min-w-0"
+                      >
+                        <FileTypeIcon fileType={doc.fileType} className="w-7 h-7 shrink-0" />
+                        <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
+                          {chip.label}
+                        </span>
+                      </Link>
+                    </div>
 
                     <CardContent className="p-4 flex-1 flex flex-col">
                       <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col min-w-0">
@@ -762,9 +821,11 @@ export default function DocumentsList() {
             <table className="w-full text-sm border-collapse min-w-[520px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  {/* Checkbox column header */}
+                  <th className="pl-4 pr-2 py-2.5 w-8" aria-label="Select" />
                   {(
                     [
-                      { col: "name" as SortColumn, label: "Name", align: "left", className: "px-6 py-2.5 w-[40%]" },
+                      { col: "name" as SortColumn, label: "Name", align: "left", className: "px-3 py-2.5 w-[40%]" },
                       { col: "status" as SortColumn, label: "Status", align: "left", className: "px-3 py-2.5" },
                       { col: "chunks" as SortColumn, label: "Chunks", align: "right", className: "px-3 py-2.5" },
                       { col: "uploaded" as SortColumn, label: "Uploaded", align: "left", className: "px-3 py-2.5" },
@@ -799,9 +860,28 @@ export default function DocumentsList() {
                   const status = getDocumentStatus(doc);
                   const isReindexing = reindexingId === doc.id;
                   const chip = fileTypeChip(doc.fileType);
+                  const isSelected = selectedIds.has(doc.id);
                   return (
-                    <tr key={doc.id} className="group hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-2.5">
+                    <tr
+                      key={doc.id}
+                      className={`group transition-colors ${
+                        isSelected ? "bg-primary/5 hover:bg-primary/8" : "hover:bg-gray-50"
+                      }`}
+                    >
+                      {/* Checkbox cell */}
+                      <td className="pl-4 pr-2 py-2.5">
+                        <div
+                          className={`transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(doc.id)}
+                            aria-label={`Select ${doc.fileName}`}
+                            className="w-4 h-4"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5">
                         <Link href={`/documents/${doc.id}`} className="flex items-center gap-2 min-w-0">
                           <FileTypeIcon fileType={doc.fileType} className="w-4 h-4 shrink-0" />
                           <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
@@ -871,6 +951,51 @@ export default function DocumentsList() {
             </div>
           )}
         </div>
+
+        {/* ══════════════════════════════════════════════════
+            STICKY MULTI-SELECT ACTION BAR
+            Appears when 2–5 documents are selected
+            ══════════════════════════════════════════════════ */}
+        {showActionBar && (
+          <div className="border-t border-primary/20 bg-primary/5 backdrop-blur-sm px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shrink-0">
+                {selectionCount}
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {selectionCount} document{selectionCount !== 1 ? "s" : ""} selected
+              </span>
+              {selectionCount === MAX_SELECT && (
+                <span className="text-xs text-muted-foreground">(max)</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={clearSelection}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+              >
+                Clear
+              </button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1.5 px-3"
+                onClick={handleCompare}
+              >
+                <GitCompare className="w-3.5 h-3.5" />
+                Compare
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 text-xs gap-1.5 px-3"
+                onClick={handleBrief}
+              >
+                <ScrollText className="w-3.5 h-3.5" />
+                Brief
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
