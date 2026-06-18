@@ -6,6 +6,7 @@
 - [Deployed-app verification](deployed-app-verification.md) — prod has its own DB (separate from dev); live-URL screenshots are cached/stale (verify via live API + built asset-hash); autoscale cold-start logs transient healthcheck 500s.
 - [pdf-parse test fixtures](pdf-parse-test-fixtures.md) — pdf-parse@1.1.1 rejects hand-rolled PDFs (`bad XRef entry`) even with correct offsets; for a known-good test PDF, re-upload a real one from `/original`.
 - [Document readiness invariant](document-readiness-invariant.md) — "answerable" needs chunks>0 AND extractionStatus==success; a failed reindex leaves stale chunks, so chunk-count alone is not a safe gate.
-- [Clerk dev cookie in iframe](clerk-dev-iframe-cookie.md) — signed-in frontend but backend 401 (cookie present, userId null) = dev session cookie can't refresh in preview iframe; test in a standalone tab.
+- [Clerk dev cookie in iframe](clerk-dev-iframe-cookie.md) — signed-in frontend but backend 401 (cookie present, userId null) = dev session cookie can't refresh in preview iframe; real fix: attach Clerk token as Bearer centrally in customFetch (backend already accepts it).
 - [Ownership-model exceptions](ownership-model-exceptions.md) — /demo/qa, /admin/stats, /system/info deliberately read globally; not ownership bugs.
 - [Public endpoint protected-store leak](public-endpoint-protected-data.md) — a public/no-auth route reading a protected table must anonymize identifying fields (e.g. real filenames); select only non-identifying columns.
+- [customFetch blob downloads](customfetch-blob-download.md) — file downloads must call customFetch with explicit `responseType:"blob"`; generated ops mis-parse text/plain & text/csv as strings.

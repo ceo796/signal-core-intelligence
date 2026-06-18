@@ -1,6 +1,9 @@
 # Signal87 Core — QA Test Plan
 
-> Checkpoint: **Signal87_Spreadsheet_Excel_Readability_v1**
+> Checkpoint: **Signal87_Embedded_Preview_Auth_Transport_v1**
+> Last updated: 2026-06-18
+> Note (Embedded_Preview_Auth_Transport_v1): New tests **T64–T67** cover the centralized Clerk **bearer-token transport** that makes authenticated `/api/*` calls work inside the embedded preview iframe (where the dev session cookie can't establish, so calls previously 401'd). T64 = signed-in approved reads return **200/304** in the iframe (were 401); T65 = Download Original via authenticated blob; T66 = upload via the authenticated transport (207 warning UX preserved); T67 = security gates still enforced (**401** unauth, **403** unapproved, **404** cross-user `owner_user_id` filtering). Frontend-only — no backend, OpenAPI/codegen, DB schema, storage, or UI-redesign changes; cookie auth still works in a standalone tab and production.
+> Prior checkpoint: **Signal87_Spreadsheet_Excel_Readability_v1**
 > Last updated: 2026-06-18
 > Note (Spreadsheet_Excel_Readability_v1): New tests **T58–T63** cover Excel (`.xlsx`/`.xls`) ingestion — upload, sheet-by-sheet readable preview, single-doc chat, hybrid agent, executive brief, and the empty-workbook failure path — all with **sheet/row-aware citations** (`Sheet: <name> | Rows a–b`, `[Chunk N]`/`[Source N]` preserved). CSV ingestion (T05) is **unchanged**. No DB schema, OpenAPI/codegen, auth/ownership, storage, or UI-redesign changes; PDF viewer, download/delete/reindex, and the citations + Verification Trace payload are unchanged.
 > Prior checkpoint: **Signal87_Core_Document_Thumbnails_v1**
@@ -28,6 +31,67 @@
    - `PRIVATE_OBJECT_DIR: "set"`
    - `fileStorageConfig.bucketConfigured: true`
    - `fileStorageConfig.originalFilesStored: true`
+
+---
+
+## T64 — Embedded preview: authenticated reads succeed (was 401)
+
+**Goal:** Confirm authenticated `/api/*` calls work inside the Replit embedded preview iframe via the Clerk bearer token.
+
+**Steps:**
+1. Open the app in the **embedded preview** (iframe), signed in as an approved user (`ceo@signal87.ai`).
+2. Navigate to `/documents`.
+
+**Expected:**
+- The document list loads; `GET /api/documents` returns **200/304** (not 401).
+- Server logs show the request authenticated; no "Could not load your documents" error inside the iframe.
+- Detail, chunks, history, single-doc chat, hybrid agent, brief, admin, and the in-app PDF preview blob all load (all share the same transport).
+
+---
+
+## T65 — Download Original via authenticated blob
+
+**Goal:** Downloading the original file works in the iframe (no cookie-based anchor).
+
+**Steps:**
+1. Signed in as approved, open a document that has an available original.
+2. Click **Download Original** in each location: the detail action bar, the PDF viewer toolbar, and the preview-error fallback.
+
+**Expected:**
+- The file downloads; **no "Download failed" toast**.
+- The request carries the bearer token; `GET /api/documents/:id/original` returns **200**.
+
+---
+
+## T66 — Upload via authenticated transport
+
+**Goal:** Upload works in the iframe and preserves the 207 "extraction failed" warning UX.
+
+**Steps:**
+1. Signed in as approved, upload a valid file (PDF/DOCX/TXT/CSV/XLSX).
+2. Upload a file that stores but fails text extraction (to exercise the 207 path).
+
+**Expected:**
+- Valid upload → success toast; document appears in the list.
+- 207 → **warning** toast from the server `warning` message (not a generic error); document still appears.
+- Server-side error → error toast sourced from `ApiError.data.error`.
+
+---
+
+## T67 — Security unchanged by the transport change
+
+**Goal:** Auth/authorization gates are not weakened.
+
+**Steps:**
+1. Unauthenticated: `GET /api/documents`.
+2. Signed in as a NON-approved email: load `/documents`.
+3. Signed in as approved: request another user's document id directly.
+
+**Expected:**
+- Unauthenticated → **401**.
+- Unapproved email → **403** (approved-email gate intact).
+- Cross-user document → **404** (`owner_user_id` filtering intact).
+- New uploads still stamp `owner_user_id` (unchanged backend).
 
 ---
 

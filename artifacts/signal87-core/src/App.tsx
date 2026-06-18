@@ -1,8 +1,10 @@
+import { useEffect, useRef } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth, RedirectToSignIn } from "@clerk/react";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 import Home from "@/pages/home";
 import DocumentsList from "@/pages/documents";
@@ -62,6 +64,24 @@ function isPublicRoute(path: string): boolean {
   return publicRoutes.some(
     (route) => path === route || path.startsWith(route + "/"),
   );
+}
+
+// Bridges Clerk's session token into the centralized API fetch layer so every
+// /api/* request carries `Authorization: Bearer <token>`. This is required
+// inside the embedded preview iframe, where the Clerk session cookie isn't
+// available and cookie-only auth 401s. Cookies still work in a standalone tab
+// and in production — the bearer token is simply attached in addition.
+function ApiAuthBridge() {
+  const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
+  useEffect(() => {
+    setAuthTokenGetter(() => getTokenRef.current());
+    return () => setAuthTokenGetter(null);
+  }, []);
+
+  return null;
 }
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -137,6 +157,7 @@ function SignUpPage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ApiAuthBridge />
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthGuard>

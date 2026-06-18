@@ -34,11 +34,13 @@ export function setBaseUrl(url: string | null): void {
  * the getter is invoked; when it returns a non-null string, an
  * `Authorization: Bearer <token>` header is attached to the request.
  *
- * Useful for Expo bundles making token-gated API calls.
+ * Useful for Expo bundles making token-gated API calls, and for web apps
+ * running inside an embedded iframe (e.g. the Replit preview) where the auth
+ * provider's session cookie cannot be established in the third-party context —
+ * attaching a bearer token keeps authenticated calls working. Cookie-based auth
+ * still works when present (standalone tab / production); the bearer header is
+ * only added when no Authorization header has been explicitly set.
  * Pass `null` to clear the getter.
- *
- * NOTE: This function should never be used in web applications where session
- * token cookies are automatically associated with API calls by the browser.
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;

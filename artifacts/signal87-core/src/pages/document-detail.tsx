@@ -9,7 +9,6 @@ import {
   useReindexDocument,
   useDeleteDocument,
   getDocumentOriginal,
-  getGetDocumentOriginalUrl,
   getGetDocumentQueryKey,
   getGetDocumentChunksQueryKey,
   getGetChatHistoryQueryKey,
@@ -35,6 +34,7 @@ import {
 import { PdfViewer } from "@/components/pdf-viewer";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
+import { downloadOriginal } from "@/lib/download-original";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -200,8 +200,6 @@ export default function DocumentDetail() {
       .catch(() => toast.error("Copy failed"));
   };
 
-  const originalUrl = getGetDocumentOriginalUrl(id);
-
   if (isLoading) {
     return (
       <Layout>
@@ -233,6 +231,10 @@ export default function DocumentDetail() {
 
   const extractionOk = doc.extractionStatus?.toLowerCase() === "success";
   const status = getDocumentStatus(doc);
+
+  const handleDownload = () => {
+    downloadOriginal(doc.id, doc.fileName).catch(() => toast.error("Download failed"));
+  };
 
   const messagePairs: { question: string; answer: string; at: string; citations: number | null }[] = [];
   if (history) {
@@ -295,12 +297,14 @@ export default function DocumentDetail() {
               </Button>
             </Link>
             {doc.originalFileAvailable ? (
-              <a href={originalUrl} download={doc.fileName}>
-                <Button variant="outline" className="text-sm gap-2 border-border/50">
-                  <Download className="w-3 h-3" />
-                  Download Original
-                </Button>
-              </a>
+              <Button
+                variant="outline"
+                className="text-sm gap-2 border-border/50"
+                onClick={handleDownload}
+              >
+                <Download className="w-3 h-3" />
+                Download Original
+              </Button>
             ) : (
               <Button variant="outline" className="text-sm gap-2 border-border/50" disabled>
                 <Download className="w-3 h-3" />
@@ -417,16 +421,19 @@ export default function DocumentDetail() {
                     <p className="text-xs text-muted-foreground max-w-sm">
                       The original file could not be fetched for preview. You can still download it.
                     </p>
-                    <a href={originalUrl} download={doc.fileName}>
-                      <Button variant="outline" size="sm" className="text-sm gap-2 border-border/50">
-                        <Download className="w-3 h-3" />
-                        Download Original
-                      </Button>
-                    </a>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-sm gap-2 border-border/50"
+                      onClick={handleDownload}
+                    >
+                      <Download className="w-3 h-3" />
+                      Download Original
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex-1 min-h-0">
-                    <PdfViewer fileUrl={pdfUrl} downloadUrl={originalUrl} fileName={doc.fileName} />
+                    <PdfViewer fileUrl={pdfUrl} onDownload={handleDownload} />
                   </div>
                 )
               ) : doc.extractedText ? (

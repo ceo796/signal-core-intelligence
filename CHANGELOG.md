@@ -2,6 +2,28 @@
 
 ---
 
+## [Signal87_Embedded_Preview_Auth_Transport_v1] — 2026-06-18  *(Authenticated `/api/*` calls now work inside the embedded preview iframe — attach Clerk's verified session token as a Bearer header, centralized in the API fetch layer)*
+
+### Summary
+Inside the Replit **embedded preview iframe**, the Clerk dev **session cookie can't be established** (browser third-party-cookie limitation), so every authenticated `GET /api/*` returned **401** even though the UI showed a signed-in user. This **supersedes** the prior `Signal87_Document_Load_Lag_Fix_v1` workaround note ("open in a standalone tab") — the embedded preview now works. **Root cause:** the frontend relied solely on the session cookie for transport. The backend already accepted **either** a cookie **or** `Authorization: Bearer <token>` (standard `@clerk/express` `clerkMiddleware`), so the fix is **frontend-only and centralized**: attach Clerk's verified session token as a Bearer header on every request through the shared API fetch layer. **No backend change. No weakening of Clerk auth, the approved-email gate, or `owner_user_id` ownership filtering. Cookies still work in a standalone tab and in production (the bearer header is added only when no Authorization header is already set).**
+
+### Changed — frontend (centralized transport only)
+- **`lib/api-client-react/src/custom-fetch.ts`** — already attaches `Authorization: Bearer <token>` for every generated operation when a token getter is registered and returns a token (cookie fallback otherwise; no header when signed out). Only the doc comment was updated to reflect the legitimate embedded-iframe web use case.
+- **`lib/api-client-react/src/index.ts`** — additionally export `customFetch`, `ApiError`, and `CustomFetchOptions` so the two non-generated request surfaces (upload, download) share the same authenticated transport.
+- **`artifacts/signal87-core/src/App.tsx`** — new `<ApiAuthBridge/>` (mounted inside `QueryClientProvider`, within `ClerkProvider`) registers `setAuthTokenGetter(() => getToken())` from Clerk's `useAuth()` via a ref (latest getter always used), clearing it on unmount. This is the **single** place auth transport is wired — no per-page patches.
+- **`artifacts/signal87-core/src/components/file-upload.tsx`** — multipart upload now goes through `customFetch` (was a raw `fetch()` that bypassed the token). The 207 "stored but extraction failed" warning UX is preserved via the response `warning` field; server errors surface via `ApiError.data.error`.
+- **`artifacts/signal87-core/src/lib/download-original.ts`** *(new)* — downloads the original as an **authenticated blob** via `customFetch(getGetDocumentOriginalUrl(id), { responseType: "blob" })` → object URL → anchor click → deferred revoke, replacing cookie-based `<a href download>` anchors that 401 in the iframe. Forces `responseType: "blob"` (the generated `getDocumentOriginal` omits it, which would mis-parse `text/plain`/`text/csv` originals as a string and break TXT/CSV downloads).
+- **`artifacts/signal87-core/src/pages/document-detail.tsx`** — the two "Download Original" anchors are now buttons calling the authenticated `downloadOriginal` helper.
+- **`artifacts/signal87-core/src/components/pdf-viewer.tsx`** — the viewer's "Download Original" control takes an `onDownload` callback (was a `downloadUrl` anchor), routing through the same authenticated path.
+
+### Verification
+- `pnpm run typecheck` — clean (all packages).
+- **Embedded preview logs:** `GET /api/documents` now returns **200/304** (previously **401** on every call).
+- **e2e (signed-in, approved `ceo@signal87.ai`):** `/documents` loads with no 401; open document; **Download Original** triggers with no error; single-doc chat returns a grounded answer with **citations + Verification Trace**; **Re-index** succeeds (200).
+- **Security:** unauthenticated `GET /api/documents` returns **401**; approved-email gate (**403**) and `owner_user_id` filtering (**404** cross-user) unchanged (no backend change).
+
+---
+
 ## [Signal87_Document_Load_Lag_Fix_v1] — 2026-06-18  *(Kill the multi-second "loading" lag before a failed document fetch surfaces; clearer fast failure)*
 
 ### Summary

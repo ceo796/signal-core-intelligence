@@ -11,8 +11,10 @@ description: Why a signed-in user gets backend 401s in the Replit preview/canvas
 
 **Why:** Browser third-party-cookie restrictions (Chrome phase-out, Safari ITP). It's a browser-level limitation, not a code bug. Production is unaffected because the app runs top-level on its own domain with first-party cookies.
 
+**Real fix (preferred over the standalone-tab workaround):** don't rely on the cookie for transport — attach Clerk's verified session token as `Authorization: Bearer <token>` on every `/api` request. `@clerk/express` `clerkMiddleware` already accepts a bearer token as an alternative to the cookie, so this is **frontend-only** and needs no backend change. Centralize it in the shared fetch layer: register a token getter (`setAuthTokenGetter(() => getToken())` from Clerk `useAuth()`) once via a small bridge component mounted inside `ClerkProvider`, and have `customFetch` add the header only when a getter returns a token AND no Authorization header is already set (so cookie auth still works in a standalone tab / production, and nothing is attached when signed out). Do this in ONE place — never per-page. Surfaces that bypass the generated client (multipart upload, blob download) must be routed through the same `customFetch` too, or they'll keep 401'ing in the iframe.
+
 **How to apply / diagnose (differential):**
-- 401 (not 403) + `__session` cookie present + `userId:null`/empty claims + frontend `isSignedIn` true ⇒ iframe cookie staleness. **Dev fix: open the app in a standalone browser tab**, not the embedded preview/canvas iframe.
+- 401 (not 403) + `__session` cookie present + `userId:null`/empty claims + frontend `isSignedIn` true ⇒ iframe cookie staleness. **Fix: attach the bearer token centrally (above).** Quick dev workaround if you can't: open the app in a standalone browser tab.
 - 403 ⇒ approved-email gate, not a session problem.
 - No `__session` cookie on the request ⇒ user not actually signed in, or cookie not being sent.
 - Still fails in a standalone tab ⇒ a real key/instance mismatch or middleware-order bug — then debug the code, not the transport.

@@ -24,13 +24,11 @@ const SCALE_STEP = 0.25;
 interface PdfViewerProps {
   /** Blob object-URL or file URL for the PDF. */
   fileUrl: string;
-  /** Anchor URL used by the Download Original control. */
-  downloadUrl: string;
-  /** Suggested download filename. */
-  fileName: string;
+  /** Invoked by the Download Original control. */
+  onDownload: () => void;
 }
 
-export function PdfViewer({ fileUrl, downloadUrl, fileName }: PdfViewerProps) {
+export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1);
@@ -83,12 +81,15 @@ export function PdfViewer({ fileUrl, downloadUrl, fileName }: PdfViewerProps) {
   const toggleFitWidth = () => setFitWidth((v) => !v);
 
   const downloadButton = (
-    <a href={downloadUrl} download={fileName}>
-      <Button variant="outline" size="sm" className="text-xs gap-2 border-border/50">
-        <Download className="w-3 h-3" />
-        Download Original
-      </Button>
-    </a>
+    <Button
+      variant="outline"
+      size="sm"
+      className="text-xs gap-2 border-border/50"
+      onClick={onDownload}
+    >
+      <Download className="w-3 h-3" />
+      Download Original
+    </Button>
   );
 
   if (error) {

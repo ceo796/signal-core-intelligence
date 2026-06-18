@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getListDocumentsQueryKey } from "@workspace/api-client-react";
+import { customFetch, ApiError, getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -34,37 +34,38 @@ export function FileUploadModal() {
       const formData = new FormData();
       formData.append("file", uploadFile);
 
-      const res = await fetch("/api/documents/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        const serverMessage =
-          data && typeof data.error === "string" ? data.error : "Upload failed. Please try again.";
-        throw new Error(serverMessage);
-      }
-
-      return { data, status: res.status };
+      // Route through the shared API client so the Clerk bearer token is
+      // attached centrally — a raw fetch() would 401 inside the embedded
+      // preview iframe, where the session cookie isn't available.
+      return customFetch<{ warning?: string } & Record<string, unknown>>(
+        "/api/documents/upload",
+        { method: "POST", body: formData, responseType: "json" },
+      );
     },
-    onSuccess: (result) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
       setOpen(false);
       setFile(null);
       setValidationError(null);
-      if (result.status === 207) {
+      if (data && typeof data.warning === "string") {
         toast.warning(
-          (result.data && typeof result.data.warning === "string" && result.data.warning) ||
+          data.warning ||
             "File uploaded, but no text could be extracted. Open it to re-index or re-upload.",
         );
       } else {
         toast.success("Document uploaded successfully");
       }
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to upload document");
+    onError: (err: unknown) => {
+      const serverMessage =
+        err instanceof ApiError &&
+        err.data &&
+        typeof (err.data as { error?: unknown }).error === "string"
+          ? (err.data as { error: string }).error
+          : err instanceof Error
+            ? err.message
+            : "Upload failed. Please try again.";
+      toast.error(serverMessage || "Failed to upload document");
     },
   });
 
