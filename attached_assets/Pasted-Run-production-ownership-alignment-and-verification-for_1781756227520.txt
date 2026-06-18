@@ -1,0 +1,57 @@
+Run production ownership alignment and verification for Signal87.
+
+This is a production safety task. Do not add features. Do not redesign UI. Do not refactor.
+
+Context:
+Production currently has the documents.owner_user_id column, but the live serving code was stale and did not enforce ownership. Production also had 2 ownerless documents. The latest committed code includes owner-scoped document access and must now be verified in production.
+
+Tasks:
+
+1. Confirm latest code is live
+
+* Confirm production is serving the latest committed code, HEAD fff3815 or later.
+* Confirm /api/demo/qa behavior matches current code expectations.
+* Confirm /api/healthz returns 200.
+
+2. Backfill production ownerless documents
+
+* Identify all production documents where owner_user_id IS NULL.
+* There should be 2 based on the prior report.
+* Assign them to the rightful owner.
+* If the rightful owner cannot be confidently determined, assign them to the primary admin account associated with mbenezra@erezcapital.io.
+* If the Clerk userId for mbenezra@erezcapital.io cannot be confidently resolved, stop and ask before making the backfill.
+* Do not leave any production documents ownerless.
+
+3. Verify production ownership enforcement
+
+* Confirm production has 0 ownerless documents.
+* Confirm new uploads are stamped with owner_user_id.
+* Confirm document list returns only the signed-in user’s documents.
+* Confirm document detail returns 404 for unowned or nonexistent documents.
+* Confirm download original is owner-scoped.
+* Confirm re-index is owner-scoped.
+* Confirm delete is owner-scoped.
+* Confirm single-document chat and history are owner-scoped.
+* Confirm multi-chat is owner-scoped.
+* Confirm executive brief generation is owner-scoped.
+* Confirm hybrid agent auto-select and provided-documentIds paths are owner-scoped.
+* Confirm unauthenticated protected routes return 401.
+* Confirm unowned and nonexistent document IDs both return 404 after authentication.
+
+4. Confirm no unintended changes
+
+* No auth config changes.
+* No storage config changes.
+* No schema changes beyond existing owner_user_id.
+* No UI changes.
+* No OpenAPI/codegen changes unless already committed.
+* No unrelated asset/binary changes.
+
+Final report:
+
+* Production code version verified
+* Ownerless document count before and after
+* Clerk userId used for backfill
+* Routes tested
+* Pass/fail status
+* Whether production is now safe for public authenticated users
