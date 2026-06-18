@@ -16,3 +16,10 @@ Screenshots of the live `*.replit.app` URL are served through a caching screensh
 
 ## Autoscale cold-start emits transient healthcheck 500s
 On a fresh deploy/scale-from-zero, the platform health probe logs a few `healthcheck /api returned status 500` lines for ~3s until the Node process binds its port and logs `Server listening`; healthz then returns 200. These are internal startup probes (not user-facing) — not an app error.
+
+## Publish migrates prod SCHEMA but never prod DATA
+A dev-side data backfill (e.g. stamping `owner_user_id` on legacy rows) does NOT propagate to prod — prod has its own DB and Publish only syncs schema (column adds), not row data. After deploying any code that depends on a backfill, the same backfill must be re-run against prod separately, or legacy rows stay in the un-backfilled state (e.g. NULL owner → invisible to every user under owner-scoped queries).
+**How to apply:** when verifying a per-row migration in prod, query the prod replica for the un-migrated state (`WHERE <col> IS NULL`) — do not assume the dev backfill count carries over.
+
+## A public route OLDER than your change is a canary for "is my latest build actually live in prod"
+To tell whether prod is running the latest committed code without an authenticated session, pick a route whose public/unauth behavior changed in a commit that PREDATES your feature, and curl it on the prod URL. Example: `/api/demo/qa` became public at an earlier commit than the ownership work; prod returning 401 (the `requireApprovedEmail` body `"Unauthorized. Please sign in."`) while dev returns 200 proves the live build predates both. Schema can be ahead of code (column present) while the serving build is stale — behavior, not the DB column, tells you what code is live.
