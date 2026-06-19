@@ -1,0 +1,136 @@
+```text id="r9k2av"
+Remove all fake dashboard information immediately.
+
+The Home dashboard is currently showing fake AI answers, fake source documents, fake growth opportunities, fake activity, and fake insight content. This is not acceptable.
+
+Goal:
+Keep the dashboard visually polished, but only show real data or honest empty states.
+
+Scope:
+Frontend/UI cleanup only.
+
+Do not change:
+- Backend routes
+- Database schema
+- Auth
+- Upload behavior
+- Extraction/indexing
+- Chat behavior
+- Citations
+- Brief generation
+- Compare logic
+- AI provider/model behavior
+- Document storage
+- Download/delete/re-index behavior
+- Document detail page
+- AI Chat ResultView
+
+Required changes:
+
+1. Remove fake Signal87 AI answer content
+Delete the static sample conversation that says:
+- “What are the top 3 growth opportunities for Q2...”
+- The numbered growth opportunities
+- Fake source pills such as Q2 Market Research.pdf, Competitive Analysis.docx, Customer Interviews.pdf
+- Fake suggested follow-up chips tied to that fake answer
+
+Replace with an honest AI entry card:
+Title: “Signal87 AI”
+Subtitle: “Ask questions across your documents and verify answers with sources.”
+
+Show:
+- Sources: Connected, only if actually true
+- Documents indexed: use real count if available
+- Web research: Off
+
+Add real action prompts that do not pretend an answer already exists:
+- Ask across my documents
+- Summarize my recent uploads
+- Find names mentioned in my documents
+- Find dates and deadlines
+- Compare recent documents
+
+Clicking should route to the existing AI Chat / Ask page. If prompt prefill is not supported, just route to AI Chat.
+
+2. Remove fake Recent Activity
+If there is no real activity feed, show an empty state:
+“No recent activity”
+“Uploads, briefs, and document analysis activity will appear here.”
+
+Do not show fake uploads, fake comments, fake completed analysis, or fake workflow events.
+
+3. Remove fake Recent Briefs
+If there is no real brief history, show an empty state:
+“No recent briefs”
+“Generated briefs will appear here.”
+
+Do not show fake brief names or fake statuses.
+
+4. Recent Documents
+Recent Documents may remain only if it uses real uploaded document data from the existing documents endpoint.
+
+Show:
+- Real document name
+- File type or collection/type if available
+- Uploaded or updated date
+- Thumbnail/fallback if available
+
+Do not show chunks.
+
+5. Key Mentions / Document Signals
+If these are not backed by real extracted data yet, show honest empty states only.
+
+Examples:
+“No key mentions detected yet.”
+“Analyze documents to surface recurring people, companies, and terms.”
+
+“Document signals will appear after analysis.”
+“Dates, dollar amounts, parties, and obligations will appear here when available.”
+
+Do not invent names, companies, risks, dates, dollar amounts, or obligations.
+
+6. Suggested actions
+Suggested actions are allowed, but they must be action prompts, not fake results:
+- Ask about uploaded documents
+- Summarize recent uploads
+- Extract names and organizations
+- Find deadlines and dates
+- Compare documents
+- Create a brief
+
+7. Visual style
+Keep the approved dashboard look:
+- White background
+- Dark blue accents
+- Rounded cards
+- Clean spacing
+- Thin borders
+- Premium SaaS feel
+
+8. Verification
+After cleanup, verify:
+- No fake AI answers remain.
+- No fake source/citation pills remain.
+- No fake recent activity remains.
+- No fake brief history remains.
+- Recent documents use only real document data.
+- Empty states appear where real data is unavailable.
+- No chunks are shown.
+- Ask routes still work.
+- Upload routes still work.
+- Documents page still works.
+- AI Chat still works.
+- Brief page still works.
+- Compare page still works.
+- No backend files changed.
+- No AI calls were added.
+- No console errors.
+- Git diff is limited and clean.
+
+Report:
+- Files changed.
+- Which dashboard sections use real data.
+- Which sections now show empty states.
+- Confirmation that no fake content remains.
+- Confirmation that no backend, auth, upload, indexing, chat, citations, or provider/model behavior was changed.
+```

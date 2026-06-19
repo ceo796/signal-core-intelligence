@@ -14,7 +14,6 @@ import {
   FileText,
   Sparkles,
   Bot,
-  Send,
 } from "lucide-react";
 
 const ACCENT = "#1e3a5f";
@@ -317,7 +316,7 @@ export default function Dashboard() {
             {/* Row 2: AI preview (wider) + Recent activity */}
             <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 pb-4">
 
-              {/* Signal87 AI preview card */}
+              {/* Signal87 AI card */}
               <SectionCard>
                 {/* Card header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -333,131 +332,73 @@ export default function Dashboard() {
                       Beta
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-gray-500 flex items-center gap-1.5">
-                      Sources
-                      <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
-                      Connected
-                    </span>
-                    <button
-                      type="button"
-                      className="text-[11px] text-gray-500 px-2 py-0.5 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      Manage
-                    </button>
-                  </div>
                 </div>
 
-                <div className="p-5 space-y-4">
-                  <p className="text-xs text-gray-500">
-                    I have access to all your documents, briefs, and collections.
+                <div className="p-5 space-y-5">
+                  <p className="text-sm text-gray-500">
+                    Ask questions across your documents and verify answers with sources.
                   </p>
 
-                  {/* User question bubble */}
-                  <div className="flex justify-end">
-                    <div
-                      className="rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%] text-sm text-white"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      What are the top 3 growth opportunities for Q2 based on our latest research?
+                  {/* Status row */}
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-600">
+                      <span className="inline-block w-2 h-2 rounded-full bg-green-400 shrink-0" />
+                      Sources connected
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-600">
+                      <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      {docsLoading
+                        ? "Loading documents…"
+                        : `${documents?.length ?? 0} document${(documents?.length ?? 0) === 1 ? "" : "s"} indexed`}
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-400">
+                      <span className="inline-block w-2 h-2 rounded-full bg-gray-300 shrink-0" />
+                      Web research: off
                     </div>
                   </div>
 
-                  {/* AI answer card */}
-                  <div className="rounded-2xl rounded-tl-sm border border-gray-200 bg-gray-50 p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${ACCENT}15` }}
-                      >
-                        <Sparkles className="w-3 h-3" style={{ color: ACCENT }} />
-                      </div>
-                      <span className="text-xs font-medium text-gray-700">Signal87 AI</span>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      Based on your Q2 market research and competitive analysis, the top 3 growth
-                      opportunities are:
+                  {/* Action prompt chips */}
+                  <div>
+                    <p className="text-[11px] text-gray-400 font-medium mb-2.5 uppercase tracking-wide">
+                      Try asking
                     </p>
-                    <ol className="space-y-1.5 pl-0">
+                    <div className="space-y-2">
                       {[
-                        "Expand into mid-market segment with simplified onboarding.",
-                        "Increase wallet share through integrations and workflow automation.",
-                        "Differentiate on pricing transparency and ROI reporting.",
-                      ].map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                          <span
-                            className="shrink-0 mt-0.5 w-4 h-4 rounded text-white text-[10px] flex items-center justify-center font-bold"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            {i + 1}
-                          </span>
-                          {item}
-                        </li>
-                      ))}
-                    </ol>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      These are supported by trends in market demand, competitive gaps, and customer
-                      feedback.
-                    </p>
-
-                    {/* Citation pills */}
-                    <div className="flex items-center gap-2 flex-wrap pt-1">
-                      {["Q2 Market Research.pdf", "Competitive Analysis.docx", "Customer Interviews.pdf"].map(
-                        (src, i) => (
-                          <span
-                            key={src}
-                            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white text-gray-500"
-                          >
-                            <span
-                              className="w-3.5 h-3.5 rounded text-white shrink-0 inline-flex items-center justify-center text-[7px] font-bold"
-                              style={{ backgroundColor: i === 1 ? "#3182ce" : "#e53e3e" }}
-                            >
-                              {i === 1 ? "W" : "P"}
+                        "Ask across my documents",
+                        "Summarize my recent uploads",
+                        "Find names mentioned in my documents",
+                        "Find dates and deadlines",
+                        "Compare recent documents",
+                      ].map((prompt) => (
+                        <Link key={prompt} href="/agents/hybrid">
+                          <div className="flex items-center justify-between px-4 py-2.5 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer group">
+                            <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                              {prompt}
                             </span>
-                            {src}
-                          </span>
-                        ),
-                      )}
+                            <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 shrink-0" />
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  </div>
-
-                  {/* Follow-up chips */}
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "Show market sizing for these opportunities",
-                      "What risks should we watch?",
-                      "Compare vs last quarter",
-                    ].map((chip) => (
-                      <Link key={chip} href="/agents/hybrid">
-                        <button
-                          type="button"
-                          className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
-                        >
-                          {chip}
-                        </button>
-                      </Link>
-                    ))}
                   </div>
                 </div>
 
-                {/* Follow-up input */}
+                {/* Ask bar */}
                 <div className="px-5 pb-5 mt-auto">
                   <Link href="/agents/hybrid">
                     <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-colors cursor-pointer group">
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" style={{ color: ACCENT }} />
                       <span className="flex-1 text-sm text-gray-400 select-none">
-                        Ask a follow-up…
+                        Ask Signal87 AI…
                       </span>
                       <div
                         className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                         style={{ backgroundColor: ACCENT }}
                       >
-                        <Send className="w-3 h-3 text-white" />
+                        <ArrowRight className="w-3.5 h-3.5 text-white" />
                       </div>
                     </div>
                   </Link>
-                  <p className="text-[10px] text-gray-400 text-center mt-2">
-                    AI can make mistakes. Verify important information.
-                  </p>
                 </div>
               </SectionCard>
 
