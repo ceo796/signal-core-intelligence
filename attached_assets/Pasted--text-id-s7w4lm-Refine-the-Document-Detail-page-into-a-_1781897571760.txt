@@ -1,0 +1,140 @@
+```text id="s7w4lm"
+Refine the Document Detail page into a document intelligence workspace based on the attached reference image.
+
+Goal:
+The document detail page should default to an intelligent Overview layout, not a raw PDF viewer. Users should immediately see document metadata, summary, key details, and AI analysis. The original document preview should remain available under a Preview/Content tab.
+
+Important constraints:
+- Frontend/UI pass only unless absolutely necessary.
+- Do not change backend routes.
+- Do not change database schema.
+- Do not change auth.
+- Do not change upload, extraction, indexing, chat, citations, download, delete, re-index, or AI provider behavior.
+- Reuse existing extracted text, citations, document metadata, and chat/analysis capabilities where already available.
+- If some data is not available, use clean empty states instead of inventing backend functionality.
+
+Layout:
+
+1. Left sidebar
+Keep existing Signal87 sidebar.
+Use approved white background with dark blue accent.
+
+2. Top breadcrumb/header
+Show:
+- Back navigation
+- Documents / document type / file name breadcrumb
+- File title
+- File type badge
+- Status
+- Owner
+- Last updated/uploaded date
+- Size
+
+Actions:
+- Open in new window
+- Download
+- More
+
+Move into More:
+- Re-index
+- Delete
+- Print if retained
+
+Do not show chunks.
+
+3. Main left content area
+Default tab: Overview
+
+Tabs:
+- Overview
+- Preview
+- Extracted Text
+- Metadata
+- Activity
+
+Remove from normal view:
+- System
+- History
+- Visible chunks count
+
+Overview content:
+- Short document summary
+- Key details card, using available metadata/extracted information where possible
+- Key parties section if detectable from existing extracted text or analysis
+- Related documents section only if existing data supports it; otherwise hide or show empty state
+
+4. Right AI Analysis panel
+Create a persistent right-side panel titled “AI Analysis.”
+
+Tabs:
+- Summary
+- Key Clauses
+- Risks
+- Actions
+- Citations
+
+Default tab: Summary.
+
+The panel should show:
+- AI Summary
+- At a Glance fields
+- Potential risks, if available
+- Suggested actions
+- Citation access
+
+Important:
+- Do not generate new analysis automatically on every page load unless the existing app already does that safely.
+- If no analysis exists, show a clear CTA: “Generate analysis.”
+- The Generate/Regenerate action should use existing GPT-backed document analysis/chat behavior if available.
+- Do not add new AI providers.
+- Do not add web research.
+- Do not call Gemini.
+
+5. Preview tab
+The original PDF/document viewer should remain available here.
+- Keep page navigation, zoom, open in new window, and download.
+- The preview should be large and clean.
+- Do not make the raw PDF viewer the default tab.
+
+6. Ask behavior
+Add an “Ask about this document” action in the AI Analysis panel or header.
+- It should route to or open the existing Ask workflow scoped to this document.
+- Do not create a new chat endpoint.
+- Preserve citations and Verification Trace.
+
+7. Visual direction
+- Match the attached reference closely.
+- White background.
+- Dark blue primary accent.
+- Thin borders.
+- Calm enterprise SaaS layout.
+- Large content area.
+- Right-side intelligence panel.
+- No purple accent unless already part of logo.
+- No chunks displayed.
+- No noisy toolbar.
+- No duplicate actions.
+
+Verification checklist:
+1. Document detail loads.
+2. Overview tab loads by default.
+3. Preview tab still renders the document.
+4. Extracted Text still works.
+5. Citations still work.
+6. Activity/metadata still works if currently available.
+7. Ask still works.
+8. Download still works.
+9. Open in new window works.
+10. Re-index and Delete remain available in More menu.
+11. No chunks are visible.
+12. No Gemini references or calls.
+13. No backend files changed unless absolutely necessary.
+14. No console errors.
+15. Git diff is limited and clean.
+
+Report:
+- Files changed.
+- Whether the default tab changed from Preview to Overview.
+- Whether AI analysis uses existing data or shows an empty/generate state.
+- Confirmation that document processing, chat, citations, upload, and backend behavior were not changed.
+```

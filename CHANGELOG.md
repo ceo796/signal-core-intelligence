@@ -2,6 +2,44 @@
 
 ---
 
+## [Signal87_DocumentDetail_Intelligence_v1] — 2026-06-19  *(Document Detail page redesign; frontend/UI only)*
+
+### Summary
+The Document Detail page has been refactored into a **document intelligence workspace**. The default view is now the **Overview tab** (not the raw PDF viewer). A new **AI Analysis right panel** replaces the generic Hybrid AI Agent panel, with five purpose-built tabs (Summary, Key Clauses, Risks, Actions, Citations) each with a "Generate" CTA that uses the existing `POST /api/agent/hybrid` endpoint scoped to the current document.
+
+### Added
+- **`components/document-intelligence-panel.tsx`** — new right-side AI Analysis panel component:
+  - Tabs: **Summary** (mode: `summarize`), **Key Clauses** (mode: `extract`), **Risks** (mode: `diligence`), **Actions** (mode: `auto`), **Citations** (aggregated from all tab results)
+  - Per-tab generate CTA — no analysis runs automatically on page load
+  - Regenerate button appears after first generation
+  - Inline Verification Trace (collapsed) per result
+  - "Ask" shortcut button → `/documents/:id/chat` (existing single-doc chat, no new endpoint)
+  - `isReady` prop disables generation if document is not indexed
+
+### Changed
+- **`pages/document-detail.tsx`** — full redesign:
+  - **Default tab changed** from `preview` → `overview`
+  - **Header**: breadcrumb (`Documents / TYPE / filename`), title, file-type badge (navy accent), status badge, size, relative upload date. Chunk count removed from all visible UI.
+  - **Actions**: Download + Open in New Window (primary) + More dropdown (Re-Index, Print, Delete) — Print and Re-Index moved out of the main action bar
+  - **Left tabs**: Overview | Preview | Extracted Text | Metadata | Activity
+    - **Overview**: document summary (from `extractedTextPreview` / first 500 chars of `extractedText`), Key Details card, Key Parties placeholder, Related Documents empty state
+    - **Preview**: unchanged PDF viewer / extracted-text fallback
+    - **Extracted Text**: unchanged, chunk count removed from info bar
+    - **Metadata**: replaces System tab — same data, cleaner label
+    - **Activity**: replaces History tab — same Q&A pair content
+  - **Removed tabs**: System, History, Citations (raw chunk viewer)
+  - `useGetDocumentChunks` removed (no longer needed — raw chunk tab is gone)
+  - Right panel replaced: `DocumentAiPanel` → `DocumentIntelligencePanel`
+
+### Scope
+- Frontend-only. No backend routes, DB schema, auth, upload, extraction, re-index, delete, download, chat, citations logic, or AI provider changed. `POST /api/agent/hybrid` is reused as-is. `DocumentAiPanel` component kept (not deleted — may be referenced elsewhere).
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Document detail loads, Overview is default tab, Preview tab still renders PDF, Extracted Text works, Metadata tab shows doc info, Activity shows chat history, Download and Open in New Window work, Re-index and Delete in More menu, no chunk count shown, no new backend calls.
+
+---
+
 ## [Signal87_Home_Command_Center_v1] — 2026-06-19  *(Home / Command Center dashboard page; authenticated-app frontend only)*
 
 ### Summary
