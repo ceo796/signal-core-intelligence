@@ -496,42 +496,6 @@ const LANDING_CSS = `
 .s87-landing .badge.two { left: 365px; bottom: 100px; }
 .s87-landing .badge.three { right: 78px; bottom: 74px; }
 
-.s87-landing .cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 44px;
-}
-
-.s87-landing .feature {
-  min-height: 240px;
-  padding: 26px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.s87-landing .feature .num {
-  color: var(--green);
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.s87-landing .feature h3 {
-  margin-top: 56px;
-  font-size: 26px;
-  font-weight: 430;
-  letter-spacing: -0.055em;
-}
-
-.s87-landing .feature p {
-  font-size: 15px;
-  color: rgba(238, 238, 231, 0.66);
-  margin-top: 13px;
-  line-height: 1.55;
-}
-
 .s87-landing .flow-eyebrow {
   display: inline-block;
   padding: 9px 15px;
@@ -898,10 +862,6 @@ const LANDING_CSS = `
 
   .s87-landing .mock.e {
     display: none;
-  }
-
-  .s87-landing .cards {
-    grid-template-columns: 1fr;
   }
 
   .s87-landing .flow-grid {
@@ -1300,7 +1260,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section flow" id="how-it-works">
+        <section className="section flow" id="workflow">
           <span className="flow-eyebrow">Build your first document workflow</span>
           <h2>From source material to verified answer in three steps.</h2>
 
@@ -1419,42 +1379,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section" id="workflow">
-          <h2>From upload to executive clarity.</h2>
-          <p>
-            Signal87 turns dense, unstructured material into answers,
-            comparisons, briefs, and decision-ready intelligence.
-          </p>
-
-          <div className="cards">
-            <article className="feature">
-              <div className="num">01</div>
-              <h3>Upload private files</h3>
-              <p>
-                Documents, spreadsheets, contracts, diligence files, reports, and
-                operating materials become searchable intelligence assets.
-              </p>
-            </article>
-
-            <article className="feature">
-              <div className="num">02</div>
-              <h3>Ask better questions</h3>
-              <p>
-                Use GPT reasoning to summarize, compare, extract risks, and
-                synthesize across selected documents.
-              </p>
-            </article>
-
-            <article className="feature">
-              <div className="num">03</div>
-              <h3>Verify the answer</h3>
-              <p>
-                Answers remain connected to source chunks, citations, and
-                traceable document evidence.
-              </p>
-            </article>
-          </div>
-        </section>
       </main>
 
       <footer className="footer" id="security">
