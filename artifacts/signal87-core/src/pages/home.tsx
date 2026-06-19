@@ -768,10 +768,10 @@ const LANDING_CSS = `
 .s87-landing .partners-strip {
   display: block;
   width: 100%;
-  max-width: 760px;
+  max-width: 540px;
   height: auto;
   margin: 0 auto;
-  opacity: 0.9;
+  opacity: 0.82;
 }
 
 .s87-landing .ticker {
@@ -1178,7 +1178,7 @@ export default function Home() {
           <p className="partners-cap">Backed by</p>
           <img
             className="partners-strip"
-            src={`${import.meta.env.BASE_URL}partners-strip.png`}
+            src={`${import.meta.env.BASE_URL}partners-strip-transparent.png`}
             alt="NVIDIA Inception and Google Cloud for Startups"
             loading="lazy"
           />
