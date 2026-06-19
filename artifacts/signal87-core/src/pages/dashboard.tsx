@@ -7,7 +7,6 @@ import {
   Bell,
   Upload,
   ScrollText,
-  GitCompare,
   Zap,
   FolderOpen,
   ArrowRight,
@@ -313,94 +312,8 @@ export default function Dashboard() {
               </SectionCard>
             </div>
 
-            {/* Row 2: AI preview (wider) + Recent activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 pb-4">
-
-              {/* Signal87 AI card */}
-              <SectionCard>
-                {/* Card header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${ACCENT}12` }}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" style={{ color: ACCENT }} />
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900">Signal87 AI</span>
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border border-gray-200 text-gray-500">
-                      Beta
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-5 space-y-5">
-                  <p className="text-sm text-gray-500">
-                    Ask questions across your documents and verify answers with sources.
-                  </p>
-
-                  {/* Status row */}
-                  <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-600">
-                      <span className="inline-block w-2 h-2 rounded-full bg-green-400 shrink-0" />
-                      Sources connected
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-600">
-                      <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      {docsLoading
-                        ? "Loading documents…"
-                        : `${documents?.length ?? 0} document${(documents?.length ?? 0) === 1 ? "" : "s"} indexed`}
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-400">
-                      <span className="inline-block w-2 h-2 rounded-full bg-gray-300 shrink-0" />
-                      Web research: off
-                    </div>
-                  </div>
-
-                  {/* Action prompt chips */}
-                  <div>
-                    <p className="text-[11px] text-gray-400 font-medium mb-2.5 uppercase tracking-wide">
-                      Try asking
-                    </p>
-                    <div className="space-y-2">
-                      {[
-                        "Ask across my documents",
-                        "Summarize my recent uploads",
-                        "Find names mentioned in my documents",
-                        "Find dates and deadlines",
-                        "Compare recent documents",
-                      ].map((prompt) => (
-                        <Link key={prompt} href="/agents/hybrid">
-                          <div className="flex items-center justify-between px-4 py-2.5 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer group">
-                            <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                              {prompt}
-                            </span>
-                            <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 shrink-0" />
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ask bar */}
-                <div className="px-5 pb-5 mt-auto">
-                  <Link href="/agents/hybrid">
-                    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-colors cursor-pointer group">
-                      <Sparkles className="w-3.5 h-3.5 shrink-0" style={{ color: ACCENT }} />
-                      <span className="flex-1 text-sm text-gray-400 select-none">
-                        Ask Signal87 AI…
-                      </span>
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        <ArrowRight className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              </SectionCard>
+            {/* Row 2: Recent activity */}
+            <div className="pb-4">
 
               {/* Recent activity */}
               <SectionCard>
