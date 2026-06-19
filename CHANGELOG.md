@@ -2,6 +2,25 @@
 
 ---
 
+## [Signal87_Consolidate_Ask_Nav_v1] — 2026-06-19  *(Remove redundant "Ask" nav item; redirect /ask to /agents/hybrid; authenticated-app frontend only)*
+
+### Summary
+The **Ask** page (`/ask`) was a document picker that redirected to a single-document chat (`/documents/:id/chat`). The **Hybrid AI Chat** (`/agents/hybrid`) already covers the same single-document chat via its document selector, making the two nav items overlapping and confusing. The **Ask** nav item is now removed, and the `/ask` URL is permanently redirected to `/agents/hybrid` (the canonical AI Chat page).
+
+### Changed
+- **Nav** (`components/layout.tsx`): removed the "Ask" nav item (`/ask`, `MessageSquare` icon). Nav now reads: Documents | AI Chat | Brief | Compare | Activity.
+- **Routing** (`App.tsx`): `/ask` now renders a `RedirectToHybrid` component that redirects to `/agents/hybrid` via wouter `<Redirect>`. The old `Ask` page import is removed.
+- **Cleanup**: deleted `pages/ask.tsx` (no longer used). The unused `MessageSquare` import is removed from `layout.tsx`.
+
+### Scope
+- Frontend-only, no backend / API / DB / auth / OpenAPI change. No `Ask` button labels in document cards or detail pages are removed — they correctly point to the existing single-document chat at `/documents/:id/chat`.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Web workflow running without console errors.
+
+---
+
 ## [Signal87_Compare_Brief_Differentiation_v1] — 2026-06-19  *(Visually differentiate the /compare and /brief pages; authenticated-app frontend only)*
 
 ### Summary

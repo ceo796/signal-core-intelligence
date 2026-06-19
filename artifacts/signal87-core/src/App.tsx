@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +10,6 @@ import Home from "@/pages/home";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
-import Ask from "@/pages/ask";
 import Activity from "@/pages/activity";
 import ExecutiveBrief from "@/pages/executive-brief";
 import MultiDocumentChat from "@/pages/multi-document-chat";
@@ -107,6 +106,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function RedirectToHybrid() {
+  return <Redirect to="/agents/hybrid" />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -114,7 +117,7 @@ function Router() {
       <Route path="/documents" component={DocumentsList} />
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />
-      <Route path="/ask" component={Ask} />
+      <Route path="/ask" component={RedirectToHybrid} />
       <Route path="/brief" component={ExecutiveBrief} />
       <Route path="/compare" component={MultiDocumentChat} />
       <Route path="/agents/hybrid" component={HybridAgent} />
