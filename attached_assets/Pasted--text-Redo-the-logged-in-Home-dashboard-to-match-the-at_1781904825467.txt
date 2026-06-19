@@ -1,0 +1,228 @@
+```text
+Redo the logged-in Home dashboard to match the attached reference image as closely as possible.
+
+The current dashboard is not acceptable. It is too sparse and does not match the approved reference. Rebuild the Home page layout to look almost identical to the attached screenshot, excluding the waving hand emoji.
+
+Scope:
+Frontend/UI only.
+
+Do not change:
+- Backend routes
+- Database schema
+- Auth / Clerk logic
+- Upload behavior
+- Extraction / indexing
+- Chat behavior
+- Citations
+- Brief generation
+- Compare logic
+- Delete/download/re-index behavior
+- AI provider/model configuration
+- Document detail page
+- AI Chat ResultView
+
+Design requirement:
+Match the attached screenshot closely:
+- White background
+- Left sidebar
+- Top global search bar
+- User/avatar area at top right
+- Welcome section
+- Large ask bar
+- Quick action row
+- Recent documents card
+- Recent briefs card
+- Signal87 AI chat preview card
+- Recent activity card
+- Suggested actions card
+- Soft borders
+- Rounded cards
+- Light gray dividers
+- Dark blue/navy accent, not purple
+- Clean enterprise SaaS styling
+- No waving hand emoji
+
+Main layout:
+
+1. Left sidebar
+Use:
+- Signal87 logo
+- Home selected
+- Documents
+- Collections
+- Briefs
+- Agents
+- Workflows
+- Settings
+- Workspace/user card at bottom
+
+If Collections, Agents, or Workflows do not exist, they may appear as disabled or coming soon, but the visual layout should match the reference.
+
+2. Top bar
+Add a global search bar across the top:
+Placeholder:
+“Search documents, briefs, collections, and more...”
+
+Top right:
+- Notification icon
+- User avatar/name if already available
+
+3. Welcome section
+Text:
+“Welcome back”
+
+Do not include the waving hand emoji.
+
+Subtitle:
+“Your AI workspace for documents, insights, and execution.”
+
+4. Large Ask bar
+Create a prominent horizontal ask bar:
+Placeholder:
+“Ask Signal87 anything across your documents”
+
+Left icon inside the bar.
+Round dark-blue arrow button on the right.
+Clicking/submitting routes to existing AI Chat / Ask page.
+Do not create a new endpoint.
+
+5. Quick action row
+Five equal-width buttons:
+- Upload document
+- Create brief
+- New agent
+- Start workflow
+- New collection
+
+Behavior:
+- Upload document routes to existing upload/documents flow.
+- Create brief routes to existing Brief page.
+- New agent, Start workflow, and New collection should be disabled or marked coming soon if not implemented.
+- Keep the buttons visually active-looking but do not create backend behavior for unavailable features.
+
+6. First content row
+Two side-by-side cards.
+
+Left card: Recent documents
+Columns:
+- Name
+- Collection
+- Updated
+
+Use real recent document data if available.
+Do not show chunks.
+Use small file-type icons.
+Include “View all” link.
+
+Right card: Recent briefs
+Show list of recent briefs if real data exists.
+If real brief history does not exist, show a polished empty state or safe static placeholders only if they are clearly non-persistent preview items.
+Include “View all” link.
+
+7. Second content row
+Left large card: Signal87 AI
+This should look like the reference chat preview card.
+
+Header:
+“Signal87 AI”
+Small badge: “Beta”
+
+Subtext:
+“I have access to all your documents, briefs, and collections.”
+
+Show sources status:
+“Sources · Connected”
+And a small “Manage” button.
+
+Inside the card, include a sample conversation preview:
+User bubble:
+“What are the top 3 growth opportunities for Q2 based on our latest research?”
+
+Assistant answer card:
+“Based on your Q2 market research and competitive analysis, the top 3 growth opportunities are:”
+Then three numbered bullets.
+
+Below the answer, show small citation/source pills:
+- Q2 Market Research.pdf
+- Competitive Analysis.docx
+- Customer Interviews.pdf
+
+Add suggested follow-up chips:
+- Show market sizing for these opportunities
+- What risks should we watch?
+- Compare vs last quarter
+
+At the bottom, add a follow-up input:
+“Ask a follow-up...”
+
+This is visual/dashboard preview only. Do not create a new chat system.
+
+Right column:
+A Recent activity card above a Suggested actions card.
+
+Recent activity:
+Show a list similar to the reference:
+- Uploaded document
+- Created brief
+- Completed analysis
+- Commented on file
+- Started workflow
+
+Use real activity if available. If not, use a clean empty state or clearly safe static UI.
+
+Suggested actions:
+Show four rows:
+- Summarize a collection
+- Compare documents
+- Extract key insights
+- Create a brief
+
+Each row should have:
+- Icon
+- Title
+- Subtitle
+- Chevron
+
+8. Visual proportions
+The page should closely match the screenshot:
+- Main content width should feel full and balanced.
+- Cards should be aligned in a two-column dashboard grid.
+- Signal87 AI chat preview should be the largest lower-left card.
+- Recent activity and Suggested actions should stack on the right.
+- Spacing should be polished and not sparse.
+- Do not compress everything into a narrow centered column.
+- Do not omit the lower AI preview card.
+
+9. Accent color
+Use dark blue/navy accents.
+Do not use purple as the main accent.
+Avoid orange on this page unless required by existing branding.
+
+10. Verification
+After implementation, verify:
+- Home page visually matches the attached reference closely.
+- Waving hand emoji is not included.
+- Home sidebar link works.
+- Default logged-in route goes to Home if appropriate.
+- Recent documents use existing document data if available.
+- No chunks are shown.
+- Ask bar routes to existing AI Chat / Ask page.
+- Upload document routes correctly.
+- Create brief routes correctly.
+- Compare/Suggested actions route correctly where supported.
+- Disabled/coming-soon features do not create fake backend behavior.
+- Documents page still works.
+- AI Chat still works.
+- Brief page still works.
+- Compare page still works.
+- No backend files changed.
+- No AI provider/model behavior changed.
+- No console errors.
+- Git diff is limited and clean.
+
+Report:
+- Files changed.
+- Whether recent documents use real data.
+- Which actions are live versus coming soon.
+- Confirmation that no backend, auth, AI, upload, indexing, citations, or document logic was changed.
+```
