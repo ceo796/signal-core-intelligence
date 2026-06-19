@@ -1,0 +1,130 @@
+Inspect the current Signal87 AI codebase and produce a comprehensive platform status report.
+
+This is inspection-only. Do not modify files, do not refactor, do not run destructive commands, do not change environment variables, do not alter the database, and do not change app behavior.
+
+The goal is to understand exactly where the platform stands today and what would be required to evolve beyond basic document chunking into a stronger intelligence layer.
+
+Please report on the following:
+
+1. Current architecture
+
+* Frontend framework and routing structure
+* Backend framework and API structure
+* Database/storage architecture
+* Auth system
+* File storage system
+* How frontend and backend communicate
+
+2. Current product capabilities
+
+* Document upload
+* Original file storage
+* Document listing
+* Document detail page
+* PDF preview
+* Text extraction
+* Chunking
+* Citations / verification trace
+* Single-document chat
+* Multi-document chat or comparison
+* Executive brief generation
+* Spreadsheet/XLSX support
+* Re-indexing
+* Delete behavior
+* User isolation / ownership
+
+3. Current AI/reasoning pipeline
+
+* How documents are processed after upload
+* How text is extracted
+* How chunks are created
+* Whether embeddings are used
+* Whether semantic search, keyword search, or simple chunk selection is used
+* How citations are attached to answers
+* How prompts are structured
+* Whether the system supports hybrid reasoning beyond document grounding
+* Whether there is any infrastructure for future web research, even if inactive
+
+4. Current limitations
+   Identify the current technical and product limitations around:
+
+* Retrieval quality
+* Chunking
+* Multi-document reasoning
+* Spreadsheet reasoning
+* Citation accuracy
+* Source provenance
+* Entity extraction
+* Fact extraction
+* Relationship extraction
+* Confidence scoring
+* Contradiction detection
+* Evaluation/testing
+
+5. Readiness to move beyond chunking
+   Evaluate whether the current architecture can support:
+
+* Structural chunking by page, section, heading, table, sheet, row, and clause
+* Document-level summaries
+* Section-level summaries
+* Entity extraction
+* Key fact extraction
+* Relationship extraction
+* Evidence graph or lightweight facts table
+* Confidence and uncertainty handling
+* Query routing by task type
+* Vertical modes such as diligence, contracts, financial analysis, or family-history research
+
+6. Database and schema assessment
+   Review the current schema and explain:
+
+* What tables exist
+* What fields are used for documents, chunks, users, chat, citations, or activity
+* Whether the schema can support entities, facts, relationships, summaries, and evaluation records
+* What schema additions would be needed to support a stronger intelligence layer
+
+7. Testing and quality
+   Report on:
+
+* Existing tests
+* What they cover
+* What they do not cover
+* Whether there are tests for upload, extraction, chat, citations, spreadsheet support, auth, and user isolation
+* What evaluation harness should be added for answer quality, citation accuracy, retrieval quality, and insufficient-evidence behavior
+
+8. Deployment status
+   Report on:
+
+* Current dev/prod assumptions
+* Any known deployment risks
+* Whether environment variables appear required
+* Whether production and development databases/storage appear separate
+* Any areas that should be verified before publishing
+
+9. Recommended next roadmap
+   Provide a prioritized roadmap in phases:
+
+Phase 1: Stabilize and polish the current platform
+Phase 2: Improve retrieval and structure beyond chunking
+Phase 3: Add structured intelligence: entities, facts, relationships, confidence, contradictions
+Phase 4: Add vertical modes and specialized answer formats
+Phase 5: Add partner/API/white-label integration readiness
+
+For each phase, list:
+
+* What should be built
+* Why it matters
+* Which files or areas of the codebase would likely be affected
+* Risk level
+* What tests should be run after implementation
+
+10. Do not focus on which LLM is being used.
+    The primary focus is platform capability, retrieval quality, evidence handling, extensibility, and readiness for enterprise or partner conversations.
+
+At the end, provide:
+
+* A concise executive summary
+* A list of current strengths
+* A list of current gaps
+* The next 5 highest-priority platform improvements
+* A “do not touch” list of working areas that should be protected during future changes
