@@ -2,6 +2,28 @@
 
 ---
 
+## [Signal87_Landing_Sections_v1] — 2026-06-19  *(Add two sections to the public landing page; landing-page-only, frontend)*
+
+### Summary
+Added two new sections to the public landing page (`/`, `pages/home.tsx`), recreated as **native scoped CSS/JSX** from the two attached PNG mockups (consistent with the page's all-CSS mock-UI approach — not embedded raster images — so they stay crisp and scale within the page margins):
+
+1. **Three-step document workflow** (`#how-it-works`): an eyebrow pill *"Build your first document workflow"*, the heading *"From source material to verified answer in three steps."*, and a **three-column grid of purple-gradient cards**. Each card holds a white mock panel — **Signal87 Library** (file rows: Q1 Financials.xlsx / Master Services Agreement.pdf), **Ask Signal87** (a *"Use GPT reasoning + selected documents"* pill), **Verification Trace** (Chunk 04 · Agreement A / Chunk 11 · Agreement B) — with a step title + description below (Set your workspace up for intelligence / Use GPT reasoning on your documents / Verify every important answer).
+2. **Grounded AI blocks** (split section): a dark teal-glow **stage with a dashed frame** containing code-block cards (`summarizeDocument`, `verificationTrace`, and `generateBrief` / `compareDocs` pills) on the left, and an icon + *"Grounded AI blocks"* heading + description on the right.
+
+Both sit between the existing governance and `#workflow` sections; nav and all existing sections are unchanged.
+
+### Layout & scope
+- All styling is scoped under `.s87-landing`; new text/heading rules use **higher-specificity selectors** to override the base `.section p` / `h2` rules; the decorative dashed frame and the icon glyph are `aria-hidden`.
+- Responsive: both sections **collapse to a single column at ≤980px** and the overlapping trace card resets its transform at ≤640px — content stays inside the page container with **no horizontal overflow** ("fit within the page margins").
+- Renamed the blocks trace card class to **`block-trace`** to avoid colliding with the pre-existing hero `.trace` chip rule (which would otherwise force a flex/side-by-side layout on the card).
+- **Only** `pages/home.tsx` changed. No backend / API / DB / auth / authenticated-app / OpenAPI change.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Three-step section verified on mobile via screenshot (renders within margins). The Grounded AI blocks section sits below the 3000px screenshot cap (and the desktop hero fills the viewport via `100vh`), so it could not be captured directly; it is verified by typecheck + architect review (PASS after the class-collision fix) with no runtime/console errors.
+
+---
+
 ## [Signal87_Landing_Page_Retool_Redesign_v1] — 2026-06-19  *(Replace the public landing page with the approved Retool-style design; landing-page-only, frontend)*
 
 ### Summary

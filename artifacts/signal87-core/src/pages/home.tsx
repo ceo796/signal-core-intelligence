@@ -532,6 +532,260 @@ const LANDING_CSS = `
   line-height: 1.55;
 }
 
+.s87-landing .flow-eyebrow {
+  display: inline-block;
+  padding: 9px 15px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(238, 238, 231, 0.74);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  margin-bottom: 30px;
+}
+
+.s87-landing .flow h2 {
+  max-width: 780px;
+}
+
+.s87-landing .flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+  margin-top: 50px;
+}
+
+.s87-landing .flow-card {
+  min-height: 240px;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(150, 124, 224, 0.2);
+  background:
+    radial-gradient(120% 95% at 22% 4%, rgba(124, 96, 206, 0.4), transparent 52%),
+    linear-gradient(170deg, rgba(48, 32, 82, 0.85), rgba(18, 13, 32, 0.95));
+}
+
+.s87-landing .flow-panel {
+  width: 100%;
+  max-width: 280px;
+  align-self: flex-start;
+  background: #f5f4ee;
+  color: #1b2430;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.s87-landing .flow-card.mid .flow-panel {
+  align-self: center;
+}
+
+.s87-landing .flow-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.s87-landing .flow-panel-title {
+  font-weight: 540;
+  letter-spacing: -0.01em;
+}
+
+.s87-landing .flow-panel-icon {
+  color: rgba(27, 36, 48, 0.45);
+  font-size: 14px;
+}
+
+.s87-landing .flow-panel .flow-panel-copy {
+  color: rgba(27, 36, 48, 0.62);
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin: 12px 0 14px;
+  max-width: none;
+}
+
+.s87-landing .flow-row {
+  background: #ffffff;
+  border: 1px solid rgba(20, 30, 40, 0.1);
+  border-radius: 9px;
+  padding: 11px 12px;
+  font-size: 12.5px;
+  color: #33404e;
+}
+
+.s87-landing .flow-row + .flow-row {
+  margin-top: 9px;
+}
+
+.s87-landing .flow-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #eef4f0;
+  border: 1px solid rgba(14, 111, 80, 0.28);
+  color: #0e513d;
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.s87-landing .flow-col h3 {
+  margin-top: 22px;
+  font-size: 21px;
+  font-weight: 440;
+  letter-spacing: -0.04em;
+}
+
+.s87-landing .flow-grid .flow-col > p {
+  color: rgba(238, 238, 231, 0.66);
+  font-size: 15px;
+  line-height: 1.52;
+  margin-top: 11px;
+  max-width: none;
+}
+
+.s87-landing .section.blocks {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.s87-landing .blocks-stage {
+  position: relative;
+  min-height: 380px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 22% 36%, rgba(58, 120, 98, 0.32), transparent 56%),
+    linear-gradient(180deg, #0d1413, #090d0c);
+}
+
+.s87-landing .blocks-frame {
+  position: absolute;
+  inset: 26px;
+  border: 1px dashed rgba(122, 162, 146, 0.26);
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.s87-landing .blocks-cluster {
+  position: relative;
+  z-index: 1;
+  padding: 46px 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.s87-landing .block-card {
+  width: min(280px, 100%);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.s87-landing .block-card.summarize {
+  background: #f5f4ee;
+  color: #1b2430;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.s87-landing .block-card.block-trace {
+  background: #0a1413;
+  color: var(--ink);
+  border: 1px solid rgba(122, 162, 146, 0.24);
+  align-self: flex-end;
+  transform: translateX(36px);
+  margin-top: -12px;
+}
+
+.s87-landing .bc-head {
+  padding: 13px 14px 0;
+  font-size: 13px;
+  font-weight: 540;
+  letter-spacing: -0.01em;
+}
+
+.s87-landing .bc-code {
+  padding: 9px 14px 14px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.s87-landing .block-card.summarize .bc-code code {
+  display: block;
+  background: #ffffff;
+  border: 1px solid rgba(20, 30, 40, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #2c3744;
+}
+
+.s87-landing .block-card.block-trace .bc-code {
+  white-space: pre;
+  color: #9ab9ad;
+}
+
+.s87-landing .block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.s87-landing .block-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: rgba(18, 40, 33, 0.66);
+  border: 1px solid rgba(111, 210, 173, 0.3);
+  color: #bce8d7;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.s87-landing .block-pill .tri {
+  color: var(--green);
+  font-size: 9px;
+}
+
+.s87-landing .blocks-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  margin-bottom: 22px;
+}
+
+.s87-landing .blocks-copy h2 {
+  font-size: clamp(32px, 3.6vw, 46px);
+  line-height: 1.02;
+}
+
+.s87-landing .blocks .blocks-copy p {
+  color: rgba(238, 238, 231, 0.72);
+  font-size: 17px;
+  line-height: 1.55;
+  margin-top: 18px;
+  max-width: 420px;
+}
+
 .s87-landing .ticker {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -626,6 +880,19 @@ const LANDING_CSS = `
     grid-template-columns: 1fr;
   }
 
+  .s87-landing .flow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .s87-landing .section.blocks {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .s87-landing .blocks-stage {
+    min-height: 340px;
+  }
+
   .s87-landing .floating-window {
     left: 24px;
     width: calc(100% - 48px);
@@ -685,6 +952,16 @@ const LANDING_CSS = `
 
   .s87-landing .security-visual {
     min-height: 440px;
+  }
+
+  .s87-landing .blocks-cluster {
+    padding: 30px 22px;
+  }
+
+  .s87-landing .block-card.block-trace {
+    transform: none;
+    margin-top: 0;
+    align-self: flex-start;
   }
 
   .s87-landing .footer {
@@ -986,6 +1263,125 @@ export default function Home() {
             <div className="badge one">Citations</div>
             <div className="badge two">Verification Trace</div>
             <div className="badge three">GPT Reasoning</div>
+          </div>
+        </section>
+
+        <section className="section flow" id="how-it-works">
+          <span className="flow-eyebrow">Build your first document workflow</span>
+          <h2>From source material to verified answer in three steps.</h2>
+
+          <div className="flow-grid">
+            <div className="flow-col">
+              <div className="flow-card">
+                <div className="flow-panel">
+                  <div className="flow-panel-head">
+                    <span className="flow-panel-title">Signal87 Library</span>
+                    <span className="flow-panel-icon">+</span>
+                  </div>
+                  <p className="flow-panel-copy">
+                    Upload contracts, reports, spreadsheets, and diligence files.
+                  </p>
+                  <div className="flow-row">Q1 Financials.xlsx</div>
+                  <div className="flow-row">Master Services Agreement.pdf</div>
+                </div>
+              </div>
+              <h3>Set your workspace up for intelligence</h3>
+              <p>
+                Bring in private source material and turn dense files into
+                structured, queryable knowledge.
+              </p>
+            </div>
+
+            <div className="flow-col">
+              <div className="flow-card mid">
+                <div className="flow-panel">
+                  <div className="flow-panel-head">
+                    <span className="flow-panel-title">Ask Signal87</span>
+                    <span className="flow-panel-icon">⌘</span>
+                  </div>
+                  <p className="flow-panel-copy">
+                    Compare these agreements and identify the highest-risk
+                    differences.
+                  </p>
+                  <span className="flow-pill">
+                    Use GPT reasoning + selected documents
+                  </span>
+                </div>
+              </div>
+              <h3>Use GPT reasoning on your documents</h3>
+              <p>
+                Ask richer questions, compare files, generate briefs, and
+                synthesize across multiple sources.
+              </p>
+            </div>
+
+            <div className="flow-col">
+              <div className="flow-card">
+                <div className="flow-panel">
+                  <div className="flow-panel-head">
+                    <span className="flow-panel-title">Verification Trace</span>
+                    <span className="flow-panel-icon">✓</span>
+                  </div>
+                  <p className="flow-panel-copy">
+                    Response supported by cited chunks.
+                  </p>
+                  <div className="flow-row">Chunk 04 · Agreement A</div>
+                  <div className="flow-row">Chunk 11 · Agreement B</div>
+                </div>
+              </div>
+              <h3>Verify every important answer</h3>
+              <p>
+                Trace conclusions back to source chunks, documents, and evidence
+                before making decisions.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="section blocks">
+          <div className="blocks-stage">
+            <div className="blocks-frame" aria-hidden="true" />
+            <div className="blocks-cluster">
+              <div className="block-card summarize">
+                <div className="bc-head">summarizeDocument</div>
+                <div className="bc-code">
+                  <code>{`{{ selectedDocument.extractedText }}`}</code>
+                </div>
+              </div>
+              <div className="block-card block-trace">
+                <div className="bc-head">verificationTrace</div>
+                <div className="bc-code">
+                  {`{ citations: true,\n  chunks: ["04", "11"],\n  model: "GPT" }`}
+                </div>
+              </div>
+              <div className="block-actions">
+                <span className="block-pill">
+                  generateBrief <span className="tri">▶</span>
+                </span>
+                <span className="block-pill">
+                  compareDocs <span className="tri">▶</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="blocks-copy">
+            <span className="blocks-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M7 4h13l-3 16H4L7 4z"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <h2>Grounded AI blocks</h2>
+            <p>
+              Summarize documents, compare clauses, read spreadsheets, and
+              generate chat responses with model reasoning and citation
+              controls.
+            </p>
           </div>
         </section>
 
