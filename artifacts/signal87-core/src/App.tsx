@@ -7,6 +7,7 @@ import { useAuth, RedirectToSignIn } from "@clerk/react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 import Home from "@/pages/home";
+import Dashboard from "@/pages/dashboard";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
@@ -115,6 +116,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/documents" component={DocumentsList} />
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />

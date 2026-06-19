@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth, UserButton } from "@clerk/react";
-import { FileText, Activity, FileCheck, GitCompare, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, FileText, Activity, FileCheck, GitCompare, Sparkles, Settings } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,6 +12,7 @@ export function Layout({ children }: LayoutProps) {
   const { isSignedIn } = useAuth();
 
   const navItems = [
+    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/agents/hybrid", label: "AI Chat", icon: Sparkles },
     { href: "/brief", label: "Brief", icon: FileCheck },

@@ -1,4 +1,5 @@
-import { Link } from "wouter";
+import { useEffect } from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@clerk/react";
 
 const LANDING_CSS = `
@@ -958,6 +959,21 @@ const LANDING_CSS = `
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   const authed = isLoaded && isSignedIn;
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, navigate]);
+
+  if (isLoaded && isSignedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#111211]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="s87-landing">

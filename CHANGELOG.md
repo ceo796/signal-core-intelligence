@@ -2,6 +2,33 @@
 
 ---
 
+## [Signal87_Home_Command_Center_v1] — 2026-06-19  *(Home / Command Center dashboard page; authenticated-app frontend only)*
+
+### Summary
+A new **Home / Command Center** page (`/dashboard`) is now the post-login landing destination. It provides an at-a-glance hub: a prominent Ask bar, five quick-action buttons, a live Recent Documents list pulled from the existing API, a Recent Briefs empty state (briefs are ephemeral), and a Suggested Actions grid. The design uses a white background with a dark navy accent (`#1e3a5f`) matching the approved mockup.
+
+### Added
+- **`pages/dashboard.tsx`** — new Command Center page. Sections:
+  - **Ask bar** → links to `/agents/hybrid`
+  - **Quick actions** (Upload document → `/documents`, Create brief → `/brief`, Compare documents → `/compare`, Start workflow → toast "coming soon", New collection → toast "coming soon")
+  - **Recent documents** — last 5 by `uploadedAt`, with file-type color badges and relative timestamps; loading skeleton + empty state
+  - **Recent briefs** — empty state with explanation ("generated on-demand, not stored") and link to `/brief`
+  - **Suggested actions** — Summarize a collection, Compare documents, Extract key insights, Create a brief
+
+### Changed
+- **`components/layout.tsx`**: added **Home** (`LayoutDashboard` icon, `/dashboard`) as the first nav item. Nav now reads: Home | Documents | AI Chat | Brief | Compare | Activity.
+- **`App.tsx`**: added `/dashboard` route (authenticated). The `/` marketing landing page now redirects signed-in users to `/dashboard` via `useEffect` so the Command Center is the default post-login destination.
+- **`pages/home.tsx`**: added redirect — if `isLoaded && isSignedIn`, navigate to `/dashboard` immediately (shows a brief spinner while navigating to avoid flash of the marketing page).
+
+### Scope
+- Frontend-only. No backend, API, DB, auth, OpenAPI, codegen, upload, extraction, indexing, citations, Verification Trace, or provider/model changes. `ResultView` / Hybrid AI answer flow untouched.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Vite HMR running without console errors.
+
+---
+
 ## [Signal87_Consolidate_Ask_Nav_v1] — 2026-06-19  *(Remove redundant "Ask" nav item; redirect /ask to /agents/hybrid; authenticated-app frontend only)*
 
 ### Summary
