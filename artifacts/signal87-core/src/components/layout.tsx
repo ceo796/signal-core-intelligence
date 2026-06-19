@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth, UserButton } from "@clerk/react";
-import { FileText, Activity, FileCheck, GitCompare, Sparkles } from "lucide-react";
+import { FileText, Activity, FileCheck, GitCompare, Sparkles, Settings } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -73,6 +73,20 @@ export function Layout({ children }: LayoutProps) {
             />
           </div>
         )}
+        {/* Settings link — desktop only, pinned at bottom of sidebar */}
+        <div className="hidden md:block px-3 pb-3 pt-1 border-t border-border mt-auto shrink-0">
+          <Link
+            href="/settings"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-xs transition-colors w-full ${
+              location.startsWith("/settings")
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <Settings className="w-4 h-4 shrink-0" />
+            Settings
+          </Link>
+        </div>
       </aside>
     </div>
   );

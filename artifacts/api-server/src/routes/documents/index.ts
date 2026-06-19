@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-zod";
 import { extractAndChunk, getFileType, type SupportedFileType } from "../../lib/text-extractor";
 import * as fileStore from "../../lib/file-store";
+import { PROVIDER_CONFIG } from "../../lib/ai-provider";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -548,7 +549,7 @@ router.get("/system/info", (_req, res): void => {
     },
     ai: {
       provider: "OpenAI",
-      chatModel: "gpt-4o-mini",
+      chatModel: PROVIDER_CONFIG.model,
       embeddingModel: "text-embedding-3-small",
       maxTokens: 2048,
     },

@@ -1,0 +1,68 @@
+```text
+Add model transparency and reduce repeated GPT references across the Signal87 platform.
+
+Goal:
+The app should clearly define what OpenAI/GPT model is being used, but the user interface should not over-reference GPT on every page.
+
+Before editing:
+1. Inspect the existing AI provider configuration.
+2. Identify where the OpenAI model is currently set.
+3. Identify all visible UI copy that says GPT, OpenAI, model, powered by GPT, or similar.
+4. Report the intended files to change before making edits.
+
+Model configuration:
+- Keep the AI provider GPT/OpenAI-only for now.
+- Do not add Gemini, Claude, or any other provider.
+- Do not change the backend AI behavior unless the current model value is hardcoded in multiple places.
+- If the model is hardcoded, centralize it into one configuration location.
+- Prefer environment-based configuration such as OPENAI_MODEL, with a safe default matching the current working model.
+- Do not change embeddings, extraction, chat, citations, indexing, or database behavior unless already part of the existing AI provider file.
+- Add a simple internal constant or config display label so the UI can show the current model/provider without duplicating strings everywhere.
+
+UI copy cleanup:
+- Remove repeated “powered by GPT” language from the Documents page, Ask banners, cards, and generic helper text.
+- Replace repetitive GPT references with cleaner product language:
+  - “Ask a question across your documents”
+  - “Grounded answers with citations”
+  - “AI reasoning with source verification”
+  - “Verification Trace”
+  - “Document-grounded response”
+- Keep one clear model/provider disclosure in Settings or an About/Model Transparency area.
+
+Settings / transparency:
+Add or update a Settings section called “Models & Providers” or “AI Configuration” showing:
+- Provider: OpenAI
+- Primary reasoning model: current configured model
+- Embedding model: current configured embedding model, if already available in config
+- Web research: Off
+- External providers: Disabled
+- Status: GPT-only
+
+Important constraints:
+- Do not change auth.
+- Do not change upload.
+- Do not change document extraction/indexing.
+- Do not change chat endpoint behavior.
+- Do not change citations or Verification Trace.
+- Do not add web research.
+- Do not add additional providers.
+- Do not refactor unrelated UI.
+- Do not break the current working documents flow.
+
+After changes, verify:
+1. Documents page still loads.
+2. Ask still works.
+3. Citations still appear.
+4. Briefs still work if currently connected.
+5. Compare still works if currently connected.
+6. Settings displays the configured provider/model.
+7. No Gemini references exist in code or UI.
+8. GPT/OpenAI is not repeated unnecessarily in normal user-facing copy.
+9. Git diff is limited and clean.
+
+Report:
+- What model was found in the current code.
+- Whether model configuration was centralized.
+- Where model/provider disclosure appears in the UI.
+- Which repeated GPT references were removed.
+```

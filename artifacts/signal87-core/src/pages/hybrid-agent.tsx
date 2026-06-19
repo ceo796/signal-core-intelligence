@@ -61,7 +61,7 @@ const modeLabel = (value: string) =>
 // GPT model's own reasoning (gpt_reasoning). Web context is a disabled future placeholder.
 const SOURCE_LABELS = {
   document_context: "Document context",
-  gpt_reasoning: "GPT reasoning",
+  gpt_reasoning: "AI reasoning",
   web_context_placeholder_disabled: "Web context",
 } as const;
 
@@ -250,7 +250,7 @@ function Composer({
         </div>
       </div>
       <p className="text-center text-[11px] text-muted-foreground mt-2">
-        Answers use your documents (with citations) and GPT reasoning — no web research.
+        Answers use your documents (with citations) and AI reasoning — no web research.
       </p>
     </form>
   );
@@ -278,7 +278,7 @@ function SourceBadges({ usedDocuments }: { usedDocuments: boolean }) {
       </span>
       <span
         className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/20"
-        title="Produced by the configured OpenAI GPT model's reasoning — not web research"
+        title="Produced by the configured AI model's reasoning — not web research"
       >
         <Sparkles className="w-3 h-3 shrink-0" />
         {SOURCE_LABELS.gpt_reasoning}
@@ -583,8 +583,8 @@ export default function HybridAgent() {
                       What can I help you find?
                     </h1>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Grounded answers from your documents (with citations), supplemented by GPT
-                      reasoning. No web research.
+                      Grounded answers from your documents (with citations), with AI reasoning.
+                      No web research.
                     </p>
                   </div>
                 </div>

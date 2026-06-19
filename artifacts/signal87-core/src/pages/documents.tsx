@@ -660,7 +660,7 @@ export default function DocumentsList() {
             <Sparkles className="w-4 h-4 text-primary shrink-0" />
             <span className="font-medium text-foreground">Ask a question across your documents</span>
             <span className="text-muted-foreground hidden sm:inline">
-              — grounded answers with citations, powered by GPT
+              — grounded answers with source citations
             </span>
             <ArrowRight className="w-3.5 h-3.5 text-primary ml-auto shrink-0 transition-transform group-hover:translate-x-0.5" />
           </Link>
