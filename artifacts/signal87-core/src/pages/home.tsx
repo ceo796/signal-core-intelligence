@@ -786,6 +786,30 @@ const LANDING_CSS = `
   max-width: 420px;
 }
 
+.s87-landing .partners {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 30px 0 4px;
+  text-align: center;
+}
+
+.s87-landing .partners-cap {
+  color: rgba(238, 238, 231, 0.5);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.s87-landing .partners-strip {
+  display: block;
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  margin: 0 auto;
+  opacity: 0.9;
+}
+
 .s87-landing .ticker {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -1188,6 +1212,16 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="partners" aria-label="Backed by NVIDIA Inception and Google Cloud for Startups">
+          <p className="partners-cap">Backed by</p>
+          <img
+            className="partners-strip"
+            src={`${import.meta.env.BASE_URL}partners-strip.png`}
+            alt="NVIDIA Inception and Google Cloud for Startups"
+            loading="lazy"
+          />
         </section>
 
         <div className="ticker">

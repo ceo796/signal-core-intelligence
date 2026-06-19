@@ -2,6 +2,22 @@
 
 ---
 
+## [Signal87_Landing_Partners_v1] — 2026-06-19  *(Add a "Backed by" partner logo strip to the public landing page; landing-page-only, frontend)*
+
+### Summary
+Added a **"Backed by"** partner strip to the public landing page (`/`, `pages/home.tsx`), placed directly **below the hero and above the ticker**. It shows a subtle uppercase **"Backed by"** caption above a framed monochrome band with the **NVIDIA Inception** and **Google Cloud for Startups** logos (the supplied composed logo image, which matches the page's dark theme).
+
+### Implementation & scope
+- Because these are official third-party brand marks (not generic mock UI), the supplied logo image is used directly rather than approximated in CSS, preserving brand fidelity. The asset was copied to `public/partners-strip.png` and referenced via `import.meta.env.BASE_URL` (base-path safe).
+- New scoped styles under `.s87-landing` (`.partners`, `.partners-cap`, `.partners-strip`): the band is centered, capped at 760px wide, with `width:100% / height:auto` so it scales within the page margins on all widths; the image carries its own hairline frame + divider.
+- **Only** `pages/home.tsx` + the new `public/partners-strip.png` changed. No backend / API / DB / auth / authenticated-app / OpenAPI change.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Verified visually on mobile: the "Backed by" strip renders between the hero and the ticker, within the page margins, with both logos legible. No runtime/console errors.
+
+---
+
 ## [Signal87_Landing_Sections_v1] — 2026-06-19  *(Add two sections to the public landing page; landing-page-only, frontend)*
 
 ### Summary
