@@ -1,0 +1,7 @@
+product,category,price,quantity
+Widget A,Electronics,29.99,150
+Widget B,Electronics,49.99,80
+Gadget X,Hardware,89.99,35
+Gadget Y,Hardware,129.99,20
+Service Plan,Support,199.99,500
+Premium Support,Support,499.99,45

@@ -1,0 +1,24 @@
+Signal87 Platform Overview
+
+Signal87 is a document intelligence platform that allows users to upload, analyze, and query their documents using AI.
+
+Key Features:
+- Document upload (PDF, DOCX, TXT, CSV, XLSX, XLS)
+- Single-document chat with cited answers
+- Multi-document comparison
+- Executive Brief generation
+- Verification Trace for every answer
+
+The platform uses cosine similarity over OpenAI embeddings to retrieve the most relevant document chunks for each user query. Every answer includes a Verification Trace showing the retrieval latency, model used, and number of chunks searched.
+
+Pricing Information:
+The platform is priced at $99 per month for individual users and $499 per month for team plans with up to 20 members.
+
+Technical Stack:
+- Backend: Express 5, TypeScript, PostgreSQL, Drizzle ORM
+- Frontend: React 18, Vite, Tailwind CSS
+- AI: OpenAI GPT-4o-mini and text-embedding-3-small
+- Auth: Clerk
+- Storage: Replit Object Storage (GCS-backed)
+
+The system stores original uploaded files in object storage for later re-indexing. Text is extracted at upload time using pdf-parse (PDF), mammoth (DOCX), and custom spreadsheet extraction (XLSX/XLS). Chunks are created using a sliding window of 500 words with 50-word overlap.

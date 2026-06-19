@@ -1,0 +1,60 @@
+Begin Phase 1 platform hardening for Signal87 AI.
+
+This is a safety-first implementation. Do not redesign the app. Do not change product behavior. Do not change the landing page. Do not alter the authenticated UI unless absolutely required for tests. Do not change the database schema yet. Do not add pgvector yet. Do not add structural chunking yet. Do not change the AI prompts or model behavior yet.
+
+Goal:
+Add an automated regression test foundation so future improvements to retrieval, chunking, embeddings, and structured intelligence can be made safely.
+
+Use the current platform behavior as the baseline.
+
+Implement the following:
+
+1. Add backend unit tests for:
+
+* text extraction dispatcher behavior where feasible
+* chunk creation
+* retriever behavior using mocked embeddings
+* citation object generation
+* fallback behavior when embeddings fail
+
+2. Add integration or E2E tests for:
+
+* authenticated document upload
+* document listing
+* document detail retrieval
+* single-document chat returns an answer and citations
+* spreadsheet upload/extraction produces sheet and row context
+* re-index does not break document ownership
+* delete removes document and related chunks
+* user A cannot access user B’s documents
+
+3. Add a small retrieval-quality fixture set:
+
+* at least one PDF/text fixture
+* at least one spreadsheet fixture
+* known questions
+* expected retrieved chunk or expected source text
+
+4. Add an insufficient-evidence test:
+
+* when a question is unrelated to the uploaded document, the system should not fabricate a grounded answer.
+
+5. Add a clear test command to package scripts.
+
+6. Do not make destructive changes.
+
+7. Do not change production data.
+
+8. Do not change existing route contracts unless strictly necessary.
+
+9. Do not weaken Clerk auth, ownerUserId scoping, customFetch token injection, object storage behavior, re-index transaction behavior, or Verification Trace fields.
+
+10. After implementation, provide:
+
+* files changed
+* tests added
+* commands run
+* test results
+* any skipped tests and why
+* confirmation that no database schema change was made
+* confirmation that existing platform behavior was preserved
