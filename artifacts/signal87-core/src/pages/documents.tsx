@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { FileUploadModal } from "@/components/file-upload";
@@ -44,6 +44,7 @@ import {
   ScrollText,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -267,6 +268,20 @@ export default function DocumentsList() {
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  // Detect picker mode: user arrived from Hybrid AI Chat to choose documents.
+  const fromHybrid = new URLSearchParams(window.location.search).get("from") === "hybrid";
+  const urlPreselected = new URLSearchParams(window.location.search).get("selected") ?? "";
+
+  // Pre-check documents passed via ?selected= when in picker mode.
+  const urlInitDone = useRef(false);
+  useEffect(() => {
+    if (!fromHybrid || !urlPreselected || !documents || urlInitDone.current) return;
+    urlInitDone.current = true;
+    const ids = urlPreselected.split(",").map(Number).filter((n) => !isNaN(n) && n > 0);
+    const valid = ids.filter((id) => documents.some((d) => d.id === id));
+    if (valid.length > 0) setSelectedIds(new Set(valid));
+  }, [documents]);
+
   const availableTypes = Array.from(
     new Set((documents ?? []).map((d) => d.fileType.toLowerCase()).filter(Boolean))
   ).sort();
@@ -412,6 +427,11 @@ export default function DocumentsList() {
     navigate(`/brief?ids=${ids}`);
   };
 
+  const handleUseInChat = () => {
+    const ids = Array.from(selectedIds).join(",");
+    navigate(`/agents/hybrid?preselect=${ids}`);
+  };
+
   const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
   if (search) activeFilterChips.push({ key: "search", label: `"${search}"`, onRemove: () => handleSearch("") });
   if (typeFilter !== "all") activeFilterChips.push({ key: "type", label: fileTypeChip(typeFilter).label, onRemove: () => handleTypeFilter("all") });
@@ -478,15 +498,28 @@ export default function DocumentsList() {
   };
 
   const selectionCount = selectedIds.size;
-  const showActionBar = selectionCount >= 2;
+  const showActionBar = fromHybrid ? selectionCount >= 1 : selectionCount >= 2;
 
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <header className="px-4 md:px-6 py-4 md:py-5 border-b border-border flex items-center justify-between bg-card">
           <div>
+            {fromHybrid && (
+              <Link
+                href="/agents/hybrid"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline mb-1.5"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                Back to AI Chat
+              </Link>
+            )}
             <h1 className="text-xl font-bold tracking-tight">Documents</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Your uploaded documents</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {fromHybrid
+                ? "Select documents, then click Use in AI Chat."
+                : "Your uploaded documents"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {/* View toggle */}
@@ -1040,23 +1073,38 @@ export default function DocumentsList() {
               >
                 Clear
               </button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs gap-1.5 px-3"
-                onClick={handleCompare}
-              >
-                <GitCompare className="w-3.5 h-3.5" />
-                Compare
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 text-xs gap-1.5 px-3"
-                onClick={handleBrief}
-              >
-                <ScrollText className="w-3.5 h-3.5" />
-                Brief
-              </Button>
+              {fromHybrid && (
+                <Button
+                  size="sm"
+                  className="h-8 text-xs gap-1.5 px-3"
+                  onClick={handleUseInChat}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Use {selectionCount} in AI Chat
+                </Button>
+              )}
+              {selectionCount >= 2 && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5 px-3"
+                    onClick={handleCompare}
+                  >
+                    <GitCompare className="w-3.5 h-3.5" />
+                    Compare
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={fromHybrid ? "outline" : "default"}
+                    className="h-8 text-xs gap-1.5 px-3"
+                    onClick={handleBrief}
+                  >
+                    <ScrollText className="w-3.5 h-3.5" />
+                    Brief
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}

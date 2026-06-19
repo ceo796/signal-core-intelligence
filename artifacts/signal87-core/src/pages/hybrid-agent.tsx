@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import {
   useListDocuments,
@@ -43,6 +44,7 @@ import {
   Globe,
   Check,
   SlidersHorizontal,
+  ExternalLink,
 } from "lucide-react";
 
 const MODES = [
@@ -86,6 +88,7 @@ interface ComposerProps {
   clearDocSelection: () => void;
   isPending: boolean;
   onSubmit: (e: React.FormEvent) => void;
+  onBrowse: () => void;
   autoFocus?: boolean;
 }
 
@@ -101,6 +104,7 @@ function Composer({
   clearDocSelection,
   isPending,
   onSubmit,
+  onBrowse,
   autoFocus,
 }: ComposerProps) {
   const docsLabel = docsLoading
@@ -221,6 +225,16 @@ function Composer({
                   </p>
                 </>
               )}
+              <div className="border-t border-border/40 mt-2 pt-2">
+                <button
+                  type="button"
+                  onClick={onBrowse}
+                  className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-xs text-primary hover:bg-primary/5 transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                  Browse all documents
+                </button>
+              </div>
             </PopoverContent>
           </Popover>
 
@@ -475,6 +489,8 @@ export default function HybridAgent() {
   const [mode, setMode] = useState<HybridAgentInputMode>("auto");
   const [selectedDocIds, setSelectedDocIds] = useState<Set<number>>(new Set());
 
+  const [, navigate] = useLocation();
+
   const readyDocs = (documents ?? []).filter(
     (doc) => doc.extractionStatus === "success" && (doc.chunkCount ?? 0) > 0
   );
@@ -489,6 +505,26 @@ export default function HybridAgent() {
   };
 
   const clearDocSelection = () => setSelectedDocIds(new Set());
+
+  // Seed selection from ?preselect=1,2,3 when arriving from the Documents picker.
+  // Validated against the ready-doc list so phantom IDs never stay selected.
+  const preSelectApplied = useRef(false);
+  useEffect(() => {
+    if (preSelectApplied.current || readyDocs.length === 0) return;
+    const raw = new URLSearchParams(window.location.search).get("preselect");
+    preSelectApplied.current = true;
+    if (!raw) return;
+    const ids = raw.split(",").map(Number).filter((n) => !isNaN(n) && n > 0);
+    const valid = ids.filter((id) => readyDocs.some((d) => d.id === id));
+    if (valid.length > 0) setSelectedDocIds(new Set(valid));
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [readyDocs]);
+
+  // Navigate to Documents page in "picker" mode, carrying the current selection.
+  const handleBrowse = () => {
+    const ids = [...selectedDocIds].join(",");
+    navigate(`/documents?from=hybrid${ids ? `&selected=${ids}` : ""}`);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -527,6 +563,7 @@ export default function HybridAgent() {
     clearDocSelection,
     isPending,
     onSubmit: handleSubmit,
+    onBrowse: handleBrowse,
   };
 
   const showConversation = isPending || !!data || !!error;
