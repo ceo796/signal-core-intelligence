@@ -63,7 +63,7 @@ const modeLabel = (value: string) =>
 // GPT model's own reasoning (gpt_reasoning). Web context is a disabled future placeholder.
 const SOURCE_LABELS = {
   document_context: "Document context",
-  gpt_reasoning: "AI reasoning",
+  gpt_reasoning: "GPT reasoning",
   web_context_placeholder_disabled: "Web context",
 } as const;
 
@@ -264,7 +264,7 @@ function Composer({
         </div>
       </div>
       <p className="text-center text-[11px] text-muted-foreground mt-2">
-        Answers use your documents (with citations) and AI reasoning — no web research.
+        Answers use your documents (with citations) and GPT reasoning — no web research.
       </p>
     </form>
   );
@@ -739,7 +739,7 @@ export default function HybridAgent() {
                       What can I help you find?
                     </h1>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Grounded answers from your documents (with citations), with AI reasoning.
+                      Grounded answers from your documents (with citations), with GPT reasoning.
                       No web research.
                     </p>
                   </div>
