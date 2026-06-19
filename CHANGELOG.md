@@ -2,6 +2,20 @@
 
 ---
 
+## [Signal87_Hybrid_AI_Chat_GPT_UI_v1] — 2026-06-19  *(Redesign the Hybrid AI Chat page as a ChatGPT-style composer; frontend-only)*
+
+### Summary
+The **Hybrid AI Chat** page (`/agents/hybrid`) now looks like ChatGPT. On the empty state the **textbox is centered in the middle of the page** under a "What can I help you find?" greeting (with the "Hybrid AI Chat" eyebrow + the *documents + GPT reasoning, no web research* explainer). **Underneath the textbox** sits a control row: the **Mode** selector is now a **pill button** (dropdown of Auto/Summarize/Compare/Extract/Diligence with descriptions + a check on the active one), the **Documents** selector is now a **dropdown** (popover with the same multi-select checkbox list, showing "All documents" / "N selected"), the **disabled "Web · Soon"** placeholder pill (future pathway, **no external calls**), and a circular **send** button (↑). **Enter** submits, **Shift+Enter** newlines. After you ask, the composer **docks to the bottom**, your question shows as a right-aligned bubble, a "Thinking…" indicator runs, and the answer renders above it. **Frontend-only:** no backend, route, OpenAPI/codegen, schema, auth, or storage change — the same `POST /api/agent/hybrid` call, the `{answer,mode,documentsUsed,citations,trace}` payload, the `[Source N]` citations, the three source badges (`document_context` / `gpt_reasoning` / disabled `web_context_placeholder_disabled`), and the Verification Trace are all preserved.
+
+### Changed — frontend
+- **`artifacts/signal87-core/src/pages/hybrid-agent.tsx`** — replaced the top form Card with a reusable **`Composer`** (rounded textarea + control-pill row + circular send). Empty state centers the composer; conversation state docks it to the bottom and echoes the submitted question as a bubble. Mode moved from a `Select` to a **DropdownMenu pill**; Documents moved from an inline checkbox list to a **Popover dropdown**; submit clears the textbox (restored on error). `ResultView` / `SourceBadges` / `CitationCard` / `TracePanel` and the GPT-only source labels are unchanged.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- No contract change: source labels are still derived client-side from `documentsUsed`/`citations`; the disabled web pill makes no network calls; auth, upload, storage, download, delete, reindex, PDF viewer, single-doc chat, brief, compare, and the response/Verification-Trace payload are untouched.
+
+---
+
 ## [Signal87_Hybrid_AI_Chat_GPT_Only_v1] — 2026-06-18  *(Make the Hybrid AI page easy to find, position it as "Hybrid AI Chat", and make its GPT-only behavior explicit; nav + page UI + one hybrid-agent prompt change)*
 
 ### Summary

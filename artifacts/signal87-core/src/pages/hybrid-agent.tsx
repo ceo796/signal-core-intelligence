@@ -13,12 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -30,13 +34,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
   Sparkles,
-  Send,
+  ArrowUp,
   FileText,
   ShieldCheck,
   Terminal,
   ChevronDown,
   ChevronRight,
   Globe,
+  Check,
+  SlidersHorizontal,
 } from "lucide-react";
 
 const MODES = [
@@ -47,6 +53,9 @@ const MODES = [
   { value: "diligence", label: "Diligence", description: "Risks, obligations, red flags" },
 ];
 
+const modeLabel = (value: string) =>
+  MODES.find((m) => m.value === value)?.label ?? "Auto";
+
 // Internal source labels surfaced on each answer. This assistant is OpenAI/GPT-only:
 // it grounds answers in your documents (document_context, with citations) and may add the
 // GPT model's own reasoning (gpt_reasoning). Web context is a disabled future placeholder.
@@ -55,6 +64,197 @@ const SOURCE_LABELS = {
   gpt_reasoning: "GPT reasoning",
   web_context_placeholder_disabled: "Web context",
 } as const;
+
+const PILL_CLASS =
+  "inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors";
+
+interface DocOption {
+  id: number;
+  fileName: string;
+  chunkCount?: number | null;
+}
+
+interface ComposerProps {
+  query: string;
+  setQuery: (v: string) => void;
+  mode: HybridAgentInputMode;
+  setMode: (v: HybridAgentInputMode) => void;
+  readyDocs: DocOption[];
+  docsLoading: boolean;
+  selectedDocIds: Set<number>;
+  toggleDoc: (id: number) => void;
+  clearDocSelection: () => void;
+  isPending: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  autoFocus?: boolean;
+}
+
+function Composer({
+  query,
+  setQuery,
+  mode,
+  setMode,
+  readyDocs,
+  docsLoading,
+  selectedDocIds,
+  toggleDoc,
+  clearDocSelection,
+  isPending,
+  onSubmit,
+  autoFocus,
+}: ComposerProps) {
+  const docsLabel = docsLoading
+    ? "Documents"
+    : readyDocs.length === 0
+    ? "No documents"
+    : selectedDocIds.size === 0
+    ? "All documents"
+    : `${selectedDocIds.size} selected`;
+
+  return (
+    <form onSubmit={onSubmit} className="w-full">
+      <div className="rounded-[28px] border border-border bg-card shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md">
+        <Textarea
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Ask anything about your documents…"
+          disabled={isPending}
+          autoFocus={autoFocus}
+          rows={1}
+          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 min-h-[52px] max-h-[220px] px-5 pt-4 pb-1 text-base"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              (e.currentTarget.closest("form") as HTMLFormElement)?.requestSubmit();
+            }
+          }}
+        />
+        <div className="flex items-center gap-2 px-3 pb-3 pt-1 flex-wrap">
+          {/* Mode — pill button */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className={PILL_CLASS} aria-label="Answer mode">
+                <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+                <span>{modeLabel(mode)}</span>
+                <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              {MODES.map((m) => (
+                <DropdownMenuItem
+                  key={m.value}
+                  onClick={() => setMode(m.value as HybridAgentInputMode)}
+                  className="flex items-start gap-2"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium">{m.label}</div>
+                    <div className="text-xs text-muted-foreground">{m.description}</div>
+                  </div>
+                  {mode === m.value && (
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Documents — dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={PILL_CLASS} aria-label="Documents to search">
+                <FileText className="w-3.5 h-3.5 shrink-0" />
+                <span className="max-w-[160px] truncate">{docsLabel}</span>
+                <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-2">
+              <div className="flex items-center justify-between px-1 pb-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Documents to search
+                </span>
+                {selectedDocIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearDocSelection}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {docsLoading ? (
+                <div className="space-y-1.5 px-1 py-1">
+                  <Skeleton className="h-7 w-full" />
+                  <Skeleton className="h-7 w-full" />
+                </div>
+              ) : readyDocs.length === 0 ? (
+                <p className="px-1 py-2 text-xs text-muted-foreground">
+                  No indexed documents yet. Upload and index a document first.
+                </p>
+              ) : (
+                <>
+                  <div className="max-h-60 overflow-y-auto rounded-md border border-border/50 divide-y divide-border/30">
+                    {readyDocs.map((doc) => (
+                      <label
+                        key={doc.id}
+                        className="flex items-center gap-2.5 px-2.5 py-2 hover:bg-muted/50 cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={selectedDocIds.has(doc.id)}
+                          onCheckedChange={() => toggleDoc(doc.id)}
+                        />
+                        <span className="text-sm truncate flex-1" title={doc.fileName}>
+                          {doc.fileName}
+                        </span>
+                        {doc.chunkCount != null && (
+                          <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                            {doc.chunkCount}c
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="px-1 pt-2 text-[11px] text-muted-foreground">
+                    {selectedDocIds.size === 0
+                      ? "Searching all indexed documents."
+                      : `${selectedDocIds.size} of ${readyDocs.length} selected.`}
+                  </p>
+                </>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Web context — disabled placeholder (future pathway, no external calls) */}
+          <span
+            className="inline-flex items-center gap-1.5 h-8 rounded-full border border-dashed border-border/60 bg-muted px-3 text-xs font-medium text-muted-foreground opacity-70 cursor-not-allowed select-none"
+            title="Web context is not available yet — no external web research is performed"
+          >
+            <Globe className="w-3.5 h-3.5 shrink-0" />
+            <span>Web</span>
+            <span className="opacity-80">· Soon</span>
+          </span>
+
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isPending || !query.trim()}
+            className="ml-auto rounded-full h-9 w-9 shrink-0"
+            aria-label="Send"
+          >
+            {isPending ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <ArrowUp className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+      <p className="text-center text-[11px] text-muted-foreground mt-2">
+        Answers use your documents (with citations) and GPT reasoning — no web research.
+      </p>
+    </form>
+  );
+}
 
 function SourceBadges({ usedDocuments }: { usedDocuments: boolean }) {
   return (
@@ -271,6 +471,7 @@ export default function HybridAgent() {
   const { mutate, isPending, data, error } = usePostAgentHybrid();
 
   const [query, setQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [mode, setMode] = useState<HybridAgentInputMode>("auto");
   const [selectedDocIds, setSelectedDocIds] = useState<Set<number>>(new Set());
 
@@ -287,13 +488,18 @@ export default function HybridAgent() {
     });
   };
 
+  const clearDocSelection = () => setSelectedDocIds(new Set());
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setSubmittedQuery(trimmed);
+    setQuery("");
     mutate(
       {
         data: {
-          query: query.trim(),
+          query: trimmed,
           documentIds: selectedDocIds.size > 0 ? [...selectedDocIds] : undefined,
           mode,
           maxDocuments: 5,
@@ -301,164 +507,92 @@ export default function HybridAgent() {
         },
       },
       {
-        onError: () => toast.error("Agent query failed. Please try again."),
+        onError: () => {
+          setQuery(trimmed);
+          toast.error("Agent query failed. Please try again.");
+        },
       }
     );
   };
 
+  const composerProps: ComposerProps = {
+    query,
+    setQuery,
+    mode,
+    setMode,
+    readyDocs,
+    docsLoading,
+    selectedDocIds,
+    toggleDoc,
+    clearDocSelection,
+    isPending,
+    onSubmit: handleSubmit,
+  };
+
+  const showConversation = isPending || !!data || !!error;
+
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="p-4 md:p-6 border-b border-border bg-card shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-              <Sparkles className="w-5 h-5 text-primary" />
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
+        {showConversation ? (
+          <>
+            <ScrollArea className="flex-1">
+              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
+                {submittedQuery && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap">
+                      {submittedQuery}
+                    </div>
+                  </div>
+                )}
+
+                {isPending ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Thinking…
+                  </div>
+                ) : error ? (
+                  <p className="text-sm text-destructive">
+                    Something went wrong. Please try again.
+                  </p>
+                ) : data ? (
+                  <ResultView result={data} />
+                ) : null}
+              </div>
+            </ScrollArea>
+
+            <div className="shrink-0 border-t border-border/60 bg-background/80 backdrop-blur">
+              <div className="max-w-3xl mx-auto w-full px-4 py-3">
+                <Composer {...composerProps} />
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">Hybrid AI Chat</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Grounded answers from your documents (with citations), supplemented by GPT reasoning. No web research.
-              </p>
+          </>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            <div className="min-h-full flex flex-col items-center justify-center px-4 py-10">
+              <div className="w-full max-w-2xl space-y-7">
+                <div className="text-center space-y-3">
+                  <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium uppercase tracking-wider text-primary/80">
+                      Hybrid AI Chat
+                    </p>
+                    <h1 className="text-2xl md:text-[28px] font-semibold tracking-tight">
+                      What can I help you find?
+                    </h1>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      Grounded answers from your documents (with citations), supplemented by GPT
+                      reasoning. No web research.
+                    </p>
+                  </div>
+                </div>
+                <Composer {...composerProps} autoFocus />
+              </div>
             </div>
           </div>
-        </header>
-
-        <ScrollArea className="flex-1">
-          <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
-            <form onSubmit={handleSubmit}>
-              <Card className="bg-card border-border/50">
-                <CardContent className="p-5 space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Mode</label>
-                    <Select value={mode} onValueChange={(v) => setMode(v as HybridAgentInputMode)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MODES.map((m) => (
-                          <SelectItem key={m.value} value={m.value}>
-                            <span className="font-medium">{m.label}</span>
-                            <span className="text-muted-foreground ml-1.5">— {m.description}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-start gap-3 rounded-md border border-dashed border-border/60 bg-muted/30 px-3 py-2.5 opacity-80">
-                    <Globe className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">Web context</span>
-                        <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-border/60 text-muted-foreground">
-                          Coming soon
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Answers currently use your documents and GPT reasoning only — no web research.
-                      </p>
-                    </div>
-                    <Checkbox checked={false} disabled aria-label="Web context (coming soon, disabled)" />
-                  </div>
-
-                  {docsLoading ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : readyDocs.length > 0 ? (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">Documents</label>
-                        <span className="text-xs text-muted-foreground">
-                          {selectedDocIds.size === 0
-                            ? `All ${readyDocs.length} indexed will be searched`
-                            : `${selectedDocIds.size} of ${readyDocs.length} selected`}
-                        </span>
-                      </div>
-                      <div className="border border-border/50 rounded-md max-h-44 overflow-y-auto divide-y divide-border/30">
-                        {readyDocs.map((doc) => (
-                          <label
-                            key={doc.id}
-                            className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 cursor-pointer"
-                          >
-                            <Checkbox
-                              checked={selectedDocIds.has(doc.id)}
-                              onCheckedChange={() => toggleDoc(doc.id)}
-                            />
-                            <span
-                              className="text-sm truncate flex-1"
-                              title={doc.fileName}
-                            >
-                              {doc.fileName}
-                            </span>
-                            {doc.chunkCount != null && (
-                              <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
-                                {doc.chunkCount}c
-                              </span>
-                            )}
-                          </label>
-                        ))}
-                      </div>
-                      {selectedDocIds.size === 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Leave all unchecked to search across all indexed documents.
-                        </p>
-                      )}
-                    </div>
-                  ) : !docsLoading && readyDocs.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No indexed documents yet. Upload and index a document first.
-                    </p>
-                  ) : null}
-
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Your question</label>
-                    <Textarea
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Ask anything about your documents…"
-                      className="resize-none min-h-[80px]"
-                      disabled={isPending}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                          e.preventDefault();
-                          (e.currentTarget.closest("form") as HTMLFormElement)?.requestSubmit();
-                        }
-                      }}
-                    />
-                    <p className="text-xs text-muted-foreground text-right">
-                      Cmd/Ctrl+Enter to submit
-                    </p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isPending || !query.trim()}
-                    className="w-full gap-2"
-                  >
-                    {isPending ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        Thinking…
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        Ask
-                      </>
-                    )}
-                  </Button>
-
-                  {error && (
-                    <p className="text-sm text-destructive text-center">
-                      Something went wrong. Please try again.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </form>
-
-            {data && <ResultView result={data} />}
-          </div>
-        </ScrollArea>
+        )}
       </div>
     </Layout>
   );

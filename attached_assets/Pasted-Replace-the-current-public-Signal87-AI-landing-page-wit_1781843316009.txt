@@ -1,0 +1,43 @@
+Replace the current public Signal87 AI landing page with the new Retool-style landing page design we approved.
+
+Use the sample HTML landing page as the visual source of truth: dark near-black background, large thin off-white typography, cream and green pill buttons, sticky top navigation, large left-side hero copy, right-side product UI collage, moving ticker, governance/security section, and feature cards.
+
+Critical constraints:
+
+1. Only change the public landing page and its styling.
+2. Do not touch the authenticated app experience, document upload, document detail page, Ask page, Activity page, PDF viewer, spreadsheet support, chat, citations, Clerk auth, backend API routes, database schema, object storage, or existing document workflows.
+3. Preserve all working platform functionality.
+4. Convert the design cleanly into the existing React app structure rather than dropping in a standalone HTML file if the app uses React components.
+5. Use the existing public home route as the target landing page.
+6. Keep the same Signal87 AI positioning:
+
+   * Document intelligence
+   * GPT reasoning
+   * Grounded citations
+   * Verification trace
+   * Private document workflows
+   * No live web research in the core product for now
+7. The navigation should include:
+
+   * Signal87 AI logo/wordmark
+   * Product
+   * Governance
+   * Use cases
+   * Security
+   * Sign in
+   * Book a demo
+   * Start for free
+8. “Sign in” and “Start for free” should use the existing Clerk/auth flow already present in the app.
+9. “Book a demo” may be a placeholder link unless there is already an existing route or contact flow.
+10. The page must be responsive and feel premium on desktop and mobile.
+11. Before making changes, inspect the current landing page files and routing.
+12. After implementation, run the app and verify:
+
+* Public landing page loads correctly
+* Authenticated app routes still work
+* Sign-in/sign-up still works
+* Documents page still loads
+* No backend or database behavior changed
+* No TypeScript, build, or runtime errors
+
+Do not redesign the platform app itself. This is a landing-page-only replacement.
