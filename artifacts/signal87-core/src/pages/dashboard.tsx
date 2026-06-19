@@ -312,45 +312,6 @@ export default function Dashboard() {
               </SectionCard>
             </div>
 
-            {/* Row 2: Recent activity */}
-            <div className="pb-4">
-
-              {/* Recent activity */}
-              <SectionCard>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                  <h2 className="text-sm font-semibold text-gray-900">Recent activity</h2>
-                  <Link
-                    href="/activity"
-                    className="text-xs font-medium hover:underline"
-                    style={{ color: ACCENT }}
-                  >
-                    View all
-                  </Link>
-                </div>
-
-                <div className="flex-1 flex flex-col items-center justify-center py-10 px-5 text-center">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
-                    style={{ backgroundColor: `${ACCENT}10` }}
-                  >
-                    <FileText className="w-4 h-4" style={{ color: ACCENT }} />
-                  </div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">No recent activity</p>
-                  <p className="text-xs text-gray-400 max-w-[180px] leading-relaxed">
-                    Your uploads, briefs, and analysis sessions will appear here.
-                  </p>
-                  <Link href="/activity">
-                    <button
-                      type="button"
-                      className="mt-3 text-xs font-medium hover:underline"
-                      style={{ color: ACCENT }}
-                    >
-                      View activity →
-                    </button>
-                  </Link>
-                </div>
-              </SectionCard>
-            </div>
 
           </div>
         </div>
