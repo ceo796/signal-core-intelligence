@@ -470,13 +470,15 @@ export default function ExecutiveBrief() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
-        <header className="p-4 md:p-6 border-b border-border bg-card shrink-0">
-          <div className="flex items-center gap-2">
-            <ScrollText className="w-5 h-5 text-primary" />
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">Executive Brief</h1>
+        <header className="border-b border-border bg-card shrink-0 px-4 md:px-6 py-4 md:py-5">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-primary/70">
+            <ScrollText className="w-3.5 h-3.5" />
+            Brief Generator
           </div>
-          <p className="text-sm text-muted-foreground font-mono mt-0.5">
-            BRIEF_GENERATOR // SELECT 1–5 DOCUMENTS
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mt-1">Executive Brief</h1>
+          <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+            Generate a structured, citation-backed report across 1–5 documents —
+            choose a brief type, add optional focus, then export.
           </p>
         </header>
 
@@ -487,7 +489,7 @@ export default function ExecutiveBrief() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-sm font-bold">
                   <Layers className="w-4 h-4 text-primary" />
-                  Select documents
+                  Source documents
                 </div>
                 <span
                   className={`font-mono text-xs px-2 py-0.5 rounded ${

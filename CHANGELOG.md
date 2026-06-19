@@ -2,6 +2,27 @@
 
 ---
 
+## [Signal87_Compare_Brief_Differentiation_v1] — 2026-06-19  *(Visually differentiate the /compare and /brief pages; authenticated-app frontend only)*
+
+### Summary
+The **Compare** (`/compare`, `multi-document-chat.tsx`) and **Executive Brief** (`/brief`, `executive-brief.tsx`) pages previously looked near-identical (same header pattern, same "Select documents" card, same centered card-stack, same blue accent). They now each have a distinct visual identity so they're no longer confusable at a glance.
+
+### Changed (presentation only — no logic/API/DB/auth changes)
+- **Compare → violet identity.** The page root wrapper scopes a violet accent by overriding the `--primary` / `--primary-foreground` CSS variables. Because `index.css` defines the primary color utilities via `@theme inline` (`hsl(var(--primary))`), every `*-primary` utility in the subtree (header tile, count badge, citation chips, Verification Trace accents, the Compare button, focus rings) recolors at runtime. The override is scoped **inside `Layout`**, so the nav/sidebar and all other pages keep the default blue.
+- **Compare header** redesigned into a gradient banner: an icon tile, a left accent rail, and a `Side-by-side analysis` eyebrow above the title, with comparison-oriented copy.
+- **Compare selection** now labels each selected document with an **A/B/C… slot badge** (`String.fromCharCode(65 + selectionIndex)`, with `aria-label`/`title`) to reinforce the pairing metaphor; card label changed to **"Documents to compare"**.
+- **Brief header** redesigned into a clean blue **"letterhead"** (mono `Brief Generator` eyebrow + larger title, no icon tile/banner) — a different hierarchy from Compare's banner; card label changed to **"Source documents"**.
+
+### Scope
+- Only `pages/multi-document-chat.tsx` and `pages/executive-brief.tsx` changed. No backend / API / DB / auth / OpenAPI / durable-storage change. Selection, submission, grouped citations, inline-citation activation, the Verification Trace + Trace Detail panel, and Brief type validation / Copy Brief are all unchanged.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Architect review — **PASS** (differentiation achieved, CSS-var override correct for this Tailwind v4 setup, functionality preserved).
+- Authenticated UI test (Clerk) — **success**: `/compare` shows the violet banner + "Side-by-side analysis" + "Documents to compare"; `/brief` shows the blue letterhead + "Brief Generator" + "Source documents" + the unique Brief type selector; the two pages are clearly distinguishable, no console errors.
+
+---
+
 ## [Signal87_Landing_Partners_v1] — 2026-06-19  *(Add a "Backed by" partner logo strip to the public landing page; landing-page-only, frontend)*
 
 ### Summary

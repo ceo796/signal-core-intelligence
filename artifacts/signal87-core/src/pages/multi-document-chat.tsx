@@ -380,15 +380,31 @@ export default function MultiDocumentChat() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
-        <header className="p-4 md:p-6 border-b border-border bg-card shrink-0">
-          <div className="flex items-center gap-2">
-            <GitCompare className="w-5 h-5 text-primary" />
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">Compare Documents</h1>
+      <div
+        className="flex-1 flex flex-col h-full bg-background overflow-hidden"
+        style={
+          {
+            "--primary": "262 83% 58%",
+            "--primary-foreground": "0 0% 100%",
+          } as React.CSSProperties
+        }
+      >
+        <header className="relative overflow-hidden border-b border-border bg-gradient-to-r from-primary/10 via-card to-card shrink-0">
+          <span className="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden />
+          <div className="p-4 md:p-6 flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary shrink-0">
+              <GitCompare className="w-6 h-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/80">
+                Side-by-side analysis
+              </span>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight">Compare Documents</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Ask one question across 2–5 documents and see where they agree and differ.
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground font-mono mt-0.5">
-            MULTI_DOCUMENT_ANALYSIS // SELECT 2–5 DOCUMENTS
-          </p>
         </header>
 
         <ScrollArea className="flex-1 p-4 md:p-6">
@@ -398,7 +414,7 @@ export default function MultiDocumentChat() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-sm font-bold">
                   <Layers className="w-4 h-4 text-primary" />
-                  Select documents
+                  Documents to compare
                 </div>
                 <span
                   className={`font-mono text-xs px-2 py-0.5 rounded ${
@@ -460,6 +476,15 @@ export default function MultiDocumentChat() {
                             <span>CHUNKS:{doc.chunkCount}</span>
                           </div>
                         </div>
+                        {isChecked && (
+                          <span
+                            className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground font-mono text-xs font-bold"
+                            aria-label={`Comparison slot ${String.fromCharCode(65 + selected.indexOf(doc.id))}`}
+                            title={`Comparison slot ${String.fromCharCode(65 + selected.indexOf(doc.id))}`}
+                          >
+                            {String.fromCharCode(65 + selected.indexOf(doc.id))}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
