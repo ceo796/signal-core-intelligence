@@ -1,436 +1,1041 @@
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, FileText, GitCompare, Search, Lock, Users, Linkedin, LogIn, UserPlus, Upload, MessageSquare, CheckCircle2, Anchor, Fingerprint, Eye } from "lucide-react";
-import AriaChatAnimation from "@/components/aria-chat-animation";
-import CrossDocAnimation from "@/components/cross-doc-animation";
-import AuditTraceAnimation from "@/components/audit-trace-animation";
 
-const FEATURES = [
-  {
-    icon: ShieldCheck,
-    title: "Verified Intelligence",
-    description: "Every answer is tied back to the source material, so teams can move quickly without losing confidence.",
-  },
-  {
-    icon: FileText,
-    title: "Executive Briefs",
-    description: "Generate structured summaries, risk briefs, diligence notes, and decision memos from one document or many.",
-  },
-  {
-    icon: GitCompare,
-    title: "Cross-Document Analysis",
-    description: "Compare files, surface contradictions, identify themes, and extract insights across an entire document set.",
-  },
-  {
-    icon: Search,
-    title: "Audit-Ready Reasoning",
-    description: "See what sources were used, where the answer came from, and how the system reached its conclusion.",
-  },
-  {
-    icon: Lock,
-    title: "Secure Document Workspace",
-    description: "Your files stay inside a protected workspace with authenticated access and controlled document visibility.",
-  },
-  {
-    icon: Users,
-    title: "Built for Business Judgment",
-    description: "Designed for investors, operators, advisors, and teams who need to understand complex material quickly.",
-  },
-];
+const LANDING_CSS = `
+.s87-landing {
+  --bg: #111211;
+  --bg-deep: #080908;
+  --surface: #171817;
+  --surface-2: #eef0e8;
+  --ink: #eeeee7;
+  --muted: #b8bab2;
+  --muted-dark: #59645e;
+  --line: rgba(238, 238, 231, 0.12);
+  --green: #6fd2ad;
+  --green-deep: #0e4f3c;
+  --green-soft: #d9eee2;
+  --cream: #f4f2e8;
+  --shadow: 0 40px 120px rgba(0, 0, 0, 0.42);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
 
-const TRUST = [
-  {
-    icon: Anchor,
-    title: "Grounded Responses",
-    description: "Answers are generated from your uploaded documents, not generic web assumptions.",
-  },
-  {
-    icon: Fingerprint,
-    title: "Verification Trace",
-    description: "See which documents and chunks informed each answer.",
-  },
-  {
-    icon: Eye,
-    title: "Model Transparency",
-    description: "Signal87 can expose the model/provider used for each AI response where available.",
-  },
-];
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  letter-spacing: -0.015em;
+  scroll-behavior: smooth;
+}
 
-const STEPS = [
-  {
-    icon: Upload,
-    step: "01",
-    label: "Upload your documents",
-    description: "Add PDFs, Word files, text, or CSVs to your secure workspace.",
-  },
-  {
-    icon: MessageSquare,
-    step: "02",
-    label: "Ask a question or request a brief",
-    description: "Query a single document, compare several at once, or generate an executive brief.",
-  },
-  {
-    icon: CheckCircle2,
-    step: "03",
-    label: "Get a cited, verifiable answer",
-    description: "Every response is grounded in your sources with citations and a full verification trace.",
-  },
-];
+.s87-landing *,
+.s87-landing *::before,
+.s87-landing *::after {
+  box-sizing: border-box;
+}
 
-const CATEGORIES = [
-  {
-    code: "CUI",
-    title: "Controlled\nUnclassified",
-    description: "CMMC-aligned handling. Marking-aware retrieval.",
-  },
-  {
-    code: "LEG",
-    title: "Contracts\n& legal",
-    description: "Clause-level extraction. Cross-document precedent.",
-  },
-  {
-    code: "FIN",
-    title: "Invoices\n& finance",
-    description: "Line-item parsing, vendor reconciliation.",
-  },
-  {
-    code: "STR",
-    title: "Board memos\n& strategy",
-    description: "Topic tracking across quarters and decks.",
-    highlight: true,
-  },
-  {
-    code: "MED",
-    title: "Health\nrecords",
-    description: "PHI-aware indexing. De-identification on egress.",
-  },
-];
+.s87-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.s87-landing .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(8, 9, 8, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.s87-landing .nav {
+  width: min(1280px, calc(100% - 48px));
+  height: 88px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.s87-landing .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 540;
+  font-size: 21px;
+  letter-spacing: -0.04em;
+}
+
+.s87-landing .mark {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  display: inline-block;
+}
+
+.s87-landing .mark::before,
+.s87-landing .mark::after {
+  content: "";
+  position: absolute;
+  background: var(--ink);
+  border-radius: 3px;
+}
+
+.s87-landing .mark::before {
+  width: 16px;
+  height: 7px;
+  left: 0;
+  top: 3px;
+}
+
+.s87-landing .mark::after {
+  width: 16px;
+  height: 7px;
+  right: 0;
+  bottom: 3px;
+}
+
+.s87-landing .navlinks {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  color: rgba(238, 238, 231, 0.78);
+  font-size: 14px;
+  margin-right: auto;
+  margin-left: 26px;
+}
+
+.s87-landing .navlinks a {
+  transition: color 180ms ease;
+}
+
+.s87-landing .navlinks a:hover {
+  color: var(--ink);
+}
+
+.s87-landing .nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.s87-landing .signin {
+  transition: color 180ms ease;
+  color: rgba(238, 238, 231, 0.78);
+}
+
+.s87-landing .signin:hover {
+  color: var(--ink);
+}
+
+.s87-landing .pill {
+  border: 1px solid rgba(238, 238, 231, 0.18);
+  border-radius: var(--radius-pill);
+  padding: 13px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.s87-landing .pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(238, 238, 231, 0.34);
+}
+
+.s87-landing .pill.primary {
+  background: var(--cream);
+  color: #111211;
+  border-color: var(--cream);
+}
+
+.s87-landing .pill.outline-green {
+  border-color: rgba(111, 210, 173, 0.65);
+  color: var(--ink);
+  background: rgba(111, 210, 173, 0.03);
+}
+
+.s87-landing .hero {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+  min-height: calc(100vh - 88px);
+  display: grid;
+  grid-template-columns: 0.88fr 1.12fr;
+  gap: 72px;
+  align-items: center;
+  padding: 78px 0 56px;
+}
+
+.s87-landing .kicker {
+  color: rgba(238, 238, 231, 0.78);
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 58px;
+  letter-spacing: -0.035em;
+}
+
+.s87-landing h1 {
+  font-size: clamp(54px, 6.1vw, 92px);
+  line-height: 0.98;
+  letter-spacing: -0.075em;
+  font-weight: 390;
+  max-width: 640px;
+  text-wrap: balance;
+}
+
+.s87-landing .hero-copy {
+  color: rgba(238, 238, 231, 0.82);
+  font-size: 18px;
+  line-height: 1.52;
+  max-width: 500px;
+  margin-top: 28px;
+  letter-spacing: -0.02em;
+}
+
+.s87-landing .hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.s87-landing .showcase {
+  position: relative;
+  min-height: 600px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.s87-landing .showcase::before {
+  content: "";
+  position: absolute;
+  inset: 40px 0 0 10px;
+  background:
+    radial-gradient(circle at 28% 36%, rgba(111, 210, 173, 0.28), transparent 28%),
+    radial-gradient(circle at 70% 50%, rgba(226, 237, 215, 0.16), transparent 30%),
+    linear-gradient(135deg, rgba(11, 48, 36, 0.88), rgba(49, 82, 45, 0.55), rgba(12, 14, 13, 0.2));
+  filter: blur(0.1px);
+}
+
+.s87-landing .mosaic {
+  position: relative;
+  height: 600px;
+  display: grid;
+  grid-template-columns: 1fr 1.06fr 0.64fr;
+  grid-template-rows: 148px 245px 170px;
+  gap: 22px;
+  transform: translateX(22px);
+}
+
+.s87-landing .mock {
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: #123b2e;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  position: relative;
+}
+
+.s87-landing .mock.dark {
+  background: #070b0a;
+  color: var(--ink);
+}
+
+.s87-landing .mock.a {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2;
+}
+
+.s87-landing .mock.b {
+  grid-column: 2 / 4;
+  grid-row: 2 / 3;
+}
+
+.s87-landing .mock.c {
+  grid-column: 1 / 2;
+  grid-row: 2 / 4;
+  transform: translateX(-70px);
+}
+
+.s87-landing .mock.d {
+  grid-column: 2 / 4;
+  grid-row: 3 / 4;
+  transform: translateX(34px);
+}
+
+.s87-landing .mock.e {
+  grid-column: 3 / 4;
+  grid-row: 1 / 3;
+  transform: translateX(18px);
+}
+
+.s87-landing .mock-header {
+  height: 44px;
+  background: rgba(255, 255, 255, 0.78);
+  border-bottom: 1px solid rgba(18, 59, 46, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  color: rgba(18, 59, 46, 0.48);
+  font-size: 11px;
+}
+
+.s87-landing .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(18, 59, 46, 0.15);
+}
+
+.s87-landing .mock-content {
+  padding: 18px;
+}
+
+.s87-landing .metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.s87-landing .metric {
+  background: #ffffff;
+  border: 1px solid rgba(18, 59, 46, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 14px 24px rgba(15, 40, 30, 0.08);
+}
+
+.s87-landing .metric small {
+  display: block;
+  color: rgba(18, 59, 46, 0.54);
+  font-size: 10px;
+  margin-bottom: 8px;
+}
+
+.s87-landing .metric strong {
+  display: block;
+  font-size: 24px;
+  letter-spacing: -0.06em;
+}
+
+.s87-landing .bar-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.s87-landing .bar-item {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 13px;
+  border: 1px solid rgba(18, 59, 46, 0.08);
+}
+
+.s87-landing .bar-label {
+  display: flex;
+  justify-content: space-between;
+  color: #1b4336;
+  font-size: 11px;
+  margin-bottom: 9px;
+}
+
+.s87-landing .bar {
+  height: 8px;
+  background: #e1ebe5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.s87-landing .bar span {
+  display: block;
+  height: 100%;
+  width: var(--w);
+  background: linear-gradient(90deg, #76d6b3, #0e6b50);
+  border-radius: inherit;
+}
+
+.s87-landing .doc-card {
+  display: grid;
+  gap: 10px;
+}
+
+.s87-landing .doc-line {
+  height: 13px;
+  border-radius: 999px;
+  background: rgba(18, 59, 46, 0.12);
+}
+
+.s87-landing .doc-line.short { width: 66%; }
+.s87-landing .doc-line.mid { width: 82%; }
+
+.s87-landing .chat-bubble {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 14px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(238, 238, 231, 0.78);
+}
+
+.s87-landing .trace {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.s87-landing .trace span {
+  border: 1px solid rgba(111, 210, 173, 0.38);
+  color: #bcebd8;
+  border-radius: 999px;
+  padding: 7px 9px;
+  font-size: 10px;
+}
+
+.s87-landing .section {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 96px 0;
+  border-top: 1px solid var(--line);
+}
+
+.s87-landing .section.split {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.s87-landing h2 {
+  font-size: clamp(44px, 5vw, 72px);
+  font-weight: 390;
+  line-height: 0.98;
+  letter-spacing: -0.075em;
+  text-wrap: balance;
+}
+
+.s87-landing .section p {
+  color: rgba(238, 238, 231, 0.78);
+  font-size: 18px;
+  line-height: 1.55;
+  max-width: 520px;
+  margin-top: 20px;
+}
+
+.s87-landing .security-visual {
+  min-height: 520px;
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.82), rgba(219, 238, 226, 0.98) 38%, rgba(197, 226, 212, 0.92) 62%, rgba(214, 224, 207, 0.9));
+  color: #0d513d;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow);
+}
+
+.s87-landing .security-visual::before,
+.s87-landing .security-visual::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(14, 111, 80, 0.46);
+  border-radius: 50%;
+  inset: 160px -160px auto -160px;
+  height: 260px;
+}
+
+.s87-landing .security-visual::after {
+  inset: 215px -230px auto -230px;
+  height: 360px;
+}
+
+.s87-landing .floating-window {
+  position: absolute;
+  left: 64px;
+  top: 58px;
+  width: 420px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 30px 80px rgba(19, 54, 39, 0.2);
+  overflow: hidden;
+  border: 1px solid rgba(14, 81, 61, 0.14);
+}
+
+.s87-landing .floating-window.small {
+  width: 320px;
+  left: auto;
+  right: 50px;
+  top: 118px;
+}
+
+.s87-landing .badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  background: rgba(241, 246, 236, 0.78);
+  border: 1px solid rgba(14, 111, 80, 0.35);
+  color: #0e513d;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 18px 40px rgba(19, 54, 39, 0.12);
+}
+
+.s87-landing .badge.one { left: 92px; bottom: 168px; }
+.s87-landing .badge.two { left: 365px; bottom: 100px; }
+.s87-landing .badge.three { right: 78px; bottom: 74px; }
+
+.s87-landing .cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 44px;
+}
+
+.s87-landing .feature {
+  min-height: 240px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.s87-landing .feature .num {
+  color: var(--green);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.s87-landing .feature h3 {
+  margin-top: 56px;
+  font-size: 26px;
+  font-weight: 430;
+  letter-spacing: -0.055em;
+}
+
+.s87-landing .feature p {
+  font-size: 15px;
+  color: rgba(238, 238, 231, 0.66);
+  margin-top: 13px;
+  line-height: 1.55;
+}
+
+.s87-landing .ticker {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  white-space: nowrap;
+  color: rgba(238, 238, 231, 0.72);
+  padding: 21px 0;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.s87-landing .ticker-track {
+  display: inline-block;
+  padding-left: 100%;
+  animation: s87-marquee 34s linear infinite;
+}
+
+@keyframes s87-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s87-landing .ticker-track {
+    animation: none;
+  }
+  .s87-landing {
+    scroll-behavior: auto;
+  }
+}
+
+.s87-landing .footer {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 52px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  color: rgba(238, 238, 231, 0.58);
+  font-size: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.s87-landing .footer-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.s87-landing .footer-links a {
+  transition: color 180ms ease;
+}
+
+.s87-landing .footer-links a:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 980px) {
+  .s87-landing .navlinks {
+    display: none;
+  }
+
+  .s87-landing .hero,
+  .s87-landing .section.split {
+    grid-template-columns: 1fr;
+    gap: 42px;
+  }
+
+  .s87-landing .hero {
+    min-height: auto;
+    padding-top: 52px;
+  }
+
+  .s87-landing .showcase {
+    min-height: 480px;
+  }
+
+  .s87-landing .mosaic {
+    transform: none;
+    height: 480px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .s87-landing .mock.e {
+    display: none;
+  }
+
+  .s87-landing .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .s87-landing .floating-window {
+    left: 24px;
+    width: calc(100% - 48px);
+  }
+
+  .s87-landing .floating-window.small {
+    display: none;
+  }
+
+  .s87-landing .badge.one { left: 28px; bottom: 168px; }
+  .s87-landing .badge.two { left: 28px; bottom: 104px; }
+  .s87-landing .badge.three { right: 28px; bottom: 40px; }
+}
+
+@media (max-width: 640px) {
+  .s87-landing .nav {
+    width: min(100% - 28px, 1280px);
+    height: 74px;
+  }
+
+  .s87-landing .nav-actions .signin,
+  .s87-landing .nav-actions .outline-green {
+    display: none;
+  }
+
+  .s87-landing .hero,
+  .s87-landing .section,
+  .s87-landing .footer {
+    width: min(100% - 28px, 1280px);
+  }
+
+  .s87-landing .kicker {
+    margin-bottom: 32px;
+  }
+
+  .s87-landing h1 {
+    font-size: 52px;
+  }
+
+  .s87-landing .showcase {
+    min-height: 390px;
+  }
+
+  .s87-landing .mosaic {
+    height: 390px;
+    gap: 12px;
+  }
+
+  .s87-landing .mock.c,
+  .s87-landing .mock.d {
+    transform: none;
+  }
+
+  .s87-landing .metric-row {
+    grid-template-columns: 1fr;
+  }
+
+  .s87-landing .security-visual {
+    min-height: 440px;
+  }
+
+  .s87-landing .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+`;
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
+  const authed = isLoaded && isSignedIn;
 
   return (
-    <div className="relative min-h-screen bg-white text-gray-900 flex flex-col font-sans selection:bg-blue-500/30">
-      <div className="landing-bg" aria-hidden="true" />
+    <div className="s87-landing">
+      <style>{LANDING_CSS}</style>
 
-      {/* Header */}
-      <header className="relative z-10 px-6 py-5 flex justify-between items-center border-b border-gray-200">
-        <img src="/signal87-logo-black.svg" alt="Signal87" className="h-14 w-auto" />
-        <nav className="flex items-center gap-6 text-sm text-gray-500">
-          <Link href="/about" className="hidden sm:block hover:text-gray-900 transition-colors">About</Link>
-          <Link href="/team" className="hidden sm:block hover:text-gray-900 transition-colors">Team</Link>
-          <Link href="/contact" className="hidden sm:block hover:text-gray-900 transition-colors">Contact</Link>
-          {isLoaded && isSignedIn ? (
-            <Link href="/documents" className="text-blue-600 hover:text-blue-500 font-medium transition-colors">
-              Open App
-            </Link>
-          ) : (
-            <Link href="/sign-in" className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-500 font-medium transition-colors">
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </Link>
-          )}
-        </nav>
-      </header>
+      <header className="topbar">
+        <nav className="nav">
+          <a className="brand" href="#product" aria-label="Signal87 AI home">
+            <span className="mark" aria-hidden="true" />
+            <span>Signal87 AI</span>
+          </a>
 
-      <main className="relative z-10 flex-1">
-        {/* Hero */}
-        <section className="px-6 py-24 text-center max-w-3xl mx-auto">
-          <div className="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-mono text-gray-500 border border-gray-200">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            AI-powered · Source-cited · Business-ready
+          <div className="navlinks">
+            <a href="#product">Product</a>
+            <a href="#governance">Governance</a>
+            <a href="#workflow">Use cases</a>
+            <a href="#security">Security</a>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-normal tracking-tight mb-6 text-gray-900">
-            Turn documents into decisions.
-          </h1>
-
-          <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto text-balance">
-            Signal87 converts business documents into cited answers, executive briefs, and multi-document intelligence — giving teams a faster path from source material to action.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {isLoaded && isSignedIn ? (
-              <Link href="/documents" className="inline-block">
-                <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
+          <div className="nav-actions">
+            {authed ? (
+              <>
+                <Link href="/contact" className="pill outline-green">
+                  Book a demo
+                </Link>
+                <Link href="/documents" className="pill primary">
                   Open App
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+                </Link>
+              </>
             ) : (
               <>
-                <Link href="/sign-up" className="inline-block">
-                  <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
-                    Get started
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Link href="/sign-in" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
-                  <LogIn className="w-4 h-4" />
+                <Link href="/sign-in" className="signin">
                   Sign in
+                </Link>
+                <Link href="/contact" className="pill outline-green">
+                  Book a demo
+                </Link>
+                <Link href="/sign-up" className="pill primary">
+                  Start for free
                 </Link>
               </>
             )}
           </div>
-        </section>
+        </nav>
+      </header>
 
-        {/* Trust */}
-        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
-          <div className="text-center mb-14 max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900 mb-4">
-              Trusted AI, grounded in your documents.
-            </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
-              Signal87 uses advanced language models to reason across your files, but every response is anchored to your source material with citations, document references, and verification traces.
+      <main>
+        <section className="hero" id="product">
+          <div>
+            <div className="kicker">Document intelligence</div>
+            <h1>Extend your team with verifiable AI reasoning.</h1>
+            <p className="hero-copy">
+              Signal87 AI helps teams analyze, compare, and reason across private
+              documents using GPT-powered intelligence, grounded citations, and a
+              clear verification trace.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TRUST.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="group rounded-2xl border border-gray-200 bg-white/70 p-8 space-y-4 transition-colors hover:border-blue-200 hover:bg-white"
-              >
-                <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-blue-600" />
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900">{title}</h3>
-                <p className="text-base text-gray-500 leading-relaxed">{description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 mb-4">
-              How it works.
-            </h2>
-            <p className="text-base text-gray-500 max-w-xl mx-auto">
-              From raw documents to a cited answer in three steps.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {STEPS.map(({ icon: Icon, step, label, description }) => (
-              <div key={step} className="flex flex-col items-center text-center md:items-start md:text-left">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <span className="text-xs font-mono text-gray-400">{step}</span>
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">{label}</h3>
-                <p className="text-base text-gray-500 leading-relaxed">{description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Demos */}
-        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 mb-4">
-              See it in action.
-            </h2>
-            <p className="text-base text-gray-500 max-w-xl mx-auto">
-              Three core capabilities, each grounded in your source documents.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Document Q&A */}
-            <div className="flex flex-col gap-4">
-              <AriaChatAnimation />
-              <div className="text-center">
-                <p className="text-xs text-gray-400 mb-2">Ask questions, get cited answers</p>
-                <Link
-                  href={
-                    isLoaded && isSignedIn
-                      ? "/documents"
-                      : "/sign-in?redirect_url=/documents"
-                  }
-                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Try it
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Cross-doc compare */}
-            <div className="flex flex-col gap-4">
-              <CrossDocAnimation />
-              <div className="text-center">
-                <p className="text-xs text-gray-400 mb-2">Compare multiple documents at once</p>
-                <Link
-                  href={
-                    isLoaded && isSignedIn
-                      ? "/compare"
-                      : "/sign-in?redirect_url=/compare"
-                  }
-                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Open Compare
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Verification trace */}
-            <div className="flex flex-col gap-4">
-              <AuditTraceAnimation />
-              <div className="text-center">
-                <p className="text-xs text-gray-400 mb-2">Generate briefs with full audit trail</p>
-                <Link
-                  href={
-                    isLoaded && isSignedIn
-                      ? "/brief"
-                      : "/sign-in?redirect_url=/brief"
-                  }
-                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Open Brief
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section id="features" className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 mb-4">
-              Built for high-stakes document work.
-            </h2>
-            <p className="text-base text-gray-500 max-w-xl mx-auto">
-              Signal87 helps teams move from source material to verified insight without losing traceability.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="group rounded-2xl border border-gray-200 bg-white/70 p-8 space-y-4 transition-colors hover:border-blue-200 hover:bg-white"
-              >
-                <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-blue-600" />
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900">{title}</h3>
-                <p className="text-base text-gray-500 leading-relaxed">{description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Document Categories */}
-        <section className="border-t border-gray-200 px-6 py-20 max-w-5xl mx-auto">
-          <p className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-6">
-            03 — Document Categories
-          </p>
-          <h2 className="text-4xl md:text-5xl font-normal tracking-tight text-gray-900 leading-[1.05] mb-14">
-            Built for the categories that{" "}
-            <br className="hidden md:block" />
-            <span className="italic">matter most.</span>
-          </h2>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 border-t border-gray-200 pt-8">
-            {CATEGORIES.map(({ code, title, description, highlight }) => (
-              <div
-                key={code}
-                className={`group flex h-full flex-col rounded-xl p-5 transition-colors ${
-                  highlight ? "bg-gray-50 ring-1 ring-gray-200" : "hover:bg-gray-50"
-                }`}
-              >
-                <p className="text-[11px] font-mono uppercase tracking-widest text-gray-400 mb-4">
-                  {code}
-                </p>
-                <h3 className="text-base font-semibold text-gray-900 leading-snug whitespace-pre-line mb-3">
-                  {title}
-                </h3>
-                <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                  {description}
-                </p>
-                <ArrowRight className="w-4 h-4 text-gray-400 mt-auto transition-all group-hover:text-blue-600 group-hover:translate-x-1" />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="border-t border-gray-200 px-6 py-20 text-center bg-gray-50">
-          <div className="max-w-xl mx-auto">
-            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 mb-4">
-              Ready to turn documents into decisions?
-            </h2>
-            <p className="text-base text-gray-500 mb-10">
-              Start analyzing documents in minutes. No setup required.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              {isLoaded && isSignedIn ? (
-                <Link href="/documents" className="inline-block">
-                  <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
-                    Open App
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+            <div className="hero-actions">
+              {authed ? (
+                <Link href="/documents" className="pill primary">
+                  Open App
                 </Link>
               ) : (
-                <>
-                  <Link href="/sign-up" className="inline-block">
-                    <Button size="lg" className="gap-2 h-12 px-8 group bg-blue-600 hover:bg-blue-500 text-white border-0">
-                      <UserPlus className="w-4 h-4" />
-                      Get started
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                  <Link href="/sign-in" className="inline-block">
-                    <Button size="lg" variant="outline" className="gap-2 h-12 px-8 border-gray-200 text-gray-700 hover:bg-gray-50">
-                      <LogIn className="w-4 h-4" />
-                      Sign in
-                    </Button>
-                  </Link>
-                </>
+                <Link href="/sign-up" className="pill primary">
+                  Start for free
+                </Link>
               )}
+              <Link href="/contact" className="pill">
+                Book a demo
+              </Link>
+            </div>
+          </div>
+
+          <div
+            className="showcase"
+            role="img"
+            aria-label="Signal87 product interface preview"
+          >
+            <div className="mosaic">
+              <div className="mock a">
+                <div className="mock-header">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span>signal87.ai / diligence-overview</span>
+                </div>
+                <div className="mock-content">
+                  <div className="metric-row">
+                    <div className="metric">
+                      <small>Documents reviewed</small>
+                      <strong>148</strong>
+                    </div>
+                    <div className="metric">
+                      <small>Source citations</small>
+                      <strong>2,971</strong>
+                    </div>
+                    <div className="metric">
+                      <small>Risk items</small>
+                      <strong>37</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mock b">
+                <div className="mock-header">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span>comparison brief</span>
+                </div>
+                <div className="mock-content">
+                  <div className="bar-list">
+                    <div className="bar-item">
+                      <div className="bar-label">
+                        <span>Revenue covenant alignment</span>
+                        <span>86%</span>
+                      </div>
+                      <div className="bar">
+                        <span style={{ ["--w" as string]: "86%" }} />
+                      </div>
+                    </div>
+                    <div className="bar-item">
+                      <div className="bar-label">
+                        <span>Change-of-control exposure</span>
+                        <span>64%</span>
+                      </div>
+                      <div className="bar">
+                        <span style={{ ["--w" as string]: "64%" }} />
+                      </div>
+                    </div>
+                    <div className="bar-item">
+                      <div className="bar-label">
+                        <span>Termination language variance</span>
+                        <span>72%</span>
+                      </div>
+                      <div className="bar">
+                        <span style={{ ["--w" as string]: "72%" }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mock c">
+                <div className="mock-header">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span>source library</span>
+                </div>
+                <div className="mock-content">
+                  <div className="doc-card">
+                    <div className="doc-line" />
+                    <div className="doc-line mid" />
+                    <div className="doc-line short" />
+                    <div className="doc-line" />
+                    <div className="doc-line mid" />
+                    <div className="doc-line" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mock dark d">
+                <div
+                  className="mock-header"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(238,238,231,0.56)",
+                    borderColor: "rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span>verification trace</span>
+                </div>
+                <div className="mock-content">
+                  <div className="chat-bubble">
+                    Answer generated with GPT reasoning and source-grounded
+                    evidence from selected files.
+                    <div className="trace">
+                      <span>Chunk 04</span>
+                      <span>Chunk 11</span>
+                      <span>Agreement B</span>
+                      <span>Spreadsheet Q1</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mock e">
+                <div className="mock-header">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span>executive brief</span>
+                </div>
+                <div className="mock-content">
+                  <div className="metric" style={{ marginBottom: 12 }}>
+                    <small>Confidence</small>
+                    <strong>91%</strong>
+                  </div>
+                  <div className="metric" style={{ marginBottom: 12 }}>
+                    <small>Open issues</small>
+                    <strong>14</strong>
+                  </div>
+                  <div className="metric">
+                    <small>Docs cited</small>
+                    <strong>28</strong>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Partners */}
-        <section className="border-t border-gray-200 px-6 py-16 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-8 font-medium">Partners &amp; Accelerators</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-10">
-            <img src="/google-for-startups.jpg" alt="Google for Startups" className="h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
-            <img src="/nvidia-inception-badge.jpg" alt="NVIDIA Inception Program" className="h-12 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+        <div className="ticker">
+          <div className="ticker-track">
+            GROUNDED ANSWERS · GPT REASONING · DOCUMENT COMPARISON · EXECUTIVE
+            BRIEFS · VERIFICATION TRACE · PRIVATE WORKSPACES · SPREADSHEET
+            SUPPORT ·
+          </div>
+        </div>
+
+        <section className="section split" id="governance">
+          <div>
+            <h2>Ship AI workflows with governance built in.</h2>
+            <p>
+              Deploy private document intelligence with user access, source
+              citations, audit-ready traces, and a controlled path for future
+              web research if the product needs it.
+            </p>
+            <p>
+              The core experience remains document-first: users get answers they
+              can verify, not unsupported summaries.
+            </p>
+          </div>
+
+          <div className="security-visual">
+            <div className="floating-window">
+              <div className="mock-header">
+                <span className="dot" />
+                <span className="dot" />
+                <span className="dot" />
+                <span>risk review workspace</span>
+              </div>
+              <div className="mock-content">
+                <div className="bar-list">
+                  <div className="bar-item">
+                    <div className="bar-label">
+                      <span>Source-grounded response</span>
+                      <span>Complete</span>
+                    </div>
+                    <div className="bar">
+                      <span style={{ ["--w" as string]: "92%" }} />
+                    </div>
+                  </div>
+                  <div className="bar-item">
+                    <div className="bar-label">
+                      <span>Trace detail</span>
+                      <span>Available</span>
+                    </div>
+                    <div className="bar">
+                      <span style={{ ["--w" as string]: "78%" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="floating-window small">
+              <div className="mock-header">
+                <span className="dot" />
+                <span className="dot" />
+                <span className="dot" />
+                <span>model transparency</span>
+              </div>
+              <div className="mock-content">
+                <div className="doc-card">
+                  <div className="doc-line" />
+                  <div className="doc-line mid" />
+                  <div className="doc-line short" />
+                </div>
+              </div>
+            </div>
+
+            <div className="badge one">Citations</div>
+            <div className="badge two">Verification Trace</div>
+            <div className="badge three">GPT Reasoning</div>
+          </div>
+        </section>
+
+        <section className="section" id="workflow">
+          <h2>From upload to executive clarity.</h2>
+          <p>
+            Signal87 turns dense, unstructured material into answers,
+            comparisons, briefs, and decision-ready intelligence.
+          </p>
+
+          <div className="cards">
+            <article className="feature">
+              <div className="num">01</div>
+              <h3>Upload private files</h3>
+              <p>
+                Documents, spreadsheets, contracts, diligence files, reports, and
+                operating materials become searchable intelligence assets.
+              </p>
+            </article>
+
+            <article className="feature">
+              <div className="num">02</div>
+              <h3>Ask better questions</h3>
+              <p>
+                Use GPT reasoning to summarize, compare, extract risks, and
+                synthesize across selected documents.
+              </p>
+            </article>
+
+            <article className="feature">
+              <div className="num">03</div>
+              <h3>Verify the answer</h3>
+              <p>
+                Answers remain connected to source chunks, citations, and
+                traceable document evidence.
+              </p>
+            </article>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-200 px-6 py-12 text-xs text-gray-400">
-        <div className="flex flex-col sm:flex-row justify-between gap-6">
-          <div className="flex flex-col gap-3">
-            <span>© 2026 Signal87 AI. All rights reserved.</span>
-            <div className="flex items-center gap-3">
-              <a href="https://www.linkedin.com/company/signal87-ai/" target="_blank" rel="noopener noreferrer" aria-label="Signal87 AI on LinkedIn" className="hover:text-gray-900 transition-colors">
-                <Linkedin className="w-4 h-4" />
-              </a>
-              <a href="https://theresanaiforthat.com/ai/signal87-ai/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">
-                There's An AI For That ↗
-              </a>
-            </div>
-          </div>
-          <nav className="flex items-center gap-4 flex-wrap">
-            <Link href="/about" className="hover:text-gray-900 transition-colors">About</Link>
-            <Link href="/team" className="hover:text-gray-900 transition-colors">Team</Link>
-            <Link href="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-gray-900 transition-colors">Terms of Use</Link>
-            <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
-          </nav>
-        </div>
+      <footer className="footer" id="security">
+        <div>Signal87 AI — Private document intelligence powered by GPT reasoning.</div>
+        <nav className="footer-links">
+          <Link href="/about">About</Link>
+          <Link href="/team">Team</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/contact">Contact</Link>
+        </nav>
       </footer>
     </div>
   );

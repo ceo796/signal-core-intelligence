@@ -2,6 +2,27 @@
 
 ---
 
+## [Signal87_Landing_Page_Retool_Redesign_v1] — 2026-06-19  *(Replace the public landing page with the approved Retool-style design; landing-page-only, frontend)*
+
+### Summary
+The public home page (`/`) has been replaced with the approved **Retool-style dark landing page**. It is a **near-black** page with large thin **off-white** typography, **cream** and **green-outline** pill buttons, a **sticky** blurred top navigation, a large left-side hero (`Document intelligence` eyebrow → *"Extend your team with verifiable AI reasoning."* → grounded-citations + verification-trace copy), a right-side **product UI collage** (diligence overview / comparison brief / source library / verification trace / executive brief mock cards), a moving **ticker** (GROUNDED ANSWERS · GPT REASONING · …), a **governance / security** split section with floating windows + Citations / Verification Trace / GPT Reasoning badges, and three numbered **feature cards** (Upload → Ask → Verify). It keeps the same Signal87 positioning: document intelligence, GPT reasoning, grounded citations, verification trace, private document workflows, and **no live web research** in the core product.
+
+The design was converted **cleanly into the existing React page** (`pages/home.tsx`) — not a dropped-in standalone HTML file. Styling is a **scoped `<style>` block** with every selector prefixed by `.s87-landing` (plus a namespaced `@keyframes s87-marquee`) so nothing leaks into the authenticated app.
+
+### Navigation & auth wiring
+- Nav: **Signal87 AI** wordmark + mark, **Product** / **Governance** / **Use cases** / **Security** (in-page anchors), **Sign in**, **Book a demo**, **Start for free**.
+- **Sign in → `/sign-in`** and **Start for free → `/sign-up`** use the existing Clerk flow (unchanged). **Book a demo → `/contact`** (existing route). Signed-in visitors instead see **Open App → `/documents`**.
+- Responsive: ≤980px collapses the nav links and stacks the hero/split + collage; ≤640px reduces to the primary pill, mirroring the approved mockup. Honors `prefers-reduced-motion` (ticker + smooth-scroll disabled); the decorative collage is exposed as a single labeled `role="img"`.
+
+### Scope
+- **Only** `artifacts/signal87-core/src/pages/home.tsx` changed. **No** change to the authenticated app, document upload / detail / Ask / Activity, PDF viewer, spreadsheet support, chat, citations, Clerk auth, backend API routes, DB schema, object storage, or any document workflow. No OpenAPI/codegen/Zod change.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Rendered correctly on desktop (1280) and mobile (402) via preview screenshots; no runtime/console errors (only standard Vite + Clerk dev notices). Architect review: PASS.
+
+---
+
 ## [Signal87_Hybrid_AI_Chat_GPT_UI_v1] — 2026-06-19  *(Redesign the Hybrid AI Chat page as a ChatGPT-style composer; frontend-only)*
 
 ### Summary
