@@ -1,0 +1,87 @@
+Create a simple logged-in Home / Command Center dashboard for Signal87 AI based on the attached visual reference.
+Use the attached screenshot as the primary design target. Match it as closely as reasonably possible:
+- White background
+- Clean left sidebar
+- Simple Home page layout
+- Large ask/search bar
+- Quick action buttons
+- Recent documents panel
+- Recent briefs panel
+- Suggested actions section
+- Rounded cards
+- Thin light borders
+- Spacious but not empty layout
+- Premium, minimal enterprise SaaS feel
+Important visual direction:
+- Replace the purple accent with dark blue accents.
+- Use dark blue for active sidebar state, primary icons, links, selected states, and subtle highlights.
+- Avoid orange, purple, heavy gradients, dark mode, or playful styling.
+- Keep the page calm, clean, and highly polished.
+Route / navigation:
+- Add a logged-in Home route, preferably /home or /dashboard.
+- Add “Home” to the sidebar above Documents.
+- If there is currently no logged-in homepage, make this the default post-login landing page.
+- Keep existing Documents, AI Chat/Ask, Briefs, Compare, Activity, and Settings pages accessible.
+- Do not remove any existing navigation.
+Dashboard content:
+1. Header
+- Title: Home
+- Subtitle: Command Center
+- Notification icon and user avatar on the top right if already available.
+2. Primary ask bar
+- Large horizontal bar near the top.
+- Placeholder text: “Ask Signal87 across your documents”
+- Clicking or submitting should route to the existing AI Chat / Ask page.
+- Do not create a new chat backend or new AI workflow.
+3. Quick actions row
+Add buttons:
+- Upload document → route to existing upload/documents flow
+- Create brief → route to existing Brief page
+- Compare documents → route to existing Compare page
+- New collection → if collections are not implemented, show as disabled or coming soon
+- Start workflow → if workflows are not implemented, show as disabled or coming soon
+4. Recent documents panel
+- Use real existing document data if already available through the current frontend document fetch.
+- Show: Name, Type or Collection, Last updated.
+- Do not show chunks.
+- Include “View all documents” link to the Documents page.
+- If no documents exist, show a clean empty state with an Upload document CTA.
+5. Recent briefs panel
+- If real brief history exists, show it.
+- If brief history does not exist, use a clean empty state.
+- Do not invent new persistent backend storage.
+- Include “View all briefs” link to the Brief page.
+6. Suggested actions
+Create four simple cards:
+- Summarize a document
+- Compare documents
+- Extract key insights
+- Create a brief
+Safety constraints:
+- This is a frontend-only UI pass unless a small route/navigation update is necessary.
+- Do not modify backend APIs.
+- Do not change database schema.
+- Do not change Clerk/auth logic except post-login route if needed.
+- Do not change upload, extraction, indexing, chat, citations, compare, brief generation, download, delete, or re-index behavior.
+- Do not alter AI provider/model configuration.
+- Do not add Gemini, Claude, web research, or any new provider.
+- Do not create new backend systems for collections, agents, or workflows.
+- Use disabled/coming soon states for anything not currently implemented.
+- Keep the git diff limited and clean.
+After implementation, verify:
+1. User can land on Home after login.
+2. Sidebar Home link works.
+3. Documents page still works.
+4. Upload still works.
+5. Ask / AI Chat still works.
+6. Brief page still works.
+7. Compare page still works.
+8. No chunks appear on the dashboard.
+9. Dark blue accents are used instead of purple.
+10. No console errors.
+11. No backend files were changed unless explicitly necessary.
+Report:
+- Files changed.
+- Whether Home uses real recent documents or an empty state.
+- Whether post-login routing was changed.
+- Confirmation that core document and AI workflows were not modified.

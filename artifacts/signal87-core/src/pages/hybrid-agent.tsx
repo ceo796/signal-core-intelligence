@@ -270,44 +270,6 @@ function Composer({
   );
 }
 
-function SourceBadges({ usedDocuments }: { usedDocuments: boolean }) {
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-xs text-muted-foreground mr-0.5">Answer sources:</span>
-      <span
-        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
-          usedDocuments
-            ? "bg-primary/10 text-primary border-primary/20"
-            : "bg-muted text-muted-foreground border-border/50"
-        }`}
-        title={
-          usedDocuments
-            ? "Your documents were used and are cited below"
-            : "No document context was used for this answer"
-        }
-      >
-        <FileText className="w-3 h-3 shrink-0" />
-        {SOURCE_LABELS.document_context}
-        {!usedDocuments && <span className="opacity-70">· not used</span>}
-      </span>
-      <span
-        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/20"
-        title="Produced by the configured AI model's reasoning — not web research"
-      >
-        <Sparkles className="w-3 h-3 shrink-0" />
-        {SOURCE_LABELS.gpt_reasoning}
-      </span>
-      <span
-        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-dashed border-border/60 bg-muted text-muted-foreground opacity-70"
-        title="Web context is not available yet — no external web research is performed"
-      >
-        <Globe className="w-3 h-3 shrink-0" />
-        {SOURCE_LABELS.web_context_placeholder_disabled}
-        <span className="opacity-80">· Coming soon</span>
-      </span>
-    </div>
-  );
-}
 
 function CitationCard({
   citation,
@@ -414,34 +376,57 @@ function ResultView({ result }: { result: HybridAgentResult }) {
   const [expandedCitation, setExpandedCitation] = useState<number | null>(null);
   const [traceOpen, setTraceOpen] = useState(false);
 
+  // Sources filter. null = citations hidden; "all" = show all; Set<string> = by doc name.
+  const [sourceFilter, setSourceFilter] = useState<"all" | Set<string> | null>(null);
+
   const toggleCitation = (n: number) =>
     setExpandedCitation((prev) => (prev === n ? null : n));
 
-  // "Document context" is active only when the answer actually cites the documents
-  // ([Source N] present), not merely when chunks were retrieved — so a GPT-only /
-  // general-reasoning answer honestly shows Document context as "not used".
+  // Only true when [Source N] tags actually appear in the answer text.
   const answerCitesDocuments =
     result.citations.length > 0 && /\[Source\s+\d+\]/.test(result.answer);
 
+  const citationDocs = Array.from(
+    new Set(result.citations.map((c) => c.documentName))
+  );
+
+  const filteredCitations =
+    sourceFilter === null
+      ? []
+      : sourceFilter === "all"
+      ? result.citations
+      : result.citations.filter((c) =>
+          (sourceFilter as Set<string>).has(c.documentName)
+        );
+
+  const toggleDocFilter = (name: string) => {
+    setSourceFilter((prev) => {
+      if (prev === null) return new Set([name]);
+      if (prev === "all") {
+        const next = new Set(citationDocs);
+        next.delete(name);
+        return next.size === 0 ? null : next;
+      }
+      const next = new Set(prev as Set<string>);
+      if (next.has(name)) {
+        next.delete(name);
+        return next.size === 0 ? null : next;
+      }
+      next.add(name);
+      return next.size === citationDocs.length ? "all" : next;
+    });
+  };
+
+  const allDocsChecked =
+    sourceFilter === "all" ||
+    (sourceFilter instanceof Set && sourceFilter.size === citationDocs.length);
+
+  const PILL =
+    "inline-flex items-center gap-1.5 h-7 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer select-none";
+
   return (
-    <div className="space-y-5">
-      <SourceBadges usedDocuments={answerCitesDocuments} />
-
-      {result.documentsUsed.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 items-center">
-          <span className="text-xs text-muted-foreground mr-0.5">Searched:</span>
-          {result.documentsUsed.map((doc) => (
-            <span
-              key={doc.id}
-              className="inline-flex items-center gap-1 text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full border border-border/50"
-            >
-              <FileText className="w-3 h-3 shrink-0" />
-              <span className="truncate max-w-[180px]" title={doc.name}>{doc.name}</span>
-            </span>
-          ))}
-        </div>
-      )}
-
+    <div className="space-y-4">
+      {/* AI Answer — always the first thing shown */}
       <Card className="bg-card border-border/50">
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -455,16 +440,150 @@ function ResultView({ result }: { result: HybridAgentResult }) {
         </CardContent>
       </Card>
 
-      {result.citations.length > 0 && (
+      {/* Control pills — all collapsed by default, positioned below the answer */}
+      <div className="flex flex-wrap gap-2 items-center">
+
+        {/* Answer sources */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" className={PILL}>
+              <FileText className="w-3 h-3 shrink-0" />
+              Answer sources
+              <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-60 p-3 space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              Sources used
+            </p>
+            <div
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs ${
+                answerCitesDocuments
+                  ? "bg-primary/10 text-primary"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <FileText className="w-3 h-3 shrink-0" />
+              <span className="flex-1">{SOURCE_LABELS.document_context}</span>
+              {!answerCitesDocuments && (
+                <span className="opacity-70 text-[10px]">· not used</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-primary/10 text-primary">
+              <Sparkles className="w-3 h-3 shrink-0" />
+              <span className="flex-1">{SOURCE_LABELS.gpt_reasoning}</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-muted text-muted-foreground opacity-60 border border-dashed border-border/60">
+              <Globe className="w-3 h-3 shrink-0" />
+              <span className="flex-1">{SOURCE_LABELS.web_context_placeholder_disabled}</span>
+              <span className="text-[10px]">· Soon</span>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Searched */}
+        {result.documentsUsed.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={PILL}>
+                <FileText className="w-3 h-3 shrink-0" />
+                Searched
+                <span className="opacity-60">({result.documentsUsed.length})</span>
+                <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Documents searched
+              </p>
+              <div className="space-y-1">
+                {result.documentsUsed.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-secondary/60 text-xs"
+                  >
+                    <FileText className="w-3 h-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate" title={doc.name}>
+                      {doc.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {/* Sources — filter popover; citation cards expand below the pill row */}
+        {result.citations.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={PILL}>
+                <ShieldCheck className="w-3 h-3 shrink-0" />
+                Sources
+                <span className="opacity-60">({result.citations.length})</span>
+                {sourceFilter !== null && (
+                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                )}
+                <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 p-3">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Filter by document
+              </p>
+              <div className="space-y-0.5">
+                <label className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-muted/50 rounded cursor-pointer">
+                  <Checkbox
+                    checked={allDocsChecked}
+                    onCheckedChange={(v) => setSourceFilter(v ? "all" : null)}
+                  />
+                  <span className="text-xs">All documents</span>
+                </label>
+                {citationDocs.map((name) => (
+                  <label
+                    key={name}
+                    className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-muted/50 rounded cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={
+                        sourceFilter === "all" ||
+                        (sourceFilter instanceof Set && sourceFilter.has(name))
+                      }
+                      onCheckedChange={() => toggleDocFilter(name)}
+                    />
+                    <span className="text-xs truncate" title={name}>
+                      {name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {sourceFilter !== null && (
+                <button
+                  type="button"
+                  onClick={() => setSourceFilter(null)}
+                  className="mt-2 w-full py-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline transition-colors text-center"
+                >
+                  Hide citations
+                </button>
+              )}
+            </PopoverContent>
+          </Popover>
+        )}
+
+      </div>
+
+      {/* Citation cards — expand below the controls when filter is active */}
+      {filteredCitations.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-primary/70 shrink-0" />
-            <span className="text-sm font-medium">Sources</span>
-            <span className="text-xs text-muted-foreground">
-              {result.citations.length} chunk{result.citations.length !== 1 ? "s" : ""} retrieved
+            <span className="text-sm font-medium">
+              {sourceFilter === "all"
+                ? `All sources · ${result.citations.length} chunk${result.citations.length !== 1 ? "s" : ""}`
+                : `${filteredCitations.length} chunk${filteredCitations.length !== 1 ? "s" : ""} · ${(sourceFilter as Set<string>).size} document${(sourceFilter as Set<string>).size !== 1 ? "s" : ""}`}
             </span>
           </div>
-          {result.citations.map((c) => (
+          {filteredCitations.map((c) => (
             <CitationCard
               key={c.citationNumber}
               citation={c}
