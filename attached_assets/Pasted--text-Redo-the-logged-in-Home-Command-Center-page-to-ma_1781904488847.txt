@@ -1,0 +1,169 @@
+```text
+Redo the logged-in Home / Command Center page to match the approved reference design much more closely.
+
+The current dashboard implementation is not acceptable. It is too sparse and does not follow the reference layout. Replace it with the intended design.
+
+Goal:
+Create a clean, minimal, white-background logged-in Home dashboard for Signal87 that closely matches the provided reference image.
+
+This should be a simple Command Center for post-login users.
+
+Important constraints:
+- Frontend/UI only.
+- Do not change backend routes.
+- Do not change database schema.
+- Do not change auth.
+- Do not change upload, extraction, indexing, chat, citations, briefs, compare, delete, download, re-index, or provider/model behavior.
+- Do not add fake persistent backend data.
+- Use existing document data where available.
+- If a feature does not exist yet, show a disabled or coming-soon state.
+- Do not touch the Document Detail redesign in this task.
+- Do not touch AI Chat ResultView in this task.
+
+Match the reference layout:
+
+1. Sidebar
+Use the existing sidebar, but make the Home page feel like the reference:
+- Signal87 logo at top
+- Home selected
+- Documents
+- AI Chat
+- Brief
+- Compare
+- Activity
+- Settings at bottom
+- Workspace/user card at bottom if already supported
+
+2. Header
+At the top of the main content:
+- Large title: Home
+- Subtitle: Command Center
+
+3. Large Ask bar
+Add a large horizontal ask/search bar near the top:
+- Placeholder: “Ask Signal87 across your documents”
+- Left icon inside the bar
+- Round arrow button on the right
+- Clicking or submitting routes to the existing AI Chat / Ask page
+- Do not create a new chat endpoint
+
+The ask bar must be wide and visually prominent, like the reference.
+
+4. Quick action row
+Directly below the Ask bar, add five equal-width action buttons:
+- Upload document
+- Create brief
+- Compare documents
+- Start workflow
+- New collection
+
+Behavior:
+- Upload document links to existing upload/documents flow.
+- Create brief links to existing Brief page.
+- Compare documents links to existing Compare page.
+- Start workflow should be disabled or marked coming soon if workflows are not implemented.
+- New collection should be disabled or marked coming soon if collections are not implemented.
+
+The buttons should be evenly spaced, same height, subtle border, rounded corners, and dark blue accent icons.
+
+5. Middle content: two cards side-by-side
+Create two large cards side by side:
+
+Left card: Recent documents
+- Title: Recent documents
+- “View all” link on the right
+- Table-style list with columns:
+  - Name
+  - Collection or Type
+  - Last updated
+- Show up to 5 recent documents using real existing document data if available.
+- Do not show chunks.
+- Use small file-type icons.
+- Add “View all documents →” link at the bottom.
+
+Right card: Recent briefs
+- Title: Recent briefs
+- “View all” link on the right
+- If real brief history exists, show recent briefs.
+- If brief history does not exist, show a polished empty state.
+- Do not invent backend brief history.
+- Include statuses only if real or harmless static UI is already supported.
+- Add “View all briefs →” link at the bottom.
+
+The two cards should visually match the reference: equal height, rounded borders, clean spacing, subtle dividers.
+
+6. Bottom card: Suggested actions
+Add a full-width card titled “Suggested actions”
+Inside, show four action cards:
+- Summarize a document
+  Subtitle: “Get a summary of key insights”
+- Compare documents
+  Subtitle: “Find similarities and differences”
+- Extract key insights
+  Subtitle: “Identify themes and takeaways”
+- Create a brief
+  Subtitle: “Generate a draft brief instantly”
+
+Each action card should have:
+- Small icon
+- Title
+- Subtitle
+- Chevron arrow
+- Rounded border
+- Equal width
+
+7. Visual style
+Match the approved reference as closely as possible:
+- White background
+- Lots of clean whitespace, but not empty/sparse
+- Thin light-gray borders
+- Rounded cards
+- Soft shadows only if very subtle
+- Dark navy / dark blue accent, not purple
+- Clean enterprise SaaS feel
+- Modern typography consistent with the existing app
+- No heavy gradients
+- No dark background
+- No marketing hero section
+- No giant icons
+- No chunky card spacing
+- No “chunks” anywhere on the Home page
+
+8. Layout proportions
+The page should visually resemble the reference:
+- Main content starts with Home / Command Center at top left
+- Ask bar spans most of the content width
+- Quick actions row is below the ask bar
+- Recent documents and Recent briefs sit side-by-side
+- Suggested actions spans full width below
+- Content should be centered within the main app area, not crammed left or overly narrow
+
+9. Routing
+- The Home sidebar item should route to this page.
+- If appropriate, make this the default logged-in route.
+- Do not break existing /documents, /chat, /brief, /compare, /activity, or /settings routes.
+
+10. Verification
+After implementation, verify:
+- Home page matches the reference layout closely.
+- Home sidebar link works.
+- Recent documents use existing document data if available.
+- Upload document action works or routes correctly.
+- Create brief routes correctly.
+- Compare documents routes correctly.
+- Ask bar routes to AI Chat / Ask.
+- No chunks are shown.
+- Documents page still works.
+- AI Chat still works.
+- Brief page still works.
+- Compare page still works.
+- No backend files changed.
+- No console errors.
+- Git diff is limited and clean.
+
+Report:
+- Files changed.
+- Whether the dashboard uses real recent documents.
+- Which actions are live versus coming soon.
+- Confirmation that no backend, AI, auth, upload, document processing, or citation logic was changed.
+```
