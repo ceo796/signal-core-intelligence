@@ -15,8 +15,6 @@ export function Layout({ children }: LayoutProps) {
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/agents/hybrid", label: "AI Chat", icon: Sparkles },
-    { href: "/brief", label: "Brief", icon: FileCheck },
-    { href: "/compare", label: "Compare", icon: GitCompare },
     { href: "/activity", label: "Activity", icon: Activity },
   ];
 

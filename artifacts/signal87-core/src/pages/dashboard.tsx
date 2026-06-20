@@ -1,7 +1,11 @@
+import { useRef, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useListDocuments } from "@workspace/api-client-react";
+import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { useUser, UserButton } from "@clerk/react";
+import { Document, Page, pdfjs } from "react-pdf";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
   Search,
   Upload,
@@ -10,9 +14,13 @@ import {
   FolderOpen,
   ArrowRight,
   FileText,
+  FileSpreadsheet,
   Sparkles,
   Bot,
+  GitCompare,
 } from "lucide-react";
+
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 function relativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -28,13 +36,20 @@ function relativeTime(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+const FT_BG: Record<string, string> = {
+  pdf: "#e53e3e",
+  docx: "#3182ce",
+  doc: "#3182ce",
+  xlsx: "#38a169",
+  xls: "#38a169",
+  csv: "#38a169",
+  txt: "#718096",
+  pptx: "#dd6b20",
+  ppt: "#dd6b20",
+};
+
 function fileTypeColor(ft: string): string {
-  const t = ft.toLowerCase();
-  if (t === "pdf") return "#e53e3e";
-  if (t === "docx" || t === "doc") return "#3182ce";
-  if (t === "xlsx" || t === "xls" || t === "csv") return "#38a169";
-  if (t === "txt") return "#718096";
-  return "#805ad5";
+  return FT_BG[ft.toLowerCase()] ?? "#805ad5";
 }
 
 function FileChip({ fileType }: { fileType: string }) {
@@ -52,6 +67,107 @@ function FileChip({ fileType }: { fileType: string }) {
     >
       {fileType.toUpperCase().slice(0, 3)}
     </span>
+  );
+}
+
+function FileTypeIcon({ fileType }: { fileType: string }) {
+  const ft = fileType.toLowerCase();
+  if (ft === "xlsx" || ft === "xls" || ft === "csv") return <FileSpreadsheet className="w-4 h-4" />;
+  if (ft === "docx" || ft === "doc") return <FileText className="w-4 h-4" />;
+  if (ft === "pptx" || ft === "ppt") return <FileText className="w-4 h-4" />;
+  return <FileText className="w-4 h-4" />;
+}
+
+function FallbackThumbnail({ fileType }: { fileType: string }) {
+  const bg = fileTypeColor(fileType);
+  return (
+    <div
+      className="w-11 h-14 rounded-md flex items-center justify-center shrink-0 border border-white/10"
+      style={{ backgroundColor: bg }}
+    >
+      <FileTypeIcon fileType={fileType} />
+    </div>
+  );
+}
+
+function DocumentThumbnail({ doc }: { doc: any }) {
+  const ft = doc.fileType?.toLowerCase() || "";
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true);
+      },
+      { rootMargin: "100px", threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  if (ft !== "pdf" || !visible) {
+    return (
+      <div ref={ref}>
+        <FallbackThumbnail fileType={ft} />
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="w-11 h-14 rounded-md overflow-hidden shrink-0 border border-white/10 bg-[#1a1a1a] flex items-center justify-center">
+      <PdfThumbnailLazy id={doc.id} />
+    </div>
+  );
+}
+
+function PdfThumbnailLazy({ id }: { id: number }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    customFetch<Blob>(getGetDocumentOriginalUrl(id), { method: "GET", responseType: "blob" })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [id]);
+
+  if (error || !url) {
+    return <FallbackThumbnail fileType="pdf" />;
+  }
+
+  return (
+    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+      {/* tiny first-page preview via react-pdf */}
+      <PdfPreviewMini fileUrl={url} onError={() => setError(true)} />
+    </div>
+  );
+}
+
+function PdfPreviewMini({ fileUrl, onError }: { fileUrl: string; onError: () => void }) {
+  return (
+    <Document file={fileUrl} onLoadError={onError} loading={null} error={null}>
+      <Page
+        pageNumber={1}
+        scale={0.18}
+        renderTextLayer={false}
+        renderAnnotationLayer={false}
+        className="[&_canvas]:!rounded-sm [&_canvas]:!shadow-none"
+      />
+    </Document>
   );
 }
 
@@ -85,6 +201,7 @@ export default function Dashboard() {
   const quickActions = [
     { label: "Upload document", icon: Upload, onClick: () => navigate("/documents"), live: true },
     { label: "Create brief", icon: ScrollText, onClick: () => navigate("/brief"), live: true },
+    { label: "Compare documents", icon: GitCompare, onClick: () => navigate("/compare"), live: true },
     { label: "New agent", icon: Bot, onClick: () => navigate("/agents/hybrid"), live: true },
     { label: "Start workflow", icon: Zap, onClick: () => {}, live: false },
     { label: "New collection", icon: FolderOpen, onClick: () => {}, live: false },
@@ -146,28 +263,28 @@ export default function Dashboard() {
               </div>
             </Link>
 
-            {/* Quick actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {/* Quick actions — compact pill row */}
+            <div className="flex flex-wrap gap-2">
               {quickActions.map((action) => (
                 <button
                   key={action.label}
                   type="button"
                   onClick={action.live ? action.onClick : undefined}
                   disabled={!action.live}
-                  className="relative flex flex-col items-center gap-3 py-5 px-3 rounded-2xl border border-border bg-card/70 text-center transition-all duration-200 group enabled:hover:border-primary/30 enabled:hover:bg-card enabled:hover:shadow-md enabled:motion-safe:hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="relative flex items-center gap-2.5 pl-3.5 pr-4 py-2.5 rounded-xl border border-border bg-card/70 transition-all duration-200 group enabled:hover:border-primary/30 enabled:hover:bg-card enabled:hover:shadow-sm enabled:motion-safe:hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                       action.live
                         ? "bg-primary/10 text-primary group-hover:bg-primary/15"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    <action.icon className="w-[18px] h-[18px]" />
+                    <action.icon className="w-[14px] h-[14px]" />
                   </span>
-                  <span className="text-xs text-muted-foreground leading-tight">{action.label}</span>
+                  <span className="text-[12px] text-muted-foreground leading-tight whitespace-nowrap">{action.label}</span>
                   {!action.live && (
-                    <span className="absolute top-2.5 right-2.5 text-[9px] text-muted-foreground/60 font-medium">
+                    <span className="absolute -top-1.5 -right-1 text-[8px] text-muted-foreground/60 font-medium bg-card border border-border rounded-full px-1.5 py-px leading-none">
                       Soon
                     </span>
                   )}
@@ -193,7 +310,7 @@ export default function Dashboard() {
                 {/* Column headers */}
                 <div className="grid grid-cols-[1fr_100px_72px] gap-2 px-5 py-2 border-b border-border">
                   <span className="text-[11px] text-muted-foreground font-medium">Name</span>
-                  <span className="text-[11px] text-muted-foreground font-medium">Collection</span>
+                  <span className="text-[11px] text-muted-foreground font-medium">Type</span>
                   <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
                 </div>
 
@@ -201,7 +318,7 @@ export default function Dashboard() {
                   {docsLoading ? (
                     <div className="px-3 py-4 space-y-2">
                       {[0, 1, 2, 3].map((i) => (
-                        <div key={i} className="h-7 rounded bg-muted animate-pulse" />
+                        <div key={i} className="h-14 rounded bg-muted animate-pulse" />
                       ))}
                     </div>
                   ) : recentDocs.length === 0 ? (
@@ -224,7 +341,7 @@ export default function Dashboard() {
                         className="grid grid-cols-[1fr_100px_72px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <FileChip fileType={doc.fileType} />
+                          <DocumentThumbnail doc={doc} />
                           <span
                             className="text-sm text-foreground/80 truncate group-hover:text-foreground"
                             title={doc.fileName}
@@ -232,7 +349,7 @@ export default function Dashboard() {
                             {doc.fileName}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground truncate">—</span>
+                        <span className="text-xs text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
                         <span className="text-xs text-muted-foreground text-right tabular-nums">
                           {relativeTime(doc.uploadedAt)}
                         </span>

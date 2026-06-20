@@ -2,6 +2,31 @@
 
 ---
 
+## [Signal87_DashboardCleanup_v3] — 2026-06-20  *(Compact dashboard, sidebar cleanup, document thumbnails; frontend/UI only)*
+
+### Summary
+Dashboard cleanup: compact horizontal pill-row quick actions, Brief/Compare removed from the sidebar (still accessible via dashboard buttons), Recent Documents restored with real thumbnails (lazy-loaded PDF first-page previews via `react-pdf` at scale 0.18, plus polished file-type fallback tiles for non-PDFs). No fake data. Perplexity dark theme retained.
+
+### Changed
+- **`src/components/layout.tsx`** — removed "Brief" and "Compare" from sidebar nav; nav now: Home | Documents | AI Chat | Activity | Settings. Brief/Compare routes remain fully accessible via dashboard buttons and URL.
+- **`src/pages/dashboard.tsx`** — three major changes:
+  1. **Compact quick actions** — replaced 5-column tall cards with a horizontal `flex flex-wrap` pill row (`rounded-xl`, `py-2.5`, `w-7 h-7` icon containers, `text-[12px]` labels). Added "Compare documents" as a live action (navigates to `/compare`). Disabled actions kept with "Soon" micro-badge.
+  2. **Recent Documents thumbnails** — new `DocumentThumbnail`, `FallbackThumbnail`, `PdfThumbnailLazy`, and `PdfPreviewMini` components. PDFs show a lazy-intersection-observer-triggered first-page preview (`react-pdf` at scale 0.18, no text/annotation layers). Non-PDFs show a color-coded file-type fallback tile (w-11 h-14). Thumbnail column loads on demand via `customFetch` blob + `URL.createObjectURL`. Cleanup via `revokeObjectURL`. No new backend/storage system.
+  3. **Recent docs table header** — "Collection" renamed to "Type" (shows actual `fileType.toUpperCase()`). Skeleton loader adjusted to match taller row height.
+
+### Scope
+- Frontend/UI only. No backend routes, DB schema, auth, upload, extraction, indexing, chat, citations, brief generation, compare, AI provider/model, storage, download, or delete behavior changed.
+- **Landing untouched** — `git diff` shows no `home.tsx`, `public-layout`, or marketing pages.
+- **Backend untouched** — no `api-server` or `lib/api` files changed.
+- Real data only; no fake briefs, activity, insights, or names. Honest empty states preserved.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- Vite restarted cleanly; console no errors (only Clerk dev key warning). API logs show documents list (304) and original-file thumbnail fetches (200/304) working.
+- Brief/Compare routes remain accessible via `/brief` and `/compare` direct URLs and dashboard buttons.
+
+---
+
 ## [Signal87_AppShell_PerplexityTheme_v2] — 2026-06-20  *(Accent color: emerald → Perplexity turquoise; frontend/UI only)*
 
 ### Summary

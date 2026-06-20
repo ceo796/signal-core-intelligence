@@ -1,0 +1,133 @@
+```text id="7bbm7k"
+Make targeted dashboard cleanup changes only.
+
+Current issues:
+1. The dashboard quick-action buttons are too large and take up too much space.
+2. Brief and Compare should not appear in the left sidebar because they are already accessible from the dashboard action buttons.
+3. Recent document thumbnails/previews need to be restored.
+4. Keep the current dark Perplexity-inspired color style, but make the page more compact and useful.
+
+Permanent rule:
+Do not modify the public landing page unless explicitly instructed. Confirm the landing page was untouched.
+
+Scope:
+Frontend/UI only.
+
+Do not change:
+- Backend routes
+- Database schema
+- Auth
+- Upload behavior
+- Extraction/indexing
+- Chat behavior
+- Citations
+- Brief generation behavior
+- Compare behavior
+- AI provider/model behavior
+- Document storage
+- Download/delete/re-index behavior
+
+Required changes:
+
+1. Make quick-action buttons smaller and more compact
+Current buttons are too large.
+Update the dashboard quick actions to be compact pill/card buttons:
+- smaller height
+- tighter padding
+- smaller icon container
+- less vertical space
+- same visual style as current dark theme
+- preserve click targets and accessibility
+
+Keep these dashboard action buttons:
+- Upload document
+- Create brief
+- Compare documents
+- New agent
+- Start workflow
+- New collection
+
+If New agent, Start workflow, or New collection are not implemented, keep them disabled or marked “Soon.”
+
+2. Clean up left sidebar
+Remove Brief and Compare from the left sidebar navigation.
+
+Sidebar should include:
+- Home
+- Documents
+- AI Chat
+- Activity
+- Settings
+
+Optional only if actually implemented:
+- Collections
+- Agents
+- Workflows
+
+Do not remove the actual Brief or Compare routes/features.
+They should remain accessible through dashboard buttons and any relevant workflow links.
+
+3. Restore Recent Documents thumbnails
+Recent Documents must show small thumbnails/previews again where available.
+
+For each recent document row:
+- thumbnail/preview on the left
+- file name
+- type or collection
+- updated/uploaded date
+- no chunks
+
+Thumbnail behavior:
+- Reuse existing preview/original-file support if available.
+- PDFs should show a small first-page preview when possible.
+- XLSX/DOCX/TXT should show polished fallback tiles if preview is unavailable.
+- Do not build a new backend thumbnail system.
+- Do not add storage paths.
+- Do not trigger expensive full-document rendering on dashboard load.
+- Use lazy loading or lightweight rendering where appropriate.
+
+4. Keep real data only
+Do not add fake briefs, fake activity, fake AI answers, fake citations, fake source pills, fake names, or fake insights.
+
+If data is unavailable, show honest empty states.
+
+5. Visual style
+Keep the current dark Perplexity-inspired style:
+- near-black background
+- charcoal panels
+- teal/cyan accent
+- rounded/pill controls
+- compact spacing
+- soft borders
+- understated premium UI
+
+6. Verification
+After implementation, verify:
+- Dashboard loads.
+- Quick-action buttons are visibly smaller and more compact.
+- Brief and Compare are removed from the sidebar.
+- Brief route still works through dashboard action.
+- Compare route still works through dashboard action.
+- Recent Documents uses real document data.
+- Thumbnails/previews appear where available.
+- Fallback tiles appear where previews are unavailable.
+- No chunks are visible.
+- No fake content appears.
+- Documents page still works.
+- AI Chat still works.
+- Upload still works.
+- Brief generation still works.
+- Compare still works.
+- No backend files changed.
+- No AI/provider behavior changed.
+- Landing page was untouched.
+- No console errors.
+- Git diff is limited and clean.
+
+Report:
+- Files changed.
+- Whether Brief and Compare routes remain accessible.
+- Whether thumbnails are real previews or fallback tiles.
+- Whether any backend files were touched.
+- Confirmation that the landing page was untouched.
+```
