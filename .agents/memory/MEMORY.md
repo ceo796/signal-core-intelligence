@@ -11,4 +11,5 @@
 - [Public endpoint protected-store leak](public-endpoint-protected-data.md) — a public/no-auth route reading a protected table must anonymize identifying fields (e.g. real filenames); select only non-identifying columns.
 - [customFetch blob downloads](customfetch-blob-download.md) — file downloads must call customFetch with explicit `responseType:"blob"`; generated ops mis-parse text/plain & text/csv as strings.
 - [Hybrid answer grounding signal](hybrid-answer-grounding-signal.md) — documentsUsed/citations = retrieval scope, not answer grounding; detect `[Source N]` in `answer` to know if docs were actually used.
+- [App vs landing theme isolation](app-theme-isolation.md) — app theme = global `.dark` on Layout root; landing is isolated via scoped `.s87-landing` namespace. Never apply `.dark` to public pages; dark sidebar needs the white logo PNG.
 - [Blend logos into dark bg](logo-blend-luminance-key.md) — AI bg-removal mangles light-on-dark logos; use ImageMagick luminance key (black point just above frame luma), then trim. Only `magick`/`ffmpeg` present (no python3/sharp).

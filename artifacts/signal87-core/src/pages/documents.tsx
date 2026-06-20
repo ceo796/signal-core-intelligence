@@ -523,10 +523,10 @@ export default function DocumentsList() {
           </div>
           <div className="flex items-center gap-2">
             {/* View toggle */}
-            <div className="flex items-center rounded-md border border-border overflow-hidden">
+            <div className="flex items-center rounded-full border border-border overflow-hidden p-0.5 gap-0.5">
               <button
                 onClick={() => switchView("list")}
-                className={`p-1.5 transition-colors ${
+                className={`p-1.5 rounded-full transition-colors ${
                   view === "list"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
@@ -538,7 +538,7 @@ export default function DocumentsList() {
               </button>
               <button
                 onClick={() => switchView("grid")}
-                className={`p-1.5 transition-colors ${
+                className={`p-1.5 rounded-full transition-colors ${
                   view === "grid"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
@@ -553,7 +553,7 @@ export default function DocumentsList() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="p-1.5 rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
+                  className="p-2 rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors"
                   title="Preferences"
                   aria-label="Preferences"
                 >
@@ -583,7 +583,7 @@ export default function DocumentsList() {
                 placeholder="Search by name…"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="pl-8 h-8 text-sm"
+                className="pl-9 h-9 text-sm rounded-full"
               />
               {search && (
                 <button
@@ -596,7 +596,7 @@ export default function DocumentsList() {
               )}
             </div>
             <Select value={statusFilter} onValueChange={(v) => handleStatusFilter(v as StatusFilter)}>
-              <SelectTrigger className="h-8 w-36 text-sm">
+              <SelectTrigger className="h-9 w-36 text-sm rounded-full">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -608,7 +608,7 @@ export default function DocumentsList() {
             </Select>
             {availableTypes.length > 0 && (
               <Select value={typeFilter} onValueChange={(v) => handleTypeFilter(v as TypeFilter)}>
-                <SelectTrigger className="h-8 w-32 text-sm">
+                <SelectTrigger className="h-9 w-32 text-sm rounded-full">
                   <SelectValue placeholder="File type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -628,7 +628,7 @@ export default function DocumentsList() {
                   value={gridSortColumn}
                   onValueChange={(v) => handleGridSortColumn(v as SortColumn)}
                 >
-                  <SelectTrigger className="h-8 w-36 text-sm">
+                  <SelectTrigger className="h-9 w-36 text-sm rounded-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -640,7 +640,7 @@ export default function DocumentsList() {
                 </Select>
                 <button
                   onClick={handleGridSortDirection}
-                  className="h-8 w-8 flex items-center justify-center rounded-md border border-input bg-background hover:bg-muted transition-colors shrink-0"
+                  className="h-9 w-9 flex items-center justify-center rounded-full border border-input bg-background hover:bg-muted transition-colors shrink-0"
                   title={gridSortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
                   aria-label={gridSortDirection === "asc" ? "Sort ascending" : "Sort descending"}
                 >

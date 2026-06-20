@@ -2,6 +2,27 @@
 
 ---
 
+## [Signal87_AppShell_PerplexityTheme_v1] — 2026-06-20  *(Logged-in app theme redesign; frontend/UI only)*
+
+### Summary
+Applied a **Perplexity-inspired dark theme** to the logged-in app shell — restrained near-black charcoal background, refined Inter typography, pill-shaped controls, soft rounded cards with subtle low-contrast borders, and gentle premium hover/lift motion. The change is **scoped to the authenticated app only**; the public landing page and marketing pages are untouched.
+
+### Changed
+- **`src/index.css`** — refined the `.dark` token block toward a neutral charcoal palette: background `150 5% 7%`, foreground `40 12% 94%` (near-white), muted-foreground `150 4% 64%`, card `150 4% 11%`, borders `150 4% 19%`, emerald primary `142 55% 44%`. (Edits confined to `.dark`, which only applies inside the app shell.)
+- **`src/components/layout.tsx`** — reduced the green radial glow to a very subtle ambiance (no loud gradient); nav + settings items use rounded-xl pill states with `bg-primary/12` active and `hover:bg-sidebar-accent`; swapped the sidebar logo from the dark `signal87-logo-black.svg` to the white `signal87-logo.png` so it's visible on the dark sidebar.
+- **`src/pages/dashboard.tsx`** — pill (rounded-full) top search bar; removed the non-functional notification bell (honest UI); ask bar restyled as a pill composer; quick-action buttons get circular icon chips and softer rounded-2xl surfaces.
+- **`src/pages/documents.tsx`** — pill search input, pill view-toggle group, rounded-full filter selects and sort controls, matched control heights.
+
+### Scope
+- Frontend/UI only. No backend routes, DB schema, auth, upload, extraction, indexing, chat, citations, brief, compare, download, delete, re-index, or AI provider/model logic changed. No fake data introduced; honest empty states and clearly-disabled "Soon" actions retained.
+- **Theme isolation:** the landing page (`home.tsx`) uses a scoped `.s87-landing` CSS namespace with its own variables and never applies the global `.dark` class; public pages use `public-layout.tsx` on light `:root` tokens. `git diff` confirms no landing/marketing files changed.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- HMR applied cleanly with no console errors; logs show documents and AI chat (hybrid agent `POST /api/agent/hybrid` → 200) working. Architect review passed after the sidebar-logo contrast fix.
+
+---
+
 ## [Signal87_DocumentDetail_Intelligence_v1] — 2026-06-19  *(Document Detail page redesign; frontend/UI only)*
 
 ### Summary

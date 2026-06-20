@@ -1,0 +1,116 @@
+Redesign the logged-in Signal87 dashboard and internal app shell using the attached visual reference as style inspiration.
+
+Important:
+This is a style/theme experiment for the logged-in app only.
+
+Permanent rule:
+Do not modify the public landing page unless I explicitly instruct you to do so.
+All changes must be isolated to the logged-in dashboard, documents, AI chat, brief, compare, and related internal app surfaces only.
+After implementation, confirm that the landing page was untouched.
+
+Goal:
+Apply a Perplexity-inspired dark interface style to the Signal87 dashboard and app shell.
+
+Use the attached reference as inspiration for:
+- color palette
+- typography feel
+- panel styling
+- rounded / pill-shaped controls
+- spacing
+- dark UI mood
+- clean minimalist structure
+
+Do not copy the source literally.
+Adapt the style to Signal87’s existing product structure.
+
+Style requirements:
+1. Background
+- black / near-black main background
+- subtle charcoal depth
+- clean, restrained, modern dark theme
+- no loud gradients
+
+2. Typography
+- use a clean modern sans-serif font similar in feel to the reference
+- refined, minimal, product-grade typography
+- soft off-white main text
+- muted gray secondary text
+- strong hierarchy for headings and labels
+
+3. Shapes / corners
+- use rounded rectangles and pill-shaped controls throughout
+- search bar should feel pill-like
+- action buttons should have soft circular/rounded geometry
+- cards should have smooth rounded corners
+- input areas should feel soft and modern, not boxy
+
+4. Panels / cards
+- dark charcoal panels over black background
+- subtle borders
+- low-contrast separation
+- premium, understated card surfaces
+- avoid bright outlines
+
+5. Apply the style to:
+- Home dashboard
+- top search / ask bar
+- sidebar
+- quick action buttons
+- recent documents
+- key mentions / document signals if present
+- suggested prompts/actions
+- documents page shell
+- internal app navigation
+
+6. Dashboard content rules
+Use real data only.
+Do not show fake AI answers, fake activity, fake brief history, fake citations, or fake insights.
+
+If real data is not available, use honest empty states.
+
+7. Dashboard structure
+Keep the dashboard useful and product-oriented:
+- top search / ask bar
+- welcome or command-center header
+- quick actions
+- recent documents
+- useful intelligence cards only if backed by real data
+- otherwise clean empty states or action prompts
+
+8. Motion
+Add subtle premium transitions only if lightweight:
+- smooth hover states
+- gentle button/card lift
+- soft focus states
+- no heavy animation
+- no gimmicks
+
+9. Technical constraints
+- frontend/UI only unless explicitly approved
+- do not change backend routes
+- do not change auth
+- do not change upload, extraction, indexing, chat, citations, briefs, compare, download, delete, or re-index behavior
+- do not change AI provider/model logic
+- do not create fake data
+
+10. Theme isolation
+Do not apply these theme changes globally if they would affect the public landing page.
+If needed, create app-specific theme tokens, CSS variables, or app-shell styling so the dashboard can change without changing the landing page.
+
+11. Verification
+After implementation, verify:
+- dashboard loads
+- documents page still works
+- AI chat still works
+- brief page still works
+- compare page still works
+- no fake content appears
+- landing page was not changed
+- no console errors
+- git diff is limited and clean
+
+Report:
+- files changed
+- theme tokens/colors/fonts used
+- whether styling was isolated from the landing page
+- confirmation that the landing page was untouched

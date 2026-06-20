@@ -4,7 +4,6 @@ import { useListDocuments } from "@workspace/api-client-react";
 import { useUser, UserButton } from "@clerk/react";
 import {
   Search,
-  Bell,
   Upload,
   ScrollText,
   Zap,
@@ -96,26 +95,20 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
 
         {/* ── Top bar ───────────────────────────────────────────── */}
-        <div className="shrink-0 border-b border-border bg-card/60 backdrop-blur-sm px-6 py-2.5 flex items-center gap-4">
+        <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-sm px-6 py-3 flex items-center gap-4">
           <div className="flex-1 relative max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               readOnly
-              placeholder="Search documents, briefs, collections, and more..."
+              placeholder="Search documents, briefs, and more…"
               onClick={() => navigate("/documents")}
-              className="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-border bg-muted/50 text-muted-foreground placeholder:text-muted-foreground/60 cursor-pointer focus:outline-none hover:border-border/80 transition-colors"
+              className="w-full pl-10 pr-12 py-2 text-sm rounded-full border border-border bg-muted/40 text-muted-foreground placeholder:text-muted-foreground/60 cursor-pointer focus:outline-none hover:border-border/80 hover:bg-muted/60 transition-colors"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground/50 font-mono select-none pointer-events-none">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground/50 font-mono select-none pointer-events-none">
               ⌘K
             </span>
           </div>
-          <button
-            type="button"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-          >
-            <Bell className="w-4 h-4" />
-          </button>
           <div className="flex items-center gap-2.5">
             <UserButton appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }} />
             {user?.fullName && (
@@ -140,16 +133,14 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* Ask bar */}
+            {/* Ask bar — pill composer */}
             <Link href="/agents/hybrid">
-              <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card/80 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                </div>
+              <div className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-full border border-border bg-card/70 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20 shadow-sm">
+                <Sparkles className="w-5 h-5 text-primary shrink-0" />
                 <span className="flex-1 text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">
                   Ask Signal87 anything across your documents
                 </span>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-primary transition-all duration-200 group-hover:scale-105">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-primary transition-all duration-200 group-hover:scale-105">
                   <ArrowRight className="w-4 h-4 text-primary-foreground" />
                 </div>
               </div>
@@ -163,14 +154,20 @@ export default function Dashboard() {
                   type="button"
                   onClick={action.live ? action.onClick : undefined}
                   disabled={!action.live}
-                  className="relative flex flex-col items-center gap-2.5 py-4 px-3 rounded-xl border border-border bg-card/80 text-center transition-all duration-200 group enabled:hover:border-primary/30 enabled:hover:bg-card enabled:hover:shadow-md enabled:motion-safe:hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="relative flex flex-col items-center gap-3 py-5 px-3 rounded-2xl border border-border bg-card/70 text-center transition-all duration-200 group enabled:hover:border-primary/30 enabled:hover:bg-card enabled:hover:shadow-md enabled:motion-safe:hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <action.icon
-                    className={`w-4 h-4 ${action.live ? "text-primary" : "text-muted-foreground"}`}
-                  />
+                  <span
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                      action.live
+                        ? "bg-primary/10 text-primary group-hover:bg-primary/15"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <action.icon className="w-[18px] h-[18px]" />
+                  </span>
                   <span className="text-xs text-muted-foreground leading-tight">{action.label}</span>
                   {!action.live && (
-                    <span className="absolute top-1.5 right-2 text-[9px] text-muted-foreground/60 font-medium">
+                    <span className="absolute top-2.5 right-2.5 text-[9px] text-muted-foreground/60 font-medium">
                       Soon
                     </span>
                   )}
