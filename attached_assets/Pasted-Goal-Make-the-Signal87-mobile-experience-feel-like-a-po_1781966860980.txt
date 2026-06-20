@@ -1,0 +1,52 @@
+Goal: Make the Signal87 mobile experience feel like a polished native app, using the ChatGPT app as the interaction benchmark: smooth, fast, minimalist, responsive, and focused.
+
+Use the attached screenshot as the current baseline. Do not treat this as a full product redesign. This is a mobile UX/app-shell refinement pass.
+
+Non-negotiable guardrails:
+- Do not change backend logic, database schema, auth, document ingestion, document ownership, file storage, OpenAI/GPT provider logic, or API contracts.
+- Do not remove or break existing routes, uploads, document detail pages, chat, briefs, compare, agents, thumbnails, or citations.
+- Prefer CSS/layout/component refinements over architectural changes.
+- Keep the existing dark premium Signal87 visual direction unless a small adjustment improves clarity.
+- Make a small, reviewable diff. No broad refactors.
+
+Design target:
+- Mobile-first experience that feels like an app, not a webpage.
+- Smooth transitions, fast taps, no janky layout shifts.
+- Minimal chrome, clear hierarchy, generous spacing, strong touch targets.
+- Use safe-area handling for iPhone top/bottom areas.
+- Bottom navigation should feel native, stable, and intentional.
+- Primary action should feel like ChatGPT’s prompt bar: obvious, immediate, and always easy to reach.
+- Reduce visual clutter and make the home screen feel calmer and more premium.
+
+Specific improvements:
+1. App shell
+- Add/verify proper mobile safe-area padding.
+- Ensure the bottom nav does not cover content.
+- Make scrolling feel clean and natural.
+- Keep key actions reachable with one thumb.
+
+2. Home screen
+- Refine the welcome area, search bar, quick actions, and recent documents section.
+- Make the “Ask Signal87 anything across your documents” action feel like the main app entry point.
+- Improve spacing and alignment so it feels less like a dashboard and more like a native workspace.
+- Simplify disabled/coming-soon actions so they do not visually compete with active actions.
+
+3. Interaction polish
+- Add subtle tap/press states.
+- Add lightweight transitions only where they improve perceived speed.
+- Add skeleton/loading states where needed.
+- Avoid heavy animations or anything that slows the app down.
+
+4. Performance
+- Do not introduce heavy animation libraries.
+- Avoid expensive effects, large assets, or unnecessary dependencies.
+- Keep Lighthouse/mobile performance in mind.
+
+Acceptance criteria:
+- On iPhone-sized screens, Signal87 should feel close to a native AI assistant app.
+- Navigation, upload, ask/chat, documents, and brief flows must still work.
+- No regression to auth, document list, document preview, upload, chat, citations, or agents.
+- Desktop should remain usable and not be degraded.
+- Provide a concise summary of files changed and what was tested.
+
+Before implementing, inspect the current app shell and relevant mobile components, then proceed with the smallest safe changes needed.

@@ -10,13 +10,10 @@ import {
   Search,
   Upload,
   ScrollText,
-  Zap,
-  FolderOpen,
   ArrowRight,
   FileText,
   FileSpreadsheet,
   Sparkles,
-  Bot,
   GitCompare,
 } from "lucide-react";
 
@@ -52,29 +49,9 @@ function fileTypeColor(ft: string): string {
   return FT_BG[ft.toLowerCase()] ?? "#805ad5";
 }
 
-function FileChip({ fileType }: { fileType: string }) {
-  return (
-    <span
-      className="inline-flex items-center justify-center rounded shrink-0 text-white"
-      style={{
-        backgroundColor: fileTypeColor(fileType),
-        fontSize: "7px",
-        fontWeight: 700,
-        width: 24,
-        height: 24,
-        letterSpacing: "-0.02em",
-      }}
-    >
-      {fileType.toUpperCase().slice(0, 3)}
-    </span>
-  );
-}
-
 function FileTypeIcon({ fileType }: { fileType: string }) {
   const ft = fileType.toLowerCase();
   if (ft === "xlsx" || ft === "xls" || ft === "csv") return <FileSpreadsheet className="w-4 h-4" />;
-  if (ft === "docx" || ft === "doc") return <FileText className="w-4 h-4" />;
-  if (ft === "pptx" || ft === "ppt") return <FileText className="w-4 h-4" />;
   return <FileText className="w-4 h-4" />;
 }
 
@@ -99,9 +76,7 @@ function DocumentThumbnail({ doc }: { doc: any }) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setVisible(true);
-      },
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
       { rootMargin: "100px", threshold: 0 }
     );
     obs.observe(el);
@@ -109,11 +84,7 @@ function DocumentThumbnail({ doc }: { doc: any }) {
   }, []);
 
   if (ft !== "pdf" || !visible) {
-    return (
-      <div ref={ref}>
-        <FallbackThumbnail fileType={ft} />
-      </div>
-    );
+    return <div ref={ref}><FallbackThumbnail fileType={ft} /></div>;
   }
 
   return (
@@ -136,22 +107,17 @@ function PdfThumbnailLazy({ id }: { id: number }) {
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
       })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      });
+      .catch(() => { if (!cancelled) setError(true); });
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [id]);
 
-  if (error || !url) {
-    return <FallbackThumbnail fileType="pdf" />;
-  }
+  if (error || !url) return <FallbackThumbnail fileType="pdf" />;
 
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden">
-      {/* tiny first-page preview via react-pdf */}
       <PdfPreviewMini fileUrl={url} onError={() => setError(true)} />
     </div>
   );
@@ -171,22 +137,6 @@ function PdfPreviewMini({ fileUrl, onError }: { fileUrl: string; onError: () => 
   );
 }
 
-function SectionCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border border-border bg-card flex flex-col transition-all duration-200 motion-safe:hover:-translate-y-0.5 hover:shadow-lg ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const [, navigate] = useLocation();
   const { data: documents, isLoading: docsLoading } = useListDocuments();
@@ -199,12 +149,9 @@ export default function Dashboard() {
     .slice(0, 5);
 
   const quickActions = [
-    { label: "Upload document", icon: Upload, onClick: () => navigate("/documents"), live: true },
-    { label: "Create brief", icon: ScrollText, onClick: () => navigate("/brief"), live: true },
-    { label: "Compare documents", icon: GitCompare, onClick: () => navigate("/compare"), live: true },
-    { label: "New agent", icon: Bot, onClick: () => navigate("/agents/hybrid"), live: true },
-    { label: "Start workflow", icon: Zap, onClick: () => {}, live: false },
-    { label: "New collection", icon: FolderOpen, onClick: () => {}, live: false },
+    { label: "Upload", icon: Upload, onClick: () => navigate("/documents") },
+    { label: "Brief", icon: ScrollText, onClick: () => navigate("/brief") },
+    { label: "Analyze", icon: GitCompare, onClick: () => navigate("/compare") },
   ];
 
   return (
@@ -212,21 +159,21 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
 
         {/* ── Top bar ───────────────────────────────────────────── */}
-        <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-sm px-6 py-3 flex items-center gap-4">
+        <div className="shrink-0 border-b border-border bg-card/40 backdrop-blur-sm px-4 md:px-6 py-3 flex items-center gap-3">
           <div className="flex-1 relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               readOnly
-              placeholder="Search documents, briefs, and more…"
+              placeholder="Search documents…"
               onClick={() => navigate("/documents")}
-              className="w-full pl-10 pr-12 py-2 text-sm rounded-full border border-border bg-muted/40 text-muted-foreground placeholder:text-muted-foreground/60 cursor-pointer focus:outline-none hover:border-border/80 hover:bg-muted/60 transition-colors"
+              className="w-full pl-9 pr-10 py-2 text-sm rounded-full border border-border bg-muted/40 text-muted-foreground placeholder:text-muted-foreground/60 cursor-pointer focus:outline-none hover:border-border/80 hover:bg-muted/60 transition-colors"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground/50 font-mono select-none pointer-events-none">
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground/50 font-mono select-none pointer-events-none hidden sm:block">
               ⌘K
             </span>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 shrink-0">
             <UserButton appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }} />
             {user?.fullName && (
               <span className="text-sm text-foreground/80 font-medium hidden lg:block">
@@ -238,174 +185,116 @@ export default function Dashboard() {
 
         {/* ── Scrollable content ─────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto bg-background">
-          <div className="max-w-6xl mx-auto px-6 md:px-8 py-7 space-y-5">
+          <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 space-y-4">
 
             {/* Welcome */}
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              <h1 className="text-xl font-bold text-foreground tracking-tight">
                 Welcome back, {firstName}
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Your AI workspace for documents, insights, and execution.
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Your AI workspace for documents and insights.
               </p>
             </div>
 
-            {/* Ask bar — pill composer */}
+            {/* Ask bar */}
             <Link href="/agents/hybrid">
-              <div className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-full border border-border bg-card/70 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20 shadow-sm">
+              <div className="flex items-center gap-3 pl-4 pr-3 py-3 rounded-2xl border border-border bg-card/70 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20 shadow-sm">
                 <Sparkles className="w-5 h-5 text-primary shrink-0" />
                 <span className="flex-1 text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">
-                  Ask Signal87 anything across your documents
+                  Ask Signal
                 </span>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-primary transition-all duration-200 group-hover:scale-105">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-primary transition-all duration-200 group-hover:scale-105">
                   <ArrowRight className="w-4 h-4 text-primary-foreground" />
                 </div>
               </div>
             </Link>
 
-            {/* Quick actions — compact pill row */}
-            <div className="flex flex-wrap gap-2">
+            {/* Quick actions */}
+            <div className="flex gap-2">
               {quickActions.map((action) => (
                 <button
                   key={action.label}
                   type="button"
-                  onClick={action.live ? action.onClick : undefined}
-                  disabled={!action.live}
-                  className="relative flex items-center gap-2.5 pl-3.5 pr-4 py-2.5 rounded-xl border border-border bg-card/70 transition-all duration-200 group enabled:hover:border-primary/30 enabled:hover:bg-card enabled:hover:shadow-sm enabled:motion-safe:hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={action.onClick}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-card/70 transition-all duration-150 hover:border-primary/30 hover:bg-card hover:shadow-sm active:scale-[0.97]"
                 >
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                      action.live
-                        ? "bg-primary/10 text-primary group-hover:bg-primary/15"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    <action.icon className="w-[14px] h-[14px]" />
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+                    <action.icon className="w-[13px] h-[13px]" />
                   </span>
-                  <span className="text-[12px] text-muted-foreground leading-tight whitespace-nowrap">{action.label}</span>
-                  {!action.live && (
-                    <span className="absolute -top-1.5 -right-1 text-[8px] text-muted-foreground/60 font-medium bg-card border border-border rounded-full px-1.5 py-px leading-none">
-                      Soon
-                    </span>
-                  )}
+                  <span className="text-[12px] font-medium text-muted-foreground leading-tight">{action.label}</span>
                 </button>
               ))}
             </div>
 
-            {/* Row 1: Recent documents + Recent briefs */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pb-4">
+            {/* Recent documents — full width */}
+            <div className="rounded-2xl border border-border bg-card flex flex-col pb-1">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
+                <h2 className="text-sm font-semibold text-foreground">Recent documents</h2>
+                <Link href="/documents" className="text-xs font-medium text-primary hover:underline">
+                  View all
+                </Link>
+              </div>
 
-              {/* Recent documents */}
-              <SectionCard>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                  <h2 className="text-sm font-semibold text-foreground">Recent documents</h2>
-                  <Link
-                    href="/documents"
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    View all
-                  </Link>
-                </div>
+              {/* Column headers */}
+              <div className="grid grid-cols-[1fr_68px_64px] gap-2 px-5 py-2 border-b border-border">
+                <span className="text-[11px] text-muted-foreground font-medium">Name</span>
+                <span className="text-[11px] text-muted-foreground font-medium">Type</span>
+                <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
+              </div>
 
-                {/* Column headers */}
-                <div className="grid grid-cols-[1fr_100px_72px] gap-2 px-5 py-2 border-b border-border">
-                  <span className="text-[11px] text-muted-foreground font-medium">Name</span>
-                  <span className="text-[11px] text-muted-foreground font-medium">Type</span>
-                  <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
-                </div>
-
-                <div className="flex-1 px-2 py-1">
-                  {docsLoading ? (
-                    <div className="px-3 py-4 space-y-2">
-                      {[0, 1, 2, 3].map((i) => (
-                        <div key={i} className="h-14 rounded bg-muted animate-pulse" />
-                      ))}
-                    </div>
-                  ) : recentDocs.length === 0 ? (
-                    <div className="py-10 text-center px-4">
-                      <FileText className="w-8 h-8 mx-auto mb-2.5 text-muted-foreground/30" />
-                      <p className="text-sm text-muted-foreground font-medium">No documents yet</p>
-                      <button
-                        type="button"
-                        onClick={() => navigate("/documents")}
-                        className="text-xs mt-2 font-medium text-primary hover:underline"
-                      >
-                        Upload your first document →
-                      </button>
-                    </div>
-                  ) : (
-                    recentDocs.map((doc) => (
-                      <Link
-                        key={doc.id}
-                        href={`/documents/${doc.id}`}
-                        className="grid grid-cols-[1fr_100px_72px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <DocumentThumbnail doc={doc} />
-                          <span
-                            className="text-sm text-foreground/80 truncate group-hover:text-foreground"
-                            title={doc.fileName}
-                          >
-                            {doc.fileName}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
-                        <span className="text-xs text-muted-foreground text-right tabular-nums">
-                          {relativeTime(doc.uploadedAt)}
-                        </span>
-                      </Link>
-                    ))
-                  )}
-                </div>
-
-                <div className="px-5 py-3 border-t border-border mt-auto">
-                  <Link
-                    href="/documents"
-                    className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-                  >
-                    View all documents <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </SectionCard>
-
-              {/* Recent briefs */}
-              <SectionCard>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                  <h2 className="text-sm font-semibold text-foreground">Recent briefs</h2>
-                  <Link
-                    href="/brief"
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    View all
-                  </Link>
-                </div>
-
-                <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-primary/10">
-                    <ScrollText className="w-5 h-5 text-primary" />
+              <div className="flex-1 px-2 py-1">
+                {docsLoading ? (
+                  <div className="px-3 py-3 space-y-2">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="h-14 rounded bg-muted animate-pulse" />
+                    ))}
                   </div>
-                  <p className="text-sm font-medium text-foreground/80 mb-1">No recent briefs</p>
-                  <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                    Generated briefs will appear here.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/brief")}
-                    className="mt-4 text-xs font-medium px-4 py-1.5 rounded-lg border border-primary/30 text-primary transition-colors hover:bg-primary/10"
-                  >
-                    Create a brief
-                  </button>
-                </div>
+                ) : recentDocs.length === 0 ? (
+                  <div className="py-10 text-center px-4">
+                    <FileText className="w-7 h-7 mx-auto mb-2 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground font-medium">No documents yet</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/documents")}
+                      className="text-xs mt-2 font-medium text-primary hover:underline"
+                    >
+                      Upload your first document →
+                    </button>
+                  </div>
+                ) : (
+                  recentDocs.map((doc) => (
+                    <Link
+                      key={doc.id}
+                      href={`/documents/${doc.id}`}
+                      className="grid grid-cols-[1fr_68px_64px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <DocumentThumbnail doc={doc} />
+                        <span
+                          className="text-sm text-foreground/80 truncate group-hover:text-foreground"
+                          title={doc.fileName}
+                        >
+                          {doc.fileName}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
+                      <span className="text-xs text-muted-foreground text-right tabular-nums">
+                        {relativeTime(doc.uploadedAt)}
+                      </span>
+                    </Link>
+                  ))
+                )}
+              </div>
 
-                <div className="px-5 py-3 border-t border-border mt-auto">
-                  <Link
-                    href="/brief"
-                    className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-                  >
-                    View all briefs <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </SectionCard>
+              <div className="px-5 py-3 border-t border-border">
+                <Link
+                  href="/documents"
+                  className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+                >
+                  View all documents <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
             </div>
 
           </div>
