@@ -28,7 +28,7 @@ export function Layout({ children }: LayoutProps) {
         className="pointer-events-none fixed inset-0 z-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 32% at 50% -4%, rgba(34,164,95,0.045), transparent 60%)",
+            "radial-gradient(ellipse 70% 32% at 50% -4%, rgba(32,184,205,0.05), transparent 60%)",
         }}
       />
       {/* Main content — first in DOM so it fills the top area on mobile and the right panel on desktop */}

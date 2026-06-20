@@ -2,6 +2,28 @@
 
 ---
 
+## [Signal87_AppShell_PerplexityTheme_v2] — 2026-06-20  *(Accent color: emerald → Perplexity turquoise; frontend/UI only)*
+
+### Summary
+Dropped the emerald-green brand accent and the green-tinted charcoal in the logged-in app in favor of **Perplexity's actual palette**: a turquoise/peacock accent (`#20B8CD` ≈ HSL `187 73% 46%`) on a **cool, nearly-neutral near-black charcoal** (hue shifted from green `150` to cool `190–195`, very low saturation). App shell only; landing/marketing pages untouched.
+
+### Changed
+- **`src/index.css`** (`.dark` block) — replaced all green/emerald accent + green-tinted surface tokens:
+  - `--primary` / `--ring` / `--sidebar-primary` / `--sidebar-ring` / `--chart-1`: `142 55% 44%` (emerald) → `187 73% 46%` (Perplexity turquoise). `--primary-foreground` set to a near-black teal (`195 60% 7%`) for legible dark text on turquoise.
+  - Surface tokens retinted from green hue `150` to cool `190–195` at very low saturation: background `195 6% 8%`, foreground `200 7% 93%`, card/popover `192 5% 12%`, muted `192 5% 15%`, secondary/accent `192 6% 16%`, border/input `192 5% 20%`, sidebar `195 7% 7%`, muted-foreground `200 5% 62%`.
+- **`src/components/layout.tsx`** — ambient radial glow retinted green → teal (`rgba(32,184,205,0.05)`), kept very subtle.
+- **`src/components/document-intelligence-panel.tsx`** — decorative trace accent `text-green-600` → `text-primary` (now turquoise, theme-aware).
+
+### Scope
+- Frontend/UI only; no backend/auth/data/behavior changes. Only `.dark` tokens edited (the light `:root` palette is untouched). Semantic status colors (ready/success badges, grounded/hallucination indicators) and file-type chip color-coding kept as functional indicators — they are not the brand accent.
+- **Theme isolation:** landing page (`home.tsx`, scoped `.s87-landing`) and public pages (`public-layout.tsx`, light `:root`) unaffected; `git diff` shows no landing/marketing files changed.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- HMR applied with no console errors; API logs show documents serving normally. No `142`/emerald/green-glow tokens remain in the app theme.
+
+---
+
 ## [Signal87_AppShell_PerplexityTheme_v1] — 2026-06-20  *(Logged-in app theme redesign; frontend/UI only)*
 
 ### Summary

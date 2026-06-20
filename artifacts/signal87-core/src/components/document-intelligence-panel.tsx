@@ -136,7 +136,7 @@ function TraceRow({ label, value, accent }: { label: string; value: React.ReactN
   return (
     <div className="flex gap-2">
       <span className="text-foreground/40 w-36 shrink-0 font-mono">{label}</span>
-      <span className={accent ? "text-green-600" : ""}>{value}</span>
+      <span className={accent ? "text-primary" : ""}>{value}</span>
     </div>
   );
 }
