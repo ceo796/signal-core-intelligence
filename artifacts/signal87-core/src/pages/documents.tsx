@@ -160,7 +160,7 @@ function fileTypeChip(fileType: string): FileTypeChipStyle {
     case "ppt":
       return { bg: "bg-orange-50 border-orange-200", text: "text-orange-700", label: fileType.toUpperCase() };
     case "txt":
-      return { bg: "bg-gray-100 border-gray-200", text: "text-gray-600", label: "TXT" };
+      return { bg: "bg-muted border-border", text: "text-muted-foreground", label: "TXT" };
     default:
       return { bg: "bg-violet-50 border-violet-200", text: "text-violet-700", label: (fileType || "FILE").toUpperCase() };
   }
@@ -177,7 +177,7 @@ function FileTypeIcon({ fileType, className }: { fileType: string; className?: s
     csv:  "text-green-600",
     pptx: "text-orange-500",
     ppt:  "text-orange-500",
-    txt:  "text-gray-400",
+    txt:  "text-muted-foreground",
   };
   const color = colorMap[ft] ?? "text-violet-500";
   const cls = `${color} ${className ?? ""}`;
@@ -705,8 +705,8 @@ export default function DocumentsList() {
             view === "grid" ? (
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="overflow-hidden border-gray-200">
-                    <div className="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100">
+                  <Card key={i} className="overflow-hidden border-border">
+                    <div className="px-4 py-3 flex items-center gap-2.5 border-b border-border">
                       <Skeleton className="h-7 w-7 rounded shrink-0" />
                       <Skeleton className="h-5 w-10 rounded" />
                     </div>
@@ -803,14 +803,14 @@ export default function DocumentsList() {
                 return (
                   <Card
                     key={doc.id}
-                    className={`bg-white border hover:shadow-sm transition-all group flex flex-col overflow-hidden ${
+                    className={`bg-card border hover:shadow-md motion-safe:hover:-translate-y-0.5 transition-all group flex flex-col overflow-hidden ${
                       isSelected
                         ? "border-primary/50 ring-1 ring-primary/30"
-                        : "border-gray-200 hover:border-primary/30"
+                        : "border-border hover:border-primary/30"
                     }`}
                   >
                     {/* Compact icon header */}
-                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 relative">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border relative">
                       {/* Checkbox — top-left, visible on hover or when checked */}
                       <div
                         className={`shrink-0 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
@@ -849,7 +849,7 @@ export default function DocumentsList() {
                         </div>
                       </Link>
 
-                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
                         {status.canReindex ? (
                           <Button
                             variant="secondary"
@@ -908,7 +908,7 @@ export default function DocumentsList() {
             <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse min-w-[520px]">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
+                <tr className="border-b border-border bg-muted/50">
                   {/* Checkbox column header — select all (up to 5) */}
                   <th className="pl-4 pr-2 py-2.5 w-8" aria-label="Select all">
                     {visibleSelectableIds.length > 0 && (
@@ -952,7 +952,7 @@ export default function DocumentsList() {
                   <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {filteredDocuments?.map((doc) => {
                   const status = getDocumentStatus(doc);
                   const isReindexing = reindexingId === doc.id;
@@ -962,7 +962,7 @@ export default function DocumentsList() {
                     <tr
                       key={doc.id}
                       className={`group transition-colors ${
-                        isSelected ? "bg-primary/5 hover:bg-primary/8" : "hover:bg-gray-50"
+                        isSelected ? "bg-primary/5 hover:bg-primary/8" : "hover:bg-muted/50"
                       }`}
                     >
                       {/* Checkbox cell */}

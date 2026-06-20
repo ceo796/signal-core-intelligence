@@ -21,9 +21,18 @@ export function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
+    <div className="dark h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
+      {/* Subtle green radial glow — landing-page feel, dark mode only */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 65% 38% at 50% 0%, rgba(34,164,95,0.09), transparent 65%)",
+        }}
+      />
       {/* Main content — first in DOM so it fills the top area on mobile and the right panel on desktop */}
-      <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+      <main className="relative z-10 flex-1 flex flex-col overflow-hidden min-h-0">
         {children}
       </main>
 

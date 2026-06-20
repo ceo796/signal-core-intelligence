@@ -15,8 +15,6 @@ import {
   Bot,
 } from "lucide-react";
 
-const ACCENT = "#1e3a5f";
-
 function relativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const secs = Math.floor(diff / 1000);
@@ -43,7 +41,7 @@ function fileTypeColor(ft: string): string {
 function FileChip({ fileType }: { fileType: string }) {
   return (
     <span
-      className="inline-flex items-center justify-center rounded text-white shrink-0"
+      className="inline-flex items-center justify-center rounded shrink-0 text-white"
       style={{
         backgroundColor: fileTypeColor(fileType),
         fontSize: "7px",
@@ -67,7 +65,7 @@ function SectionCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-gray-200 bg-white flex flex-col ${className}`}
+      className={`rounded-2xl border border-border bg-card flex flex-col transition-all duration-200 motion-safe:hover:-translate-y-0.5 hover:shadow-lg ${className}`}
     >
       {children}
     </div>
@@ -95,33 +93,33 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col overflow-hidden bg-white">
+      <div className="flex-1 flex flex-col overflow-hidden bg-background">
 
         {/* ── Top bar ───────────────────────────────────────────── */}
-        <div className="shrink-0 border-b border-gray-100 bg-white px-6 py-2.5 flex items-center gap-4">
+        <div className="shrink-0 border-b border-border bg-card/60 backdrop-blur-sm px-6 py-2.5 flex items-center gap-4">
           <div className="flex-1 relative max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               readOnly
               placeholder="Search documents, briefs, collections, and more..."
               onClick={() => navigate("/documents")}
-              className="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 text-gray-500 placeholder:text-gray-400 cursor-pointer focus:outline-none hover:border-gray-300 transition-colors"
+              className="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-border bg-muted/50 text-muted-foreground placeholder:text-muted-foreground/60 cursor-pointer focus:outline-none hover:border-border/80 transition-colors"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 font-mono select-none pointer-events-none">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground/50 font-mono select-none pointer-events-none">
               ⌘K
             </span>
           </div>
           <button
             type="button"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
           >
             <Bell className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2.5">
             <UserButton appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }} />
             {user?.fullName && (
-              <span className="text-sm text-gray-700 font-medium hidden lg:block">
+              <span className="text-sm text-foreground/80 font-medium hidden lg:block">
                 {user.fullName}
               </span>
             )}
@@ -129,36 +127,30 @@ export default function Dashboard() {
         </div>
 
         {/* ── Scrollable content ─────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto bg-[#fafafa]">
+        <div className="flex-1 overflow-y-auto bg-background">
           <div className="max-w-6xl mx-auto px-6 md:px-8 py-7 space-y-5">
 
             {/* Welcome */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">
                 Welcome back, {firstName}
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Your AI workspace for documents, insights, and execution.
               </p>
             </div>
 
             {/* Ask bar */}
             <Link href="/agents/hybrid">
-              <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${ACCENT}12` }}
-                >
-                  <Sparkles className="w-4 h-4" style={{ color: ACCENT }} />
+              <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card/80 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10">
+                  <Sparkles className="w-4 h-4 text-primary" />
                 </div>
-                <span className="flex-1 text-sm text-gray-400 group-hover:text-gray-500 transition-colors select-none">
+                <span className="flex-1 text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">
                   Ask Signal87 anything across your documents
                 </span>
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  <ArrowRight className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-primary transition-all duration-200 group-hover:scale-105">
+                  <ArrowRight className="w-4 h-4 text-primary-foreground" />
                 </div>
               </div>
             </Link>
@@ -171,15 +163,14 @@ export default function Dashboard() {
                   type="button"
                   onClick={action.live ? action.onClick : undefined}
                   disabled={!action.live}
-                  className="relative flex flex-col items-center gap-2.5 py-4 px-3 rounded-xl border border-gray-200 bg-white text-center transition-all group enabled:hover:border-gray-300 enabled:hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative flex flex-col items-center gap-2.5 py-4 px-3 rounded-xl border border-border bg-card/80 text-center transition-all duration-200 group enabled:hover:border-primary/30 enabled:hover:bg-card enabled:hover:shadow-md enabled:motion-safe:hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <action.icon
-                    className="w-4 h-4"
-                    style={{ color: action.live ? ACCENT : "#9ca3af" }}
+                    className={`w-4 h-4 ${action.live ? "text-primary" : "text-muted-foreground"}`}
                   />
-                  <span className="text-xs text-gray-600 leading-tight">{action.label}</span>
+                  <span className="text-xs text-muted-foreground leading-tight">{action.label}</span>
                   {!action.live && (
-                    <span className="absolute top-1.5 right-2 text-[9px] text-gray-400 font-medium">
+                    <span className="absolute top-1.5 right-2 text-[9px] text-muted-foreground/60 font-medium">
                       Soon
                     </span>
                   )}
@@ -188,44 +179,42 @@ export default function Dashboard() {
             </div>
 
             {/* Row 1: Recent documents + Recent briefs */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pb-4">
 
               {/* Recent documents */}
               <SectionCard>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                  <h2 className="text-sm font-semibold text-gray-900">Recent documents</h2>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <h2 className="text-sm font-semibold text-foreground">Recent documents</h2>
                   <Link
                     href="/documents"
-                    className="text-xs font-medium hover:underline"
-                    style={{ color: ACCENT }}
+                    className="text-xs font-medium text-primary hover:underline"
                   >
                     View all
                   </Link>
                 </div>
 
                 {/* Column headers */}
-                <div className="grid grid-cols-[1fr_100px_72px] gap-2 px-5 py-2 border-b border-gray-100">
-                  <span className="text-[11px] text-gray-400 font-medium">Name</span>
-                  <span className="text-[11px] text-gray-400 font-medium">Collection</span>
-                  <span className="text-[11px] text-gray-400 font-medium text-right">Updated</span>
+                <div className="grid grid-cols-[1fr_100px_72px] gap-2 px-5 py-2 border-b border-border">
+                  <span className="text-[11px] text-muted-foreground font-medium">Name</span>
+                  <span className="text-[11px] text-muted-foreground font-medium">Collection</span>
+                  <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
                 </div>
 
                 <div className="flex-1 px-2 py-1">
                   {docsLoading ? (
                     <div className="px-3 py-4 space-y-2">
                       {[0, 1, 2, 3].map((i) => (
-                        <div key={i} className="h-7 rounded bg-gray-100 animate-pulse" />
+                        <div key={i} className="h-7 rounded bg-muted animate-pulse" />
                       ))}
                     </div>
                   ) : recentDocs.length === 0 ? (
                     <div className="py-10 text-center px-4">
-                      <FileText className="w-8 h-8 mx-auto mb-2.5 text-gray-200" />
-                      <p className="text-sm text-gray-400 font-medium">No documents yet</p>
+                      <FileText className="w-8 h-8 mx-auto mb-2.5 text-muted-foreground/30" />
+                      <p className="text-sm text-muted-foreground font-medium">No documents yet</p>
                       <button
                         type="button"
                         onClick={() => navigate("/documents")}
-                        className="text-xs mt-2 font-medium hover:underline"
-                        style={{ color: ACCENT }}
+                        className="text-xs mt-2 font-medium text-primary hover:underline"
                       >
                         Upload your first document →
                       </button>
@@ -235,19 +224,19 @@ export default function Dashboard() {
                       <Link
                         key={doc.id}
                         href={`/documents/${doc.id}`}
-                        className="grid grid-cols-[1fr_100px_72px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                        className="grid grid-cols-[1fr_100px_72px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <FileChip fileType={doc.fileType} />
                           <span
-                            className="text-sm text-gray-800 truncate group-hover:text-gray-900"
+                            className="text-sm text-foreground/80 truncate group-hover:text-foreground"
                             title={doc.fileName}
                           >
                             {doc.fileName}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-500 truncate">—</span>
-                        <span className="text-xs text-gray-400 text-right tabular-nums">
+                        <span className="text-xs text-muted-foreground truncate">—</span>
+                        <span className="text-xs text-muted-foreground text-right tabular-nums">
                           {relativeTime(doc.uploadedAt)}
                         </span>
                       </Link>
@@ -255,11 +244,10 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="px-5 py-3 border-t border-gray-100 mt-auto">
+                <div className="px-5 py-3 border-t border-border mt-auto">
                   <Link
                     href="/documents"
-                    className="text-xs font-medium hover:underline flex items-center gap-1"
-                    style={{ color: ACCENT }}
+                    className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
                   >
                     View all documents <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -268,50 +256,43 @@ export default function Dashboard() {
 
               {/* Recent briefs */}
               <SectionCard>
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                  <h2 className="text-sm font-semibold text-gray-900">Recent briefs</h2>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <h2 className="text-sm font-semibold text-foreground">Recent briefs</h2>
                   <Link
                     href="/brief"
-                    className="text-xs font-medium hover:underline"
-                    style={{ color: ACCENT }}
+                    className="text-xs font-medium text-primary hover:underline"
                   >
                     View all
                   </Link>
                 </div>
 
                 <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                    style={{ backgroundColor: `${ACCENT}10` }}
-                  >
-                    <ScrollText className="w-5 h-5" style={{ color: ACCENT }} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-primary/10">
+                    <ScrollText className="w-5 h-5 text-primary" />
                   </div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">No recent briefs</p>
-                  <p className="text-xs text-gray-400 max-w-[200px] leading-relaxed">
-                    Briefs are generated on demand and not stored between sessions.
+                  <p className="text-sm font-medium text-foreground/80 mb-1">No recent briefs</p>
+                  <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                    Generated briefs will appear here.
                   </p>
                   <button
                     type="button"
                     onClick={() => navigate("/brief")}
-                    className="mt-4 text-xs font-medium px-4 py-1.5 rounded-lg border transition-colors hover:bg-slate-50"
-                    style={{ borderColor: `${ACCENT}40`, color: ACCENT }}
+                    className="mt-4 text-xs font-medium px-4 py-1.5 rounded-lg border border-primary/30 text-primary transition-colors hover:bg-primary/10"
                   >
                     Create a brief
                   </button>
                 </div>
 
-                <div className="px-5 py-3 border-t border-gray-100 mt-auto">
+                <div className="px-5 py-3 border-t border-border mt-auto">
                   <Link
                     href="/brief"
-                    className="text-xs font-medium hover:underline flex items-center gap-1"
-                    style={{ color: ACCENT }}
+                    className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
                   >
                     View all briefs <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
               </SectionCard>
             </div>
-
 
           </div>
         </div>

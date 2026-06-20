@@ -1,0 +1,159 @@
+```text id="4rzgpi"
+Apply the current Signal87 landing page visual theme to the logged-in document dashboard.
+
+Goal:
+Make the logged-in dashboard and document workspace visually match the public Signal87 landing page theme shown in the attached screenshot.
+
+Use the same design language:
+- black / near-black background
+- warm off-white typography
+- deep green glow accents
+- muted green verification color
+- soft ivory cards where needed
+- thin borders
+- large refined typography
+- premium enterprise AI feel
+- restrained, polished motion
+- minimalist but high-end interface
+
+Do not copy the landing page layout literally. Adapt the theme to the actual product dashboard.
+
+Scope:
+Frontend/UI only.
+
+Do not change:
+- Backend routes
+- Database schema
+- Auth
+- Upload behavior
+- Extraction/indexing
+- Chat behavior
+- Citations
+- Brief generation
+- Compare logic
+- AI provider/model behavior
+- Document storage
+- Download/delete/re-index behavior
+
+Apply theme to:
+1. Logged-in dashboard / Home
+2. Documents page
+3. Document cards/table
+4. Ask bar
+5. Recent documents
+6. Key Mentions / Document Signals cards if present
+7. Suggested actions / prompt cards
+8. Sidebar and top navigation
+
+Theme requirements:
+
+1. Background
+Use a black or near-black page background similar to the landing page:
+- #0B0D0B / #0E100E / similar near-black
+- subtle green radial glow in the background
+- no loud gradients
+- no pure gray admin-dashboard look
+
+2. Typography
+Use the same or closest available landing page font system.
+The dashboard should feel like the landing page:
+- large, elegant headings
+- refined spacing
+- warm off-white text
+- muted gray secondary text
+- avoid generic app-dashboard typography
+
+3. Accent color
+Use the landing page green/verification palette:
+- dark green / emerald accents
+- subtle mint-green highlights
+- use green for “verified,” “connected,” “ready,” and citation/source trust states
+- avoid bright blue/purple as the primary accent on this page
+
+4. Cards and panels
+Cards should feel like the floating interface panels on the landing page:
+- dark glass-like panels
+- thin muted borders
+- subtle shadows/glow
+- off-white document preview cards where useful
+- rounded corners
+- layered depth
+
+5. Documents area
+Recent documents and the Documents page should feel premium:
+- show real documents only
+- thumbnails/previews where available
+- polished fallback tiles if previews unavailable
+- no chunks
+- compact metadata
+- clear actions
+- hover states with subtle lift/depth
+
+6. Ask / AI entry area
+The main Ask Signal87 bar should feel central and premium:
+- dark panel
+- soft green focus glow
+- warm off-white text
+- source/verification language
+- route to existing AI Chat / Ask page
+- do not create a new chat backend
+
+7. Motion
+Add restrained premium interaction:
+- subtle card lift on hover
+- pointer-responsive depth only where safe
+- smooth transitions
+- soft section reveal
+- hover movement on arrows/buttons
+- respect prefers-reduced-motion
+- no heavy WebGL
+- no gimmicky animation
+
+8. Real data only
+Do not add fake AI answers, fake citations, fake activity, fake briefs, fake names, or fake document insights.
+
+Dashboard sections should show:
+- real recent documents if available
+- real Key Mentions only if backed by real extracted data
+- real Document Signals only if backed by real extracted data
+- otherwise honest empty states
+
+Empty states should still look premium and fit the dark theme.
+
+9. Layout
+Keep the dashboard useful:
+- Home / Command Center
+- large ask bar
+- quick actions
+- recent documents
+- key mentions or empty state
+- document signals or empty state
+- suggested questions/actions
+
+Do not return to the sparse white dashboard.
+Do not use fake filler content.
+
+10. Verification
+After implementation, verify:
+- Dashboard loads
+- Documents page loads
+- Recent documents use real data
+- No fake content appears
+- No chunks appear
+- Upload still works
+- Ask still works
+- Brief page still works
+- Compare page still works
+- Document detail still works
+- No backend files changed
+- No AI provider/model behavior changed
+- No console errors
+- Git diff is limited and clean
+
+Report:
+- Files changed
+- Theme tokens/colors used
+- Whether dashboard uses real data or empty states
+- Whether any backend files were touched
+- Confirmation that upload, indexing, chat, citations, briefs, compare, and provider logic were unchanged
+```
