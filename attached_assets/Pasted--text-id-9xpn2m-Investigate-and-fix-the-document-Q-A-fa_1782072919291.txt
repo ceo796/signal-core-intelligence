@@ -1,0 +1,200 @@
+```text id="9xpn2m"
+Investigate and fix the document Q&A failure involving names, payments, dates, and aggregation reasoning.
+
+Permanent rule:
+Do not modify the public landing page unless explicitly instructed. Confirm the landing page was untouched.
+
+Issue observed:
+
+PDF Upload:
+A PDF containing campaign expenditures included payments to Shaquille Worrell.
+When asked:
+- “How much has Shaquille been paid?”
+- “How much has Worrell been paid?”
+
+The platform did not recognize or retrieve the relevant person/payment information.
+
+TXT Upload:
+The TXT version of the same document worked better. The platform recognized Worrell and identified related expenditures, dates, and dollar amounts.
+
+However, when asked:
+- “How often was Worrell paid?”
+
+The platform failed to reason from the dates and amounts. It responded that the excerpts did not contain enough information for a bi-weekly calculation, even though the document contained the relevant payment dates and amounts.
+
+This shows two problems:
+1. PDF extraction/retrieval is weaker than TXT extraction.
+2. The answer layer is too conservative and is failing to perform basic aggregation/date-pattern reasoning from retrieved facts.
+
+Goal:
+Improve Signal87’s document Q&A behavior so it can:
+- retrieve names from PDFs and TXT files more reliably
+- identify partial-name matches, such as “Shaquille” or “Worrell”
+- aggregate payment amounts for a person/entity
+- count how many times a person/entity was paid
+- reason from payment dates without requiring the document to explicitly state “weekly,” “bi-weekly,” etc.
+- clearly explain uncertainty when dates are irregular
+
+Scope:
+Focus on document ingestion, retrieval, chunking, and answer-generation prompt behavior.
+Do not make cosmetic UI changes in this task.
+
+Do not change:
+- Auth / Clerk
+- Public landing page
+- Dashboard theme
+- Database schema unless absolutely necessary and approved
+- Upload UX except where needed for ingestion correctness
+- Download/delete/re-index behavior
+- AI provider/model configuration unless already centralized
+- Do not add Gemini or any non-OpenAI provider
+- Do not add live web research
+
+Investigation steps:
+
+1. Compare PDF extraction vs TXT extraction
+Use the same source document in PDF and TXT form.
+Inspect the extracted text for the PDF.
+Check whether:
+- “Shaquille” appears
+- “Worrell” appears
+- payment amounts appear
+- payment dates appear
+- rows preserve enough order to associate names, dates, purposes, and amounts
+
+Report whether the PDF extraction text contains the relevant names and payment data.
+
+2. Inspect chunking
+Check how the expenditure data is split into chunks.
+Make sure rows are not split in a way that separates:
+- payee name
+- date
+- amount
+- expenditure purpose
+
+If rows are being split poorly, improve chunking for tabular/line-based financial records while preserving existing behavior for normal documents.
+
+3. Improve name retrieval
+The system should handle:
+- full-name queries
+- first-name-only queries
+- last-name-only queries
+- case-insensitive matches
+- nearby financial fields
+- repeated entity/payment rows
+
+Examples:
+- “How much has Shaquille been paid?”
+- “How much has Worrell been paid?”
+- “How many times was Worrell paid?”
+- “List all payments to Worrell.”
+
+4. Improve aggregation behavior
+When the retrieved context contains multiple payments to the same person/entity, the answer should:
+- list each matching payment
+- include date, amount, and purpose if available
+- calculate total amount paid
+- count number of payments
+- cite the relevant source rows/chunks
+
+Example expected behavior:
+“Worrell appears to have been paid 5 times in the retrieved records, totaling $2,700. The payments were: ...”
+
+5. Improve date-frequency reasoning
+For “how often was Worrell paid?” the model should not require the document to explicitly say “bi-weekly.”
+
+It should analyze the payment dates:
+- count the payment occurrences
+- sort the dates
+- calculate intervals between dates if enough dates are available
+- describe the observed pattern
+
+If the dates are irregular, it should say:
+“The payments do not appear to follow a consistent weekly or bi-weekly pattern based on the available dates. The observed payments occurred on [dates], with intervals of [x] days. Based on the available records, Worrell was paid [n] times.”
+
+6. Prompt improvement
+Update the document Q&A / hybrid agent system prompt so that for financial or tabular questions it performs basic reasoning from retrieved evidence.
+
+Add instructions:
+- If asked “how much,” aggregate matching amounts when evidence supports it.
+- If asked “how many times” or “how often,” count matching occurrences and analyze dates.
+- If asked about a person/entity, match partial names where context supports it.
+- Do not say “not enough information” merely because the document does not explicitly state the final calculation.
+- Perform arithmetic and date-interval reasoning from cited facts.
+- If evidence is incomplete, provide the best supported answer and clearly state limitations.
+
+7. Retrieval fallback
+If the first retrieval pass returns weak results, add a safe fallback query expansion for names:
+- original query
+- first name
+- last name
+- exact quoted name if available
+- nearby terms such as “paid,” “expenditure,” “amount,” “date,” “purpose,” “field support,” “consulting,” etc.
+
+Do not make this expensive or broad. Keep it scoped to the selected/current document when in single-document chat.
+
+8. Testing
+Create or run tests using the Worrell example.
+
+Test questions:
+- “How much has Shaquille been paid?”
+- “How much has Worrell been paid?”
+- “List all payments to Worrell.”
+- “How many times was Worrell paid?”
+- “How often was Worrell paid?”
+- “Was Worrell paid weekly, bi-weekly, or irregularly?”
+
+Expected behavior:
+- The platform should retrieve the relevant rows.
+- The platform should calculate totals.
+- The platform should count payments.
+- The platform should analyze dates.
+- The platform should cite sources.
+- If frequency is irregular, it should say so clearly.
+
+9. PDF-specific verification
+Re-upload or re-index the PDF and confirm whether:
+- Worrell is discoverable from the PDF
+- payments are retrievable from the PDF
+- totals and frequency questions work against the PDF, not only the TXT
+
+If PDF extraction is still inadequate, report exactly why and recommend the smallest next fix:
+- better PDF text extraction
+- OCR fallback
+- table-aware parsing
+- layout-preserving extraction
+- user-visible warning that the PDF text extraction is incomplete
+
+10. Safety constraints
+- Do not introduce fake answers.
+- Do not hallucinate totals.
+- Calculations must be based on retrieved/cited evidence.
+- Preserve citations and verification trace.
+- Do not weaken groundedness.
+- Do not add web research.
+- Do not change provider away from OpenAI/GPT-only.
+
+Verification checklist:
+- PDF upload still works.
+- TXT upload still works.
+- Existing documents still load.
+- Single-document chat still works.
+- Hybrid AI page still works if connected.
+- Citations still appear.
+- Verification Trace still appears.
+- Totals and counts are calculated correctly from evidence.
+- Date-frequency reasoning works.
+- No Gemini references or calls.
+- Landing page untouched.
+- No console errors.
+- Git diff is limited and clean.
+
+Report:
+- Root cause of PDF failure.
+- Root cause of reasoning failure.
+- Files changed.
+- Whether extraction, chunking, retrieval, or prompt behavior changed.
+- Whether backend files were touched.
+- Whether any new AI calls were added.
+- Confirmation that landing page, auth, upload UX, citations, and provider/model behavior were not changed.
+```

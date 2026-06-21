@@ -2,6 +2,37 @@
 
 ---
 
+## [Signal87_MobileUX_v5] — 2026-06-21  *(Native-feel mobile UX: safe-area, dvh, tap feedback, scroll padding; frontend/CSS only)*
+
+### Summary
+Improved mobile experience across the entire app for a native-app feel. No backend changes, no schema changes, no new AI features.
+
+### Changed
+- **`index.html`** — viewport meta updated to `viewport-fit=cover`; added `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style: black-translucent`, and `theme-color: #0a0a0a` for iOS home-screen and status-bar integration.
+- **`src/index.css`** — global `-webkit-tap-highlight-color: transparent` and `touch-action: manipulation` on `html`; `overscroll-behavior-y: none` to stop iOS bounce chaining; applied to all interactive elements via `@layer base`.
+- **`src/components/layout.tsx`** — `h-screen` → `h-[100dvh]` (dynamic viewport height, accounts for mobile browser chrome); bottom nav gets `padding-bottom: env(safe-area-inset-bottom)` so it never hides behind the home indicator; nav tab links get `active:scale-[0.94]` for haptic-like press feedback; `select-none` on nav items.
+- **`src/pages/dashboard.tsx`** — ask-bar min-height 56px on mobile (44px+ touch target), `active:scale-[0.97]`; quick-action buttons 48px min-height, `touch-manipulation`, `select-none`; scrollable content area gets `pb-[calc(4rem+env(safe-area-inset-bottom))]` on mobile to clear the bottom nav + safe area.
+- **`src/pages/hybrid-agent.tsx`** — all pill buttons (`PILL_CLASS`, result `PILL`) get `active:scale-[0.94] touch-manipulation`; citation toggle button gets `active:scale-[0.98]`; trace trigger gets `active:scale-[0.97]`; scroll containers get safe-area bottom padding.
+- **`src/pages/activity.tsx`** — scroll container gets safe-area bottom padding.
+- **`src/pages/documents.tsx`** — main scroll area gets safe-area bottom padding; sticky multi-select action bar gets `padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))` so it clears the home indicator.
+- **`src/pages/document-chat.tsx`** — message scroll area inner div gets safe-area bottom padding.
+- **`src/pages/document-detail.tsx`** — Overview, Preview (extracted text card), and Metadata tab content areas all get safe-area bottom padding.
+- **`src/pages/multi-document-chat.tsx`** — scroll inner div gets safe-area bottom padding.
+- **`src/pages/executive-brief.tsx`** — scroll inner div gets safe-area bottom padding.
+- **`src/pages/settings.tsx`** — content area gets safe-area bottom padding.
+- **`src/pages/admin.tsx`** — content area gets safe-area bottom padding.
+
+### Scope
+- Frontend/CSS only. Zero backend changes. Zero schema changes. No new AI provider.
+- Auth, upload, download, delete, re-index, citations, verification trace all unchanged.
+- Landing page untouched.
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+- All 3 workflows running cleanly.
+
+---
+
 ## [Signal87_QAImprovement_v4] — 2026-06-21  *(PDF retrieval, name matching, aggregation, date reasoning; backend/prompt)*
 
 ### Summary
