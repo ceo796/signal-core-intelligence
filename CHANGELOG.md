@@ -2,6 +2,40 @@
 
 ---
 
+## [Signal87_QAImprovement_v4] — 2026-06-21  *(PDF retrieval, name matching, aggregation, date reasoning; backend/prompt)*
+
+### Summary
+Fixed the document Q&A failure where the system failed to find names in PDFs, match partial names, aggregate payments, and reason about payment frequency. Changes: line-aware chunking for tabular/structured text, keyword fallback for name-based queries, improved system prompts for aggregation/name-matching/date-reasoning. 105 tests pass. No UI changes. No new AI provider.
+
+### Root cause
+1. **PDF extraction**: PDFs often produce sparse/tabular text that our simple word-based chunking split across payment rows, separating names from dates and amounts.
+2. **Retrieval**: Semantic search alone missed partial-name matches ("Shaquille" or "Worrell" didn't match "Shaquille Worrell" chunks).
+3. **Prompt**: The LLM was too conservative — it was instructed to say "not enough information" when the chunks contained the raw data but required explicit calculation.
+
+### Changed
+- **`src/lib/chunker.ts`** — line-aware chunking. Detects tabular/structured text (many short lines) and preserves line boundaries, so payment rows stay intact. Normal prose still uses the existing sliding word window.
+- **`src/lib/retriever.ts`** — keyword fallback for name-based queries. Extracts first/last names and financial terms from the question, then boosts chunks containing those keywords into the semantic results (75% semantic + 25% keyword blend). Applied to both single-document and multi-document retrieval.
+- **`src/routes/chat/index.ts`** — system prompt updated with 3 new instructions: AGGREGATION (calculate totals from evidence), NAME MATCHING (partial names), DATE REASONING (count/sort/describe intervals without requiring explicit frequency labels).
+- **`src/routes/agent/index.ts`** — GROUNDING_REASONING_POLICY updated with same 3 instructions.
+- **`src/routes/multi-chat/index.ts`** — system prompt updated with same 3 instructions.
+- **`src/routes/brief/index.ts`** — system prompt updated with same 3 instructions.
+- **`src/__tests__/fixtures/worrell-expenditures.txt`** — new test fixture with realistic campaign expenditure data (6 payments to Shaquille Worrell, dates, amounts, purposes).
+- **`src/__tests__/retrieval-quality/retrieval-quality.test.ts`** — 6 new tests: row-preservation chunking, full-name retrieval, last-name retrieval, first-name retrieval, payment aggregation, date-frequency reasoning.
+- **`src/__tests__/unit/retriever.test.ts`** — updated expected score for blended semantic+keyword retrieval (0.75 instead of 1.0).
+
+### Scope
+- Backend/prompt changes only. No frontend/UI changes, no dashboard, no theme, no landing page.
+- No database schema changes. No new provider/model. No web research. No Gemini.
+- Auth, upload, download, delete, re-index, citations, verification trace all unchanged.
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+- `pnpm vitest run` — 105 tests passed, 0 failed.
+- API server restarted cleanly.
+- Landing page untouched (confirmed by `git diff --name-only` — no `home.tsx` changes).
+
+---
+
 ## [Signal87_DashboardCleanup_v3] — 2026-06-20  *(Compact dashboard, sidebar cleanup, document thumbnails; frontend/UI only)*
 
 ### Summary

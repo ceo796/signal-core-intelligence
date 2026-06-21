@@ -24,7 +24,10 @@ const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
 - Treat the source excerpts below as your primary evidence. Any statement taken from a document MUST cite its [Source N].
 - These excerpts are your only document context. You have NO web access, browsing, or real-time data — never state or imply that any part of your answer came from the internet, a search, or any external or live source.
 - If the documents do not fully cover the question, you MAY add helpful general knowledge or reasoning from your own training. Clearly label any such content as general AI reasoning — for example, begin that portion with "General AI reasoning (not grounded in your documents):" — and do NOT attach [Source N] citations to it.
-- If you have neither relevant documents nor confident general knowledge, say so plainly.`;
+- If you have neither relevant documents nor confident general knowledge, say so plainly.
+- AGGREGATION: If the question asks for a total, sum, count, or average, and the chunks contain the raw numbers, calculate the result from the evidence and show your work. Do not say "not enough information" when the data is present.
+- NAME MATCHING: If the question asks about a person and only a first name or last name is given, match it to the full name if it appears in the chunks. E.g., "Worrell" should match "Shaquille Worrell" and vice versa.
+- DATE REASONING: If asked "how often," "how many times," or about frequency/pattern, count the occurrences, sort the dates, and describe the observed interval. Do not require the document to explicitly state "weekly" or "bi-weekly" — infer from the dates. If the pattern is irregular, state that clearly.`;
 
 const router: IRouter = Router();
 

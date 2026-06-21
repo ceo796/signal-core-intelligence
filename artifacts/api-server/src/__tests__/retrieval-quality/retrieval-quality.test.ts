@@ -195,6 +195,73 @@ describe("Spreadsheet fixture — XLSX retrieval quality", () => {
   });
 });
 
+// ─── Worrell fixture ─────────────────────────────────────────────────────────
+
+describe("Worrell fixture — tabular expenditure retrieval quality", () => {
+  const fixtureText = readFileSync(join(FIXTURES_DIR, "worrell-expenditures.txt"), "utf-8");
+  const chunks = chunkText(fixtureText);
+  const indexedChunks = chunks.map((c, i) => ({
+    id: i + 1,
+    documentId: 4,
+    chunkIndex: i,
+    content: c,
+  }));
+
+  beforeEach(() => mockCreate.mockReset());
+
+  it("preserves Worrell payment rows in at least one chunk (line-aware chunking)", () => {
+    const combined = chunks.join("\n");
+    expect(combined).toContain("Shaquille Worrell");
+    expect(combined).toContain("$500.00");
+    expect(combined).toContain("January 15, 2024");
+    const fullRowChunk = chunks.find((c) =>
+      c.includes("Shaquille Worrell") &&
+      c.includes("$500.00") &&
+      c.includes("January 15, 2024")
+    );
+    expect(fullRowChunk).toBeTruthy();
+  });
+
+  it("retrieves Worrell chunks when asked by full name", async () => {
+    const question = "How much has Shaquille Worrell been paid?";
+    setupMockForChunks(question, chunks);
+    const results = await retrieveRelevantChunks(question, indexedChunks, 5);
+    const combined = results.map((r) => r.content).join("\n");
+    expect(combined.toLowerCase()).toContain("shaquille");
+    expect(combined.toLowerCase()).toContain("worrell");
+  });
+
+  it("retrieves Worrell chunks when asked by last name only", async () => {
+    const question = "How much has Worrell been paid?";
+    setupMockForChunks(question, chunks);
+    const results = await retrieveRelevantChunks(question, indexedChunks, 5);
+    const combined = results.map((r) => r.content).join("\n");
+    expect(combined.toLowerCase()).toContain("worrell");
+  });
+
+  it("retrieves Worrell chunks when asked by first name only", async () => {
+    const question = "How much has Shaquille been paid?";
+    setupMockForChunks(question, chunks);
+    const results = await retrieveRelevantChunks(question, indexedChunks, 5);
+    const combined = results.map((r) => r.content).join("\n");
+    expect(combined.toLowerCase()).toContain("shaquille");
+  });
+
+  it("chunks contain enough payment data to aggregate totals", () => {
+    const combined = chunks.join("\n");
+    const matches = Array.from(combined.matchAll(/\$[\d,]+\.\d{2}/g));
+    expect(matches.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("chunks contain enough dates to reason about frequency", () => {
+    const combined = chunks.join("\n");
+    const dateMatches = Array.from(combined.matchAll(/January \d+, \d{4}/g));
+    expect(dateMatches.length).toBeGreaterThanOrEqual(2);
+    const febMatches = Array.from(combined.matchAll(/February \d+, \d{4}/g));
+    expect(febMatches.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
 // ─── Insufficient evidence test ───────────────────────────────────────────────
 
 describe("Insufficient evidence — unrelated question", () => {

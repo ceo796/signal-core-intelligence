@@ -19,7 +19,7 @@ export function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="dark h-screen bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
+    <div className="dark h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Very subtle green ambiance — restrained, no loud gradient */}
       <div
         aria-hidden
@@ -35,7 +35,10 @@ export function Layout({ children }: LayoutProps) {
       </main>
 
       {/* Navigation shell — bottom bar on mobile, left sidebar on desktop (md:order-first) */}
-      <aside className="shrink-0 w-full md:w-56 border-t md:border-t-0 md:border-r border-border bg-sidebar flex flex-row md:flex-col md:order-first">
+      <aside
+        className="shrink-0 w-full md:w-56 border-t md:border-t-0 md:border-r border-border bg-sidebar flex flex-row md:flex-col md:order-first"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {/* Logo + UserButton — shown only on desktop sidebar */}
         <div className="hidden md:flex px-4 py-4 border-b border-border items-center justify-between shrink-0 gap-2">
           <Link href="/documents">
@@ -60,7 +63,7 @@ export function Layout({ children }: LayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-0.5 md:gap-2.5 px-1 py-3 md:py-2 md:px-3 rounded-xl transition-all duration-150 min-w-0 ${
+                className={`flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-0.5 md:gap-2.5 px-1 py-3 md:py-2 md:px-3 rounded-xl transition-all duration-150 min-w-0 select-none active:scale-[0.94] ${
                   isActive
                     ? "bg-primary/12 text-primary font-medium"
                     : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
@@ -85,7 +88,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="hidden md:block px-3 pb-3 pt-1 border-t border-border mt-auto shrink-0">
           <Link
             href="/settings"
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all duration-150 w-full ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all duration-150 w-full select-none active:scale-[0.94] ${
               location.startsWith("/settings")
                 ? "bg-primary/12 text-primary font-medium"
                 : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"

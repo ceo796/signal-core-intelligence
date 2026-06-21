@@ -116,7 +116,7 @@ export default function Activity() {
           </p>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="flex-1 overflow-auto p-4 md:p-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
           <div className="max-w-2xl mx-auto">
             {isLoading ? (
               <div className="space-y-3">

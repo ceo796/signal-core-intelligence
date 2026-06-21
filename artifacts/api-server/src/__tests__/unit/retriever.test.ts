@@ -62,7 +62,8 @@ describe("retrieveRelevantChunks", () => {
     expect(results).toHaveLength(3);
     // The top result should be chunk index 2 (perfect cosine alignment)
     expect(results[0].chunkIndex).toBe(2);
-    expect(results[0].relevanceScore).toBeCloseTo(1.0, 5);
+    // Blended score: 0.75 semantic + 0.25 keyword. No keyword match here, so 0.75.
+    expect(results[0].relevanceScore).toBeCloseTo(0.75, 5);
   });
 
   it("returns empty array when no chunks are provided", async () => {

@@ -699,7 +699,7 @@ export default function DocumentsList() {
           </Link>
         )}
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           {/* ── Loading ── */}
           {isLoading ? (
             view === "grid" ? (
@@ -1054,7 +1054,7 @@ export default function DocumentsList() {
             Appears when 2–5 documents are selected
             ══════════════════════════════════════════════════ */}
         {showActionBar && (
-          <div className="border-t border-primary/20 bg-primary/5 backdrop-blur-sm px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
+          <div className="border-t border-primary/20 bg-primary/5 backdrop-blur-sm px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shrink-0">
                 {selectionCount}

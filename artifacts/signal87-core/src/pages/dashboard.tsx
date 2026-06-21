@@ -185,7 +185,7 @@ export default function Dashboard() {
 
         {/* ── Scrollable content ─────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto bg-background">
-          <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 space-y-4">
+          <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 space-y-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
 
             {/* Welcome */}
             <div>
@@ -199,7 +199,7 @@ export default function Dashboard() {
 
             {/* Ask bar */}
             <Link href="/agents/hybrid">
-              <div className="flex items-center gap-3 pl-4 pr-3 py-3 rounded-2xl border border-border bg-card/70 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20 shadow-sm">
+              <div className="flex items-center gap-3 pl-4 pr-3 py-3.5 rounded-2xl border border-border bg-card/70 hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group ring-0 hover:ring-1 hover:ring-primary/20 shadow-sm select-none active:scale-[0.97] min-h-[56px] sm:min-h-[48px]">
                 <Sparkles className="w-5 h-5 text-primary shrink-0" />
                 <span className="flex-1 text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">
                   Ask Signal
@@ -217,7 +217,7 @@ export default function Dashboard() {
                   key={action.label}
                   type="button"
                   onClick={action.onClick}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-card/70 transition-all duration-150 hover:border-primary/30 hover:bg-card hover:shadow-sm active:scale-[0.97]"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-3 sm:py-2.5 rounded-xl border border-border bg-card/70 transition-all duration-150 hover:border-primary/30 hover:bg-card hover:shadow-sm active:scale-[0.97] select-none touch-manipulation min-h-[48px]"
                 >
                   <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary">
                     <action.icon className="w-[13px] h-[13px]" />

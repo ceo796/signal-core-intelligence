@@ -1,0 +1,82 @@
+Campaign Expenditure Report
+
+Total Disbursements: $27,000
+Reporting Period: January 1, 2024 through March 31, 2024
+
+---
+
+EXPENDITURE DETAILS
+
+Date: January 15, 2024
+Payee: Shaquille Worrell
+Amount: $500.00
+Purpose: Field Support
+Payment Method: Check #1047
+
+Date: January 29, 2024
+Payee: Shaquille Worrell
+Amount: $500.00
+Purpose: Field Support
+Payment Method: Check #1058
+
+Date: February 12, 2024
+Payee: Shaquille Worrell
+Amount: $550.00
+Purpose: Field Support
+Payment Method: Check #1069
+
+Date: February 26, 2024
+Payee: Shaquille Worrell
+Amount: $550.00
+Purpose: Field Support
+Payment Method: Check #1073
+
+Date: March 11, 2024
+Payee: Shaquille Worrell
+Amount: $600.00
+Purpose: Field Support
+Payment Method: Check #1081
+
+---
+
+OTHER EXPENDITURES
+
+Date: January 8, 2024
+Payee: PrintCo LLC
+Amount: $2,400.00
+Purpose: Printing and mailing
+
+Date: January 22, 2024
+Payee: Metro Consulting
+Amount: $3,200.00
+Purpose: Strategy consulting
+
+Date: February 5, 2024
+Payee: Digital Media Partners
+Amount: $1,800.00
+Purpose: Social media advertising
+
+Date: February 19, 2024
+Payee: Event Hall Rentals
+Amount: $4,500.00
+Purpose: Venue rental
+
+Date: March 4, 2024
+Payee: Metro Consulting
+Amount: $3,200.00
+Purpose: Strategy consulting
+
+Date: March 18, 2024
+Payee: PrintCo LLC
+Amount: $2,400.00
+Purpose: Printing and mailing
+
+Date: March 25, 2024
+Payee: Shaquille Worrell
+Amount: $600.00
+Purpose: Field Support
+Payment Method: Check #1095
+
+---
+
+Notes: All payments to Shaquille Worrell were for field support activities during the reporting period. Total campaign expenditure for this period is $27,000.

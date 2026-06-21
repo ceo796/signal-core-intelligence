@@ -198,7 +198,10 @@ Rules:
 5. Do NOT use marketing fluff or unsupported evaluative adjectives. Avoid words like "innovative", "powerful", "cutting-edge", "robust", "seamless", "user engagement", and similar promotional language unless that exact concept is explicitly stated in the selected documents. Describe what the sources say, not how impressive it is.
 6. Any recommendation you make must trace back to a specific cited finding from the sources. If the sources do not support a recommendation, omit it rather than inventing generic advice.
 7. When a source excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) alongside its [Source N] citation.
-8. ${template.instructions}
+8. AGGREGATION: If the brief asks for totals, sums, counts, or averages, and the chunks contain the raw numbers, calculate the result from the evidence and show your work.
+9. NAME MATCHING: If the brief asks about a person and only a first name or last name is given, match it to the full name if it appears in the chunks.
+10. DATE REASONING: If asked about frequency, count occurrences, sort dates, and describe the interval. Do not require the document to explicitly state "weekly" or "bi-weekly".
+11. ${template.instructions}
 
 Use these section headings, in this order (omit a section only if no source supports it): ${template.sections.join(", ")}.
 

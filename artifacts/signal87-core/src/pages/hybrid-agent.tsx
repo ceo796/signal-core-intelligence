@@ -68,7 +68,7 @@ const SOURCE_LABELS = {
 } as const;
 
 const PILL_CLASS =
-  "inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors";
+  "inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors select-none active:scale-[0.94] touch-manipulation";
 
 interface DocOption {
   id: number;
@@ -285,7 +285,7 @@ function CitationCard({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-muted/40 transition-colors"
+        className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-muted/40 transition-colors select-none active:scale-[0.98] touch-manipulation"
       >
         <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-primary/15 text-primary">
           {citation.citationNumber}
@@ -331,7 +331,7 @@ function TracePanel({ trace, open, onOpenChange }: {
       <CollapsibleTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors select-none active:scale-[0.97] touch-manipulation"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>Verification Trace</span>
@@ -422,7 +422,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
     (sourceFilter instanceof Set && sourceFilter.size === citationDocs.length);
 
   const PILL =
-    "inline-flex items-center gap-1.5 h-7 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer select-none";
+    "inline-flex items-center gap-1.5 h-7 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer select-none active:scale-[0.94] touch-manipulation";
 
   return (
     <div className="space-y-4">
@@ -693,7 +693,7 @@ export default function HybridAgent() {
         {showConversation ? (
           <>
             <ScrollArea className="flex-1">
-              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
+              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
                     <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap">
@@ -724,8 +724,8 @@ export default function HybridAgent() {
             </div>
           </>
         ) : (
-          <div className="flex-1 overflow-y-auto">
-            <div className="min-h-full flex flex-col items-center justify-center px-4 py-10">
+          <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+            <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-10">
               <div className="w-full max-w-2xl space-y-7">
                 <div className="text-center space-y-3">
                   <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl">

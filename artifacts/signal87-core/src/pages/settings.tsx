@@ -39,7 +39,7 @@ export default function Settings() {
           </div>
         </header>
 
-        <div className="p-4 md:p-6 max-w-2xl space-y-6">
+        <div className="p-4 md:p-6 max-w-2xl space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
           <section>
             <div className="flex items-center gap-2 mb-3">
               <Brain className="w-4 h-4 text-primary" />

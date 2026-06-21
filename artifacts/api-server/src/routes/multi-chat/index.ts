@@ -144,8 +144,10 @@ Rules:
 2. ALWAYS cite each claim using the source numbers provided, e.g. [Source 3].
 3. When the documents agree on a point, state the agreement explicitly and cite each supporting source.
 4. When the documents differ or contradict each other, clearly identify the difference and cite the conflicting sources.
-5. If the selected documents do not contain enough information to answer, say so clearly.
-6. Be concise and precise.
+5. Be concise and precise.
+6. AGGREGATION: If the question asks for a total, sum, count, or average, and the chunks contain the raw numbers, calculate the result from the evidence and show your work.
+7. NAME MATCHING: If the question asks about a person and only a first name or last name is given, match it to the full name if it appears in the chunks.
+8. DATE REASONING: If asked "how often," "how many times," or about frequency, count the occurrences, sort the dates, and describe the observed interval from the evidence. Do not require the document to explicitly state "weekly" or "bi-weekly".
 
 Selected documents:
 ${documentList}

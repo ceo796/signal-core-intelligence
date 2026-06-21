@@ -88,7 +88,7 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     .map((c, i) => `[Chunk ${c.chunkIndex + 1}]:\n${c.content}`)
     .join("\n\n---\n\n");
 
-  const systemPrompt = `You are a precise document intelligence assistant. You answer questions based only on the provided document excerpts.
+  const systemPrompt = `You are a precise document intelligence assistant. You answer questions based on the provided document excerpts.
 
 Rules:
 1. Answer directly and concisely.
@@ -96,6 +96,10 @@ Rules:
 3. If the answer is not in the provided chunks, say so clearly.
 4. Do not hallucinate or add information not present in the document.
 5. When an excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) in your answer alongside the [Chunk N] citation.
+
+6. AGGREGATION: If the question asks for a total, sum, count, or average, and the chunks contain the raw numbers, calculate the result from the evidence and show your work. Do not say "not enough information" when the chunks contain the data.
+7. NAME MATCHING: If the question asks about a person and only a first name or last name is given, match it to the full name if it appears in the chunks. E.g., "Worrell" should match "Shaquille Worrell" and vice versa.
+8. DATE REASONING: If asked "how often," "how many times," or about frequency/pattern, count the occurrences, sort the dates, and describe the observed interval. Do not require the document to explicitly state "weekly" or "bi-weekly" — infer from the dates themselves. If the pattern is irregular, state that clearly.
 
 Document: "${doc.fileName}"
 

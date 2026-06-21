@@ -483,7 +483,7 @@ export default function ExecutiveBrief() {
         </header>
 
         <ScrollArea className="flex-1 p-4 md:p-6">
-          <div className="max-w-3xl mx-auto space-y-6 pb-6">
+          <div className="max-w-3xl mx-auto space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
             {/* Document selection */}
             <div className="bg-card border border-border rounded-lg p-5">
               <div className="flex items-center justify-between mb-3">

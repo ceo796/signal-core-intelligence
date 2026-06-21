@@ -464,7 +464,7 @@ export default function DocumentDetail() {
               </div>
 
               {/* ── Overview ── */}
-              <TabsContent value="overview" className="flex-1 overflow-auto p-4 md:p-6 m-0">
+              <TabsContent value="overview" className="flex-1 overflow-auto p-4 md:p-6 m-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 <div className="max-w-2xl space-y-6">
 
                   {/* Document Summary */}
@@ -565,7 +565,7 @@ export default function DocumentDetail() {
               </TabsContent>
 
               {/* ── Preview ── */}
-              <TabsContent value="preview" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
+              <TabsContent value="preview" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 {isPdf ? (
                   !originalAvailable ? (
                     <div className="flex-1 overflow-auto flex flex-col gap-4">
@@ -607,7 +607,7 @@ export default function DocumentDetail() {
                     </div>
                   )
                 ) : doc.extractedText ? (
-                  <Card className="bg-card border-border/50 flex-1 overflow-auto">
+                  <Card className="bg-card border-border/50 flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
                     <CardContent className="p-5">
                       <p className="text-xs text-muted-foreground mb-3">
                         {isSpreadsheet
@@ -666,7 +666,7 @@ export default function DocumentDetail() {
               </TabsContent>
 
               {/* ── Metadata ── */}
-              <TabsContent value="metadata" className="flex-1 overflow-auto p-4 md:p-6 m-0">
+              <TabsContent value="metadata" className="flex-1 overflow-auto p-4 md:p-6 m-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 <Card className="bg-card border-border/50 max-w-xl">
                   <CardContent className="p-5">
                     <p className="text-xs text-muted-foreground mb-4">Document metadata</p>
