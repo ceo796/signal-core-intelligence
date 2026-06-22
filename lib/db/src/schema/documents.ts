@@ -14,11 +14,14 @@ export const documentsTable = pgTable("documents", {
   storageProvider: text("storage_provider"),
   storageKey: text("storage_key"),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  deletedBy: text("deleted_by"),
 }, (table) => [
   index("idx_documents_owner_user_id").on(table.ownerUserId),
   index("idx_documents_extraction_status").on(table.extractionStatus),
+  index("idx_documents_deleted_at").on(table.deletedAt),
 ]);
 
-export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, uploadedAt: true });
+export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, uploadedAt: true, deletedAt: true, deletedBy: true });
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documentsTable.$inferSelect;

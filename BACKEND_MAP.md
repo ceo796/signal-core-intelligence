@@ -1,6 +1,19 @@
 # Signal87 Core — Backend Map
 
-> Checkpoint: **Signal87_Light_Theme_Reskin_v6**
+> Checkpoint: **Signal87_Trash_SoftDelete_v11**
+> Last updated: 2026-06-22
+> Note (Trash_SoftDelete_v11): Added trash / soft-delete feature.
+- **New route** `artifacts/api-server/src/routes/trash/index.ts` (mounted in `routes/index.ts` after auth middleware) — 4 endpoints:
+  - `GET /api/trash` — paginated list of trashed documents (owner-scoped via `isNotNull(documentsTable.deletedAt)`)
+  - `POST /api/trash/:id/restore` — restore (sets `deletedAt=null, deletedBy=null`)
+  - `DELETE /api/trash/:id` — permanent delete: removes original file from storage, then `DELETE` chunks + document rows
+  - `POST /api/trash/empty` — permanently delete all user's trashed documents
+- **Soft-delete** `DELETE /api/documents/:id` now sets `deletedAt`/`deletedBy` instead of hard-delete.
+- **All document reads now exclude trashed** — every `from(documentsTable)` query in `routes/{documents,chat,multi-chat,brief,agent}/index.ts` and `routes/demo/index.ts` now filters `isNull(documentsTable.deletedAt)`. Deliberately global (no filter): `GET /api/admin/stats` and `GET /api/system/info` (aggregate-only, not per-user).
+- **OpenAPI/codegen** updated — Trash tag + 4 paths + 4 schemas (`TrashItem`, `TrashList`, `TrashRestore`, `TrashEmpty`).
+- **DB schema** — `deletedAt` and `deletedBy` columns already existed in `documentsTable` (from prior schema); this feature activates them. No new migration needed.
+>
+> Prior checkpoint: **Signal87_Light_Theme_Reskin_v6**
 > Last updated: 2026-06-22
 > Note (Light_Theme_Reskin_v6): **No backend change.** The authenticated app UI switched from dark to light (Notion/Dropbox-style, primary #4F3FF0) via a scoped `.signal-app` CSS token block in the frontend. The public landing page (`/`) remains dark and untouched. All existing routes, endpoints, auth, upload, download, delete, re-index, citations, Verification Trace, and AI behavior are unchanged. This is a purely frontend/CSS color change.
 >

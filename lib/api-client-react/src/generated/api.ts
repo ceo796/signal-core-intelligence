@@ -35,10 +35,14 @@ import type {
   HybridAgentResult,
   ListDocuments200,
   ListDocumentsParams,
+  ListTrashParams,
   MultiChatInput,
   MultiChatResult,
   ReindexResult,
-  SystemInfo
+  SystemInfo,
+  TrashEmpty,
+  TrashList,
+  TrashRestore
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1178,6 +1182,300 @@ export function useGetAdminStats<TData = Awaited<ReturnType<typeof getAdminStats
 
 
 
+
+export const getListTrashUrl = (params?: ListTrashParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/trash?${stringifiedParams}` : `/api/trash`
+}
+
+/**
+ * @summary List trashed documents with pagination
+ */
+export const listTrash = async (params?: ListTrashParams, options?: RequestInit): Promise<TrashList> => {
+
+  return customFetch<TrashList>(getListTrashUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrashQueryKey = (params?: ListTrashParams,) => {
+    return [
+    `/api/trash`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTrashQueryOptions = <TData = Awaited<ReturnType<typeof listTrash>>, TError = ErrorType<ErrorResponse>>(params?: ListTrashParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrashQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrash>>> = ({ signal }) => listTrash(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrashQueryResult = NonNullable<Awaited<ReturnType<typeof listTrash>>>
+export type ListTrashQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List trashed documents with pagination
+ */
+
+export function useListTrash<TData = Awaited<ReturnType<typeof listTrash>>, TError = ErrorType<ErrorResponse>>(
+ params?: ListTrashParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrashQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRestoreTrashUrl = (id: number,) => {
+
+
+
+
+  return `/api/trash/${id}/restore`
+}
+
+/**
+ * @summary Restore a trashed document
+ */
+export const restoreTrash = async (id: number, options?: RequestInit): Promise<TrashRestore> => {
+
+  return customFetch<TrashRestore>(getRestoreTrashUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestoreTrashMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreTrash>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreTrash>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['restoreTrash'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreTrash>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreTrash(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreTrashMutationResult = NonNullable<Awaited<ReturnType<typeof restoreTrash>>>
+
+    export type RestoreTrashMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Restore a trashed document
+ */
+export const useRestoreTrash = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreTrash>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreTrash>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRestoreTrashMutationOptions(options));
+    }
+
+export const getPermanentDeleteUrl = (id: number,) => {
+
+
+
+
+  return `/api/trash/${id}`
+}
+
+/**
+ * @summary Permanently delete a trashed document
+ */
+export const permanentDelete = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getPermanentDeleteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getPermanentDeleteMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permanentDelete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof permanentDelete>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['permanentDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof permanentDelete>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  permanentDelete(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PermanentDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof permanentDelete>>>
+
+    export type PermanentDeleteMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Permanently delete a trashed document
+ */
+export const usePermanentDelete = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permanentDelete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof permanentDelete>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getPermanentDeleteMutationOptions(options));
+    }
+
+export const getEmptyTrashUrl = () => {
+
+
+
+
+  return `/api/trash/empty`
+}
+
+/**
+ * @summary Empty all trash
+ */
+export const emptyTrash = async ( options?: RequestInit): Promise<TrashEmpty> => {
+
+  return customFetch<TrashEmpty>(getEmptyTrashUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getEmptyTrashMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emptyTrash>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof emptyTrash>>, TError,void, TContext> => {
+
+const mutationKey = ['emptyTrash'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof emptyTrash>>, void> = () => {
+
+
+          return  emptyTrash(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmptyTrashMutationResult = NonNullable<Awaited<ReturnType<typeof emptyTrash>>>
+
+    export type EmptyTrashMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Empty all trash
+ */
+export const useEmptyTrash = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emptyTrash>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof emptyTrash>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getEmptyTrashMutationOptions(options));
+    }
 
 export const getPostAgentHybridUrl = () => {
 

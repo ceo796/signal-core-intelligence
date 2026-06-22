@@ -354,6 +354,66 @@ export const GetAdminStatsResponse = zod.object({
 
 
 /**
+ * @summary List trashed documents with pagination
+ */
+export const listTrashQueryLimitDefault = 50;
+export const listTrashQueryOffsetDefault = 0;
+
+export const ListTrashQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listTrashQueryLimitDefault),
+  "offset": zod.coerce.number().default(listTrashQueryOffsetDefault)
+})
+
+export const ListTrashResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "fileName": zod.string(),
+  "fileType": zod.string(),
+  "fileSize": zod.number().nullable(),
+  "uploadedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable(),
+  "extractionStatus": zod.string(),
+  "chunkCount": zod.number(),
+  "originalFileAvailable": zod.boolean()
+})),
+  "total": zod.number(),
+  "limit": zod.number(),
+  "offset": zod.number()
+})
+
+
+/**
+ * @summary Restore a trashed document
+ */
+export const RestoreTrashParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RestoreTrashResponse = zod.object({
+  "id": zod.number(),
+  "fileName": zod.string(),
+  "fileType": zod.string(),
+  "restored": zod.boolean()
+})
+
+
+/**
+ * @summary Permanently delete a trashed document
+ */
+export const PermanentDeleteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Empty all trash
+ */
+export const EmptyTrashResponse = zod.object({
+  "deletedCount": zod.number()
+})
+
+
+/**
  * Authenticated. Runs a single query across one or more documents, retrieves relevant chunks via embedding similarity, synthesizes an answer grounded in the retrieved context, and returns citations and a verification trace. If documentIds are omitted the agent auto-selects from all indexed documents (up to maxDocuments). All documents are shared across the authenticated user pool (no per-user ownership).
 
  * @summary Hybrid cross-document agent query

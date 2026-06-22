@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { inArray, and, eq } from "drizzle-orm";
+import { inArray, and, eq, isNull } from "drizzle-orm";
 import { GenerateBriefBody } from "@workspace/api-zod";
 import { getCurrentUserId } from "../../lib/ownership";
 import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
@@ -99,7 +99,7 @@ router.post("/documents/brief", async (req, res): Promise<void> => {
   const docs = await db
     .select()
     .from(documentsTable)
-    .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId)));
+    .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
 
   if (docs.length !== uniqueIds.length) {
     const found = new Set(docs.map((d) => d.id));

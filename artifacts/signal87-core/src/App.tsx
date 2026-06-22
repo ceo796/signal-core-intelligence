@@ -22,6 +22,7 @@ import MichaelBenezra from "@/pages/team-michael-benezra";
 import MichaelChavira from "@/pages/team-michael-chavira";
 import Admin from "@/pages/admin";
 import Settings from "@/pages/settings";
+import TrashPage from "@/pages/trash";
 import NotFound from "@/pages/not-found";
 import { SignIn, SignUp } from "@clerk/react";
 
@@ -130,6 +131,7 @@ function Router() {
       <Route path="/analyze" component={AnalyzePage} />
       <Route path="/agents/hybrid" component={HybridAgent} />
       <Route path="/activity" component={Activity} />
+      <Route path="/trash" component={TrashPage} />
       {/* Public pages */}
       <Route path="/about" component={About} />
       <Route path="/privacy" component={Privacy} />

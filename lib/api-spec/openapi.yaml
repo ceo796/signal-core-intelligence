@@ -18,6 +18,8 @@ tags:
     description: Public, unauthenticated landing-page demo content
   - name: agent
     description: Hybrid cross-document agent queries
+  - name: trash
+    description: Trashed document management (restore or permanently delete)
 
 paths:
   /healthz:
@@ -373,6 +375,101 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminStats"
+
+  /trash:
+    get:
+      operationId: listTrash
+      tags: [trash]
+      summary: List trashed documents with pagination
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Trashed documents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrashList"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trash/{id}/restore:
+    post:
+      operationId: restoreTrash
+      tags: [trash]
+      summary: Restore a trashed document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrashRestore"
+        "404":
+          description: Document not found in trash
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trash/{id}:
+    delete:
+      operationId: permanentDelete
+      tags: [trash]
+      summary: Permanently delete a trashed document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Permanently deleted
+        "404":
+          description: Document not found in trash
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trash/empty:
+    post:
+      operationId: emptyTrash
+      tags: [trash]
+      summary: Empty all trash
+      responses:
+        "200":
+          description: Trash emptied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrashEmpty"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /agent/hybrid:
     post:
@@ -997,6 +1094,66 @@ components:
             $ref: "#/components/schemas/HybridAgentCitation"
         trace:
           $ref: "#/components/schemas/HybridAgentTrace"
+
+    TrashItem:
+      type: object
+      required: [id, fileName, fileType, fileSize, uploadedAt, deletedAt, extractionStatus, chunkCount, originalFileAvailable]
+      properties:
+        id:
+          type: integer
+        fileName:
+          type: string
+        fileType:
+          type: string
+        fileSize:
+          type: ["integer", "null"]
+        uploadedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: ["string", "null"]
+          format: date-time
+        extractionStatus:
+          type: string
+        chunkCount:
+          type: integer
+        originalFileAvailable:
+          type: boolean
+
+    TrashList:
+      type: object
+      required: [items, total, limit, offset]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrashItem"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    TrashRestore:
+      type: object
+      required: [id, fileName, fileType, restored]
+      properties:
+        id:
+          type: integer
+        fileName:
+          type: string
+        fileType:
+          type: string
+        restored:
+          type: boolean
+
+    TrashEmpty:
+      type: object
+      required: [deletedCount]
+      properties:
+        deletedCount:
+          type: integer
 
     ErrorResponse:
       type: object

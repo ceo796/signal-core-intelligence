@@ -9,6 +9,7 @@ import {
   getListDocumentsQueryKey,
   getGetDocumentQueryKey,
   getGetDocumentChunksQueryKey,
+  getListTrashQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -231,7 +232,7 @@ function DeleteDialog({ fileName, onConfirm }: { fileName: string; onConfirm: ()
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Document?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently remove {fileName} and all associated chat history from the system.
+            {fileName} will be moved to Trash. You can restore it later if needed.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -376,9 +377,10 @@ export default function DocumentsList() {
       { id },
       {
         onSuccess: () => {
-          toast.success("Document deleted");
+          toast.success("Document moved to Trash");
           setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
           queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListTrashQueryKey() });
         },
         onError: () => toast.error("Failed to delete document"),
       }

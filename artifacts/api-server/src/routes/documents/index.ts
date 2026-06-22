@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import multer from "multer";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { eq, and, count, inArray, sql } from "drizzle-orm";
+import { eq, and, count, inArray, sql, isNull } from "drizzle-orm";
 import { getCurrentUserId } from "../../lib/ownership";
 import {
   GetDocumentParams,
@@ -53,13 +53,13 @@ router.get("/documents", async (req, res): Promise<void> => {
     const totalResult = await db
       .select({ count: count(documentsTable.id) })
       .from(documentsTable)
-      .where(eq(documentsTable.ownerUserId, userId));
+      .where(and(eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
     const total = totalResult[0]?.count ?? 0;
 
     const docs = await db
       .select()
       .from(documentsTable)
-      .where(eq(documentsTable.ownerUserId, userId))
+      .where(and(eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)))
       .orderBy(documentsTable.uploadedAt)
       .limit(limit)
       .offset(offset);
@@ -220,7 +220,7 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -249,27 +249,18 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
 
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
   }
 
-  // Delete original file from object storage before removing the DB record,
-  // so a failure leaves storage_key intact for a retry rather than orphaning.
-  if (doc.storageKey) {
-    try {
-      await fileStore.deleteFile(doc.storageKey);
-    } catch (err) {
-      req.log.error({ err, storageKey: doc.storageKey }, "Failed to delete original file from storage");
-      res.status(500).json({ error: "Failed to delete original file from storage" });
-      return;
-    }
-  }
-
-  await db.delete(chunksTable).where(eq(chunksTable.documentId, doc.id));
-  await db.delete(documentsTable).where(eq(documentsTable.id, doc.id));
+  // Soft delete: set deletedAt and deletedBy instead of removing records
+  await db
+    .update(documentsTable)
+    .set({ deletedAt: new Date(), deletedBy: userId })
+    .where(eq(documentsTable.id, doc.id));
 
   res.sendStatus(204);
 });
@@ -290,7 +281,7 @@ router.get("/documents/:id/chunks", async (req, res): Promise<void> => {
   const [doc] = await db
     .select({ id: documentsTable.id })
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -321,7 +312,7 @@ router.get("/documents/:id/original", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -374,7 +365,7 @@ router.put(
     const [doc] = await db
       .select()
       .from(documentsTable)
-      .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
+      .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
     if (!doc) {
       res.status(404).json({ error: "Document not found" });
       return;
@@ -445,7 +436,7 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;

@@ -336,6 +336,38 @@ export interface HybridAgentResult {
   trace: HybridAgentTrace;
 }
 
+export interface TrashItem {
+  id: number;
+  fileName: string;
+  fileType: string;
+  /** @nullable */
+  fileSize: number | null;
+  uploadedAt: string;
+  /** @nullable */
+  deletedAt: string | null;
+  extractionStatus: string;
+  chunkCount: number;
+  originalFileAvailable: boolean;
+}
+
+export interface TrashList {
+  items: TrashItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface TrashRestore {
+  id: number;
+  fileName: string;
+  fileType: string;
+  restored: boolean;
+}
+
+export interface TrashEmpty {
+  deletedCount: number;
+}
+
 export interface ErrorResponse {
   error: string;
 }
@@ -357,5 +389,10 @@ export type ListDocuments200 = {
   total?: number;
   limit?: number;
   offset?: number;
+};
+
+export type ListTrashParams = {
+limit?: number;
+offset?: number;
 };
 

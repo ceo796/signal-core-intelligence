@@ -46,6 +46,7 @@ router.get("/demo/qa", async (req, res): Promise<void> => {
         and(
           eq(documentsTable.extractionStatus, "success"),
           sql`length(trim(${chunksTable.content})) > 0`,
+          sql`${documentsTable.deletedAt} IS NULL`,
         ),
       )
       .orderBy(desc(documentsTable.uploadedAt), asc(chunksTable.chunkIndex))

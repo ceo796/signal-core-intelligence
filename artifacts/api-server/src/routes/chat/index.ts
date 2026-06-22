@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable, chatMessagesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { getCurrentUserId } from "../../lib/ownership";
 import {
   ChatWithDocumentParams,
@@ -41,7 +41,7 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -197,7 +197,7 @@ router.get("/documents/:id/history", async (req, res): Promise<void> => {
   const [doc] = await db
     .select({ id: documentsTable.id })
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
@@ -235,7 +235,7 @@ router.delete("/documents/:id/history", async (req, res): Promise<void> => {
   const [doc] = await db
     .select({ id: documentsTable.id })
     .from(documentsTable)
-    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId)));
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;

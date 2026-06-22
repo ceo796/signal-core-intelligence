@@ -6,6 +6,7 @@ import chatRouter from "./chat";
 import multiChatRouter from "./multi-chat";
 import briefRouter from "./brief";
 import agentRouter from "./agent";
+import trashRouter from "./trash";
 import { requireApprovedEmail } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -21,5 +22,6 @@ router.use(multiChatRouter);
 router.use(briefRouter);
 router.use(agentRouter);
 router.use(chatRouter);
+router.use(trashRouter);
 
 export default router;

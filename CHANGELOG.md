@@ -2,6 +2,50 @@
 
 ---
 
+## [Signal87_Trash_SoftDelete_v11] — 2026-06-22  *(Trash / Soft-delete feature)*
+
+### Summary
+Documents are now soft-deleted instead of permanently removed immediately. A new Trash page (`/trash`) shows trashed documents with restore, permanent delete, and download actions. All existing document lists (Documents, AI Chat selection, Analyze selection) exclude trashed documents. The feature is fully backend + frontend.
+
+### Added
+
+- **DB schema** (`lib/db/src/schema/documents.ts`) — `deletedAt` and `deletedBy` columns (nullable) with index `idx_documents_deleted_at`. Columns already existed in prior schema; this feature activates them.
+- **Trash API** (`artifacts/api-server/src/routes/trash/index.ts`) — Four endpoints mounted under auth:
+  - `GET /api/trash` — paginated list of trashed documents (owner-scoped, ordered by `deletedAt`)
+  - `POST /api/trash/:id/restore` — restores a trashed document (clears `deletedAt`/`deletedBy`)
+  - `DELETE /api/trash/:id` — permanently deletes: removes original file from storage, then `DELETE` chunks + document rows
+  - `POST /api/trash/empty` — permanently deletes all user's trashed documents (same storage+DB cleanup per doc)
+- **OpenAPI spec** (`lib/api-spec/openapi.yaml`) — Trash tag + 4 path entries + 4 schemas (`TrashItem`, `TrashList`, `TrashRestore`, `TrashEmpty`)
+- **Codegen** — `useListTrash`, `useRestoreTrash`, `usePermanentDelete`, `useEmptyTrash` generated via Orval
+- **Trash page** (`artifacts/signal87-core/src/pages/trash.tsx`) — Full trash UI with list of trashed documents (file name, type, size, deleted date), Download Original, Restore, and Permanently Delete (per-item confirmation dialog), plus Empty Trash (global confirmation dialog). Honest empty state with back-link to Documents.
+- **Trash nav item** — Added to sidebar nav (4th item) with `Trash2` icon; active state on `/trash`
+
+### Changed
+
+- **All document reads now exclude trashed documents** — every backend query against `documentsTable` that reads a specific document or lists documents now includes `isNull(documentsTable.deletedAt)`:
+  - `GET /api/documents` (list + count)
+  - `GET /api/documents/:id` (detail)
+  - `DELETE /api/documents/:id` (now soft-delete: sets `deletedAt`/`deletedBy` instead of hard delete)
+  - `GET /api/documents/:id/chunks`
+  - `GET /api/documents/:id/original`
+  - `PUT /api/documents/:id/original` (replace stored file)
+  - `POST /api/documents/:id/reindex`
+  - `POST /api/documents/:id/chat` (single-doc chat)
+  - `GET/DELETE /api/documents/:id/history` (chat history)
+  - `POST /api/documents/multi-chat` (multi-doc selection)
+  - `POST /api/documents/brief` (brief selection)
+  - `POST /api/agent/hybrid` (auto-select + explicit selection)
+  - `GET /api/demo/qa` (demo Q&A — also excludes trashed docs)
+- **Frontend delete confirmation** — Documents list delete dialog now says "moved to Trash" instead of "permanently remove"; toast message updated to "Document moved to Trash"
+- **Frontend trash cache invalidation** — On delete success, `getListTrashQueryKey()` is also invalidated so the trash counter/badge stays fresh
+
+### Scope
+- Backend + frontend. OpenAPI/codegen updated. DB schema already had columns (no new migration needed).
+- No change to upload, extraction, indexing, AI chat, citations, Verification Trace, PDF viewer, spreadsheet viewer, admin stats.
+- Admin stats (`GET /api/admin/stats`) and `GET /api/system/info` remain deliberately global (no `deletedAt` filter) — aggregate-only, not per-user.
+
+---
+
 ## [Signal87_SpreadsheetGridViewer_v10] — 2026-06-22  *(Polished spreadsheet preview on Document Detail; frontend-only)*
 
 ### Summary

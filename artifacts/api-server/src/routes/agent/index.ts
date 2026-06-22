@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
 import { PostAgentHybridBody } from "@workspace/api-zod";
 import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
@@ -59,7 +59,7 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
     const fetched = await db
       .select({ id: documentsTable.id, fileName: documentsTable.fileName })
       .from(documentsTable)
-      .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId)));
+      .where(and(inArray(documentsTable.id, uniqueIds), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)));
 
     if (fetched.length !== uniqueIds.length) {
       const found = new Set(fetched.map((d) => d.id));
@@ -72,7 +72,7 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
     docs = await db
       .select({ id: documentsTable.id, fileName: documentsTable.fileName })
       .from(documentsTable)
-      .where(and(eq(documentsTable.extractionStatus, "success"), eq(documentsTable.ownerUserId, userId)))
+      .where(and(eq(documentsTable.extractionStatus, "success"), eq(documentsTable.ownerUserId, userId), isNull(documentsTable.deletedAt)))
       .orderBy(desc(documentsTable.uploadedAt))
       .limit(maxDocuments);
 

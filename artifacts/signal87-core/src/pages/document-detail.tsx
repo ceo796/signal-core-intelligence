@@ -10,6 +10,7 @@ import {
   getDocumentOriginal,
   getGetDocumentQueryKey,
   getListDocumentsQueryKey,
+  getListTrashQueryKey,
   type HybridAgentResult,
   type HybridAgentCitation,
   type HybridAgentTrace,
@@ -261,8 +262,9 @@ export default function DocumentDetail() {
       { id },
       {
         onSuccess: () => {
-          toast.success("Document deleted");
+          toast.success("Document moved to Trash");
           queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListTrashQueryKey() });
           navigate("/documents");
         },
         onError: () => toast.error("Failed to delete document"),
@@ -677,8 +679,7 @@ export default function DocumentDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Document?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove <strong>{doc.fileName}</strong> and all associated chat
-              history from the system.
+              <strong>{doc.fileName}</strong> will be moved to Trash. You can restore it later if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
