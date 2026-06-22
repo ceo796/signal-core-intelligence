@@ -1,0 +1,160 @@
+```text
+Use the uploaded Signal87 HTML mockups as the new visual direction for the logged-in platform.
+
+Uploaded design references:
+- signal87_document_dashboard.html
+- signal87_document_dashboard (1).html
+- signal87_document_detail_page.html
+- signal87_ai_chat_page.html
+
+Goal:
+Apply the uploaded designs to the real Signal87 logged-in platform while preserving all existing functionality.
+
+Permanent rule:
+Do not modify the public landing page unless explicitly instructed.
+All design changes must be isolated to the logged-in app experience.
+Confirm after implementation that the landing page was untouched.
+
+Important:
+Do not paste these HTML files directly into the app as static pages.
+Use them as design references and translate the style into the existing React components, routes, and data flows.
+
+Apply the new design system to:
+
+1. Document Dashboard / Home
+Use the uploaded document dashboard design as the target style:
+- compact left sidebar
+- clean workspace navigation
+- search bar
+- ask bar
+- quick actions
+- stats / summary cards if backed by real data
+- recent documents table
+- compact document rows
+- file-type pills
+- action icons
+- workspace/user area
+
+Use real data only.
+Do not show fake analysis counts, fake workspaces, fake recent activity, fake documents, or fake AI results.
+If data is unavailable, show honest empty states.
+
+2. Documents Page
+Adopt the table/list style from the uploaded dashboard:
+- document name
+- type
+- updated date
+- status if available
+- actions
+- small thumbnail or polished fallback icon
+- no visible chunks
+- compact row spacing
+- clean hover states
+
+3. Document Detail Page
+Use the uploaded document detail design:
+- sidebar remains consistent
+- topbar with back navigation, title, file type, download, analyze/ask
+- document viewer on the left
+- intelligence panel on the right
+- tabs: Summary, Extracted Data, Ask
+- preserve existing preview, extracted text, citations, download, re-index, delete, and chat behavior
+- do not invent extracted fields or analysis
+- if summary/extracted data is unavailable, show empty state or generate CTA
+
+4. AI Chat Page
+Use the uploaded AI chat design:
+- conversation sidebar
+- main chat thread
+- user and AI message bubbles
+- source/citation pills
+- bottom input bar
+- new chat button
+- preserve existing GPT/OpenAI-backed document chat behavior
+- preserve citations and verification trace
+- do not add fake conversations or fake answers
+
+5. Styling
+Create or update app-specific design tokens:
+- font: clean Notion/Dropbox-like sans-serif
+- white/light background by default
+- subtle borders
+- compact spacing
+- rounded corners
+- restrained accent color
+- quiet file-type colors
+- clean hover states
+
+Do not apply global CSS changes that affect the landing page.
+If shared tokens would change the landing page, create logged-in-app-specific tokens instead.
+
+6. Data integrity
+Use only real backend data:
+- real uploaded documents
+- real document metadata
+- real chat answers
+- real citations
+- real generated briefs
+- real comparison outputs
+
+Do not include static sample invoice totals, fake document counts, fake AI analyses, fake summaries, fake source pills, fake activity, or fake extracted data.
+
+7. Functionality preservation
+Do not change:
+- backend routes
+- database schema
+- auth / Clerk
+- upload behavior
+- extraction/indexing
+- document storage
+- chat endpoints
+- citations
+- verification trace
+- brief generation
+- compare behavior
+- download/delete/re-index behavior
+- AI provider/model configuration
+
+8. Implementation approach
+Proceed page by page:
+First: Dashboard/Documents shell
+Second: Document Detail page
+Third: AI Chat page
+
+After each page:
+- run typecheck
+- check console errors
+- confirm route still works
+- confirm data is real
+- confirm landing page was untouched
+
+9. Verification checklist
+Confirm:
+- Dashboard loads
+- Documents page loads
+- Document detail loads
+- AI Chat loads
+- Upload still works
+- Ask still works
+- Citations still appear
+- Verification Trace still works
+- Download still works
+- Delete/re-index remain available where appropriate
+- Brief page still works
+- Compare page still works
+- No chunks are visible in user-facing dashboard/document tables
+- No fake content appears
+- Landing page unchanged
+- No backend files changed unless absolutely necessary
+- No AI provider/model changes
+- No console errors
+- Git diff is limited and clean
+
+Report:
+- Files changed
+- Which uploaded mockup was applied to which route
+- Whether any backend files were touched
+- Which sections use real data
+- Which sections show empty states
+- Confirmation that the public landing page was untouched
+```
