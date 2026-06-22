@@ -1,0 +1,223 @@
+Run a Signal87 platform performance, reliability, and efficiency audit.
+
+This is not a normal pass/fail QA audit. Do not simply confirm that pages load. Assume there are hidden inefficiencies, unnecessary complexity, slow paths, fragile code, and product bottlenecks. The goal is to find them.
+
+Permanent rule:
+Do not modify the public landing page unless explicitly instructed. Confirm the landing page was untouched.
+
+Audit mindset:
+Be skeptical and adversarial.
+Do not give a Green status unless supported by evidence.
+Passing typecheck and tests is not enough.
+Identify concrete recommendations for speed, efficiency, reliability, and product quality.
+
+Scope:
+Verification and analysis only. Do not make code changes unless explicitly approved after the audit.
+
+Primary audit questions:
+
+1. What is slowing the platform down?
+Investigate:
+- slow page loads
+- slow document list rendering
+- slow thumbnails
+- unnecessary PDF rendering
+- excessive React re-renders
+- repeated API calls
+- unnecessary retries
+- oversized bundles
+- expensive dashboard data loading
+- expensive chat state updates
+- unnecessary network waterfalls
+- blocking UI operations
+- heavy components loaded too early
+
+2. What is inefficient in the frontend?
+Check:
+- dashboard render performance
+- Documents page render performance
+- document detail page render performance
+- AI Chat render performance
+- brief and compare page render performance
+- thumbnail loading strategy
+- PDF viewer loading strategy
+- whether components re-render unnecessarily
+- whether large lists need memoization, pagination, virtualization, or lazy loading
+
+3. What is inefficient in the backend?
+Check:
+- document extraction flow
+- chunking performance
+- embedding generation
+- retrieval query performance
+- chat endpoint latency
+- multi-document chat latency
+- brief generation latency
+- compare endpoint latency
+- whether endpoints fetch more data than needed
+- whether repeated work is cached or recomputed
+- whether file reads/storage calls are excessive
+- whether database queries are scoped and indexed properly
+
+4. What AI calls are unnecessary, expensive, or poorly structured?
+Audit:
+- single-doc chat
+- hybrid agent
+- multi-chat
+- brief generation
+- compare
+- any dashboard-related AI calls
+
+Confirm:
+- no AI calls run automatically on dashboard load
+- no AI calls run for purely visual pages
+- prompts are not bloated
+- retrieved context is not excessive
+- max chunks are reasonable
+- model choice is appropriate
+- OpenAI/GPT-only remains intact
+- no Gemini or unintended provider exists
+- web research remains off
+
+5. What could fail at scale?
+Evaluate:
+- 10 documents
+- 100 documents
+- 1,000 documents
+- very large PDFs
+- long TXT files
+- XLSX files with many rows/sheets
+- many users
+- repeated uploads
+- repeated re-indexing
+- large chat histories
+
+Identify where the app will slow down or break first.
+
+6. What is overbuilt, duplicative, or unnecessary?
+Look for:
+- duplicate routes
+- duplicate AI Chat / Ask concepts
+- duplicate document preview logic
+- duplicate PDF worker setup
+- duplicate styling systems
+- unused components
+- dead routes
+- unused API endpoints
+- features shown in UI but not truly implemented
+- frontend pages that imply backend functionality that does not exist
+
+7. What is confusing or inefficient for users?
+Evaluate UX friction:
+- too many routes
+- unclear difference between AI Chat and Ask
+- unclear brief/compare flows
+- too much empty space
+- too much hidden functionality
+- too many clicks to ask about a document
+- missing loading states
+- unclear error states
+- unclear empty states
+- misleading nav items, especially Trash, Agents, Workflows, Collections if not fully implemented
+
+8. What bugs may not be caught by tests?
+Look for:
+- race conditions
+- retry loops
+- broken loading states
+- stale React Query cache
+- auth edge cases
+- preview iframe/auth issues
+- upload failure edge cases
+- large-file edge cases
+- failed extraction edge cases
+- partially indexed document behavior
+- delete/re-index while chat is open
+- mobile layout regressions
+
+9. What should be measured?
+Collect or estimate:
+- initial app load time
+- dashboard load time
+- documents page load time
+- document detail load time
+- PDF preview load time
+- thumbnail load time
+- chat request latency
+- brief generation latency
+- compare latency
+- number of API calls per page
+- largest frontend bundles/components
+- repeated network calls
+- number of documents fetched per page
+
+If exact measurement is not possible, explain why and identify what instrumentation is needed.
+
+10. What needs to change?
+The audit must produce prioritized recommendations.
+
+For every recommendation, include:
+- severity: Critical / High / Medium / Low
+- category: Performance / Reliability / UX / Architecture / Security / Cost / Maintainability
+- affected route or component
+- evidence
+- expected benefit
+- implementation effort: Small / Medium / Large
+- risk level
+- whether it touches backend, frontend, database, auth, or AI
+
+Required deliverable format:
+
+A. Executive Summary
+- Overall status: Green / Yellow / Red
+- One-paragraph honest assessment
+- Top 5 risks or inefficiencies
+
+B. Performance Findings
+Include specific findings about frontend, backend, AI calls, document rendering, thumbnails, chat, and dashboard loading.
+
+C. Reliability Findings
+Include fragile areas, edge cases, and likely failure points.
+
+D. UX/Product Efficiency Findings
+Include workflow friction, duplicate features, misleading pages, or unnecessary UI.
+
+E. Cost/AI Efficiency Findings
+Include unnecessary token usage, unnecessary model calls, excessive context, or poor retrieval strategy.
+
+F. Scale Readiness
+Assess readiness for:
+- 10 documents
+- 100 documents
+- 1,000 documents
+- large PDFs
+- large spreadsheets
+
+G. Recommended Changes
+Provide a ranked list:
+1. Must fix now
+2. Should fix soon
+3. Can defer
+4. Do not build yet
+
+H. Measurement Gaps
+Identify missing logging, telemetry, timing, or instrumentation needed to properly measure speed.
+
+I. What Passed
+Only include meaningful passes supported by evidence.
+
+J. What Was Not Tested
+Explain clearly.
+
+K. Confirmations
+Confirm:
+- no files changed
+- landing page untouched
+- no backend changes made
+- no AI provider changes made
+- no database changes made
+- no fake data added
+
+Important:
+Do not mark this audit Green just because tests pass.
+If there are no serious findings, explain exactly what was measured and why the evidence supports that conclusion.
