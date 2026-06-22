@@ -218,6 +218,64 @@ html {
   --shadow-2xl: 0px 24px 48px -8px hsl(0 0% 0% / 0.75);
 }
 
+/* ── Signal87 logged-in app theme ─────────────────────────────────────────
+   Scoped to the authenticated platform only (applied via the Layout root).
+   Notion/Dropbox-style light surface with a restrained indigo accent (#4F3FF0).
+   The public landing page (home.tsx) is self-scoped under .s87-landing and never
+   receives this class, so it is unaffected. Do NOT move these into :root/.dark. */
+.signal-app {
+  --button-outline: rgba(0,0,0, .08);
+  --badge-outline: rgba(0,0,0, .04);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .06);
+
+  --background: 0 0% 100%;
+  --foreground: 240 6% 12%;
+  --border: 240 6% 90%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 6% 12%;
+  --card-border: 240 6% 91%;
+  --sidebar: 36 12% 98%;
+  --sidebar-foreground: 240 6% 12%;
+  --sidebar-border: 240 6% 91%;
+  --sidebar-primary: 246 84% 59%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 246 80% 96%;
+  --sidebar-accent-foreground: 245 55% 50%;
+  --sidebar-ring: 246 84% 59%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 6% 12%;
+  --popover-border: 240 6% 90%;
+  --primary: 246 84% 59%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 20%;
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 46%;
+  --accent: 246 80% 96%;
+  --accent-foreground: 245 50% 48%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 240 6% 90%;
+  --ring: 246 84% 59%;
+  --chart-1: 246 84% 59%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 28 80% 52%;
+  --chart-4: 210 80% 56%;
+  --chart-5: 340 72% 55%;
+
+  --radius: 0.5rem;
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
 /* ── Signal87 hero animations ─────────────────────────────────────────── */
 @keyframes s87-gradient {
   0%   { background-position: 0% 50%; }

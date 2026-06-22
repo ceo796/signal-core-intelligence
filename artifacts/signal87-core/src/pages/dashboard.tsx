@@ -33,20 +33,20 @@ function relativeTime(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const FT_BG: Record<string, string> = {
-  pdf: "#e53e3e",
-  docx: "#3182ce",
-  doc: "#3182ce",
-  xlsx: "#38a169",
-  xls: "#38a169",
-  csv: "#38a169",
-  txt: "#718096",
-  pptx: "#dd6b20",
-  ppt: "#dd6b20",
+const FT_STYLE: Record<string, { bg: string; fg: string }> = {
+  pdf: { bg: "#FAECE7", fg: "#993C1D" },
+  docx: { bg: "#E6F1FB", fg: "#185FA5" },
+  doc: { bg: "#E6F1FB", fg: "#185FA5" },
+  xlsx: { bg: "#E1F5EE", fg: "#0F6E56" },
+  xls: { bg: "#E1F5EE", fg: "#0F6E56" },
+  csv: { bg: "#E1F5EE", fg: "#0F6E56" },
+  txt: { bg: "#EEF1F4", fg: "#475569" },
+  pptx: { bg: "#FDF0E6", fg: "#B45309" },
+  ppt: { bg: "#FDF0E6", fg: "#B45309" },
 };
 
-function fileTypeColor(ft: string): string {
-  return FT_BG[ft.toLowerCase()] ?? "#805ad5";
+function fileTypeStyle(ft: string): { bg: string; fg: string } {
+  return FT_STYLE[ft.toLowerCase()] ?? { bg: "#EEEDFE", fg: "#534AB7" };
 }
 
 function FileTypeIcon({ fileType }: { fileType: string }) {
@@ -56,11 +56,11 @@ function FileTypeIcon({ fileType }: { fileType: string }) {
 }
 
 function FallbackThumbnail({ fileType }: { fileType: string }) {
-  const bg = fileTypeColor(fileType);
+  const { bg, fg } = fileTypeStyle(fileType);
   return (
     <div
-      className="w-11 h-14 rounded-md flex items-center justify-center shrink-0 border border-white/10"
-      style={{ backgroundColor: bg }}
+      className="w-11 h-14 rounded-md flex items-center justify-center shrink-0 border border-border"
+      style={{ backgroundColor: bg, color: fg }}
     >
       <FileTypeIcon fileType={fileType} />
     </div>
@@ -88,7 +88,7 @@ function DocumentThumbnail({ doc }: { doc: any }) {
   }
 
   return (
-    <div ref={ref} className="w-11 h-14 rounded-md overflow-hidden shrink-0 border border-white/10 bg-[#1a1a1a] flex items-center justify-center">
+    <div ref={ref} className="w-11 h-14 rounded-md overflow-hidden shrink-0 border border-border bg-muted flex items-center justify-center">
       <PdfThumbnailLazy id={doc.id} />
     </div>
   );
@@ -185,7 +185,7 @@ export default function Dashboard() {
 
         {/* ── Scrollable content ─────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto bg-background">
-          <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 space-y-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
+          <div className="w-full px-4 md:px-8 py-6 space-y-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
 
             {/* Welcome */}
             <div>
@@ -211,7 +211,7 @@ export default function Dashboard() {
             </Link>
 
             {/* Quick actions */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-3">
               {quickActions.map((action) => (
                 <button
                   key={action.label}
