@@ -166,7 +166,7 @@ export function FileUploadModal() {
         const data = await uploadOne.mutateAsync(item.file);
         if (data && typeof data.warning === "string" && data.warning) {
           warningCount++;
-          setItemState(item.id, "warning", data.warning);
+          setItemState(item.id, "warning", "Stored — not AI-searchable. File may be scanned or image-only.");
         } else {
           successCount++;
           setItemState(item.id, "success");
@@ -190,8 +190,11 @@ export function FileUploadModal() {
 
     if (errorCount === 0) {
       if (warningCount > 0) {
+        const readyPart = successCount > 0 ? `${successCount} ready for AI search` : null;
+        const notSearchablePart = `${warningCount} stored without searchable text`;
+        const breakdown = [readyPart, notSearchablePart].filter(Boolean).join(", ");
         toast.warning(
-          `${uploaded} document${uploaded !== 1 ? "s" : ""} uploaded; ${warningCount} had no extractable text — open to re-index.${skippedNote}`,
+          `${uploaded} file${uploaded !== 1 ? "s" : ""} uploaded — ${breakdown}.${skippedNote}`,
         );
       } else {
         toast.success(

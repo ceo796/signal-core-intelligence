@@ -1,0 +1,91 @@
+Update Signal87’s document extraction failure messaging so users clearly understand when a file is stored but not AI-searchable.
+
+Goal:
+Make failed text extraction understandable and actionable without treating it like a system bug.
+
+Context:
+Some uploaded files are stored successfully but produce 0 searchable chunks because no machine-readable text can be extracted. This commonly happens with scanned or image-only PDFs. Re-indexing only reruns the same extractor and will not fix scanned PDFs unless OCR is added later.
+
+Required changes:
+
+1. Upload result messaging
+   After upload completes, show a clear summary:
+
+* Stored successfully
+* Indexed successfully
+* Needs text / not searchable
+
+Example:
+“8 files uploaded. 4 are ready for AI search. 4 were stored but have no extractable text.”
+
+For files with 0 chunks, show:
+“Stored, but not searchable. This file may be scanned or image-only.”
+
+2. Documents page status badge
+   For documents with 0 chunks or failed extraction due to no text, show a badge:
+   “No searchable text”
+
+Do not use only “Failed” because that makes it sound like storage failed.
+
+Badge behavior:
+
+* Subtle warning color
+* Tooltip or popover explaining:
+  “The original file is stored and downloadable, but Signal87 could not extract machine-readable text. If this is a scanned PDF, re-indexing will not help unless OCR is added.”
+
+3. Document detail banner
+   On the document detail page, show a small non-intrusive warning when a document has no searchable text:
+
+Title:
+Stored, but not searchable
+
+Message:
+“This document is saved and can be downloaded, but Signal87 could not extract machine-readable text. It may be a scanned or image-only PDF. AI Chat and Analyze require searchable text.”
+
+Actions:
+
+* Re-index once
+* Download original
+
+Do not make this a large AI panel.
+Do not block the document viewer.
+
+4. Re-index clarification
+   When the user clicks Re-index on a no-text document, show a confirmation message:
+
+“Re-index will retry text extraction. If this is a scanned or image-only PDF, re-indexing may not recover text without OCR.”
+
+Actions:
+
+* Re-index
+* Cancel
+
+5. Data/status model
+   Add or use an extraction reason field where appropriate:
+
+* ready
+* processing
+* failed
+* no_extractable_text
+* unsupported_type
+* extraction_error
+
+The UI should distinguish:
+
+* upload/storage failure
+* extraction failure
+* no searchable text
+
+6. Do not add OCR yet
+   Do not implement OCR in this change.
+   Do not add new AI calls.
+   Do not add a new navigation item.
+   Do not introduce a large refactor.
+
+7. Acceptance criteria
+
+* A scanned PDF upload no longer appears like a generic bug.
+* Users can clearly see that the file is stored but not searchable.
+* Documents with no text show “No searchable text” instead of a vague failure.
+* Re-index messaging honestly explains when it will and will not help.
+* Existing upload, storage, preview, download, re-index, delete, document ownership, and AI chat functionality remain intact.

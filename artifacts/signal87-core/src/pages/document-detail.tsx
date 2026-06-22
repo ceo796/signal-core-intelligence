@@ -47,6 +47,7 @@ import {
   RefreshCw,
   Trash2,
   AlertCircle,
+  AlertTriangle,
   FileText,
   Loader2,
   ExternalLink,
@@ -171,6 +172,7 @@ export default function DocumentDetail() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [printLoading, setPrintLoading] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
@@ -510,7 +512,11 @@ export default function DocumentDetail() {
                     disabled={!originalAvailable || reindexMutation.isPending}
                     onClick={() => {
                       setMoreOpen(false);
-                      handleReindex();
+                      if (status.isNoExtractableText) {
+                        setReindexConfirmOpen(true);
+                      } else {
+                        handleReindex();
+                      }
                     }}
                   >
                     {reindexMutation.isPending ? (
@@ -578,10 +584,47 @@ export default function DocumentDetail() {
 
           {/* Status alert */}
           {!status.isReady && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 mt-2">
-              <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-              <p className="text-[11px] text-foreground/80 leading-relaxed">{status.description}</p>
-            </div>
+            status.isNoExtractableText ? (
+              <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50 p-3 mt-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-semibold text-amber-900 mb-0.5">Stored, but not searchable</p>
+                  <p className="text-[11px] text-amber-800/80 leading-relaxed">
+                    This document is saved and can be downloaded, but Signal87 could not extract machine-readable text.
+                    It may be a scanned or image-only PDF. AI Chat and Analyze require searchable text.
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-[11px] gap-1 border-amber-300 text-amber-900 hover:bg-amber-100"
+                      disabled={!originalAvailable || reindexMutation.isPending}
+                      onClick={() => setReindexConfirmOpen(true)}
+                    >
+                      {reindexMutation.isPending
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <RefreshCw className="w-3 h-3" />}
+                      Re-index
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-[11px] gap-1 border-amber-300 text-amber-900 hover:bg-amber-100"
+                      disabled={!originalAvailable}
+                      onClick={handleDownload}
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 mt-2">
+                <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                <p className="text-[11px] text-foreground/80 leading-relaxed">{status.description}</p>
+              </div>
+            )
           )}
         </header>
 
@@ -593,6 +636,30 @@ export default function DocumentDetail() {
           {renderSourcePanel()}
         </div>
       </div>
+
+      {/* Re-index confirmation (shown for no-extractable-text docs) */}
+      <AlertDialog open={reindexConfirmOpen} onOpenChange={setReindexConfirmOpen}>
+        <AlertDialogContent className="bg-card border-border font-sans">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Re-index this document?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Re-index retries text extraction from the stored original file. If this is a scanned or
+              image-only PDF, re-indexing will likely not recover searchable text without OCR support.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setReindexConfirmOpen(false);
+                handleReindex();
+              }}
+            >
+              Re-index
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

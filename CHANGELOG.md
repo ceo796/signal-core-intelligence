@@ -2,6 +2,29 @@
 
 ---
 
+## [Signal87_ExtractionFailureMessaging_v9] — 2026-06-22  *(Honest extraction-failure UX; frontend-only)*
+
+### Summary
+Improved messaging for documents where text extraction produced no machine-readable text (e.g., scanned or image-only PDFs). The system now distinguishes "no extractable text" from hard extraction errors, uses an amber warning tone instead of a red error tone, and surfaces honest copy everywhere: upload toast, document list badge, document detail banner, and re-index confirmation.
+
+### Changed
+
+- **`src/lib/document-status.ts`** — Added `extractionError?: string | null` to `DocumentStatusInput` and `isNoExtractableText: boolean` to `DocumentStatus`. New helper `isNoTextError()` detects the backend's `"No text could be extracted from the file"` error string. The failed/no-chunks branch now branches on this flag: no-text case gets `tone: "warning"`, `label: "No searchable text"`, honest description about scanned PDFs; other extraction errors get `tone: "error"`, `label: "Extraction error"`. All return paths carry `isNoExtractableText`.
+
+- **`src/components/file-upload.tsx`** — Updated per-item warning message (shown in the upload list) to `"Stored — not AI-searchable. File may be scanned or image-only."`. Updated batch summary toast to a clear breakdown: `"N files uploaded — M ready for AI search, K stored without searchable text."` instead of the vague `"N had no extractable text — open to re-index."`.
+
+- **`src/pages/document-detail.tsx`** — Added `AlertTriangle` import. Added `reindexConfirmOpen` state. Status alert (shown when `!status.isReady`) now branches on `isNoExtractableText`: amber banner with title "Stored, but not searchable", honest message about scanned/image PDFs and AI requiring searchable text, and inline Re-index + Download buttons. Other failures keep the existing red error alert. More > Re-Index menu item now opens the re-index confirmation dialog (instead of firing immediately) when the doc has no extractable text. New re-index confirmation `AlertDialog` explains that re-indexing retries extraction and may not recover text from scanned PDFs without OCR.
+
+### Scope
+- Frontend-only. Zero backend, schema, auth, or API contract changes.
+- No OCR added. Document list badge (`DocumentStatusBadge`) auto-updates via the `tone`/`label` change in `document-status.ts` — no direct change to the badge component.
+- Upload, storage, download, delete, re-index, PDF viewer, AI chat, citations, and Verification Trace all preserved.
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+
+---
+
 ## [Signal87_NavRestructure_v8] — 2026-06-22  *(Nav simplification + /analyze page + Ask AI drawer; frontend-only)*
 
 ### Summary

@@ -10,13 +10,29 @@ export interface DocumentStatus {
   needsReupload: boolean;
   /** Document is indexed and can answer questions. */
   isReady: boolean;
+  /**
+   * True when extraction ran but found no machine-readable text (e.g. a
+   * scanned/image-only PDF). Distinct from a hard extraction error so the UI
+   * can display honest copy ("re-indexing may not help without OCR") and use
+   * an amber warning tone instead of a red error tone.
+   */
+  isNoExtractableText: boolean;
 }
 
 /** Minimal shape needed to derive a document's status. */
 export interface DocumentStatusInput {
   extractionStatus?: string | null;
+  extractionError?: string | null;
   chunkCount: number;
   originalFileAvailable: boolean;
+}
+
+/**
+ * Returns true when the extraction error string matches the backend's
+ * "no text found" case, as opposed to a hard parse/IO failure.
+ */
+function isNoTextError(extractionError?: string | null): boolean {
+  return (extractionError ?? "").toLowerCase().includes("no text");
 }
 
 /**
@@ -37,20 +53,35 @@ export function getDocumentStatus(doc: DocumentStatusInput): DocumentStatus {
       canReindex: false,
       needsReupload: false,
       isReady: false,
+      isNoExtractableText: false,
     };
   }
 
-  // Extraction failed, or succeeded but produced no searchable text.
+  // Extraction failed, or succeeded but produced no searchable chunks.
   if (status === "failed" || !hasChunks) {
     if (hasOriginal) {
+      // Distinguish "no text found" (scanned/image PDF) from a hard parse error.
+      if (isNoTextError(doc.extractionError)) {
+        return {
+          label: "No searchable text",
+          description:
+            "This file is stored and downloadable, but Signal87 could not find machine-readable text. It may be a scanned or image-only PDF. Re-indexing will not help without OCR.",
+          tone: "warning",
+          canReindex: true,
+          needsReupload: false,
+          isReady: false,
+          isNoExtractableText: true,
+        };
+      }
       return {
-        label: "Extraction failed",
+        label: "Extraction error",
         description:
-          "No readable text could be extracted. This may be a scanned, image-only, blank, password-protected, or malformed PDF. Try a text-based PDF or an OCR-enabled version.",
+          "Text extraction failed. The original file is stored — try re-indexing. If the problem persists, the file may be malformed or password-protected.",
         tone: "error",
         canReindex: true,
         needsReupload: false,
         isReady: false,
+        isNoExtractableText: false,
       };
     }
     return {
@@ -61,6 +92,7 @@ export function getDocumentStatus(doc: DocumentStatusInput): DocumentStatus {
       canReindex: false,
       needsReupload: true,
       isReady: false,
+      isNoExtractableText: false,
     };
   }
 
@@ -75,6 +107,7 @@ export function getDocumentStatus(doc: DocumentStatusInput): DocumentStatus {
       canReindex: false,
       needsReupload: false,
       isReady: true,
+      isNoExtractableText: false,
     };
   }
 
@@ -85,5 +118,6 @@ export function getDocumentStatus(doc: DocumentStatusInput): DocumentStatus {
     canReindex: false,
     needsReupload: false,
     isReady: true,
+    isNoExtractableText: false,
   };
 }
