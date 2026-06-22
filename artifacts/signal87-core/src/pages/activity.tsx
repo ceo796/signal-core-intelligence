@@ -46,7 +46,8 @@ function iconFor(tone: Tone) {
 }
 
 export default function Activity() {
-  const { data: documents, isLoading, error } = useListDocuments();
+  const { data: listData, isLoading, error } = useListDocuments();
+  const documents = listData?.items;
 
   const events: ActivityEvent[] = [];
   for (const doc of documents ?? []) {
@@ -109,9 +110,9 @@ export default function Activity() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="p-4 md:p-6 border-b border-border bg-card">
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Activity</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+        <header className="px-4 md:px-6 py-3 border-b border-border bg-card">
+          <h1 className="text-[15px] font-medium tracking-tight text-foreground">Activity</h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             Recent upload and indexing activity for your documents.
           </p>
         </header>
@@ -152,7 +153,7 @@ export default function Activity() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-medium truncate">{ev.title}</p>
-                            <span className="text-xs text-muted-foreground shrink-0 font-mono">
+                            <span className="text-xs text-muted-foreground shrink-0">
                               <span className="hidden sm:inline">{format(new Date(ev.timestamp), "MMM d, yyyy")}</span>
                               <span className="sm:hidden">{format(new Date(ev.timestamp), "MMM d")}</span>
                             </span>

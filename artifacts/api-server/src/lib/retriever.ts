@@ -144,42 +144,39 @@ export interface DocumentRetrieval {
 // Multi-document retrieval: embeds the question once, then scores and selects the
 // top-K chunks PER document so every selected document is represented and we can
 // report a per-document breakdown. Document identity is preserved on every chunk.
+// All document embedding calls run in parallel to minimize latency.
 export async function retrieveAcrossDocuments(
   question: string,
   groups: DocumentGroup[],
   perDocTopK = 3
 ): Promise<DocumentRetrieval[]> {
   const questionEmbedding = await getEmbedding(question);
+  const fallbacks = extractKeywordFallbacks(question);
 
-  const results: DocumentRetrieval[] = [];
-  for (const group of groups) {
+  const retrievalTasks = groups.map(async (group) => {
     if (group.chunks.length === 0) {
-      results.push({
+      return {
         documentId: group.documentId,
         documentName: group.documentName,
         chunksSearched: 0,
-        retrieved: [],
-      });
-      continue;
+        retrieved: [] as ScoredChunk[],
+      };
     }
 
     const nonEmpty = group.chunks.filter((c) => c.content.trim().length > 0);
     if (nonEmpty.length === 0) {
-      results.push({
+      return {
         documentId: group.documentId,
         documentName: group.documentName,
         chunksSearched: group.chunks.length,
-        retrieved: [],
-      });
-      continue;
+        retrieved: [] as ScoredChunk[],
+      };
     }
 
     const embedResponse = await openai.embeddings.create({
       model: PROVIDER_CONFIG.embeddingModel,
       input: nonEmpty.map((c) => c.content),
     });
-
-    const fallbacks = extractKeywordFallbacks(question);
 
     const scored: ScoredChunk[] = nonEmpty.map((chunk, i) => {
       const semantic = cosineSimilarity(questionEmbedding, embedResponse.data[i].embedding);
@@ -193,13 +190,13 @@ export async function retrieveAcrossDocuments(
 
     scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
-    results.push({
+    return {
       documentId: group.documentId,
       documentName: group.documentName,
       chunksSearched: group.chunks.length,
       retrieved: scored.slice(0, perDocTopK),
-    });
-  }
+    };
+  });
 
-  return results;
+  return Promise.all(retrievalTasks);
 }

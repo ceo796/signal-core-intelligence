@@ -162,6 +162,8 @@ export default function DocumentDetail() {
       const blob = await getDocumentOriginal(id);
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener");
+      // Release the blob after a short delay so the new tab can load it.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
     } catch {
       toast.error("Could not open file in new window");
     }
@@ -246,155 +248,134 @@ export default function DocumentDetail() {
           <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
 
             {/* Header */}
-            <header className="shrink-0 border-b border-border bg-card px-4 md:px-6 pt-4 pb-3 space-y-3">
-
-              {/* Breadcrumb */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <header className="shrink-0 border-b border-border bg-card px-4 md:px-6 py-3">
+              {/* Top bar: breadcrumb + title + actions in a single compact row */}
+              <div className="flex items-center gap-2">
                 <Link href="/documents">
-                  <button className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
-                    <ArrowLeft className="w-3 h-3" />
+                  <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+                    <ArrowLeft className="w-3.5 h-3.5" />
                     Documents
                   </button>
                 </Link>
-                <span>/</span>
-                <span className="uppercase text-[11px] tracking-wide">{doc.fileType}</span>
-                <span>/</span>
-                <span className="text-foreground/80 truncate max-w-[200px]" title={doc.fileName}>
-                  {doc.fileName}
-                </span>
-              </div>
-
-              {/* Title + meta */}
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 p-2 rounded-md shrink-0 bg-primary/8">
-                  <FileText className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h1
-                    className="text-lg md:text-xl font-semibold tracking-tight break-words leading-snug"
-                    title={doc.fileName}
-                  >
-                    {doc.fileName}
-                  </h1>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    <Badge
-                      variant="secondary"
-                      className="text-[11px] font-medium px-2 py-0 h-5 bg-primary/10 text-primary border-none"
-                    >
-                      {doc.fileType.toUpperCase()}
-                    </Badge>
-                    <DocumentStatusBadge doc={doc} />
-                    {doc.fileSize != null && (
-                      <span className="text-xs text-muted-foreground">{formatBytes(doc.fileSize)}</span>
-                    )}
-                    <span
-                      className="text-xs text-muted-foreground"
-                      title={format(uploadDate, "yyyy-MM-dd HH:mm")}
-                    >
-                      Uploaded {formatDistanceToNow(uploadDate, { addSuffix: true })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action bar */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 h-8"
-                  disabled={!originalAvailable}
-                  onClick={handleDownload}
+                <span className="text-muted-foreground text-[12px]">/</span>
+                <h1
+                  className="text-[14px] font-medium text-foreground truncate max-w-[300px]"
+                  title={doc.fileName}
                 >
-                  <Download className="w-3 h-3" />
-                  Download
-                </Button>
-
-                {canPrint && (
+                  {doc.fileName}
+                </h1>
+                <span
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                  style={{ backgroundColor: "#FAECE7", color: "#993C1D" }}
+                >
+                  <FileText className="w-3 h-3" />
+                  {doc.fileType.toUpperCase()}
+                </span>
+                <div className="flex items-center gap-1.5 ml-auto flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-xs gap-1.5 h-8"
-                    disabled={printLoading}
-                    onClick={handlePrint}
+                    className="text-[12px] gap-1 h-7 px-2.5"
+                    disabled={!originalAvailable}
+                    onClick={handleDownload}
                   >
-                    {printLoading ? (
+                    <Download className="w-3 h-3" />
+                    Download
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-[12px] gap-1 h-7 px-2.5"
+                    disabled={!originalAvailable}
+                    onClick={handleOpenInNewWindow}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Open
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      handleReindex();
+                    }}
+                    disabled={!originalAvailable || reindexMutation.isPending}
+                  >
+                    {reindexMutation.isPending ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
                     ) : (
-                      <Printer className="w-3 h-3" />
+                      <RefreshCw className="w-3 h-3" />
                     )}
-                    Print
+                    Re-Index
                   </Button>
-                )}
-
-                {isPdf && originalAvailable && (
-                  <Button
-                    variant={highlightMode ? "default" : "outline"}
-                    size="sm"
-                    className="text-xs gap-1.5 h-8"
-                    onClick={() => {
-                      if (highlightMode) clearHighlights();
-                      setHighlightMode((v) => !v);
-                    }}
-                  >
-                    <Highlighter className="w-3 h-3" />
-                    {highlightMode ? "Highlighting On" : "Highlight"}
-                  </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 h-8"
-                  disabled={!originalAvailable}
-                  onClick={handleOpenInNewWindow}
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Open in New Window
-                </Button>
-
-                <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 px-2">
-                      <MoreHorizontal className="w-4 h-4" />
-                      <span className="sr-only">More actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-44">
-                    <DropdownMenuItem
-                      disabled={!originalAvailable || reindexMutation.isPending}
-                      onClick={() => {
-                        setMoreOpen(false);
-                        handleReindex();
-                      }}
-                    >
-                      {reindexMutation.isPending ? (
-                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-3.5 h-3.5 mr-2" />
+                  <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-7 px-2">
+                        <MoreHorizontal className="w-4 h-4" />
+                        <span className="sr-only">More</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      {canPrint && (
+                        <DropdownMenuItem
+                          disabled={printLoading}
+                          onClick={() => {
+                            setMoreOpen(false);
+                            handlePrint();
+                          }}
+                        >
+                          <Printer className="w-3.5 h-3.5 mr-2" />
+                          Print
+                        </DropdownMenuItem>
                       )}
-                      Re-Index
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => {
-                        setMoreOpen(false);
-                        setDeleteOpen(true);
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      {isPdf && originalAvailable && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setMoreOpen(false);
+                            if (highlightMode) clearHighlights();
+                            setHighlightMode((v) => !v);
+                          }}
+                        >
+                          <Highlighter className="w-3.5 h-3.5 mr-2" />
+                          {highlightMode ? "Stop Highlighting" : "Highlight"}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          setDeleteOpen(true);
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              {/* Meta row */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <DocumentStatusBadge doc={doc} />
+                {doc.fileSize != null && (
+                  <span className="text-[11px] text-muted-foreground">{formatBytes(doc.fileSize)}</span>
+                )}
+                <span
+                  className="text-[11px] text-muted-foreground"
+                  title={format(uploadDate, "yyyy-MM-dd HH:mm")}
+                >
+                  Uploaded {formatDistanceToNow(uploadDate, { addSuffix: true })}
+                </span>
               </div>
 
               {/* Status alert */}
               {!status.isReady && (
-                <div className="flex items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-3">
-                  <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-xs text-foreground/80 leading-relaxed">{status.description}</p>
+                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 mt-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-foreground/80 leading-relaxed">{status.description}</p>
                 </div>
               )}
             </header>
@@ -461,7 +442,7 @@ export default function DocumentDetail() {
           </div>
 
           {/* ── Right column: AI Analysis Panel ─────────────────────── */}
-          <aside className="shrink-0 flex flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-card w-full lg:w-[38%] lg:min-w-[340px] lg:max-w-[480px] h-[60vh] lg:h-auto">
+          <aside className="shrink-0 flex flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-card w-full lg:w-[40%] lg:min-w-[340px] lg:max-w-[480px] h-[60vh] lg:h-auto">
             <DocumentIntelligencePanel
               documentId={doc.id}
               documentName={doc.fileName}

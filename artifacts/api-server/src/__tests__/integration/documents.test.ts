@@ -123,8 +123,8 @@ describe("Document CRUD integration (auth bypassed, file-store mocked)", () => {
 
       const res = await request(app).get("/api/documents");
       expect(res.status).toBe(200);
-      expect(Array.isArray(res.body)).toBe(true);
-      const found = (res.body as Array<{ id: number; fileName: string }>).find(
+      expect(Array.isArray(res.body.items)).toBe(true);
+      const found = (res.body.items as Array<{ id: number; fileName: string }>).find(
         (d) => d.id === upload.body.id
       );
       expect(found).toBeDefined();
@@ -134,7 +134,7 @@ describe("Document CRUD integration (auth bypassed, file-store mocked)", () => {
     it("returns only documents owned by the current user", async () => {
       const res = await request(app).get("/api/documents");
       expect(res.status).toBe(200);
-      for (const doc of res.body as Array<{ id: number }>) {
+      for (const doc of res.body.items as Array<{ id: number }>) {
         const [dbDoc] = await db
           .select({ ownerUserId: documentsTable.ownerUserId })
           .from(documentsTable)

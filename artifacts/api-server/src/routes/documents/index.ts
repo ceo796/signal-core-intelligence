@@ -47,13 +47,24 @@ router.get("/documents", async (req, res): Promise<void> => {
     return;
   }
   try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string, 10) || 50, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset as string, 10) || 0, 0);
+
+    const totalResult = await db
+      .select({ count: count(documentsTable.id) })
+      .from(documentsTable)
+      .where(eq(documentsTable.ownerUserId, userId));
+    const total = totalResult[0]?.count ?? 0;
+
     const docs = await db
       .select()
       .from(documentsTable)
       .where(eq(documentsTable.ownerUserId, userId))
-      .orderBy(documentsTable.uploadedAt);
+      .orderBy(documentsTable.uploadedAt)
+      .limit(limit)
+      .offset(offset);
 
-    // Scope the chunk-count query to the caller's own documents.
+    // Scope the chunk-count query to the returned documents.
     const docIds = docs.map((d) => d.id);
     const chunksCountResult = docIds.length
       ? await db
@@ -64,9 +75,9 @@ router.get("/documents", async (req, res): Promise<void> => {
       : [];
 
     const chunkMap = new Map(chunksCountResult.map((r) => [r.documentId, r.cnt]));
-    const result = docs.map((doc) => docToResponse(doc, chunkMap.get(doc.id) ?? 0));
+    const items = docs.map((doc) => docToResponse(doc, chunkMap.get(doc.id) ?? 0));
 
-    res.json(ListDocumentsResponse.parse(result));
+    res.json({ items, total, limit, offset });
   } catch (err) {
     req.log.error({ err }, "Failed to list documents");
     res.status(500).json({ error: "Failed to list documents" });

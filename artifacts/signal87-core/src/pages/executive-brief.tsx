@@ -82,7 +82,7 @@ function InlineCitation({
       onClick={onActivate}
       disabled={!hasSource}
       title={hasSource ? `View source ${n}` : `Source ${n}`}
-      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-mono font-semibold leading-none transition-colors ${
+      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-semibold leading-none transition-colors ${
         active
           ? "bg-primary text-primary-foreground"
           : hasSource
@@ -123,14 +123,14 @@ function CitationChip({
         onClick={onToggle}
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/5 transition-colors"
       >
-        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold shrink-0">
+        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary text-[10px] font-semibold shrink-0">
           {citation.citationNumber}
         </span>
         <span className="text-[11px] text-muted-foreground/70 truncate flex-1 min-w-0">
           Chunk #{citation.chunkIndex}
         </span>
         {score > 0 && (
-          <span className={`font-mono text-[11px] shrink-0 ${scoreColor}`}>
+          <span className={`text-[11px] shrink-0 ${scoreColor}`}>
             {(score * 100).toFixed(0)}% match
           </span>
         )}
@@ -144,7 +144,7 @@ function CitationChip({
         <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-muted/60">
           <div className="flex items-center gap-1.5 mt-2 mb-1.5">
             <Quote className="w-3 h-3 text-primary/50" />
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+            <span className="text-[11px] font-medium text-muted-foreground/70">
               Source Excerpt
             </span>
           </div>
@@ -166,40 +166,40 @@ function TraceDetailPanel({ debug }: { debug: BriefDebugInfo }) {
       onOpenChange={setIsOpen}
       className="border border-border/40 bg-muted/40 rounded-md overflow-hidden"
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-xs font-mono text-muted-foreground hover:bg-black/5 transition-colors">
+      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-[11px] text-muted-foreground hover:bg-muted/50 transition-colors">
         <div className="flex items-center gap-2">
           <Terminal className="w-3 h-3 text-primary/70" />
-          <span className="text-primary/70 uppercase tracking-widest text-[10px]">Trace Detail</span>
+          <span className="text-[11px] font-medium text-primary/70">Trace Detail</span>
         </div>
         {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
       </CollapsibleTrigger>
-      <CollapsibleContent className="px-3 pb-3 pt-2 border-t border-border/40 font-mono text-[11px] space-y-1.5 text-muted-foreground">
+      <CollapsibleContent className="px-3 pb-3 pt-2 border-t border-border/40 text-[11px] space-y-1.5 text-muted-foreground">
         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-          <Row label="PROVIDER" value={debug.provider} />
-          <Row label="MODEL" value={debug.model} />
-          <Row label="ROUTE" value={debug.route} />
-          <Row label="BRIEF_TYPE" value={debug.briefType} />
+          <Row label="Provider" value={debug.provider} />
+          <Row label="Model" value={debug.model} />
+          <Row label="Route" value={debug.route} />
+          <Row label="Brief Type" value={debug.briefType} />
           <Row
-            label="FOCUS"
-            value={debug.focusProvided ? "YES" : "NO"}
+            label="Focus"
+            value={debug.focusProvided ? "Yes" : "No"}
           />
           <Row
-            label="FALLBACK"
+            label="Fallback"
             value={
               debug.fallbackUsed ? (
-                <span className="bg-destructive/20 text-destructive px-1.5 rounded">YES</span>
+                <span className="bg-destructive/20 text-destructive px-1.5 rounded">Yes</span>
               ) : (
-                <span className="bg-green-500/15 text-green-500 px-1.5 rounded">NO</span>
+                <span className="bg-green-500/15 text-green-500 px-1.5 rounded">No</span>
               )
             }
           />
-          <Row label="DOCS_SEARCHED" value={String(debug.documentsSearched)} />
-          <Row label="CHUNKS_SEARCHED" value={String(debug.chunksSearched)} />
-          <Row label="CHUNKS_RETRIEVED" value={String(debug.chunksRetrieved)} />
+          <Row label="Documents Searched" value={String(debug.documentsSearched)} />
+          <Row label="Chunks Searched" value={String(debug.chunksSearched)} />
+          <Row label="Chunks Retrieved" value={String(debug.chunksRetrieved)} />
         </div>
 
         <div className="border-t border-border/30 pt-1.5 mt-1">
-          <div className="text-muted-foreground/50 mb-1">PER_DOCUMENT</div>
+          <div className="text-muted-foreground/50 mb-1 text-[11px]">Per document</div>
           <div className="space-y-1">
             {debug.chunksRetrievedByDocument.map((d) => (
               <div key={d.documentId} className="flex justify-between items-center gap-2 min-w-0">
@@ -207,7 +207,7 @@ function TraceDetailPanel({ debug }: { debug: BriefDebugInfo }) {
                   {d.documentName}
                 </span>
                 <span className="shrink-0 text-foreground/60">
-                  ID:{d.documentId} · {d.chunksRetrieved}/{d.chunksSearched} chunks
+                  {d.chunksRetrieved}/{d.chunksSearched} chunks
                 </span>
               </div>
             ))}
@@ -215,9 +215,9 @@ function TraceDetailPanel({ debug }: { debug: BriefDebugInfo }) {
         </div>
 
         <div className="border-t border-border/30 pt-1.5 mt-1 grid grid-cols-3 gap-x-4 gap-y-1.5">
-          <Row label="RETRIEVAL" value={`${debug.retrievalLatencyMs}ms`} />
+          <Row label="Retrieval" value={`${debug.retrievalLatencyMs}ms`} />
           <Row label="LLM" value={`${debug.llmLatencyMs}ms`} />
-          <Row label="TOTAL" value={`${debug.totalLatencyMs}ms`} highlight />
+          <Row label="Total" value={`${debug.totalLatencyMs}ms`} highlight />
         </div>
 
         {debug.errors && (
@@ -317,7 +317,7 @@ function ResultView({ result }: { result: BriefResultState }) {
       <div className="space-y-5">
         {result.sections.map((section, i) => (
           <div key={`${section.heading}-${i}`} className="space-y-1.5">
-            <h3 className="font-mono text-[11px] uppercase tracking-widest text-primary/80">
+            <h3 className="text-[12px] font-medium text-primary/80">
               {section.heading}
             </h3>
             <MarkdownAnswer
@@ -343,10 +343,10 @@ function ResultView({ result }: { result: BriefResultState }) {
       <div className="mt-3 space-y-3">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="w-3 h-3 text-primary/70" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-primary/70">
+          <span className="text-[11px] font-medium text-primary/70">
             Verification Trace
           </span>
-          <span className="font-mono text-[10px] text-muted-foreground/50 ml-1">
+          <span className="text-[11px] text-muted-foreground/50 ml-1">
             — {result.citations.length} source{result.citations.length !== 1 ? "s" : ""} across{" "}
             {groups.length} document{groups.length !== 1 ? "s" : ""}
           </span>
@@ -354,7 +354,7 @@ function ResultView({ result }: { result: BriefResultState }) {
 
         {groups.map((group) => (
           <div key={group.documentId} className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground/80">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
               <FileText className="w-3 h-3 text-primary/60 shrink-0" />
               <span className="truncate" title={group.documentName}>
                 {group.documentName}
@@ -383,7 +383,8 @@ function ResultView({ result }: { result: BriefResultState }) {
 }
 
 export default function ExecutiveBrief() {
-  const { data: documents, isLoading } = useListDocuments();
+  const { data: listData, isLoading } = useListDocuments();
+  const documents = listData?.items;
   const generateBrief = useGenerateBrief();
 
   const [selected, setSelected] = useState<number[]>(() => {
@@ -470,15 +471,10 @@ export default function ExecutiveBrief() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
-        <header className="border-b border-border bg-card shrink-0 px-4 md:px-6 py-4 md:py-5">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-primary/70">
-            <ScrollText className="w-3.5 h-3.5" />
-            Brief Generator
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mt-1">Executive Brief</h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-            Generate a structured, citation-backed report across 1–5 documents —
-            choose a brief type, add optional focus, then export.
+        <header className="border-b border-border bg-card shrink-0 px-4 md:px-6 py-3">
+          <h1 className="text-[15px] font-medium tracking-tight text-foreground">Executive Brief</h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xl">
+            Generate a structured, citation-backed report across 1–5 documents.
           </p>
         </header>
 
@@ -492,7 +488,7 @@ export default function ExecutiveBrief() {
                   Source documents
                 </div>
                 <span
-                  className={`font-mono text-xs px-2 py-0.5 rounded ${
+                  className={`text-xs font-medium px-2 py-0.5 rounded ${
                     selected.length >= MIN_DOCS && selected.length <= MAX_DOCS
                       ? "bg-primary/15 text-primary"
                       : "bg-secondary text-muted-foreground"
@@ -503,8 +499,8 @@ export default function ExecutiveBrief() {
               </div>
 
               {isLoading ? (
-                <div className="font-mono text-sm text-muted-foreground py-6 text-center">
-                  LOADING_DOCUMENTS...
+                <div className="text-sm text-muted-foreground py-6 text-center">
+                  Loading documents...
                 </div>
               ) : eligible.length < MIN_DOCS ? (
                 <div className="p-6 text-center border border-dashed border-border rounded-md text-muted-foreground">
@@ -544,9 +540,9 @@ export default function ExecutiveBrief() {
                           <div className="text-sm font-medium truncate" title={doc.fileName}>
                             {doc.fileName}
                           </div>
-                          <div className="text-[10px] font-mono text-muted-foreground flex gap-2 mt-0.5">
+                          <div className="text-[10px] text-muted-foreground flex gap-2 mt-0.5">
                             <span>{doc.fileType.toUpperCase()}</span>
-                            <span>CHUNKS:{doc.chunkCount}</span>
+                            <span>{doc.chunkCount} chunks</span>
                           </div>
                         </div>
                       </div>
@@ -585,7 +581,7 @@ export default function ExecutiveBrief() {
                           {active && <Check className="w-3 h-3 text-primary shrink-0" />}
                           {t.label}
                         </div>
-                        <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
                           {t.hint}
                         </div>
                       </button>
@@ -597,7 +593,7 @@ export default function ExecutiveBrief() {
               <div className="space-y-2">
                 <label className="text-sm font-bold flex items-center gap-2">
                   Focus instruction
-                  <span className="font-mono text-[10px] text-muted-foreground font-normal">
+                  <span className="text-[10px] text-muted-foreground font-normal">
                     (optional)
                   </span>
                 </label>
@@ -606,10 +602,10 @@ export default function ExecutiveBrief() {
                   onChange={(e) => setFocus(e.target.value)}
                   maxLength={500}
                   placeholder="e.g. Emphasize financial exposure and termination clauses."
-                  className="bg-background border-border font-mono text-sm min-h-[70px] resize-none"
+                  className="bg-background border-border text-sm min-h-[70px] resize-none"
                   disabled={generateBrief.isPending}
                 />
-                <div className="text-right font-mono text-[10px] text-muted-foreground/60">
+                <div className="text-right text-[11px] text-muted-foreground/60">
                   {focus.length}/500
                 </div>
               </div>
@@ -622,12 +618,12 @@ export default function ExecutiveBrief() {
               )}
 
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground">
                   {selected.length < MIN_DOCS
-                    ? "SELECT AT LEAST 1 DOCUMENT"
+                    ? "Select at least 1 document"
                     : comparisonBlocked
-                    ? "COMPARISON NEEDS 2+ DOCUMENTS"
-                    : "READY"}
+                    ? "Comparison needs 2+ documents"
+                    : "Ready"}
                 </span>
                 <Button type="submit" disabled={!canSubmit} className="text-xs gap-2">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -639,9 +635,9 @@ export default function ExecutiveBrief() {
             {/* Loading */}
             {generateBrief.isPending && (
               <div className="bg-card border border-border rounded-lg p-5">
-                <div className="flex items-center gap-2 text-muted-foreground font-mono text-xs">
+                <div className="flex items-center gap-2 text-muted-foreground text-[11px]">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  GENERATING_BRIEF...
+                  Generating brief...
                 </div>
               </div>
             )}

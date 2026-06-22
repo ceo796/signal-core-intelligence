@@ -33,7 +33,7 @@ function FallbackThumb({ fileType }: { fileType: string }) {
       style={{ backgroundColor: bg, color: fg }}
     >
       <Icon className="w-10 h-10 opacity-50" />
-      <span className="text-[11px] font-mono font-semibold tracking-widest uppercase opacity-60">
+      <span className="text-[11px] font-semibold opacity-60">
         {fileType}
       </span>
     </div>

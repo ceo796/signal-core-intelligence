@@ -18,7 +18,7 @@ function ConfigRow({ label, value, mono, icon, muted }: ConfigRowProps) {
         {label}
       </div>
       <span
-        className={`text-sm font-medium ${mono ? "font-mono" : ""} ${
+        className={`text-sm font-medium ${
           muted ? "text-muted-foreground" : "text-foreground"
         }`}
       >
@@ -32,10 +32,10 @@ export default function Settings() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-auto">
-        <header className="px-4 md:px-6 py-4 md:py-5 border-b border-border flex items-center justify-between bg-card shrink-0">
+        <header className="px-4 md:px-6 py-3 border-b border-border flex items-center justify-between bg-card shrink-0">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Settings</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Platform configuration and AI transparency</p>
+            <h1 className="text-[15px] font-medium tracking-tight text-foreground">Settings</h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Platform configuration and AI transparency</p>
           </div>
         </header>
 

@@ -95,7 +95,7 @@ function FileTypePlaceholder({ fileType }: { fileType: string }) {
         <FileText className={`w-8 h-8 ${v.iconColor}`} />
       </div>
       <span
-        className={`text-[11px] font-mono font-bold tracking-widest uppercase px-2.5 py-1 rounded-full ${v.pillBg} ${v.pillText}`}
+        className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${v.pillBg} ${v.pillText}`}
       >
         {v.label}
       </span>

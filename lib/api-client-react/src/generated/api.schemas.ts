@@ -340,3 +340,22 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type ListDocumentsParams = {
+/**
+ * Maximum number of documents to return
+ * @maximum 200
+ */
+limit?: number;
+/**
+ * Number of documents to skip
+ */
+offset?: number;
+};
+
+export type ListDocuments200 = {
+  items?: Document[];
+  total?: number;
+  limit?: number;
+  offset?: number;
+};
+

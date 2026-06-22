@@ -85,7 +85,7 @@ describe("User isolation — ownerUserId scoping", () => {
       vi.mocked(getCurrentUserId).mockReturnValue(USER_A);
       const res = await request(app).get("/api/documents");
       expect(res.status).toBe(200);
-      const ids = (res.body as Array<{ id: number }>).map((d) => d.id);
+      const ids = (res.body.items as Array<{ id: number }>).map((d) => d.id);
       for (const aId of userADocIds) {
         expect(ids).toContain(aId);
       }
@@ -98,7 +98,7 @@ describe("User isolation — ownerUserId scoping", () => {
       vi.mocked(getCurrentUserId).mockReturnValue(USER_B);
       const res = await request(app).get("/api/documents");
       expect(res.status).toBe(200);
-      const ids = (res.body as Array<{ id: number }>).map((d) => d.id);
+      const ids = (res.body.items as Array<{ id: number }>).map((d) => d.id);
       for (const bId of userBDocIds) {
         expect(ids).toContain(bId);
       }

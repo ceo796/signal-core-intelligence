@@ -69,7 +69,7 @@ function InlineCitation({
       onClick={onActivate}
       disabled={!hasSource}
       title={hasSource ? `View source ${n}` : `Source ${n}`}
-      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-mono font-semibold leading-none transition-colors ${
+      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-semibold leading-none transition-colors ${
         active
           ? "bg-primary text-primary-foreground"
           : hasSource
@@ -110,14 +110,14 @@ function CitationChip({
         onClick={onToggle}
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/5 transition-colors"
       >
-        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold shrink-0">
+        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary text-[10px] font-semibold shrink-0">
           {citation.citationNumber}
         </span>
         <span className="text-[11px] text-muted-foreground/70 truncate flex-1 min-w-0">
           Chunk #{citation.chunkIndex}
         </span>
         {score > 0 && (
-          <span className={`font-mono text-[11px] shrink-0 ${scoreColor}`}>
+          <span className={`text-[11px] shrink-0 ${scoreColor}`}>
             {(score * 100).toFixed(0)}% match
           </span>
         )}
@@ -131,7 +131,7 @@ function CitationChip({
         <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-muted/60">
           <div className="flex items-center gap-1.5 mt-2 mb-1.5">
             <Quote className="w-3 h-3 text-primary/50" />
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+            <span className="text-[11px] font-medium text-muted-foreground/70">
               Source Excerpt
             </span>
           </div>
@@ -153,35 +153,35 @@ function TraceDetailPanel({ debug }: { debug: MultiDebugInfo }) {
       onOpenChange={setIsOpen}
       className="border border-border/40 bg-muted/40 rounded-md overflow-hidden"
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-xs font-mono text-muted-foreground hover:bg-black/5 transition-colors">
+      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-[11px] text-muted-foreground hover:bg-muted/50 transition-colors">
         <div className="flex items-center gap-2">
           <Terminal className="w-3 h-3 text-primary/70" />
-          <span className="text-primary/70 uppercase tracking-widest text-[10px]">Trace Detail</span>
+          <span className="text-[11px] font-medium text-primary/70">Trace Detail</span>
         </div>
         {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
       </CollapsibleTrigger>
-      <CollapsibleContent className="px-3 pb-3 pt-2 border-t border-border/40 font-mono text-[11px] space-y-1.5 text-muted-foreground">
+      <CollapsibleContent className="px-3 pb-3 pt-2 border-t border-border/40 text-[11px] space-y-1.5 text-muted-foreground">
         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-          <Row label="PROVIDER" value={debug.provider} />
-          <Row label="MODEL" value={debug.model} />
-          <Row label="ROUTE" value={debug.route} />
+          <Row label="Provider" value={debug.provider} />
+          <Row label="Model" value={debug.model} />
+          <Row label="Route" value={debug.route} />
           <Row
-            label="FALLBACK"
+            label="Fallback"
             value={
               debug.fallbackUsed ? (
-                <span className="bg-destructive/20 text-destructive px-1.5 rounded">YES</span>
+                <span className="bg-destructive/20 text-destructive px-1.5 rounded">Yes</span>
               ) : (
-                <span className="bg-green-500/15 text-green-500 px-1.5 rounded">NO</span>
+                <span className="bg-green-500/15 text-green-500 px-1.5 rounded">No</span>
               )
             }
           />
-          <Row label="DOCS_SEARCHED" value={String(debug.documentsSearched)} />
-          <Row label="CHUNKS_SEARCHED" value={String(debug.chunksSearched)} />
-          <Row label="CHUNKS_RETRIEVED" value={String(debug.chunksRetrieved)} />
+          <Row label="Documents searched" value={String(debug.documentsSearched)} />
+          <Row label="Chunks searched" value={String(debug.chunksSearched)} />
+          <Row label="Chunks retrieved" value={String(debug.chunksRetrieved)} />
         </div>
 
         <div className="border-t border-border/30 pt-1.5 mt-1">
-          <div className="text-muted-foreground/50 mb-1">PER_DOCUMENT</div>
+          <div className="text-muted-foreground/50 mb-1">Per document</div>
           <div className="space-y-1">
             {debug.chunksRetrievedByDocument.map((d) => (
               <div key={d.documentId} className="flex justify-between items-center gap-2 min-w-0">
@@ -197,9 +197,9 @@ function TraceDetailPanel({ debug }: { debug: MultiDebugInfo }) {
         </div>
 
         <div className="border-t border-border/30 pt-1.5 mt-1 grid grid-cols-3 gap-x-4 gap-y-1.5">
-          <Row label="RETRIEVAL" value={`${debug.retrievalLatencyMs}ms`} />
+          <Row label="Retrieval" value={`${debug.retrievalLatencyMs}ms`} />
           <Row label="LLM" value={`${debug.llmLatencyMs}ms`} />
-          <Row label="TOTAL" value={`${debug.totalLatencyMs}ms`} highlight />
+          <Row label="Total" value={`${debug.totalLatencyMs}ms`} highlight />
         </div>
 
         {debug.errors && (
@@ -242,7 +242,7 @@ function ResultView({ result }: { result: MultiResult }) {
 
   return (
     <div className="bg-card border border-border rounded-lg p-5 space-y-4">
-      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground border-b border-border/50 pb-3">
+      <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-b border-border/50 pb-3">
         <GitCompare className="w-3.5 h-3.5 text-primary" />
         <span className="text-foreground/80">{result.question}</span>
       </div>
@@ -267,10 +267,10 @@ function ResultView({ result }: { result: MultiResult }) {
       <div className="mt-3 space-y-3">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="w-3 h-3 text-primary/70" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-primary/70">
+          <span className="text-[11px] font-medium text-primary/70">
             Verification Trace
           </span>
-          <span className="font-mono text-[10px] text-muted-foreground/50 ml-1">
+          <span className="text-[11px] text-muted-foreground/50 ml-1">
             — {result.citations.length} source{result.citations.length !== 1 ? "s" : ""} across{" "}
             {groups.length} document{groups.length !== 1 ? "s" : ""}
           </span>
@@ -278,7 +278,7 @@ function ResultView({ result }: { result: MultiResult }) {
 
         {groups.map((group) => (
           <div key={group.documentId} className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground/80">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
               <FileText className="w-3 h-3 text-primary/60 shrink-0" />
               <span className="truncate" title={group.documentName}>
                 {group.documentName}
@@ -307,7 +307,8 @@ function ResultView({ result }: { result: MultiResult }) {
 }
 
 export default function MultiDocumentChat() {
-  const { data: documents, isLoading } = useListDocuments();
+  const { data: listData, isLoading } = useListDocuments();
+  const documents = listData?.items;
   const multiChat = useMultiChat();
 
   const [selected, setSelected] = useState<number[]>(() => {
@@ -389,22 +390,11 @@ export default function MultiDocumentChat() {
           } as React.CSSProperties
         }
       >
-        <header className="relative overflow-hidden border-b border-border bg-gradient-to-r from-primary/10 via-card to-card shrink-0">
-          <span className="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden />
-          <div className="p-4 md:p-6 flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary shrink-0">
-              <GitCompare className="w-6 h-6" />
-            </div>
-            <div className="min-w-0">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/80">
-                Side-by-side analysis
-              </span>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">Compare Documents</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Ask one question across 2–5 documents and see where they agree and differ.
-              </p>
-            </div>
-          </div>
+        <header className="border-b border-border bg-card shrink-0 px-4 md:px-6 py-3">
+          <h1 className="text-[15px] font-medium tracking-tight text-foreground">Compare Documents</h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Ask one question across 2–5 documents and see where they agree and differ.
+          </p>
         </header>
 
         <ScrollArea className="flex-1 p-4 md:p-6">
@@ -417,7 +407,7 @@ export default function MultiDocumentChat() {
                   Documents to compare
                 </div>
                 <span
-                  className={`font-mono text-xs px-2 py-0.5 rounded ${
+                  className={`text-xs font-medium px-2 py-0.5 rounded ${
                     selected.length >= MIN_DOCS && selected.length <= MAX_DOCS
                       ? "bg-primary/15 text-primary"
                       : "bg-secondary text-muted-foreground"
@@ -428,8 +418,8 @@ export default function MultiDocumentChat() {
               </div>
 
               {isLoading ? (
-                <div className="font-mono text-sm text-muted-foreground py-6 text-center">
-                  LOADING_DOCUMENTS...
+                <div className="text-sm text-muted-foreground py-6 text-center">
+                  Loading documents...
                 </div>
               ) : eligible.length < MIN_DOCS ? (
                 <div className="p-6 text-center border border-dashed border-border rounded-md text-muted-foreground">
@@ -471,14 +461,14 @@ export default function MultiDocumentChat() {
                           <div className="text-sm font-medium truncate" title={doc.fileName}>
                             {doc.fileName}
                           </div>
-                          <div className="text-[10px] font-mono text-muted-foreground flex gap-2 mt-0.5">
+                          <div className="text-[10px] text-muted-foreground flex gap-2 mt-0.5">
                             <span>{doc.fileType.toUpperCase()}</span>
-                            <span>CHUNKS:{doc.chunkCount}</span>
+                            <span>{doc.chunkCount} chunks</span>
                           </div>
                         </div>
                         {isChecked && (
                           <span
-                            className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground font-mono text-xs font-bold"
+                            className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold"
                             aria-label={`Comparison slot ${String.fromCharCode(65 + selected.indexOf(doc.id))}`}
                             title={`Comparison slot ${String.fromCharCode(65 + selected.indexOf(doc.id))}`}
                           >
@@ -502,16 +492,16 @@ export default function MultiDocumentChat() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="e.g. How do these policies differ on remote work and stipends?"
-                className="bg-background border-border font-mono text-sm min-h-[80px] resize-none"
+                className="bg-background border-border text-sm min-h-[80px] resize-none"
                 disabled={multiChat.isPending}
               />
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground">
                   {selected.length < MIN_DOCS
-                    ? `SELECT ${MIN_DOCS - selected.length} MORE DOCUMENT${
-                        MIN_DOCS - selected.length !== 1 ? "S" : ""
+                    ? `Select ${MIN_DOCS - selected.length} more document${
+                        MIN_DOCS - selected.length !== 1 ? "s" : ""
                       }`
-                    : "READY"}
+                    : "Ready"}
                 </span>
                 <Button type="submit" disabled={!canSubmit} className="text-xs gap-2">
                   <Send className="w-3.5 h-3.5" />
@@ -523,9 +513,9 @@ export default function MultiDocumentChat() {
             {/* Loading */}
             {multiChat.isPending && (
               <div className="bg-card border border-border rounded-lg p-5">
-                <div className="flex items-center gap-2 text-muted-foreground font-mono text-xs">
+                <div className="flex items-center gap-2 text-muted-foreground text-[11px]">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  SYNTHESIZING_COMPARISON...
+                  Synthesizing comparison...
                 </div>
               </div>
             )}

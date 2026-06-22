@@ -124,7 +124,7 @@ function TracePanel({
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 font-mono text-[11px] space-y-1 text-muted-foreground">
+        <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 text-[11px] space-y-1 text-muted-foreground">
           <div className="flex gap-2">
             <span className="text-foreground/50 w-36 shrink-0">provider</span>
             <span>{trace.provider}</span>
@@ -188,7 +188,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
           <div className="flex items-center gap-2 mb-3">
             <Bot className="w-4 h-4 text-primary shrink-0" />
             <span className="text-sm font-medium text-primary">Agent Answer</span>
-            <span className="ml-auto text-xs text-muted-foreground font-mono uppercase tracking-wider">
+            <span className="ml-auto text-[11px] font-medium text-muted-foreground">
               {result.mode}
             </span>
           </div>
@@ -229,7 +229,8 @@ export function DocumentAiPanel({
   currentDocumentId: number;
   currentDocumentName: string;
 }) {
-  const { data: documents, isLoading: docsLoading } = useListDocuments();
+  const { data: listData, isLoading: docsLoading } = useListDocuments();
+  const documents = listData?.items;
   const { mutate, isPending, data, error } = usePostAgentHybrid();
 
   const [query, setQuery] = useState("");

@@ -33,6 +33,8 @@ import type {
   HealthStatus,
   HybridAgentInput,
   HybridAgentResult,
+  ListDocuments200,
+  ListDocumentsParams,
   MultiChatInput,
   MultiChatResult,
   ReindexResult,
@@ -207,20 +209,27 @@ export function useGetDemoQa<TData = Awaited<ReturnType<typeof getDemoQa>>, TErr
 
 
 
-export const getListDocumentsUrl = () => {
+export const getListDocumentsUrl = (params?: ListDocumentsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/documents`
+  return stringifiedParams.length > 0 ? `/api/documents?${stringifiedParams}` : `/api/documents`
 }
 
 /**
- * @summary List all documents
+ * @summary List documents with pagination
  */
-export const listDocuments = async ( options?: RequestInit): Promise<Document[]> => {
+export const listDocuments = async (params?: ListDocumentsParams, options?: RequestInit): Promise<ListDocuments200> => {
 
-  return customFetch<Document[]>(getListDocumentsUrl(),
+  return customFetch<ListDocuments200>(getListDocumentsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -233,23 +242,23 @@ export const listDocuments = async ( options?: RequestInit): Promise<Document[]>
 
 
 
-export const getListDocumentsQueryKey = () => {
+export const getListDocumentsQueryKey = (params?: ListDocumentsParams,) => {
     return [
-    `/api/documents`
+    `/api/documents`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<unknown>>(params?: ListDocumentsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListDocumentsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListDocumentsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDocuments>>> = ({ signal }) => listDocuments({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDocuments>>> = ({ signal }) => listDocuments(params, { signal, ...requestOptions });
 
 
 
@@ -263,15 +272,15 @@ export type ListDocumentsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all documents
+ * @summary List documents with pagination
  */
 
 export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: ListDocumentsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListDocumentsQueryOptions(options)
+  const queryOptions = getListDocumentsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

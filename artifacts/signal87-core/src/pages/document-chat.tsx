@@ -22,8 +22,9 @@ import {
   ChevronRight,
   ChevronDown,
   Send,
-  Bot,
+  Sparkles,
   User,
+  Bot,
   FileText,
   ArrowLeft,
   Trash2,
@@ -74,7 +75,7 @@ function InlineCitation({
       onClick={onActivate}
       disabled={!hasSource}
       title={hasSource ? `View source — Section ${n}` : `Section ${n}`}
-      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-mono font-semibold leading-none transition-colors ${
+      className={`inline-flex items-center justify-center align-text-top mx-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-semibold leading-none transition-colors ${
         active
           ? "bg-primary text-primary-foreground"
           : hasSource
@@ -117,14 +118,14 @@ function CitationChip({
         onClick={onToggle}
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/5 transition-colors"
       >
-        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary font-mono text-[10px] font-semibold shrink-0">
+        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary text-[10px] font-semibold shrink-0">
           {citation.chunkIndex + 1}
         </span>
         <span className="text-[11px] text-muted-foreground/70 truncate flex-1 min-w-0">
           Section {citation.chunkIndex + 1} · {documentName}
         </span>
         {score > 0 && (
-          <span className={`font-mono text-[11px] shrink-0 ${scoreColor}`}>
+          <span className={`text-[11px] shrink-0 ${scoreColor}`}>
             {(score * 100).toFixed(0)}% match
           </span>
         )}
@@ -138,7 +139,7 @@ function CitationChip({
         <div className="px-3 pb-3 pt-0 border-t border-border/30 bg-muted/60">
           <div className="flex items-center gap-1.5 mt-2 mb-1.5">
             <Quote className="w-3 h-3 text-primary/50" />
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+            <span className="text-[11px] font-medium text-muted-foreground/70">
               Source Excerpt
             </span>
           </div>
@@ -166,42 +167,42 @@ function TraceDetailPanel({
       onOpenChange={setIsOpen}
       className="border border-border/60 bg-muted/40 rounded-md overflow-hidden"
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-xs font-mono text-muted-foreground hover:bg-black/5 transition-colors">
+      <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-[11px] text-muted-foreground hover:bg-muted/50 transition-colors">
         <div className="flex items-center gap-2">
           <Terminal className="w-3 h-3 text-primary/70" />
-          <span className="text-primary/70 uppercase tracking-widest text-[10px]">Trace Detail</span>
+          <span className="text-[11px] font-medium text-primary/70">Trace Detail</span>
         </div>
         {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
       </CollapsibleTrigger>
-      <CollapsibleContent className="px-3 pb-3 pt-2 border-t border-border/40 font-mono text-[11px] space-y-1.5 text-muted-foreground">
+      <CollapsibleContent className="px-3 pb-3 pt-2 border-t border-border/40 text-[11px] space-y-1.5 text-muted-foreground">
         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-          <Row label="PROVIDER" value={debug.provider} />
-          <Row label="MODEL" value={debug.model} />
-          <Row label="ROUTE" value={debug.route} />
+          <Row label="Provider" value={debug.provider} />
+          <Row label="Model" value={debug.model} />
+          <Row label="Route" value={debug.route} />
           <Row
-            label="FALLBACK"
+            label="Fallback"
             value={
               debug.fallbackUsed ? (
-                <span className="bg-destructive/20 text-destructive px-1.5 rounded">YES</span>
+                <span className="bg-destructive/20 text-destructive px-1.5 rounded">Yes</span>
               ) : (
-                <span className="bg-green-500/15 text-green-500 px-1.5 rounded">NO</span>
+                <span className="bg-green-500/15 text-green-500 px-1.5 rounded">No</span>
               )
             }
           />
-          <Row label="CHUNKS_SEARCHED" value={String(debug.chunksSearched)} />
-          <Row label="CHUNKS_RETRIEVED" value={String(debug.chunksRetrieved)} />
+          <Row label="Chunks searched" value={String(debug.chunksSearched)} />
+          <Row label="Chunks retrieved" value={String(debug.chunksRetrieved)} />
         </div>
         <div className="border-t border-border/30 pt-1.5 mt-1">
-          <Row label="DOCUMENT" value={documentName} />
+          <Row label="Document" value={documentName} />
         </div>
         <div className="border-t border-border/30 pt-1.5 mt-1 grid grid-cols-3 gap-x-4 gap-y-1.5">
-          <Row label="RETRIEVAL" value={`${debug.retrievalLatencyMs}ms`} />
+          <Row label="Retrieval" value={`${debug.retrievalLatencyMs}ms`} />
           <Row label="LLM" value={`${debug.llmLatencyMs}ms`} />
-          <Row label="TOTAL" value={`${debug.totalLatencyMs}ms`} highlight />
+          <Row label="Total" value={`${debug.totalLatencyMs}ms`} highlight />
         </div>
         {debug.errors && (
           <div className="mt-1.5 pt-1.5 border-t border-border/30 text-destructive text-[11px]">
-            <span className="font-bold">ERROR:</span> {debug.errors}
+            <span className="font-bold">Error:</span> {debug.errors}
           </div>
         )}
       </CollapsibleContent>
@@ -254,18 +255,18 @@ function AssistantAnswer({
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3 h-3 text-primary/70" />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-primary/70">
+            <span className="text-[11px] font-medium text-primary/70">
               Verification Trace
             </span>
             {citations.length > 0 && (
-              <span className="font-mono text-[10px] text-muted-foreground/50 ml-1">
+              <span className="text-[11px] text-muted-foreground/50 ml-1">
                 — {citations.length} source{citations.length !== 1 ? "s" : ""}
               </span>
             )}
           </div>
 
           {citations.length === 0 && (
-            <p className="font-mono text-[10px] text-muted-foreground/50 italic">
+            <p className="text-[11px] text-muted-foreground/50 italic">
               No source citations were returned for this answer.
             </p>
           )}
@@ -404,36 +405,27 @@ export default function DocumentChat() {
     <Layout>
       <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative">
         {/* Header */}
-        <header className="p-4 border-b border-border bg-card flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="px-4 py-2.5 border-b border-border bg-card flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
             <Link href="/documents">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
+              <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Documents
+              </button>
             </Link>
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-primary" />
-              <div>
-                <h2 className="font-bold text-sm tracking-tight truncate max-w-[200px] md:max-w-md">
-                  {document.fileName}
-                </h2>
-                <div className="text-[10px] font-mono text-muted-foreground flex gap-2">
-                  <span>doc {document.id}</span>
-                  <span>·</span>
-                  <span>{document.chunkCount} chunks</span>
-                </div>
-              </div>
-            </div>
+            <span className="text-muted-foreground text-[12px]">/</span>
+            <h2 className="font-medium text-[13px] text-foreground truncate max-w-[200px] md:max-w-md">
+              {document.fileName}
+            </h2>
           </div>
-
           <Button
             variant="outline"
             size="sm"
-            className="font-mono text-xs h-8 text-muted-foreground hover:text-destructive border-border/50"
+            className="text-[11px] h-7 px-2 text-muted-foreground hover:text-destructive border-border/50"
             onClick={handleClear}
             disabled={clearHistoryMutation.isPending || !history?.length}
           >
-            <Trash2 className="w-3 h-3 mr-2" />
+            <Trash2 className="w-3 h-3 mr-1.5" />
             Clear
           </Button>
         </header>
@@ -471,24 +463,24 @@ export default function DocumentChat() {
                 return (
                   <div key={msg.id} className={`flex gap-4 ${isUser ? "flex-row-reverse" : ""}`}>
                     <div
-                      className={`w-8 h-8 rounded shrink-0 flex items-center justify-center ${
+                      className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center ${
                         isUser
                           ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
+                          : "bg-[#EEEDFE] text-[#534AB7]"
                       }`}
                     >
-                      {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                      {isUser ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
                     </div>
                     <div className={`flex-1 min-w-0 ${isUser ? "text-right" : "text-left"}`}>
                       <div
-                        className={`inline-block text-left max-w-full rounded-lg p-4 ${
+                        className={`inline-block text-left max-w-full rounded-lg px-3.5 py-2.5 text-[13px] leading-relaxed ${
                           isUser
-                            ? "bg-primary/10 border border-primary/20 text-foreground"
-                            : "bg-card border border-border"
+                            ? "rounded-tl-sm bg-primary text-primary-foreground"
+                            : "rounded-tr-sm bg-card border border-border"
                         }`}
                       >
                         {isUser ? (
-                          <div className="prose prose-sm max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                          <div className="whitespace-pre-wrap">
                             {msg.content}
                           </div>
                         ) : (
@@ -508,11 +500,11 @@ export default function DocumentChat() {
 
             {chatMutation.isPending && (
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center bg-secondary text-secondary-foreground">
-                  <Bot className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center bg-[#EEEDFE] text-[#534AB7]">
+                  <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1">
-                  <div className="inline-block text-left max-w-full rounded-lg p-4 bg-card border border-border">
+                  <div className="inline-block text-left max-w-full rounded-lg rounded-tl-sm px-3.5 py-2.5 bg-card border border-border text-[13px] leading-relaxed">
                     <div className="flex items-center gap-2 text-muted-foreground text-xs">
                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       Thinking...
@@ -538,13 +530,13 @@ export default function DocumentChat() {
                   ? "Ask a question about this document..."
                   : "This document can't answer questions yet"
               }
-              className="bg-background border-border flex-1 font-mono text-sm h-12"
+              className="bg-muted/50 border-border flex-1 text-[13px] rounded-xl h-12 shadow-sm focus-visible:ring-1 focus-visible:ring-primary/40"
               disabled={chatMutation.isPending || !status.isReady}
             />
             <Button
               type="submit"
               disabled={!input.trim() || chatMutation.isPending || !status.isReady}
-              className="h-12 w-12 shrink-0 p-0"
+              className="h-12 w-12 shrink-0 p-0 rounded-xl"
             >
               <Send className="w-4 h-4" />
             </Button>

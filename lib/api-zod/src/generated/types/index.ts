@@ -30,6 +30,8 @@ export * from './hybridAgentInput';
 export * from './hybridAgentInputMode';
 export * from './hybridAgentResult';
 export * from './hybridAgentTrace';
+export * from './listDocuments200';
+export * from './listDocumentsParams';
 export * from './multiChatDocumentStat';
 export * from './multiChatInput';
 export * from './multiChatResult';

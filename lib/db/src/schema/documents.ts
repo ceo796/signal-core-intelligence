@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -14,7 +14,10 @@ export const documentsTable = pgTable("documents", {
   storageProvider: text("storage_provider"),
   storageKey: text("storage_key"),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_documents_owner_user_id").on(table.ownerUserId),
+  index("idx_documents_extraction_status").on(table.extractionStatus),
+]);
 
 export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, uploadedAt: true });
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;

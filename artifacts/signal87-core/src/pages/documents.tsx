@@ -249,7 +249,8 @@ function DeleteDialog({ fileName, onConfirm }: { fileName: string; onConfirm: ()
 }
 
 export default function DocumentsList() {
-  const { data: documents, isLoading, error } = useListDocuments();
+  const { data: listData, isLoading, error } = useListDocuments();
+  const documents = listData?.items;
   const deleteMutation = useDeleteDocument();
   const reindexMutation = useReindexDocument();
   const queryClient = useQueryClient();
@@ -505,19 +506,19 @@ export default function DocumentsList() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="px-4 md:px-6 py-4 md:py-5 border-b border-border flex items-center justify-between bg-card">
+        <header className="px-4 md:px-6 py-3 border-b border-border flex items-center justify-between bg-card">
           <div>
             {fromHybrid && (
               <Link
                 href="/agents/hybrid"
-                className="inline-flex items-center gap-1 text-xs text-primary hover:underline mb-1.5"
+                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline mb-1"
               >
                 <ArrowLeft className="w-3 h-3" />
                 Back to AI Chat
               </Link>
             )}
-            <h1 className="text-xl font-bold tracking-tight">Documents</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h1 className="text-[15px] font-medium tracking-tight text-foreground">Documents</h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
               {fromHybrid
                 ? "Select documents, then click Use in AI Chat."
                 : "Your uploaded documents"}
@@ -576,9 +577,9 @@ export default function DocumentsList() {
           </div>
         </header>
 
-        {/* Search + filter toolbar — only shown when documents exist */}
+        {/* Search + filter toolbar — compact, only shown when documents exist */}
         {!isLoading && !error && documents && documents.length > 0 && (
-          <div className="px-4 md:px-6 py-3 border-b border-border bg-card/60 flex flex-wrap items-center gap-x-2 gap-y-2">
+          <div className="px-4 md:px-6 py-2.5 border-b border-border bg-card/60 flex flex-wrap items-center gap-x-2 gap-y-2">
             <div className="relative flex-1 min-w-[160px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
@@ -686,17 +687,14 @@ export default function DocumentsList() {
           </div>
         )}
 
-        {/* AI Chat discovery CTA — only when documents exist */}
+        {/* AI Chat discovery CTA — subtle, compact, only when documents exist */}
         {!isLoading && !error && documents && documents.length > 0 && (
           <Link
             href="/agents/hybrid"
-            className="group mx-4 md:mx-6 mt-3 flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
+            className="group mx-4 md:mx-6 mt-2 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:border-primary/30 hover:shadow-sm transition-colors"
           >
             <Sparkles className="w-4 h-4 text-primary shrink-0" />
-            <span className="font-medium text-foreground">Ask a question across your documents</span>
-            <span className="text-muted-foreground hidden sm:inline">
-              — grounded answers with source citations
-            </span>
+            <span className="font-medium text-[13px] text-foreground">Ask across your documents</span>
             <ArrowRight className="w-3.5 h-3.5 text-primary ml-auto shrink-0 transition-transform group-hover:translate-x-0.5" />
           </Link>
         )}
@@ -774,7 +772,7 @@ export default function DocumentsList() {
                GRID VIEW — compact icon cards
                ══════════════════════════════ */
             <>
-            <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground">
+            <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <ArrowUpDown className="w-3 h-3 shrink-0" />
               <span>
                 Sorted by{" "}
@@ -786,7 +784,7 @@ export default function DocumentsList() {
               {visibleSelectableIds.length > 0 && (
                 <button
                   onClick={handleSelectAll}
-                  className="ml-auto text-[11px] font-mono text-primary hover:underline underline-offset-2 transition-colors"
+                  className="ml-auto text-[11px] text-primary hover:underline underline-offset-2 transition-colors"
                   aria-label={allVisibleSelected ? "Deselect all" : "Select all visible (up to 5)"}
                 >
                   {allVisibleSelected ? "Deselect all" : `Select all${visibleSelectableIds.length < (filteredDocuments?.length ?? 0) ? ` (top ${visibleSelectableIds.length})` : ""}`}
@@ -840,13 +838,13 @@ export default function DocumentsList() {
                           {highlightMatch(doc.fileName, search)}
                         </h3>
                         <div className="flex items-center gap-1.5 mb-2 min-w-0">
-                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
+                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-semibold ${chip.bg} ${chip.text}`}>
                             {chip.label}
                           </span>
                           <span className="text-[11px] text-muted-foreground truncate">{inferDocumentKind(doc.fileName, doc.fileType)}</span>
                         </div>
                         <DocumentStatusBadge doc={doc} />
-                        <div className="mt-auto pt-3 text-[11px] font-mono text-muted-foreground text-right">
+                        <div className="mt-auto pt-3 text-[11px] text-muted-foreground text-right">
                           <span>{format(new Date(doc.uploadedAt), "MMM d, yyyy")}</span>
                         </div>
                       </Link>
@@ -984,7 +982,7 @@ export default function DocumentsList() {
                       <td className="px-3 py-2.5">
                         <Link href={`/documents/${doc.id}`} className="flex items-center gap-2 min-w-0">
                           <FileTypeIcon fileType={doc.fileType} className="w-4 h-4 shrink-0" />
-                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
+                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-semibold ${chip.bg} ${chip.text}`}>
                             {chip.label}
                           </span>
                           <span className="truncate font-medium text-sm group-hover:text-primary transition-colors" title={doc.fileName}>
@@ -995,7 +993,7 @@ export default function DocumentsList() {
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <DocumentStatusBadge doc={doc} />
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                      <td className="px-3 py-2.5 text-right text-xs text-muted-foreground tabular-nums">
                         {doc.chunkCount}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted-foreground">

@@ -135,7 +135,7 @@ function CitationItem({
 function TraceRow({ label, value, accent }: { label: string; value: React.ReactNode; accent?: boolean }) {
   return (
     <div className="flex gap-2">
-      <span className="text-foreground/40 w-36 shrink-0 font-mono">{label}</span>
+      <span className="text-foreground/40 w-36 shrink-0">{label}</span>
       <span className={accent ? "text-primary" : ""}>{value}</span>
     </div>
   );
@@ -148,7 +148,7 @@ function AnalysisResult({ result }: { result: HybridAgentResult }) {
       <MarkdownAnswer content={result.answer} />
       {result.citations.length > 0 && (
         <div className="pt-1 space-y-1.5">
-          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+          <p className="text-[11px] text-muted-foreground font-medium">
             {result.citations.length} source{result.citations.length !== 1 ? "s" : ""} cited
           </p>
           {result.citations.slice(0, 4).map((c, i) => (
@@ -177,7 +177,7 @@ function AnalysisResult({ result }: { result: HybridAgentResult }) {
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 font-mono text-[11px] space-y-1 text-muted-foreground">
+          <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 text-[11px] space-y-1 text-muted-foreground">
             <TraceRow label="provider" value={result.trace.provider} />
             <TraceRow label="model" value={result.trace.model} />
             <TraceRow label="chunks considered" value={result.trace.chunksConsidered} />

@@ -31,9 +31,20 @@ export const GetDemoQaResponse = zod.object({
 
 
 /**
- * @summary List all documents
+ * @summary List documents with pagination
  */
-export const ListDocumentsResponseItem = zod.object({
+export const listDocumentsQueryLimitDefault = 50;
+export const listDocumentsQueryLimitMax = 200;
+
+export const listDocumentsQueryOffsetDefault = 0;
+
+export const ListDocumentsQueryParams = zod.object({
+  "limit": zod.coerce.number().max(listDocumentsQueryLimitMax).default(listDocumentsQueryLimitDefault).describe('Maximum number of documents to return'),
+  "offset": zod.coerce.number().default(listDocumentsQueryOffsetDefault).describe('Number of documents to skip')
+})
+
+export const ListDocumentsResponse = zod.object({
+  "items": zod.array(zod.object({
   "id": zod.number(),
   "fileName": zod.string(),
   "fileType": zod.string(),
@@ -47,8 +58,11 @@ export const ListDocumentsResponseItem = zod.object({
   "storageProvider": zod.string().nullish(),
   "storageKey": zod.string().nullish(),
   "originalFileAvailable": zod.boolean()
+})).optional(),
+  "total": zod.number().optional(),
+  "limit": zod.number().optional(),
+  "offset": zod.number().optional()
 })
-export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
 
 
 /**

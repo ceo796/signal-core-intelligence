@@ -96,8 +96,8 @@ export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
         <AlertCircle className="w-8 h-8 text-destructive" />
-        <p className="font-mono text-sm text-destructive">FAILED_TO_RENDER_PDF</p>
-        <p className="font-mono text-xs text-muted-foreground max-w-sm">
+        <p className="text-sm text-destructive">Failed to render PDF</p>
+        <p className="text-xs text-muted-foreground max-w-sm">
           The PDF could not be displayed in the viewer. You can still download the original file.
         </p>
         {downloadButton}
@@ -120,7 +120,7 @@ export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <span className="font-mono text-xs text-muted-foreground tabular-nums px-1">
+          <span className="text-xs text-muted-foreground tabular-nums px-1">
             {loading ? "–" : pageNumber} / {numPages ?? "–"}
           </span>
           <Button
@@ -146,8 +146,8 @@ export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
           >
             <ZoomOut className="w-4 h-4" />
           </Button>
-          <span className="font-mono text-xs text-muted-foreground tabular-nums px-1 w-12 text-center">
-            {fitWidth ? "FIT" : `${Math.round(scale * 100)}%`}
+          <span className="text-xs text-muted-foreground tabular-nums px-1 w-12 text-center">
+            {fitWidth ? "Fit" : `${Math.round(scale * 100)}%`}
           </span>
           <Button
             variant="ghost"
@@ -184,14 +184,14 @@ export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
           onLoadSuccess={onLoadSuccess}
           onLoadError={onLoadError}
           loading={
-            <div className="flex items-center justify-center gap-2 p-12 text-sm font-mono text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> LOADING_PDF
+            <div className="flex items-center justify-center gap-2 p-12 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading PDF...
             </div>
           }
           error={
             <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
               <AlertCircle className="w-8 h-8 text-destructive" />
-              <p className="font-mono text-sm text-destructive">FAILED_TO_RENDER_PDF</p>
+              <p className="text-sm text-destructive">Failed to render PDF</p>
               {downloadButton}
             </div>
           }
@@ -207,8 +207,8 @@ export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
               renderAnnotationLayer
               className="shadow-lg [&_canvas]:rounded-sm"
               loading={
-                <div className="flex items-center justify-center gap-2 p-12 text-sm font-mono text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" /> RENDERING_PAGE
+                <div className="flex items-center justify-center gap-2 p-12 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Rendering page...
                 </div>
               }
             />

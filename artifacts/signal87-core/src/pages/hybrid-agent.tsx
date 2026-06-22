@@ -41,7 +41,6 @@ import {
   Terminal,
   ChevronDown,
   ChevronRight,
-  Globe,
   Check,
   SlidersHorizontal,
   ExternalLink,
@@ -60,11 +59,10 @@ const modeLabel = (value: string) =>
 
 // Internal source labels surfaced on each answer. This assistant is OpenAI/GPT-only:
 // it grounds answers in your documents (document_context, with citations) and may add the
-// GPT model's own reasoning (gpt_reasoning). Web context is a disabled future placeholder.
+// GPT model's own reasoning (gpt_reasoning).
 const SOURCE_LABELS = {
   document_context: "Document context",
   gpt_reasoning: "GPT reasoning",
-  web_context_placeholder_disabled: "Web context",
 } as const;
 
 const PILL_CLASS =
@@ -117,7 +115,7 @@ function Composer({
 
   return (
     <form onSubmit={onSubmit} className="w-full">
-      <div className="rounded-[28px] border border-border bg-card shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md">
+      <div className="rounded-lg border border-border bg-card shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md">
         <Textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -125,7 +123,7 @@ function Composer({
           disabled={isPending}
           autoFocus={autoFocus}
           rows={1}
-          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 min-h-[52px] max-h-[220px] px-5 pt-4 pb-1 text-base"
+          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 min-h-[44px] max-h-[220px] px-4 pt-3 pb-1 text-[13px]"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -238,27 +236,17 @@ function Composer({
             </PopoverContent>
           </Popover>
 
-          {/* Web context — disabled placeholder (future pathway, no external calls) */}
-          <span
-            className="inline-flex items-center gap-1.5 h-8 rounded-full border border-dashed border-border/60 bg-muted px-3 text-xs font-medium text-muted-foreground opacity-70 cursor-not-allowed select-none"
-            title="Web context is not available yet — no external web research is performed"
-          >
-            <Globe className="w-3.5 h-3.5 shrink-0" />
-            <span>Web</span>
-            <span className="opacity-80">· Soon</span>
-          </span>
-
           <Button
             type="submit"
             size="icon"
             disabled={isPending || !query.trim()}
-            className="ml-auto rounded-full h-9 w-9 shrink-0"
+            className="ml-auto rounded-full h-8 w-8 shrink-0"
             aria-label="Send"
           >
             {isPending ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
-              <ArrowUp className="w-4 h-4" />
+              <ArrowUp className="w-3.5 h-3.5" />
             )}
           </Button>
         </div>
@@ -339,7 +327,7 @@ function TracePanel({ trace, open, onOpenChange }: {
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 font-mono text-[11px] space-y-1 text-muted-foreground">
+        <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 text-[11px] space-y-1 text-muted-foreground">
           <div className="flex gap-2">
             <span className="text-foreground/50 w-36 shrink-0">provider</span>
             <span>{trace.provider}</span>
@@ -432,7 +420,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-primary shrink-0" />
             <span className="text-sm font-medium text-primary">AI Answer</span>
-            <span className="ml-auto text-xs text-muted-foreground font-mono uppercase tracking-wider">
+            <span className="ml-auto text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">
               {result.mode}
             </span>
           </div>
@@ -453,7 +441,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-60 p-3 space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+            <p className="text-[11px] font-medium text-muted-foreground mb-2">
               Sources used
             </p>
             <div
@@ -473,11 +461,6 @@ function ResultView({ result }: { result: HybridAgentResult }) {
               <Sparkles className="w-3 h-3 shrink-0" />
               <span className="flex-1">{SOURCE_LABELS.gpt_reasoning}</span>
             </div>
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-muted text-muted-foreground opacity-60 border border-dashed border-border/60">
-              <Globe className="w-3 h-3 shrink-0" />
-              <span className="flex-1">{SOURCE_LABELS.web_context_placeholder_disabled}</span>
-              <span className="text-[10px]">· Soon</span>
-            </div>
           </PopoverContent>
         </Popover>
 
@@ -493,7 +476,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-72 p-3">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              <p className="text-[11px] font-medium text-muted-foreground mb-2">
                 Documents searched
               </p>
               <div className="space-y-1">
@@ -528,7 +511,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-64 p-3">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              <p className="text-[11px] font-medium text-muted-foreground mb-2">
                 Filter by document
               </p>
               <div className="space-y-0.5">
@@ -600,7 +583,8 @@ function ResultView({ result }: { result: HybridAgentResult }) {
 }
 
 export default function HybridAgent() {
-  const { data: documents, isLoading: docsLoading } = useListDocuments();
+  const { data: listData, isLoading: docsLoading } = useListDocuments();
+  const documents = listData?.items;
   const { mutate, isPending, data, error } = usePostAgentHybrid();
 
   const [query, setQuery] = useState("");
@@ -696,19 +680,19 @@ export default function HybridAgent() {
               <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap">
+                    <div className="max-w-[90%] rounded-lg rounded-br-sm bg-primary text-primary-foreground px-3.5 py-2 text-[13px] whitespace-pre-wrap">
                       {submittedQuery}
                     </div>
                   </div>
                 )}
 
                 {isPending ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     Thinking…
                   </div>
                 ) : error ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-[13px] text-destructive">
                     Something went wrong. Please try again.
                   </p>
                 ) : data ? (
