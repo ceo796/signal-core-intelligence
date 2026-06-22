@@ -812,7 +812,7 @@ export default function DocumentsList() {
                     <div className="relative border-b border-border">
                       <div
                         className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSelect(doc.id); }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Checkbox
                           checked={isSelected}
