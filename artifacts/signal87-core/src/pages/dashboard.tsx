@@ -19,18 +19,12 @@ import {
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return "Just now";
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function formatUploadDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 const FT_STYLE: Record<string, { bg: string; fg: string }> = {
@@ -237,10 +231,10 @@ export default function Dashboard() {
               </div>
 
               {/* Column headers */}
-              <div className="grid grid-cols-[1fr_68px_64px] gap-2 px-5 py-2 border-b border-border">
+              <div className="grid grid-cols-[1fr_68px_104px] gap-2 px-5 py-2 border-b border-border">
                 <span className="text-[11px] text-muted-foreground font-medium">Name</span>
                 <span className="text-[11px] text-muted-foreground font-medium">Type</span>
-                <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
+                <span className="text-[11px] text-muted-foreground font-medium text-right">Uploaded</span>
               </div>
 
               <div className="flex-1 px-2 py-1">
@@ -267,7 +261,7 @@ export default function Dashboard() {
                     <Link
                       key={doc.id}
                       href={`/documents/${doc.id}`}
-                      className="grid grid-cols-[1fr_68px_64px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                      className="grid grid-cols-[1fr_68px_104px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <DocumentThumbnail doc={doc} />
@@ -280,7 +274,7 @@ export default function Dashboard() {
                       </div>
                       <span className="text-xs text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
                       <span className="text-xs text-muted-foreground text-right tabular-nums">
-                        {relativeTime(doc.uploadedAt)}
+                        {formatUploadDate(doc.uploadedAt)}
                       </span>
                     </Link>
                   ))
