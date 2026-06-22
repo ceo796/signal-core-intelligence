@@ -727,14 +727,9 @@ export default function HybridAgent() {
           <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-10">
               <div className="w-full max-w-2xl space-y-7">
-                <div className="text-center space-y-3">
+                <div className="flex justify-center">
                   <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl">
                     <Sparkles className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium uppercase tracking-wider text-primary/80">
-                      Hybrid AI Chat
-                    </p>
                   </div>
                 </div>
                 <Composer {...composerProps} autoFocus />
