@@ -227,52 +227,56 @@ export default function TrashPage() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="md:divide-y md:divide-border grid grid-cols-1 md:block gap-3 p-4 md:p-0">
               {items.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 hover:bg-accent/50 transition-colors"
+                  className="md:flex md:items-center md:gap-3 md:px-4 md:py-3 lg:px-6 lg:py-4 md:hover:bg-accent/50 md:transition-colors bg-card border border-border rounded-lg md:rounded-none md:border-0 p-4 md:p-0"
                 >
-                  <FileTypeIcon fileType={doc.fileType} />
-
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate" title={doc.fileName}>
-                      {doc.fileName}
+                  {/* Mobile: card header with icon and title */}
+                  <div className="flex items-start gap-3 min-w-0 mb-3 md:mb-0">
+                    <div className="shrink-0 mt-0.5 md:mt-0">
+                      <FileTypeIcon fileType={doc.fileType} />
                     </div>
-                    <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
-                      <span className="uppercase text-[10px] font-semibold text-muted-foreground/70">
-                        {doc.fileType}
-                      </span>
-                      <span>·</span>
-                      <span>{formatSize(doc.fileSize)}</span>
-                      <span>·</span>
-                      <span>
-                        Deleted{" "}
-                        {doc.deletedAt
-                          ? format(new Date(doc.deletedAt), "MMM d, yyyy")
-                          : "—"}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate leading-snug" title={doc.fileName}>
+                        {doc.fileName}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+                        <span className="uppercase text-[10px] font-semibold text-muted-foreground/70">
+                          {doc.fileType}
+                        </span>
+                        <span className="hidden md:inline">·</span>
+                        <span>{formatSize(doc.fileSize)}</span>
+                        <span className="hidden md:inline">·</span>
+                        <span>
+                          Deleted{" "}
+                          {doc.deletedAt
+                            ? format(new Date(doc.deletedAt), "MMM d, yyyy")
+                            : "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Actions — full width on mobile, row on desktop */}
+                  <div className="flex items-center gap-2 md:gap-1.5 md:shrink-0">
                     {doc.originalFileAvailable && (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                        className="flex-1 md:flex-none h-9 md:h-7 text-xs gap-1.5"
                         onClick={() => downloadOriginal(doc.id, doc.fileName)}
                       >
                         <Download className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Download</span>
+                        <span>Download</span>
                       </Button>
                     )}
 
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                      className="flex-1 md:flex-none h-9 md:h-7 text-xs gap-1.5"
                       onClick={() => handleRestore(doc.id, doc.fileName)}
                       disabled={restore.isPending}
                     >
@@ -281,7 +285,7 @@ export default function TrashPage() {
                       ) : (
                         <RotateCcw className="w-3.5 h-3.5" />
                       )}
-                      <span className="hidden sm:inline">Restore</span>
+                      <span>Restore</span>
                     </Button>
 
                     <AlertDialog
@@ -290,12 +294,12 @@ export default function TrashPage() {
                     >
                       <AlertDialogTrigger asChild>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="h-7 text-xs gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                          className="flex-1 md:flex-none h-9 md:h-7 text-xs gap-1.5 text-destructive/80 border-destructive/20 hover:text-destructive hover:bg-destructive/10 hover:border-destructive/30"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Delete</span>
+                          <span>Delete</span>
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>

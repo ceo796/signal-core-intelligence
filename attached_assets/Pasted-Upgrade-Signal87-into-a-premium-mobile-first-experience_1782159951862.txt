@@ -1,0 +1,234 @@
+Upgrade Signal87 into a premium mobile-first experience.
+
+Goal:
+Make Signal87 feel exceptional on mobile — fast, smooth, polished, and app-like, with the quality level of a top-tier native iOS productivity app. Do not simply shrink the desktop layout. Design the mobile experience intentionally.
+
+Product principle:
+Signal87 should feel like a clean, premium document intelligence app. On mobile, users should be able to upload, view, ask, analyze, restore, and manage documents with minimal friction.
+
+Required mobile improvements:
+
+1. Mobile-first audit
+   Review every logged-in app route on mobile:
+
+* Documents
+* Document Detail
+* AI Chat
+* Analyze
+* Trash
+* Settings
+* Upload modal
+* Any empty, loading, error, and confirmation states
+
+Fix cramped spacing, awkward scrolling, small tap targets, clipped text, and desktop-first layouts.
+
+2. Native-feeling layout
+   Use a mobile-first structure:
+
+* Full-width content
+* Comfortable padding
+* Large readable titles
+* Clear section hierarchy
+* Sticky bottom composer where appropriate
+* Sticky bottom navigation
+* Safe-area support for iPhone notch/home indicator
+* No horizontal overflow
+* No tiny desktop tables forced onto mobile
+
+3. Navigation
+   Keep the mobile bottom nav clean and app-like:
+
+* Documents
+* AI Chat
+* Analyze
+* Trash
+* Settings or avatar/settings access
+
+Bottom nav requirements:
+
+* Clear active state
+* Large tap targets
+* Smooth transitions
+* No crowding
+* Works with iOS safe areas
+* Does not cover important content
+
+4. Documents page
+   On mobile, Documents should feel like a document app, not a web table.
+
+Replace table-heavy layouts with mobile document cards:
+
+* File icon or thumbnail
+* File name
+* File type
+* Status badge
+* Upload date
+* Chunk/searchability status
+* Subtle actions menu
+
+Support:
+
+* Search
+* Filters
+* Sort
+* Upload
+* Duplicate warnings
+* No searchable text badges
+* Trash-aware document visibility
+
+5. Document Detail page
+   Make the document viewer excellent on mobile.
+
+Requirements:
+
+* Viewer-first layout
+* Large readable header
+* Back button
+* File name truncation that looks polished
+* Status badge
+* Ask AI button
+* More menu
+* Download/Open/Re-index actions
+* PDF viewer optimized for mobile width
+* Spreadsheet files should not show raw extracted text by default
+* Text/extracted views should be secondary, not the main experience
+
+AI behavior:
+
+* Do not show a permanent AI panel on mobile
+* Ask AI should open a clean bottom sheet or full-screen mobile chat drawer
+* AI must be user-initiated only
+
+6. AI Chat mobile experience
+   Make AI Chat feel like a premium mobile assistant.
+
+Requirements:
+
+* ChatGPT-style mobile layout
+* Clear answer cards
+* Clean source chips instead of raw “[Source 1]” text
+* Sticky bottom composer
+* Comfortable typing area
+* Large send button
+* Smooth loading state
+* Collapsible citations
+* Collapsible searched documents
+* Collapsible verification trace
+* No cramped metadata
+
+7. Analyze page
+   Make Analyze simple on mobile.
+
+Requirements:
+
+* Step-based flow:
+
+  1. Select documents
+  2. Choose analysis type
+  3. Add optional focus/question
+  4. Generate
+* Avoid two-column desktop layouts on mobile
+* Use clean cards, sheets, and accordions
+* Show output in a polished memo-style answer card
+
+8. Upload experience
+   Make upload feel reliable and modern.
+
+Requirements:
+
+* Large upload button/card
+* Clear file picker
+* Progress indicators
+* Per-file status
+* Duplicate alert on upload
+* “Stored but not searchable” messaging when text extraction fails
+* Clear success summary after upload
+
+9. Trash page
+   Make Trash mobile-friendly.
+
+Requirements:
+
+* Document cards instead of tables
+* Restore action
+* Permanently delete action
+* Empty Trash action
+* Confirmation dialogs that are clear and not cramped
+
+10. Motion and polish
+    Add subtle, restrained interaction polish:
+
+* Smooth page transitions
+* Button press states
+* Card hover/tap states
+* Loading skeletons
+* Bottom sheet animations
+* Gentle empty states
+* No flashy or distracting animation
+
+11. Performance
+    Mobile must feel fast.
+
+Requirements:
+
+* Avoid unnecessary AI component mounting
+* Avoid automatic AI queries on document detail load
+* Lazy-load heavy viewers where appropriate
+* Keep PDF/spreadsheet previews performant
+* Avoid layout shifts
+* Optimize long document lists
+
+12. Visual quality
+    Refine the mobile visual system:
+
+* Better spacing rhythm
+* Better typography scale
+* Better card density
+* Cleaner icons
+* Consistent border radius
+* Consistent button hierarchy
+* Premium but minimal color usage
+* No cluttered panels
+* No raw developer-looking output
+
+13. Preserve existing functionality
+    Do not break:
+
+* Auth
+* Per-user document ownership
+* Upload
+* Preview
+* Download
+* Open original
+* Re-index
+* Delete / Trash
+* Restore
+* AI Chat
+* Analyze
+* Citations
+* Verification trace
+* Duplicate detection
+* No-searchable-text handling
+* PDF behavior
+* XLSX behavior
+
+14. Implementation guardrails
+
+* Do not do a broad backend refactor unless required.
+* Prefer focused frontend improvements.
+* Preserve desktop behavior unless a small shared component update is necessary.
+* Keep changes incremental and testable.
+* If a route is risky, improve it one component at a time.
+
+Acceptance criteria:
+
+* Signal87 feels intentionally designed for mobile, not like a compressed desktop app.
+* Documents are easy to browse, search, open, and manage from a phone.
+* Document Detail is clean and viewer-first.
+* AI Chat feels smooth and native on mobile.
+* Analyze is usable without desktop-style columns.
+* Upload feedback is clear and polished.
+* Trash is accessible and easy to use.
+* There is no horizontal scrolling or clipped UI.
+* Tap targets are comfortable.
+* The app feels fast, premium, and trustworthy on iPhone-sized screens.

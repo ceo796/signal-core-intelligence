@@ -444,37 +444,39 @@ export default function DocumentDetail() {
 
         {/* ── Top bar: document info + actions ───────────────────────── */}
         <header className="shrink-0 border-b border-border bg-card/60 px-4 md:px-6 py-2.5">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             {/* Breadcrumb back */}
             <Link href="/documents">
               <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Documents
+                <span className="hidden sm:inline">Documents</span>
               </button>
             </Link>
 
             {/* Divider */}
-            <span className="text-muted-foreground/50 text-[12px] shrink-0">/</span>
+            <span className="text-muted-foreground/50 text-[12px] shrink-0 hidden sm:inline">/</span>
 
             {/* Title */}
             <h1
-              className="text-[14px] font-medium text-foreground truncate max-w-[200px] md:max-w-[320px]"
+              className="text-[14px] font-medium text-foreground truncate max-w-[140px] sm:max-w-[200px] md:max-w-[320px]"
               title={doc.fileName}
             >
               {doc.fileName}
             </h1>
 
-            {/* File type pill */}
+            {/* File type pill — hidden on mobile */}
             <span
-              className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+              className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0"
               style={{ backgroundColor: "#FAECE7", color: "#993C1D" }}
             >
               <FileText className="w-3 h-3" />
               {doc.fileType.toUpperCase()}
             </span>
 
-            {/* Status badge */}
-            <DocumentStatusBadge doc={doc} />
+            {/* Status badge — hidden on mobile */}
+            <span className="hidden md:inline">
+              <DocumentStatusBadge doc={doc} />
+            </span>
 
             {/* Spacer */}
             <div className="flex-1" />
@@ -484,17 +486,18 @@ export default function DocumentDetail() {
               {/* Primary: Ask AI — opens slide-over drawer */}
               <Button
                 size="sm"
-                className="text-xs gap-1.5 h-8"
+                className="text-xs gap-1.5 h-9 sm:h-8 px-3 sm:px-2.5"
                 onClick={() => setDrawerOpen(true)}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Ask AI
+                <span className="hidden sm:inline">Ask AI</span>
+                <span className="sm:hidden">Ask</span>
               </Button>
 
               {/* More menu */}
               <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 px-2">
+                  <Button variant="outline" size="sm" className="h-9 sm:h-8 px-2.5">
                     <MoreHorizontal className="w-4 h-4" />
                     <span className="sr-only">More</span>
                   </Button>
@@ -704,11 +707,12 @@ export default function DocumentDetail() {
         />
       )}
 
-      {/* Drawer panel */}
+      {/* Drawer panel — full-screen on mobile, fixed width on desktop */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 flex flex-col bg-background border-l border-border shadow-2xl transition-transform duration-300 ease-in-out w-full md:w-[420px] ${
+        className={`fixed inset-y-0 right-0 z-50 flex flex-col bg-background border-l border-border shadow-2xl transition-transform duration-300 ease-in-out w-full sm:w-[420px] ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ maxWidth: "100%" }}
       >
         {/* Drawer header */}
         <div className="shrink-0 flex items-center gap-2.5 px-4 py-3 border-b border-border bg-card">

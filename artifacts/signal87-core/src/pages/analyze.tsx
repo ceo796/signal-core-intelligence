@@ -584,7 +584,7 @@ export default function AnalyzePage() {
         <ScrollArea className="flex-1 p-4 md:p-6">
           <div className="max-w-3xl mx-auto space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
             {/* Document selector */}
-            <div className="bg-card border border-border rounded-lg p-5">
+            <div className="bg-card border border-border rounded-lg p-4 sm:p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-sm font-bold">
                   <Layers className="w-4 h-4 text-primary" />
@@ -636,7 +636,7 @@ export default function AnalyzePage() {
                               toggle(doc.id);
                             }
                           }}
-                          className={`flex items-center gap-3 p-3 rounded-md border text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                          className={`flex items-center gap-3 p-3 sm:p-3 min-h-[52px] sm:min-h-0 rounded-md border text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                             isChecked
                               ? "border-primary/50 bg-primary/5"
                               : atMax
@@ -716,7 +716,7 @@ export default function AnalyzePage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-[11px] text-muted-foreground">
                   {comparisonBlocked
                     ? "Needs 2+ documents"
@@ -726,7 +726,7 @@ export default function AnalyzePage() {
                     ? "Will search all documents"
                     : "Ready"}
                 </span>
-                <Button type="submit" disabled={!canSubmit} className="text-xs gap-2">
+                <Button type="submit" disabled={!canSubmit} className="text-xs gap-2 h-9 sm:h-9">
                   <Sparkles className="w-3.5 h-3.5" />
                   {submitLabel}
                 </Button>

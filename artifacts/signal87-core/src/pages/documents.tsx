@@ -527,8 +527,8 @@ export default function DocumentsList() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* View toggle */}
-            <div className="flex items-center rounded-full border border-border overflow-hidden p-0.5 gap-0.5">
+            {/* View toggle — hidden on mobile (always grid on mobile) */}
+            <div className="hidden md:flex items-center rounded-full border border-border overflow-hidden p-0.5 gap-0.5">
               <button
                 onClick={() => switchView("list")}
                 className={`p-1.5 rounded-full transition-colors ${
@@ -581,8 +581,8 @@ export default function DocumentsList() {
 
         {/* Search + filter toolbar — compact, only shown when documents exist */}
         {!isLoading && !error && documents && documents.length > 0 && (
-          <div className="px-4 md:px-6 py-2.5 border-b border-border bg-card/60 flex flex-wrap items-center gap-x-2 gap-y-2">
-            <div className="relative flex-1 min-w-[160px]">
+          <div className="px-4 md:px-6 py-2.5 border-b border-border bg-card/60 flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-0 sm:min-w-[160px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search by name…"
@@ -600,63 +600,65 @@ export default function DocumentsList() {
                 </button>
               )}
             </div>
-            <Select value={statusFilter} onValueChange={(v) => handleStatusFilter(v as StatusFilter)}>
-              <SelectTrigger className="h-9 w-36 text-sm rounded-full">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="ready">Ready</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="error">Error</SelectItem>
-              </SelectContent>
-            </Select>
-            {availableTypes.length > 0 && (
-              <Select value={typeFilter} onValueChange={(v) => handleTypeFilter(v as TypeFilter)}>
-                <SelectTrigger className="h-9 w-32 text-sm rounded-full">
-                  <SelectValue placeholder="File type" />
+            <div className="flex items-center gap-2 shrink-0">
+              <Select value={statusFilter} onValueChange={(v) => handleStatusFilter(v as StatusFilter)}>
+                <SelectTrigger className="h-9 w-32 sm:w-36 text-sm rounded-full">
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  {availableTypes.map((ft) => (
-                    <SelectItem key={ft} value={ft}>
-                      {fileTypeChip(ft).label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="ready">Ready</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
                 </SelectContent>
               </Select>
-            )}
-            {view === "grid" && (
-              <div className="flex items-center gap-1.5 ml-auto">
-                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                <Select
-                  value={gridSortColumn}
-                  onValueChange={(v) => handleGridSortColumn(v as SortColumn)}
-                >
-                  <SelectTrigger className="h-9 w-36 text-sm rounded-full">
-                    <SelectValue />
+              {availableTypes.length > 0 && (
+                <Select value={typeFilter} onValueChange={(v) => handleTypeFilter(v as TypeFilter)}>
+                  <SelectTrigger className="h-9 w-28 sm:w-32 text-sm rounded-full">
+                    <SelectValue placeholder="File type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                    <SelectItem value="chunks">Chunks</SelectItem>
-                    <SelectItem value="uploaded">Uploaded</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
+                    {availableTypes.map((ft) => (
+                      <SelectItem key={ft} value={ft}>
+                        {fileTypeChip(ft).label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <button
-                  onClick={handleGridSortDirection}
-                  className="h-9 w-9 flex items-center justify-center rounded-full border border-input bg-background hover:bg-muted transition-colors shrink-0"
-                  title={gridSortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
-                  aria-label={gridSortDirection === "asc" ? "Sort ascending" : "Sort descending"}
-                >
-                  {gridSortDirection === "asc" ? (
-                    <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  )}
-                </button>
-              </div>
-            )}
+              )}
+              {view === "grid" && (
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <Select
+                    value={gridSortColumn}
+                    onValueChange={(v) => handleGridSortColumn(v as SortColumn)}
+                  >
+                    <SelectTrigger className="h-9 w-36 text-sm rounded-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="status">Status</SelectItem>
+                      <SelectItem value="chunks">Chunks</SelectItem>
+                      <SelectItem value="uploaded">Uploaded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <button
+                    onClick={handleGridSortDirection}
+                    className="h-9 w-9 flex items-center justify-center rounded-full border border-input bg-background hover:bg-muted transition-colors shrink-0"
+                    title={gridSortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
+                    aria-label={gridSortDirection === "asc" ? "Sort ascending" : "Sort descending"}
+                  >
+                    {gridSortDirection === "asc" ? (
+                      <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -907,7 +909,7 @@ export default function DocumentsList() {
             /* ══════════════════════════════
                LIST VIEW — compact table
                ══════════════════════════════ */
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm border-collapse min-w-[520px]">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
@@ -1072,7 +1074,7 @@ export default function DocumentsList() {
                 <span className="text-xs text-muted-foreground">(max)</span>
               )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
               <button
                 onClick={clearSelection}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
@@ -1082,11 +1084,12 @@ export default function DocumentsList() {
               {fromHybrid && (
                 <Button
                   size="sm"
-                  className="h-8 text-xs gap-1.5 px-3"
+                  className="h-9 sm:h-8 text-xs gap-1.5 px-3"
                   onClick={handleUseInChat}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  Use {selectionCount} in AI Chat
+                  <span className="hidden sm:inline">Use {selectionCount} in AI Chat</span>
+                  <span className="sm:hidden">Use in AI Chat</span>
                 </Button>
               )}
               {selectionCount >= 2 && (
@@ -1094,7 +1097,7 @@ export default function DocumentsList() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs gap-1.5 px-3"
+                    className="h-9 sm:h-8 text-xs gap-1.5 px-3"
                     onClick={handleCompare}
                   >
                     <GitCompare className="w-3.5 h-3.5" />
@@ -1103,7 +1106,7 @@ export default function DocumentsList() {
                   <Button
                     size="sm"
                     variant={fromHybrid ? "outline" : "default"}
-                    className="h-8 text-xs gap-1.5 px-3"
+                    className="h-9 sm:h-8 text-xs gap-1.5 px-3"
                     onClick={handleBrief}
                   >
                     <ScrollText className="w-3.5 h-3.5" />

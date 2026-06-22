@@ -406,27 +406,27 @@ export default function DocumentChat() {
       <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative">
         {/* Header */}
         <header className="px-4 py-2.5 border-b border-border bg-card flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <Link href="/documents">
-              <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+              <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Documents
+                <span className="hidden sm:inline">Documents</span>
               </button>
             </Link>
-            <span className="text-muted-foreground text-[12px]">/</span>
-            <h2 className="font-medium text-[13px] text-foreground truncate max-w-[200px] md:max-w-md">
+            <span className="text-muted-foreground text-[12px] shrink-0 hidden sm:inline">/</span>
+            <h2 className="font-medium text-[13px] text-foreground truncate max-w-[160px] sm:max-w-[200px] md:max-w-md">
               {document.fileName}
             </h2>
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="text-[11px] h-7 px-2 text-muted-foreground hover:text-destructive border-border/50"
+            className="text-[11px] h-8 sm:h-7 px-2 text-muted-foreground hover:text-destructive border-border/50 shrink-0"
             onClick={handleClear}
             disabled={clearHistoryMutation.isPending || !history?.length}
           >
             <Trash2 className="w-3 h-3 mr-1.5" />
-            Clear
+            <span className="hidden sm:inline">Clear</span>
           </Button>
         </header>
 
@@ -530,13 +530,14 @@ export default function DocumentChat() {
                   ? "Ask a question about this document..."
                   : "This document can't answer questions yet"
               }
-              className="bg-muted/50 border-border flex-1 text-[13px] rounded-xl h-12 shadow-sm focus-visible:ring-1 focus-visible:ring-primary/40"
+              className="bg-muted/50 border-border flex-1 text-[14px] sm:text-[13px] rounded-xl h-12 shadow-sm focus-visible:ring-1 focus-visible:ring-primary/40"
               disabled={chatMutation.isPending || !status.isReady}
             />
             <Button
               type="submit"
               disabled={!input.trim() || chatMutation.isPending || !status.isReady}
               className="h-12 w-12 shrink-0 p-0 rounded-xl"
+              aria-label="Send"
             >
               <Send className="w-4 h-4" />
             </Button>

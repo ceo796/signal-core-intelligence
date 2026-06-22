@@ -124,7 +124,7 @@ function Composer({
           disabled={isPending}
           autoFocus={autoFocus}
           rows={1}
-          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 min-h-[44px] max-h-[220px] px-4 pt-3 pb-1 text-[13px]"
+          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 min-h-[48px] sm:min-h-[44px] max-h-[220px] px-3.5 sm:px-4 pt-3 pb-1 text-[14px] sm:text-[13px]"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -132,13 +132,14 @@ function Composer({
             }
           }}
         />
-        <div className="flex items-center gap-2 px-3 pb-3 pt-1 flex-wrap">
+        <div className="flex items-center gap-2 px-2 sm:px-3 pb-2.5 sm:pb-3 pt-1 flex-wrap">
           {/* Mode — pill button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button type="button" className={PILL_CLASS} aria-label="Answer mode">
                 <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-                <span>{modeLabel(mode)}</span>
+                <span className="hidden sm:inline">{modeLabel(mode)}</span>
+                <span className="sm:hidden">{modeLabel(mode).slice(0,3)}</span>
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </DropdownMenuTrigger>
@@ -166,11 +167,11 @@ function Composer({
             <PopoverTrigger asChild>
               <button type="button" className={PILL_CLASS} aria-label="Documents to search">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
-                <span className="max-w-[160px] truncate">{docsLabel}</span>
+                <span className="max-w-[120px] sm:max-w-[160px] truncate">{docsLabel}</span>
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-72 p-2">
+            <PopoverContent align="start" className="w-[calc(100vw-2rem)] sm:w-72 p-2">
               <div className="flex items-center justify-between px-1 pb-1.5">
                 <span className="text-xs font-medium text-muted-foreground">
                   Documents to search
@@ -200,7 +201,7 @@ function Composer({
                     {readyDocs.map((doc) => (
                       <label
                         key={doc.id}
-                        className="flex items-center gap-2.5 px-2.5 py-2 hover:bg-muted/50 cursor-pointer"
+                        className="flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 hover:bg-muted/50 cursor-pointer min-h-[44px]"
                       >
                         <Checkbox
                           checked={selectedDocIds.has(doc.id)}
@@ -228,7 +229,7 @@ function Composer({
                 <button
                   type="button"
                   onClick={onBrowse}
-                  className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-xs text-primary hover:bg-primary/5 transition-colors"
+                  className="flex items-center gap-1.5 w-full px-2 py-2 sm:py-1.5 rounded-md text-xs text-primary hover:bg-primary/5 transition-colors min-h-[44px] sm:min-h-0"
                 >
                   <ExternalLink className="w-3 h-3 shrink-0" />
                   Browse all documents
@@ -239,7 +240,7 @@ function Composer({
 
           {/* Web placeholder — disabled, never calls external APIs */}
           <span
-            className="inline-flex items-center gap-1.5 h-8 rounded-full border border-border/60 bg-muted/50 px-3 text-xs font-medium text-muted-foreground/60 cursor-not-allowed select-none"
+            className="hidden sm:inline-flex items-center gap-1.5 h-8 rounded-full border border-border/60 bg-muted/50 px-3 text-xs font-medium text-muted-foreground/60 cursor-not-allowed select-none"
             title="Web context coming soon"
             aria-disabled="true"
           >
@@ -251,18 +252,18 @@ function Composer({
             type="submit"
             size="icon"
             disabled={isPending || !query.trim()}
-            className="ml-auto rounded-full h-8 w-8 shrink-0"
+            className="ml-auto rounded-full h-10 w-10 sm:h-8 sm:w-8 shrink-0"
             aria-label="Send"
           >
             {isPending ? (
-              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 sm:w-3.5 sm:h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
-              <ArrowUp className="w-3.5 h-3.5" />
+              <ArrowUp className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             )}
           </Button>
         </div>
       </div>
-      <p className="text-center text-[11px] text-muted-foreground mt-2">
+      <p className="text-center text-[11px] text-muted-foreground mt-2 px-2">
         Answers use your documents (with citations) and GPT reasoning — no web research.
       </p>
     </form>
