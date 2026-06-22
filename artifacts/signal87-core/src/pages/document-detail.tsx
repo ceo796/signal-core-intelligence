@@ -35,7 +35,6 @@ import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
 import { printDocument, canPrintDocument } from "@/lib/print-document";
-import { DocumentIntelligencePanel } from "@/components/document-intelligence-panel";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   ArrowLeft,
@@ -50,9 +49,6 @@ import {
   Printer,
   Highlighter,
   MessageSquare,
-  Eye,
-  EyeOff,
-  FileSearch,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -93,7 +89,6 @@ export default function DocumentDetail() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [printLoading, setPrintLoading] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
-  const [showPdf, setShowPdf] = useState(false);
   const highlightRanges = useRef<Range[]>([]);
 
   useEffect(() => {
@@ -243,7 +238,6 @@ export default function DocumentDetail() {
   const uploadDate = new Date(doc.uploadedAt);
 
   const hasPdfViewer = isPdf && originalAvailable;
-  const hasSource = hasPdfViewer || doc.extractedText;
 
   const renderSourcePanel = () => {
     if (isPdf) {
@@ -361,31 +355,9 @@ export default function DocumentDetail() {
               <Link href={`/documents/${doc.id}/chat`}>
                 <Button size="sm" className="text-xs gap-1.5 h-8">
                   <MessageSquare className="w-3.5 h-3.5" />
-                  Ask
+                  Ask AI
                 </Button>
               </Link>
-
-              {/* View Source toggle (mobile only) */}
-              {hasSource && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 h-8 lg:hidden"
-                  onClick={() => setShowPdf((v) => !v)}
-                >
-                  {showPdf ? (
-                    <>
-                      <EyeOff className="w-3.5 h-3.5" />
-                      Hide Source
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3.5 h-3.5" />
-                      View Source
-                    </>
-                  )}
-                </Button>
-              )}
 
               {/* More menu */}
               <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
@@ -495,42 +467,12 @@ export default function DocumentDetail() {
           )}
         </header>
 
-        {/* ── Main content: AI primary + PDF secondary ─────────────── */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
-
-          {/* AI Analysis Panel — primary */}
-          <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
-            <DocumentIntelligencePanel
-              documentId={doc.id}
-              documentName={doc.fileName}
-              isReady={isReady}
-            />
-          </div>
-
-          {/* PDF / Source Panel — secondary, collapsible on mobile */}
-          {/* Always visible on desktop, toggle on mobile */}
-          <div className={`shrink-0 flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-card w-full lg:w-[40%] lg:min-w-[340px] lg:max-w-[520px] ${showPdf ? "flex h-[50vh]" : "hidden lg:flex h-auto"}`}>
-            {/* PDF header */}
-            <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/20">
-              <FileSearch className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[11px] font-medium text-muted-foreground">Source Document</span>
-              <div className="flex-1" />
-              {/* Mobile close button */}
-              <button
-                className="lg:hidden text-muted-foreground hover:text-foreground"
-                onClick={() => setShowPdf(false)}
-              >
-                <EyeOff className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            {/* PDF content */}
-            <div
-              className={`flex-1 min-h-0 overflow-hidden flex flex-col${highlightMode ? " cursor-text" : ""}`}
-              onMouseUp={handleMouseUp}
-            >
-              {renderSourcePanel()}
-            </div>
-          </div>
+        {/* ── Main content: document viewer full width ──────────────── */}
+        <div
+          className={`flex-1 min-h-0 overflow-hidden flex flex-col${highlightMode ? " cursor-text" : ""}`}
+          onMouseUp={handleMouseUp}
+        >
+          {renderSourcePanel()}
         </div>
       </div>
 

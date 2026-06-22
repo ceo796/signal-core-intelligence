@@ -2,6 +2,26 @@
 
 ---
 
+## [Signal87_DocumentDetail_ViewerOnly_v7] — 2026-06-22  *(Document detail page: viewer-only layout; AI panel removed; frontend-only)*
+
+### Summary
+Removed the always-visible right-side AI Analysis panel from the document detail page. The page now functions as a clean, full-width document viewer. AI interaction is user-initiated via the "Ask AI" header button.
+
+### Changed
+- **`src/pages/document-detail.tsx`** — Removed `DocumentIntelligencePanel` from layout and its import. Removed `showPdf` state and the mobile "View Source" toggle button (no longer needed). Removed unused lucide-react imports (`Eye`, `EyeOff`, `FileSearch`). The `DocumentIntelligencePanel` is no longer mounted at all — no AI queries fire on page load. Renamed the "Ask" header button to "Ask AI" (navigates to `/documents/:id/chat`, the single-doc chat page). The PDF/source viewer now fills the full available width. Highlight mode and the More menu (Download, Open Original, Re-Index, Print, Delete) are all preserved unchanged.
+
+### Scope
+- Frontend-only. Zero backend changes. Zero schema changes. No new AI provider.
+- PDF viewer, pagination, zoom controls, download original, re-index, delete, print, highlight mode all preserved.
+- No AI queries run on document page load.
+- Auth and ownership checks unchanged.
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+- No references to `DocumentIntelligencePanel`, `showPdf`, `Eye`, `EyeOff`, or `FileSearch` remain in document-detail.tsx.
+
+---
+
 ## [Signal87_Light_Theme_Reskin_v6] — 2026-06-22  *(Notion/Dropbox-style light UI for logged-in app; frontend-only)*
 
 ### Summary
