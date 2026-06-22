@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth, UserButton, useUser } from "@clerk/react";
-import { LayoutDashboard, FileText, Activity, Sparkles, Settings } from "lucide-react";
+import { FileText, Sparkles, BarChart2, Settings } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,8 +15,7 @@ export function Layout({ children }: LayoutProps) {
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/agents/hybrid", label: "AI Chat", icon: Sparkles },
-    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-    { href: "/activity", label: "Activity", icon: Activity },
+    { href: "/analyze", label: "Analyze", icon: BarChart2 },
   ];
 
   const userName =

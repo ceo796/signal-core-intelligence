@@ -1,0 +1,70 @@
+Use the attached Signal87 site brief as the source of truth.
+
+Goal:
+Restructure the Signal87 app around a cleaner, simpler document-first workflow.
+
+Primary product philosophy:
+Signal87 should feel like a fast, minimalist document intelligence workspace. Documents are the core. AI should be powerful but user-initiated, not visually overwhelming.
+
+Required restructuring:
+1. Make /documents the primary logged-in landing page after authentication.
+2. Remove /dashboard as the main home experience, or redirect /dashboard to /documents.
+3. Simplify primary navigation to:
+   - Documents
+   - AI Chat
+   - Analyze
+   - Settings
+4. Remove Activity from primary navigation.
+5. Remove /ask as a standalone page.
+6. Merge /brief and /compare into a single /analyze page with modes:
+   - Open Q&A
+   - Executive Brief
+   - Risk Review
+   - Contract Review
+   - Comparison
+
+Document Detail Page:
+1. Keep the document viewer as the main focus.
+2. Do not show a permanent right-side AI panel.
+3. Do not mount AI analysis components by default.
+4. Do not auto-run summary, risk, clause, action, or citation queries on page load.
+5. Keep the document viewer centered with more horizontal space.
+6. Keep existing document actions:
+   - Download
+   - Open
+   - Re-Index
+   - More menu
+7. Add a simple “Ask AI” button in the header.
+8. When clicked, open a lightweight slide-over drawer for single-document chat.
+9. The drawer should be user-initiated only.
+10. Closing the drawer should return the user to a clean viewer-only state.
+
+AI Chat:
+1. Keep /agents/hybrid as the cross-document AI Chat page.
+2. Make it clear that this is for asking across multiple documents.
+3. Do not overlap it confusingly with /ask, /brief, or /compare.
+4. Preserve grounded citations, verification trace, document selection, and GPT reasoning labels.
+
+Analyze Page:
+1. Create one consolidated analysis workspace.
+2. Let the user select 1–5 documents.
+3. Let the user choose an analysis mode.
+4. Show generated output with citations and verification trace.
+5. Avoid duplicating separate Brief and Compare experiences.
+
+Performance requirements:
+1. No AI calls should run automatically on document detail load.
+2. AI components should only mount after user action.
+3. Document viewer should load quickly.
+4. Avoid broad refactors.
+5. Preserve existing auth, document ownership, upload, preview, download, re-index, delete, citations, and chat functionality.
+
+Acceptance criteria:
+1. User logs in and lands on Documents.
+2. Sidebar feels simpler and more logical.
+3. Document detail opens as a clean viewer.
+4. AI is accessible but not visually dominant.
+5. Ask AI opens in-context without forcing the user away from the document.
+6. /ask is removed or redirected.
+7. /brief and /compare are replaced by /analyze.
+8. No existing working document functionality breaks.

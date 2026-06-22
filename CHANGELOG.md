@@ -2,6 +2,39 @@
 
 ---
 
+## [Signal87_NavRestructure_v8] — 2026-06-22  *(Nav simplification + /analyze page + Ask AI drawer; frontend-only)*
+
+### Summary
+Restructured the logged-in app navigation and merged two analysis pages into one. `/documents` is now the post-auth landing. Nav simplified to three items: Documents | AI Chat | Analyze. `/brief` and `/compare` are redirected to `/analyze`, a new merged workspace with five modes. The Document Detail "Ask AI" button now opens an in-page slide-over drawer instead of navigating away.
+
+### Changed
+
+- **`src/components/layout.tsx`** — Nav simplified to Documents | AI Chat | Analyze (BarChart2 icon). Home/Dashboard and Activity items removed from primary nav. Logo link updated to `/documents`.
+
+- **`src/App.tsx`** — Added `Redirect` component (wouter `useLocation` + `useEffect`). Routes updated:
+  - `/dashboard` → redirect to `/documents`
+  - `/ask` → redirect to `/documents`
+  - `/brief` → redirect to `/analyze`
+  - `/compare` → redirect to `/analyze`
+  - `/analyze` → new `AnalyzePage` component
+  - `/activity`, `/documents/:id/chat` and all other routes preserved.
+  - Removed unused imports: `Dashboard`, `ExecutiveBrief`, `MultiDocumentChat`.
+
+- **`src/pages/analyze.tsx`** *(new)* — Merged analysis workspace replacing `/brief` and `/compare`. Five mode tabs: Open Q&A (uses `usePostAgentHybrid`, `query` field, up to all docs if none selected) | Executive Brief | Risk Review | Contract Review | Comparison (last four use `useGenerateBrief`). Shared doc selector (1–5 docs, grid layout), input field (question or focus instruction), and result panels. Q&A result includes grounded answer, grouped citations with expandable excerpts, and a collapsible Verification Trace. Brief results reuse the full citation + trace display from executive-brief. URL `?preselect=` and `?ids=` deep-linking supported with eligibility reconciliation.
+
+- **`src/pages/document-detail.tsx`** — "Ask AI" button now opens a fixed slide-over drawer (420 px on desktop, full-width on mobile) instead of navigating to `/documents/:id/chat`. Drawer is ephemeral: conversation resets on close. Uses `usePostAgentHybrid` scoped to `documentIds: [id]`. Each turn shows a question bubble, markdown answer with inline `[N]` citation badges, a flat source list, and a `<details>` trace line. Drawer includes a bottom composer with Enter-to-send. The `/documents/:id/chat` route is still accessible directly.
+
+### Scope
+- Frontend-only. Zero backend, schema, auth, or API contract changes.
+- Existing brief/compare functionality preserved in the new `/analyze` page with all citations + Verification Trace intact.
+- `/activity` route remains accessible (just removed from primary nav).
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+- Fixed `HybridAgentCitation.excerpt` (not `.content`) and `HybridAgentInput.query` (not `.question`) per generated types.
+
+---
+
 ## [Signal87_DocumentDetail_ViewerOnly_v7] — 2026-06-22  *(Document detail page: viewer-only layout; AI panel removed; frontend-only)*
 
 ### Summary

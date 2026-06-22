@@ -7,13 +7,11 @@ import { useAuth, RedirectToSignIn } from "@clerk/react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 import Home from "@/pages/home";
-import Dashboard from "@/pages/dashboard";
 import DocumentsList from "@/pages/documents";
 import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
 import Activity from "@/pages/activity";
-import ExecutiveBrief from "@/pages/executive-brief";
-import MultiDocumentChat from "@/pages/multi-document-chat";
+import AnalyzePage from "@/pages/analyze";
 import HybridAgent from "@/pages/hybrid-agent";
 import About from "@/pages/about";
 import Privacy from "@/pages/privacy";
@@ -108,18 +106,31 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function Redirect({ to }: { to: string }) {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    navigate(to, { replace: true });
+  }, [navigate, to]);
+  return null;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/dashboard" component={Dashboard} />
+      {/* Redirects — old routes → new destinations */}
+      <Route path="/dashboard"><Redirect to="/documents" /></Route>
+      <Route path="/ask"><Redirect to="/documents" /></Route>
+      <Route path="/brief"><Redirect to="/analyze" /></Route>
+      <Route path="/compare"><Redirect to="/analyze" /></Route>
+      {/* Primary app routes */}
       <Route path="/documents" component={DocumentsList} />
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />
-      <Route path="/brief" component={ExecutiveBrief} />
-      <Route path="/compare" component={MultiDocumentChat} />
+      <Route path="/analyze" component={AnalyzePage} />
       <Route path="/agents/hybrid" component={HybridAgent} />
       <Route path="/activity" component={Activity} />
+      {/* Public pages */}
       <Route path="/about" component={About} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
@@ -127,6 +138,7 @@ function Router() {
       <Route path="/team" component={Team} />
       <Route path="/team/michael-benezra" component={MichaelBenezra} />
       <Route path="/team/michael-chavira" component={MichaelChavira} />
+      {/* Admin + settings */}
       <Route path="/admin" component={Admin} />
       <Route path="/settings" component={Settings} />
       <Route path="/sign-in">

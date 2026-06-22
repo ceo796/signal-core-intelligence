@@ -6,9 +6,13 @@ import {
   useGetDocument,
   useReindexDocument,
   useDeleteDocument,
+  usePostAgentHybrid,
   getDocumentOriginal,
   getGetDocumentQueryKey,
   getListDocumentsQueryKey,
+  type HybridAgentResult,
+  type HybridAgentCitation,
+  type HybridAgentTrace,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +39,7 @@ import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
 import { printDocument, canPrintDocument } from "@/lib/print-document";
+import { MarkdownAnswer } from "@/components/markdown-answer";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   ArrowLeft,
@@ -49,6 +54,11 @@ import {
   Printer,
   Highlighter,
   MessageSquare,
+  X,
+  Send,
+  Sparkles,
+  Terminal,
+  Quote,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -65,6 +75,80 @@ function formatBytes(bytes?: number | null): string {
   return `${value.toFixed(1)} ${units[i]}`;
 }
 
+// A single Q&A turn rendered inside the slide-over drawer.
+function DrawerChatTurn({
+  question,
+  result,
+}: {
+  question: string;
+  result: HybridAgentResult;
+}) {
+  return (
+    <div className="space-y-3">
+      {/* Question bubble */}
+      <div className="flex justify-end">
+        <div className="max-w-[85%] bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 text-[13px] leading-snug">
+          {question}
+        </div>
+      </div>
+
+      {/* Answer */}
+      <div className="space-y-2.5">
+        <div className="text-[13px] leading-relaxed text-foreground">
+          <MarkdownAnswer
+            content={result.answer}
+            citationPattern={/\[\s*sources?\s+(\d+)\s*\]/gi}
+            renderCitation={(n, key) => (
+              <span
+                key={key}
+                className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded bg-primary/15 text-primary text-[10px] font-semibold mx-0.5 align-text-top"
+              >
+                {n}
+              </span>
+            )}
+          />
+        </div>
+
+        {/* Compact source list */}
+        {result.citations.length > 0 && (
+          <div className="space-y-1.5 border-t border-border/30 pt-2">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
+              <Quote className="w-2.5 h-2.5" />
+              Sources
+            </div>
+            {result.citations.slice(0, 5).map((c) => (
+              <div key={c.citationNumber} className="flex gap-2 text-[11px]">
+                <span className="shrink-0 text-primary/70 font-medium">[{c.citationNumber}]</span>
+                <span className="text-muted-foreground line-clamp-2 leading-snug">{c.excerpt}</span>
+              </div>
+            ))}
+            {result.citations.length > 5 && (
+              <p className="text-[10px] text-muted-foreground/50 pl-5">
+                +{result.citations.length - 5} more
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Minimal trace */}
+        <details className="text-[10px] group">
+          <summary className="flex items-center gap-1 text-muted-foreground/50 cursor-pointer hover:text-muted-foreground transition-colors select-none list-none">
+            <Terminal className="w-2.5 h-2.5 shrink-0" />
+            <span>Trace</span>
+          </summary>
+          <p className="pt-1 text-muted-foreground/60 pl-3.5 leading-relaxed">
+            {result.trace.provider} · {result.trace.model} · {result.trace.chunksConsidered} chunks
+            {" "}· {result.trace.latencyMs.toFixed(0)}ms
+            {result.trace.fallbackUsed && (
+              <span className="ml-1 text-yellow-600">[fallback]</span>
+            )}
+          </p>
+        </details>
+      </div>
+    </div>
+  );
+}
+
 export default function DocumentDetail() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -77,6 +161,7 @@ export default function DocumentDetail() {
 
   const reindexMutation = useReindexDocument();
   const deleteMutation = useDeleteDocument();
+  const hybridMutation = usePostAgentHybrid();
 
   const isPdf = doc?.fileType?.toLowerCase() === "pdf";
   const isSpreadsheet = ["xlsx", "xls"].includes(doc?.fileType?.toLowerCase() ?? "");
@@ -90,6 +175,40 @@ export default function DocumentDetail() {
   const [printLoading, setPrintLoading] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
   const highlightRanges = useRef<Range[]>([]);
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMessages, setDrawerMessages] = useState<
+    Array<{ question: string; result: HybridAgentResult }>
+  >([]);
+  const [drawerInput, setDrawerInput] = useState("");
+  const drawerBottomRef = useRef<HTMLDivElement>(null);
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerMessages([]);
+    setDrawerInput("");
+    hybridMutation.reset();
+  };
+
+  const handleDrawerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = drawerInput.trim();
+    if (!q || hybridMutation.isPending) return;
+    setDrawerInput("");
+    hybridMutation.mutate(
+      { data: { query: q, mode: "auto", documentIds: [id] } },
+      {
+        onSuccess: (data) => {
+          setDrawerMessages((prev) => [...prev, { question: q, result: data }]);
+          setTimeout(() => {
+            drawerBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+          }, 50);
+        },
+        onError: () => toast.error("Could not get an answer. Try again."),
+      },
+    );
+  };
 
   useEffect(() => {
     if (!isPdf || !originalAvailable) {
@@ -233,11 +352,8 @@ export default function DocumentDetail() {
   }
 
   const status = getDocumentStatus(doc);
-  const isReady = status.isReady;
   const canPrint = canPrintDocument(doc);
   const uploadDate = new Date(doc.uploadedAt);
-
-  const hasPdfViewer = isPdf && originalAvailable;
 
   const renderSourcePanel = () => {
     if (isPdf) {
@@ -351,13 +467,15 @@ export default function DocumentDetail() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Primary: Ask */}
-              <Link href={`/documents/${doc.id}/chat`}>
-                <Button size="sm" className="text-xs gap-1.5 h-8">
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  Ask AI
-                </Button>
-              </Link>
+              {/* Primary: Ask AI — opens slide-over drawer */}
+              <Button
+                size="sm"
+                className="text-xs gap-1.5 h-8"
+                onClick={() => setDrawerOpen(true)}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Ask AI
+              </Button>
 
               {/* More menu */}
               <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
@@ -497,6 +615,97 @@ export default function DocumentDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Slide-over AI chat drawer ──────────────────────────────── */}
+
+      {/* Mobile backdrop */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/15 md:hidden"
+          onClick={closeDrawer}
+        />
+      )}
+
+      {/* Drawer panel */}
+      <div
+        className={`fixed inset-y-0 right-0 z-50 flex flex-col bg-background border-l border-border shadow-2xl transition-transform duration-300 ease-in-out w-full md:w-[420px] ${
+          drawerOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer header */}
+        <div className="shrink-0 flex items-center gap-2.5 px-4 py-3 border-b border-border bg-card">
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium leading-tight">Ask AI</p>
+            <p className="text-[11px] text-muted-foreground truncate" title={doc.fileName}>
+              {doc.fileName}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={closeDrawer}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+          >
+            <X className="w-4 h-4" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+          {drawerMessages.length === 0 && !hybridMutation.isPending && (
+            <div className="text-center py-12 text-muted-foreground">
+              <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">Ask a question about this document</p>
+              <p className="text-[11px] mt-1 opacity-60">
+                Answers are grounded in document context with citations.
+              </p>
+            </div>
+          )}
+
+          {drawerMessages.map((msg, i) => (
+            <DrawerChatTurn key={i} question={msg.question} result={msg.result} />
+          ))}
+
+          {hybridMutation.isPending && (
+            <div className="flex items-center gap-2 text-muted-foreground text-[11px] py-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+              Thinking…
+            </div>
+          )}
+
+          <div ref={drawerBottomRef} />
+        </div>
+
+        {/* Composer */}
+        <div className="shrink-0 border-t border-border p-3 bg-card">
+          <form onSubmit={handleDrawerSubmit} className="flex items-end gap-2">
+            <textarea
+              value={drawerInput}
+              onChange={(e) => setDrawerInput(e.target.value)}
+              placeholder="Ask about this document…"
+              disabled={hybridMutation.isPending}
+              rows={2}
+              className="flex-1 resize-none text-sm rounded-md border border-border bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-50 min-h-[52px] font-sans"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleDrawerSubmit(e as unknown as React.FormEvent);
+                }
+              }}
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!drawerInput.trim() || hybridMutation.isPending}
+              className="shrink-0 h-[52px] px-3"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span className="sr-only">Send</span>
+            </Button>
+          </form>
+        </div>
+      </div>
     </Layout>
   );
 }
