@@ -24,6 +24,7 @@ import MichaelBenezra from "@/pages/team-michael-benezra";
 import MichaelChavira from "@/pages/team-michael-chavira";
 import Admin from "@/pages/admin";
 import Settings from "@/pages/settings";
+import Trash from "@/pages/trash";
 import NotFound from "@/pages/not-found";
 import { SignIn, SignUp } from "@clerk/react";
 
@@ -134,6 +135,7 @@ function Router() {
       <Route path="/team/michael-chavira" component={MichaelChavira} />
       <Route path="/admin" component={Admin} />
       <Route path="/settings" component={Settings} />
+      <Route path="/trash" component={Trash} />
       <Route path="/sign-in">
         <SignInPage />
       </Route>

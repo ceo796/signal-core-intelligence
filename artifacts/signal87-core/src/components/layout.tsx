@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth, UserButton, useUser } from "@clerk/react";
-import { LayoutDashboard, FileText, Activity, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, FileText, Activity, Sparkles, Settings, Trash2 } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -17,6 +17,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/agents/hybrid", label: "AI Chat", icon: Sparkles },
     { href: "/activity", label: "Activity", icon: Activity },
+    { href: "/trash", label: "Trash", icon: Trash2 },
   ];
 
   const userName =
