@@ -10,7 +10,7 @@ export const openai = new OpenAI({
 
 export const PROVIDER_CONFIG = {
   provider: "openai",
-  model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+  model: "gpt-4o-mini",
   embeddingModel: "text-embedding-3-small",
   maxTokens: 2048,
 };

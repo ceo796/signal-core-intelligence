@@ -63,6 +63,7 @@ const modeLabel = (value: string) =>
 const SOURCE_LABELS = {
   document_context: "Document context",
   gpt_reasoning: "GPT reasoning",
+  web_context_placeholder_disabled: "Web context",
 } as const;
 
 const PILL_CLASS =
@@ -235,6 +236,16 @@ function Composer({
               </div>
             </PopoverContent>
           </Popover>
+
+          {/* Web placeholder — disabled, never calls external APIs */}
+          <span
+            className="inline-flex items-center gap-1.5 h-8 rounded-full border border-border/60 bg-muted/50 px-3 text-xs font-medium text-muted-foreground/60 cursor-not-allowed select-none"
+            title="Web context coming soon"
+            aria-disabled="true"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span>Web · Soon</span>
+          </span>
 
           <Button
             type="submit"
@@ -460,6 +471,11 @@ function ResultView({ result }: { result: HybridAgentResult }) {
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-primary/10 text-primary">
               <Sparkles className="w-3 h-3 shrink-0" />
               <span className="flex-1">{SOURCE_LABELS.gpt_reasoning}</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-muted text-muted-foreground/70">
+              <ShieldCheck className="w-3 h-3 shrink-0 opacity-50" />
+              <span className="flex-1">{SOURCE_LABELS.web_context_placeholder_disabled}</span>
+              <span className="text-[10px] opacity-60">Coming soon</span>
             </div>
           </PopoverContent>
         </Popover>
@@ -715,6 +731,14 @@ export default function HybridAgent() {
                   <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl">
                     <Sparkles className="w-6 h-6 text-primary" />
                   </div>
+                </div>
+                <div className="text-center space-y-2">
+                  <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                    Hybrid AI Chat
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Documents + GPT reasoning, no web research.
+                  </p>
                 </div>
                 <Composer {...composerProps} autoFocus />
               </div>

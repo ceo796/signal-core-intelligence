@@ -13,9 +13,9 @@ export function Layout({ children }: LayoutProps) {
   const { user } = useUser();
 
   const navItems = [
-    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/documents", label: "Documents", icon: FileText },
     { href: "/agents/hybrid", label: "AI Chat", icon: Sparkles },
+    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/activity", label: "Activity", icon: Activity },
   ];
 
