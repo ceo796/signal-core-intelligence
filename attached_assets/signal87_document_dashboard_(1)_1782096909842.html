@@ -1,0 +1,214 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html { font-family: var(--font-sans); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 600px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); }
+  .sidebar { background: var(--color-background-secondary); border-right: 0.5px solid var(--color-border-tertiary); padding: 20px 0; display: flex; flex-direction: column; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 20px 24px; }
+  .logo-mark { width: 28px; height: 28px; background: #4F3FF0; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark i { color: #fff; font-size: 14px; }
+  .logo-text { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .nav-section { padding: 0 12px; margin-bottom: 8px; }
+  .nav-label { font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px; margin-bottom: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: var(--border-radius-md); font-size: 13px; color: var(--color-text-secondary); cursor: pointer; margin-bottom: 2px; }
+  .nav-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+  .nav-item.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; }
+  .nav-item i { font-size: 16px; }
+  .nav-badge { margin-left: auto; background: #4F3FF0; color: #fff; font-size: 10px; border-radius: 10px; padding: 1px 6px; }
+  .sidebar-footer { margin-top: auto; padding: 16px 12px 0; border-top: 0.5px solid var(--color-border-tertiary); }
+  .avatar-row { display: flex; align-items: center; gap: 8px; padding: 8px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: #4F3FF0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; flex-shrink: 0; }
+  .avatar-info { flex: 1; min-width: 0; }
+  .avatar-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .avatar-role { font-size: 11px; color: var(--color-text-tertiary); }
+  .main { padding: 28px 28px 28px; overflow: hidden; }
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--color-text-tertiary); }
+  .search-wrap input { width: 100%; padding: 8px 12px 8px 34px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 13px; background: var(--color-background-secondary); color: var(--color-text-primary); font-family: var(--font-sans); }
+  .search-wrap input::placeholder { color: var(--color-text-tertiary); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-sans); white-space: nowrap; }
+  .btn-primary { background: #4F3FF0; color: #fff; border-color: #4F3FF0; }
+  .btn i { font-size: 15px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; }
+  .stat-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 6px; }
+  .stat-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .view-all { font-size: 12px; color: #4F3FF0; cursor: pointer; }
+  .ask-bar { display: flex; align-items: center; gap: 10px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 16px; margin-bottom: 28px; cursor: text; }
+  .ask-bar i { font-size: 18px; color: #4F3FF0; }
+  .ask-bar-text { font-size: 13px; color: var(--color-text-tertiary); flex: 1; }
+  .ask-bar-btn { width: 30px; height: 30px; border-radius: 50%; background: #4F3FF0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .ask-bar-btn i { color: #fff; font-size: 14px; }
+  .doc-table { width: 100%; border-collapse: collapse; }
+  .doc-table th { font-size: 11px; color: var(--color-text-tertiary); text-align: left; padding: 0 10px 8px; font-weight: 400; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .doc-table th:last-child { text-align: right; }
+  .doc-table td { padding: 10px; vertical-align: middle; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; color: var(--color-text-primary); }
+  .doc-table tr:last-child td { border-bottom: none; }
+  .doc-table tr:hover td { background: var(--color-background-secondary); }
+  .doc-name { display: flex; align-items: center; gap: 10px; }
+  .doc-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .doc-icon.pdf { background: #FAECE7; }
+  .doc-icon.pdf i { color: #993C1D; font-size: 15px; }
+  .doc-icon.txt { background: #E6F1FB; }
+  .doc-icon.txt i { color: #185FA5; font-size: 15px; }
+  .doc-title { font-size: 13px; color: var(--color-text-primary); font-weight: 500; }
+  .doc-subtitle { font-size: 11px; color: var(--color-text-tertiary); }
+  .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 100px; }
+  .pill.pdf { background: #FAECE7; color: #993C1D; }
+  .pill.txt { background: #E6F1FB; color: #185FA5; }
+  .doc-time { font-size: 12px; color: var(--color-text-tertiary); text-align: right; }
+  .action-row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+  .icon-btn { width: 28px; height: 28px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; border: none; background: transparent; cursor: pointer; color: var(--color-text-secondary); }
+  .icon-btn:hover { background: var(--color-background-secondary); }
+  .icon-btn i { font-size: 15px; }
+  .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+  .qa-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .qa-card:hover { background: var(--color-background-secondary); }
+  .qa-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .qa-label { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .qa-sub { font-size: 11px; color: var(--color-text-tertiary); }
+</style>
+
+<h2 class="sr-only">Signal87 AI document dashboard redesign</h2>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark"><i class="ti ti-bolt" aria-hidden="true"></i></div>
+      <span class="logo-text">Signal87</span>
+    </div>
+    <div class="nav-section">
+      <div class="nav-item active"><i class="ti ti-home" aria-hidden="true"></i>Home</div>
+      <div class="nav-item"><i class="ti ti-files" aria-hidden="true"></i>Documents<span class="nav-badge">12</span></div>
+      <div class="nav-item"><i class="ti ti-message-bolt" aria-hidden="true"></i>AI chat</div>
+      <div class="nav-item"><i class="ti ti-activity" aria-hidden="true"></i>Activity</div>
+    </div>
+    <div class="nav-section" style="margin-top: 16px;">
+      <div class="nav-label">Workspaces</div>
+      <div class="nav-item"><i class="ti ti-folder" aria-hidden="true"></i>Agentic AI R&D</div>
+      <div class="nav-item"><i class="ti ti-folder" aria-hidden="true"></i>Finance</div>
+      <div class="nav-item"><i class="ti ti-folder" aria-hidden="true"></i>Lending</div>
+      <div class="nav-item" style="color: var(--color-text-tertiary);"><i class="ti ti-plus" aria-hidden="true"></i>New workspace</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar-row">
+        <div class="avatar">MB</div>
+        <div class="avatar-info">
+          <div class="avatar-name">Michael Benezra</div>
+          <div class="avatar-role">Admin</div>
+        </div>
+        <button class="icon-btn" aria-label="Settings"><i class="ti ti-settings" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="text" placeholder="Search documents, insights..." />
+      </div>
+      <button class="btn"><i class="ti ti-upload" aria-hidden="true"></i>Upload</button>
+      <button class="btn btn-primary"><i class="ti ti-sparkles" aria-hidden="true"></i>Analyze</button>
+    </div>
+
+    <div class="ask-bar">
+      <i class="ti ti-sparkles" aria-hidden="true"></i>
+      <span class="ask-bar-text">Ask Signal about your documents…</span>
+      <div class="ask-bar-btn"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total documents</div>
+        <div class="stat-val">12</div>
+        <div class="stat-sub">3 added this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI analyses run</div>
+        <div class="stat-val">47</div>
+        <div class="stat-sub">Last run 3d ago</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Workspaces</div>
+        <div class="stat-val">3</div>
+        <div class="stat-sub">Agentic AI, Finance, Lending</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <div class="qa-card">
+        <div class="qa-icon" style="background:#EEEDFE;"><i class="ti ti-file-text" style="font-size:17px; color:#534AB7;" aria-hidden="true"></i></div>
+        <div>
+          <div class="qa-label">Summarize</div>
+          <div class="qa-sub">Any document, fast</div>
+        </div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-icon" style="background:#E1F5EE;"><i class="ti ti-git-compare" style="font-size:17px; color:#0F6E56;" aria-hidden="true"></i></div>
+        <div>
+          <div class="qa-label">Compare</div>
+          <div class="qa-sub">Side-by-side insights</div>
+        </div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-icon" style="background:#FAECE7;"><i class="ti ti-receipt" style="font-size:17px; color:#993C1D;" aria-hidden="true"></i></div>
+        <div>
+          <div class="qa-label">Extract data</div>
+          <div class="qa-sub">Tables, figures, terms</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Recent documents</span>
+      <span class="view-all">View all →</span>
+    </div>
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th style="width: 50%;">Name</th>
+          <th>Type</th>
+          <th>Updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="doc-name"><div class="doc-icon pdf"><i class="ti ti-file-type-pdf" aria-hidden="true"></i></div><div><div class="doc-title">Invoice 2 — Agentic AI R&D (2)</div><div class="doc-subtitle">Agentic AI R&D</div></div></div></td>
+          <td><span class="pill pdf">PDF</span></td>
+          <td><div class="doc-time">3d ago</div></td>
+          <td><div class="action-row"><button class="icon-btn" aria-label="Analyze"><i class="ti ti-sparkles"></i></button><button class="icon-btn" aria-label="Download"><i class="ti ti-download"></i></button></div></td>
+        </tr>
+        <tr>
+          <td><div class="doc-name"><div class="doc-icon pdf"><i class="ti ti-file-type-pdf" aria-hidden="true"></i></div><div><div class="doc-title">Invoice 1 — Agentic AI R&D (4)</div><div class="doc-subtitle">Agentic AI R&D</div></div></div></td>
+          <td><span class="pill pdf">PDF</span></td>
+          <td><div class="doc-time">3d ago</div></td>
+          <td><div class="action-row"><button class="icon-btn" aria-label="Analyze"><i class="ti ti-sparkles"></i></button><button class="icon-btn" aria-label="Download"><i class="ti ti-download"></i></button></div></td>
+        </tr>
+        <tr>
+          <td><div class="doc-name"><div class="doc-icon pdf"><i class="ti ti-file-type-pdf" aria-hidden="true"></i></div><div><div class="doc-title">Invoice 3 — Agentic AI R&D (1)</div><div class="doc-subtitle">Agentic AI R&D</div></div></div></td>
+          <td><span class="pill pdf">PDF</span></td>
+          <td><div class="doc-time">3d ago</div></td>
+          <td><div class="action-row"><button class="icon-btn" aria-label="Analyze"><i class="ti ti-sparkles"></i></button><button class="icon-btn" aria-label="Download"><i class="ti ti-download"></i></button></div></td>
+        </tr>
+        <tr>
+          <td><div class="doc-name"><div class="doc-icon txt"><i class="ti ti-file-text" aria-hidden="true"></i></div><div><div class="doc-title">auth-transport-check</div><div class="doc-subtitle">Uncategorized</div></div></div></td>
+          <td><span class="pill txt">TXT</span></td>
+          <td><div class="doc-time">3d ago</div></td>
+          <td><div class="action-row"><button class="icon-btn" aria-label="Analyze"><i class="ti ti-sparkles"></i></button><button class="icon-btn" aria-label="Download"><i class="ti ti-download"></i></button></div></td>
+        </tr>
+        <tr>
+          <td><div class="doc-name"><div class="doc-icon pdf"><i class="ti ti-file-type-pdf" aria-hidden="true"></i></div><div><div class="doc-title">Lending Parameters</div><div class="doc-subtitle">Lending</div></div></div></td>
+          <td><span class="pill pdf">PDF</span></td>
+          <td><div class="doc-time">6d ago</div></td>
+          <td><div class="action-row"><button class="icon-btn" aria-label="Analyze"><i class="ti ti-sparkles"></i></button><button class="icon-btn" aria-label="Download"><i class="ti ti-download"></i></button></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

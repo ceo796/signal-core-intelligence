@@ -1,0 +1,185 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 680px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); font-family: var(--font-sans); }
+.sidebar { background: var(--color-background-secondary); border-right: 0.5px solid var(--color-border-tertiary); padding: 20px 0; display: flex; flex-direction: column; }
+.logo { display: flex; align-items: center; gap: 8px; padding: 0 20px 24px; }
+.logo-mark { width: 28px; height: 28px; background: #4F3FF0; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.logo-mark i { color: #fff; font-size: 14px; }
+.logo-text { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.nav-section { padding: 0 12px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: var(--border-radius-md); font-size: 13px; color: var(--color-text-secondary); cursor: pointer; margin-bottom: 2px; }
+.nav-item.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; }
+.nav-item i { font-size: 16px; }
+.nav-badge { margin-left: auto; background: #4F3FF0; color: #fff; font-size: 10px; border-radius: 10px; padding: 1px 6px; }
+.sidebar-footer { margin-top: auto; padding: 16px 12px 0; border-top: 0.5px solid var(--color-border-tertiary); }
+.avatar-row { display: flex; align-items: center; gap: 8px; padding: 8px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: #4F3FF0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; flex-shrink: 0; }
+.avatar-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.avatar-role { font-size: 11px; color: var(--color-text-tertiary); }
+.icon-btn { width: 28px; height: 28px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; border: none; background: transparent; cursor: pointer; color: var(--color-text-secondary); }
+.icon-btn i { font-size: 15px; }
+.main { display: flex; flex-direction: column; overflow: hidden; }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.back-btn { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--color-text-secondary); cursor: pointer; border: none; background: none; font-family: var(--font-sans); padding: 0; }
+.back-btn i { font-size: 15px; }
+.doc-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 100px; background: #FAECE7; color: #993C1D; }
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: var(--border-radius-md); font-size: 12px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-sans); }
+.btn-primary { background: #4F3FF0; color: #fff; border-color: #4F3FF0; }
+.btn i { font-size: 14px; }
+.content { display: grid; grid-template-columns: 1fr 1fr; flex: 1; }
+.viewer { border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; }
+.viewer-page { flex: 1; background: var(--color-background-tertiary); margin: 16px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.page-line { height: 10px; background: var(--color-border-tertiary); border-radius: 3px; }
+.page-line.short { width: 60%; }
+.page-line.med { width: 80%; }
+.page-header-block { height: 14px; background: var(--color-border-secondary); border-radius: 3px; width: 45%; margin-bottom: 6px; }
+.viewer-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 16px; border-top: 0.5px solid var(--color-border-tertiary); }
+.page-info { font-size: 12px; color: var(--color-text-secondary); }
+.panel { display: flex; flex-direction: column; }
+.tabs { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); padding: 0 16px; }
+.tab { padding: 12px 10px; font-size: 12px; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; }
+.tab.active { color: #4F3FF0; border-bottom-color: #4F3FF0; font-weight: 500; }
+.tab-content { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.finding-card { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); }
+.finding-icon { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.finding-label { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.finding-val { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.ext-table { width: 100%; border-collapse: collapse; }
+.ext-table th { font-size: 11px; color: var(--color-text-tertiary); text-align: left; padding: 0 8px 6px; font-weight: 400; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.ext-table td { padding: 8px; font-size: 12px; color: var(--color-text-primary); border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; }
+.ext-table tr:last-child td { border-bottom: none; }
+.ask-wrap { display: flex; flex-direction: column; gap: 10px; }
+.ask-context { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+.ask-input-row { display: flex; gap: 8px; }
+.ask-input-row input { flex: 1; padding: 8px 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 12px; background: var(--color-background-secondary); color: var(--color-text-primary); font-family: var(--font-sans); }
+.send-btn { width: 30px; height: 30px; border-radius: 50%; background: #4F3FF0; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; flex-shrink: 0; }
+.send-btn i { color: #fff; font-size: 13px; }
+</style>
+
+<h2 class="sr-only">Signal87 document detail page mockup</h2>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark"><i class="ti ti-bolt" aria-hidden="true"></i></div>
+      <span class="logo-text">Signal87</span>
+    </div>
+    <div class="nav-section">
+      <div class="nav-item"><i class="ti ti-home" aria-hidden="true"></i>Home</div>
+      <div class="nav-item active"><i class="ti ti-files" aria-hidden="true"></i>Documents<span class="nav-badge">12</span></div>
+      <div class="nav-item"><i class="ti ti-message-bolt" aria-hidden="true"></i>AI chat</div>
+      <div class="nav-item"><i class="ti ti-activity" aria-hidden="true"></i>Activity</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar-row">
+        <div class="avatar">MB</div>
+        <div style="flex:1;min-width:0;">
+          <div class="avatar-name">Michael Benezra</div>
+          <div class="avatar-role">Admin</div>
+        </div>
+        <button class="icon-btn" aria-label="Settings"><i class="ti ti-settings" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="back-btn"><i class="ti ti-arrow-left" aria-hidden="true"></i>Documents</button>
+      <span style="color:var(--color-border-secondary); font-size:13px;">/</span>
+      <span class="doc-title">Invoice 2 — Agentic AI R&D</span>
+      <span class="pill"><i class="ti ti-file-type-pdf" aria-hidden="true"></i>PDF</span>
+      <button class="btn"><i class="ti ti-download" aria-hidden="true"></i>Download</button>
+      <button class="btn btn-primary"><i class="ti ti-sparkles" aria-hidden="true"></i>Analyze</button>
+    </div>
+
+    <div class="content">
+      <div class="viewer">
+        <div class="viewer-page">
+          <div class="page-header-block"></div>
+          <div class="page-line"></div>
+          <div class="page-line med"></div>
+          <div class="page-line short"></div>
+          <div class="page-line"></div>
+          <div style="height:16px;"></div>
+          <div class="page-line med"></div>
+          <div class="page-line"></div>
+          <div class="page-line short"></div>
+          <div class="page-line med"></div>
+          <div style="height:16px;"></div>
+          <div class="page-line short"></div>
+          <div class="page-line"></div>
+          <div class="page-line med"></div>
+          <div class="page-line short"></div>
+          <div class="page-line"></div>
+        </div>
+        <div class="viewer-controls">
+          <button class="icon-btn" aria-label="Previous page"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+          <span class="page-info">Page 1 of 3</span>
+          <button class="icon-btn" aria-label="Next page"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="tabs">
+          <div class="tab active">Summary</div>
+          <div class="tab">Extracted data</div>
+          <div class="tab">Ask</div>
+        </div>
+        <div class="tab-content">
+          <div class="finding-card">
+            <div class="finding-icon" style="background:#EEEDFE;"><i class="ti ti-receipt" style="font-size:15px;color:#534AB7;" aria-hidden="true"></i></div>
+            <div>
+              <div class="finding-label">Total billed</div>
+              <div class="finding-val">$15,750 — infrastructure and tooling services</div>
+            </div>
+          </div>
+          <div class="finding-card">
+            <div class="finding-icon" style="background:#E1F5EE;"><i class="ti ti-calendar" style="font-size:15px;color:#0F6E56;" aria-hidden="true"></i></div>
+            <div>
+              <div class="finding-label">Billing period</div>
+              <div class="finding-val">May 1 – May 31, 2026</div>
+            </div>
+          </div>
+          <div class="finding-card">
+            <div class="finding-icon" style="background:#FAEEDA;"><i class="ti ti-clock" style="font-size:15px;color:#854F0B;" aria-hidden="true"></i></div>
+            <div>
+              <div class="finding-label">Payment terms</div>
+              <div class="finding-val">Net 45 — differs from Invoice 1 and 3 (Net 30)</div>
+            </div>
+          </div>
+          <div class="finding-card">
+            <div class="finding-icon" style="background:#E6F1FB;"><i class="ti ti-file-description" style="font-size:15px;color:#185FA5;" aria-hidden="true"></i></div>
+            <div>
+              <div class="finding-label">SOW reference</div>
+              <div class="finding-val">SOW-2026-004, consistent with other invoices</div>
+            </div>
+          </div>
+
+          <div style="margin-top:4px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;">Extracted data</div>
+            <table class="ext-table">
+              <thead><tr><th>Field</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Invoice #</td><td>INV-2026-0042</td></tr>
+                <tr><td>Vendor</td><td>Signal87 AI, Inc.</td></tr>
+                <tr><td>Amount</td><td>$15,750.00</td></tr>
+                <tr><td>Due date</td><td>Jul 14, 2026</td></tr>
+                <tr><td>Tax (0%)</td><td>$0.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="ask-wrap" style="margin-top:4px;">
+            <div class="ask-context"><i class="ti ti-sparkles" style="font-size:13px;color:#4F3FF0;vertical-align:-2px;margin-right:4px;" aria-hidden="true"></i>Ask anything about this document</div>
+            <div class="ask-input-row">
+              <input type="text" placeholder="e.g. What services are itemized?" />
+              <button class="send-btn" aria-label="Send"><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
