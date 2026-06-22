@@ -71,6 +71,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { inferDocumentKind } from "@/lib/document-kind";
 
 type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "ready" | "processing" | "error";
@@ -837,11 +838,12 @@ export default function DocumentsList() {
                     <CardContent className="p-4 flex-1 flex flex-col">
                       <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col min-w-0">
                         <h3
-                          className="font-medium text-[13px] leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2"
+                          className="font-medium text-[13px] leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1"
                           title={doc.fileName}
                         >
                           {highlightMatch(doc.fileName, search)}
                         </h3>
+                        <p className="text-[11px] text-muted-foreground mb-2">{inferDocumentKind(doc.fileName, doc.fileType)}</p>
                         <DocumentStatusBadge doc={doc} />
                         <div className="mt-auto pt-3 flex justify-between text-[11px] font-mono text-muted-foreground">
                           <span>{doc.chunkCount} chunks</span>
@@ -949,6 +951,7 @@ export default function DocumentsList() {
                       </th>
                     );
                   })}
+                  <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left whitespace-nowrap">Kind</th>
                   <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
@@ -997,6 +1000,9 @@ export default function DocumentsList() {
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
                         {format(new Date(doc.uploadedAt), "MMM d, yyyy")}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
+                        {inferDocumentKind(doc.fileName, doc.fileType)}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center justify-end gap-1.5">

@@ -1,0 +1,91 @@
+```text
+Add a “Kind” classification column to the Recent Documents table and Documents page.
+
+Goal:
+Each document row should show both the file format and the document kind where available.
+
+Examples:
+- Invoice
+- Contract
+- Campaign Expenditure Report
+- Lending Parameters
+- Financial Statement
+- Memo
+- Presentation
+- Spreadsheet
+- Text Document
+- Unknown
+
+Important distinction:
+- File type = PDF, TXT, XLSX, DOCX
+- Document kind = what the document actually is
+
+Scope:
+Start with a safe frontend/backend-light implementation.
+
+Do not change:
+- Auth
+- Upload behavior
+- Extraction/indexing pipeline unless absolutely necessary
+- Chat behavior
+- Citations
+- AI provider/model configuration
+- Public landing page
+- Database schema unless explicitly approved
+
+Implementation approach:
+1. First inspect the current document metadata returned by the documents API.
+2. Determine whether there is already a document type/category/classification field.
+3. If a semantic document kind already exists, display it.
+4. If no semantic kind exists, add a lightweight helper that infers kind from:
+   - file name
+   - MIME/file extension
+   - available extracted text preview, if already available
+5. Do not run a new AI call on dashboard load.
+6. Do not create fake classifications.
+
+Suggested classification rules:
+- filename or text contains “invoice” → Invoice
+- contains “agreement,” “contract,” “NDA,” “services agreement” → Contract
+- contains “OCPF,” “expenditures,” “campaign expenditures” → Campaign Expenditure Report
+- contains “lending parameters” → Lending Parameters
+- XLSX files → Spreadsheet unless a better kind is detected
+- PPTX files → Presentation
+- TXT files → Text Document unless a better kind is detected
+- otherwise → Unknown
+
+UI changes:
+- In Recent Documents, use columns:
+  - Name
+  - Kind
+  - Format
+  - Uploaded
+- Remove “Type” if it only means file format, or rename it to “Format.”
+- Do not show chunks.
+- Keep thumbnails/previews on the left.
+- Keep layout compact.
+
+Documents page:
+- Add the same Kind/Format distinction there as well.
+- Allow future filtering by Kind if easy, but do not build a complex filtering system in this task.
+
+Verification:
+- Recent Documents still uses real documents.
+- Each row shows document kind where available.
+- File format still appears separately.
+- Unknown is shown when classification is not reliable.
+- No fake labels are invented.
+- No AI calls run on dashboard load.
+- No chunks are visible.
+- Upload still works.
+- Document detail still works.
+- AI Chat still works.
+- Landing page untouched.
+- No console errors.
+
+Report:
+- Whether a document kind field already existed.
+- Whether classification is rule-based or stored metadata.
+- Files changed.
+- Confirmation that the landing page was untouched.
+```

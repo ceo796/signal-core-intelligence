@@ -16,6 +16,7 @@ import {
   Sparkles,
   GitCompare,
 } from "lucide-react";
+import { inferDocumentKind } from "@/lib/document-kind";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -231,9 +232,10 @@ export default function Dashboard() {
               </div>
 
               {/* Column headers */}
-              <div className="grid grid-cols-[1fr_68px_104px] gap-2 px-5 py-2 border-b border-border">
+              <div className="grid grid-cols-[1fr_150px_60px_104px] gap-2 px-5 py-2 border-b border-border">
                 <span className="text-[11px] text-muted-foreground font-medium">Name</span>
-                <span className="text-[11px] text-muted-foreground font-medium">Type</span>
+                <span className="text-[11px] text-muted-foreground font-medium">Kind</span>
+                <span className="text-[11px] text-muted-foreground font-medium">Format</span>
                 <span className="text-[11px] text-muted-foreground font-medium text-right">Uploaded</span>
               </div>
 
@@ -261,7 +263,7 @@ export default function Dashboard() {
                     <Link
                       key={doc.id}
                       href={`/documents/${doc.id}`}
-                      className="grid grid-cols-[1fr_68px_104px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                      className="grid grid-cols-[1fr_150px_60px_104px] gap-2 items-center px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <DocumentThumbnail doc={doc} />
@@ -272,6 +274,7 @@ export default function Dashboard() {
                           {doc.fileName}
                         </span>
                       </div>
+                      <span className="text-xs text-muted-foreground truncate">{inferDocumentKind(doc.fileName, doc.fileType)}</span>
                       <span className="text-xs text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
                       <span className="text-xs text-muted-foreground text-right tabular-nums">
                         {formatUploadDate(doc.uploadedAt)}
