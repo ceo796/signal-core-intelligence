@@ -79,6 +79,7 @@ export function SpreadsheetViewer({
   const [showText, setShowText] = useState(false);
 
   useEffect(() => {
+    setShowText(false);
     if (!originalAvailable) {
       setSheets([]);
       setLoading(false);

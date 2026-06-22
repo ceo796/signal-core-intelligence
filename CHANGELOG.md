@@ -2,6 +2,37 @@
 
 ---
 
+## [Signal87_SpreadsheetGridViewer_v10] — 2026-06-22  *(Polished spreadsheet preview on Document Detail; frontend-only)*
+
+### Summary
+Replaced the raw indexing-text default preview for spreadsheets (XLSX/XLS/CSV) on the Document Detail page with a polished, read-only spreadsheet grid. The page now parses the stored original file client-side and renders workbook/sheet tabs and a paginated table, while keeping the raw extracted text available as an explicit secondary debug view. Spreadsheet extraction/indexing for AI is untouched.
+
+### Added
+
+- **`src/components/spreadsheet-viewer.tsx`** (new) — Client-side spreadsheet preview. Fetches the stored original via the existing owner-scoped `getDocumentOriginal(documentId)` blob transport and parses it with SheetJS (`XLSX.read(buf, { type: "array" })` → `sheet_to_json(ws, { header: 1, defval: "", raw: false, blankrows: false })`). Renders:
+  - A toolbar of info chips (sheets — only when >1, rows, cols, Indexed/Not indexed status, indexed chunk count) plus a "View extracted text" toggle.
+  - Sheet tabs when the workbook has more than one sheet; switching a sheet resets pagination.
+  - A paginated grid (`ROWS_PER_PAGE = 50`) with 1-based row numbers, sticky header row, and a column cap (`MAX_COLS = 60`) with a footer note when columns/rows are truncated.
+  - Honest fallbacks: loading spinner; **no original on file** → a summary card (parsed from the indexed `Workbook: … — N sheet(s): …` text) instead of a grid; parse failure → error state with Download Original; whole-workbook-empty → "no readable rows"; **per-sheet empty** → inline "This sheet is empty" message that keeps the sheet tabs usable.
+  - Secondary debug view: the raw extracted text (what the AI indexes) behind the explicit "View extracted text" toggle.
+
+### Changed
+
+- **`src/pages/document-detail.tsx`** — Imported `SpreadsheetViewer`. Extended `isSpreadsheet` to `["xlsx", "xls", "csv"]`. In `renderSourcePanel`, the spreadsheet branch now renders `<SpreadsheetViewer documentId fileType originalAvailable extractedText extractionStatus chunkCount onDownload />` instead of the raw extracted-text `<pre>`. Non-spreadsheet documents still use the existing extracted-text `<pre>` / "No preview available" paths. PDF viewer branch unchanged.
+
+- **`artifacts/signal87-core/package.json`** — Added `xlsx@^0.18.5` to `devDependencies` (same version the API server already uses for extraction; not in the workspace catalog).
+
+### Scope
+- Frontend-only. Zero backend, route, OpenAPI/codegen, DB schema, auth/ownership, storage, upload, extraction, chat, citation, or Verification Trace changes.
+- Spreadsheet extraction/indexing for AI is preserved exactly; the grid is a presentation layer over the same stored original used by Download Original.
+- Download / Open Original / Re-Index / Ask AI / More actions, the PDF viewer, and the non-spreadsheet preview paths are all unchanged.
+
+### Verification
+- `pnpm --filter @workspace/signal87-core run typecheck` — clean.
+- SheetJS parse pipeline verified against a real stored workbook from object storage (7 sheets parsed with correct names, row counts, header rows, and up to 19 columns) using the exact client parse options.
+
+---
+
 ## [Signal87_ExtractionFailureMessaging_v9] — 2026-06-22  *(Honest extraction-failure UX; frontend-only)*
 
 ### Summary

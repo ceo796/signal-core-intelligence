@@ -1,0 +1,100 @@
+Add a Trash page to the Signal87 side panel.
+
+Goal:
+Give users a safe recovery path for deleted documents instead of permanently deleting them immediately.
+
+Product principle:
+Deleting a document should move it to Trash first. Users should be able to restore it or permanently delete it later.
+
+Required changes:
+
+1. Add Trash to the side panel
+
+* Add a “Trash” item to the logged-in app sidebar.
+* Place it near the bottom, above Settings, or replace the existing Activity nav item if the sidebar needs to stay minimal.
+* Route: /trash
+
+Suggested sidebar:
+
+* Documents
+* AI Chat
+* Analyze
+* Trash
+* Settings
+
+2. Change document delete behavior
+
+* When a user deletes a document from Documents, Document Detail, or any document action menu, move it to Trash instead of permanently deleting it.
+* Use a soft-delete field such as:
+
+  * deleted_at
+  * deleted_by
+  * deletion_status
+* Do not remove the original stored file or chunks immediately.
+
+3. Exclude trashed documents from active product areas
+   Trashed documents should not appear in:
+
+* Documents page
+* AI Chat document selection
+* Analyze document selection
+* Recent documents
+* Search results
+* Duplicate detection comparisons
+
+4. Trash page behavior
+   The Trash page should show deleted documents in a simple table or card list with:
+
+* File name
+* File type
+* Original upload date
+* Deleted date
+* File size
+* Status before deletion
+
+Each row/card should have:
+
+* Restore
+* Permanently delete
+* Download original, if still available
+
+5. Restore behavior
+
+* Restore moves the document back into the active document library.
+* Restored documents should retain their existing extraction status, chunks, file metadata, and original file reference.
+* Do not re-index automatically on restore unless the user clicks Re-Index.
+
+6. Permanent delete behavior
+
+* Permanent delete should require confirmation.
+* Confirmation copy:
+  “This will permanently delete the document, stored file, extracted text, chunks, chat references, and related metadata. This action cannot be undone.”
+* After confirmation, delete the document record, stored original, chunks, and related metadata according to the existing deletion cascade.
+
+7. Empty Trash
+
+* Add an “Empty Trash” button.
+* Require confirmation before permanently deleting everything in Trash.
+* Keep this visually secondary and not too prominent.
+
+8. Data ownership and security
+
+* Trash must remain scoped to the authenticated user.
+* Users must only see, restore, or permanently delete their own trashed documents.
+* Preserve existing Clerk auth and document ownership protections.
+
+9. No AI behavior changes
+
+* Do not add AI calls.
+* Do not mount AI panels.
+* Do not include trashed documents in AI Chat or Analyze.
+
+10. Acceptance criteria
+
+* Deleted documents move to Trash instead of disappearing permanently.
+* Trash appears in the sidebar.
+* Users can restore deleted documents.
+* Users can permanently delete documents from Trash.
+* Trashed documents do not appear in active Documents, AI Chat, Analyze, or search.
+* Restore does not break preview, download, citations, ownership, or indexing.
+* Existing PDF, XLSX, upload, preview, download, re-index, and AI chat functionality remains intact.
