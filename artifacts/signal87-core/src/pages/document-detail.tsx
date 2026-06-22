@@ -1,23 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import {
   useGetDocument,
-  useGetChatHistory,
   useReindexDocument,
   useDeleteDocument,
   getDocumentOriginal,
   getGetDocumentQueryKey,
-  getGetChatHistoryQueryKey,
   getListDocumentsQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,17 +42,15 @@ import {
   Download,
   RefreshCw,
   Trash2,
-  Copy,
   AlertCircle,
   FileText,
   Loader2,
   ExternalLink,
   MoreHorizontal,
   Printer,
+  Highlighter,
 } from "lucide-react";
 import { toast } from "sonner";
-
-const ACCENT = "#1e3a5f";
 
 function formatBytes(bytes?: number | null): string {
   if (bytes == null) return "—";
@@ -72,36 +65,6 @@ function formatBytes(bytes?: number | null): string {
   return `${value.toFixed(1)} ${units[i]}`;
 }
 
-function MetaRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-4 py-2.5 border-b border-border/30 last:border-0">
-      <span className="text-xs text-muted-foreground w-36 shrink-0 pt-0.5">{label}</span>
-      <span className="text-xs text-foreground break-all flex-1">{value}</span>
-    </div>
-  );
-}
-
-function SysRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2 border-b border-border/40 last:border-0">
-      <span className="text-xs font-mono text-muted-foreground shrink-0">{label}</span>
-      <span className="text-xs font-mono text-right break-all text-foreground">{value}</span>
-    </div>
-  );
-}
-
 export default function DocumentDetail() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -110,13 +73,6 @@ export default function DocumentDetail() {
 
   const { data: doc, isLoading, error } = useGetDocument(id, {
     query: { enabled: Number.isFinite(id), queryKey: getGetDocumentQueryKey(id) },
-  });
-  const {
-    data: history,
-    isLoading: historyLoading,
-    error: historyError,
-  } = useGetChatHistory(id, {
-    query: { enabled: Number.isFinite(id), queryKey: getGetChatHistoryQueryKey(id) },
   });
 
   const reindexMutation = useReindexDocument();
@@ -132,6 +88,8 @@ export default function DocumentDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [printLoading, setPrintLoading] = useState(false);
+  const [highlightMode, setHighlightMode] = useState(false);
+  const highlightRanges = useRef<Range[]>([]);
 
   useEffect(() => {
     if (!isPdf || !originalAvailable) {
@@ -223,12 +181,25 @@ export default function DocumentDetail() {
     }
   };
 
-  const handleCopyText = () => {
-    if (!doc?.extractedText) return;
-    navigator.clipboard
-      .writeText(doc.extractedText)
-      .then(() => toast.success("Text copied"))
-      .catch(() => toast.error("Copy failed"));
+  const clearHighlights = () => {
+    highlightRanges.current = [];
+    if ("highlights" in CSS) {
+      (CSS as unknown as { highlights: Map<string, unknown> }).highlights.delete("user-highlight");
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!highlightMode) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0).cloneRange();
+    highlightRanges.current = [...highlightRanges.current, range];
+    if ("highlights" in CSS) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const h = new (window as any).Highlight(...highlightRanges.current);
+      (CSS as unknown as { highlights: Map<string, unknown> }).highlights.set("user-highlight", h);
+    }
+    sel.removeAllRanges();
   };
 
   if (isLoading) {
@@ -261,28 +232,8 @@ export default function DocumentDetail() {
     );
   }
 
-  const extractionOk = doc.extractionStatus?.toLowerCase() === "success";
   const status = getDocumentStatus(doc);
   const isReady = status.isReady;
-
-  // Activity: parse chat history into Q&A pairs
-  const messagePairs: { question: string; answer: string; at: string }[] = [];
-  if (history) {
-    let pending: { question: string; at: string } | null = null;
-    for (const msg of history) {
-      if (msg.role === "user") {
-        pending = { question: msg.content, at: msg.createdAt };
-      } else if (msg.role === "assistant" && pending) {
-        messagePairs.push({ question: pending.question, answer: msg.content, at: pending.at });
-        pending = null;
-      }
-    }
-  }
-
-  const summaryText =
-    doc.extractedTextPreview?.trim() ||
-    (doc.extractedText ? doc.extractedText.slice(0, 500).trim() : null);
-
   const canPrint = canPrintDocument(doc);
   const uploadDate = new Date(doc.uploadedAt);
 
@@ -291,11 +242,11 @@ export default function DocumentDetail() {
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
 
-          {/* ── Left column ─────────────────────────────────────────── */}
+          {/* ── Left column: PDF viewer ─────────────────────────────── */}
           <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
 
             {/* Header */}
-            <header className="shrink-0 border-b border-border bg-white px-4 md:px-6 pt-4 pb-3 space-y-3">
+            <header className="shrink-0 border-b border-border bg-card px-4 md:px-6 pt-4 pb-3 space-y-3">
 
               {/* Breadcrumb */}
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -313,13 +264,10 @@ export default function DocumentDetail() {
                 </span>
               </div>
 
-              {/* Title + meta row */}
+              {/* Title + meta */}
               <div className="flex items-start gap-3">
-                <div
-                  className="mt-0.5 p-2 rounded-md shrink-0"
-                  style={{ backgroundColor: `${ACCENT}12` }}
-                >
-                  <FileText className="w-5 h-5" style={{ color: ACCENT }} />
+                <div className="mt-0.5 p-2 rounded-md shrink-0 bg-primary/8">
+                  <FileText className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1
@@ -331,8 +279,7 @@ export default function DocumentDetail() {
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <Badge
                       variant="secondary"
-                      className="text-[11px] font-medium px-2 py-0 h-5"
-                      style={{ backgroundColor: `${ACCENT}12`, color: ACCENT, border: "none" }}
+                      className="text-[11px] font-medium px-2 py-0 h-5 bg-primary/10 text-primary border-none"
                     >
                       {doc.fileType.toUpperCase()}
                     </Badge>
@@ -355,26 +302,60 @@ export default function DocumentDetail() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs gap-1.5 border-border/60 h-8"
+                  className="text-xs gap-1.5 h-8"
                   disabled={!originalAvailable}
                   onClick={handleDownload}
                 >
                   <Download className="w-3 h-3" />
                   Download
                 </Button>
+
+                {canPrint && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1.5 h-8"
+                    disabled={printLoading}
+                    onClick={handlePrint}
+                  >
+                    {printLoading ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Printer className="w-3 h-3" />
+                    )}
+                    Print
+                  </Button>
+                )}
+
+                {isPdf && originalAvailable && (
+                  <Button
+                    variant={highlightMode ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs gap-1.5 h-8"
+                    onClick={() => {
+                      if (highlightMode) clearHighlights();
+                      setHighlightMode((v) => !v);
+                    }}
+                  >
+                    <Highlighter className="w-3 h-3" />
+                    {highlightMode ? "Highlighting On" : "Highlight"}
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs gap-1.5 border-border/60 h-8"
+                  className="text-xs gap-1.5 h-8"
                   disabled={!originalAvailable}
                   onClick={handleOpenInNewWindow}
                 >
                   <ExternalLink className="w-3 h-3" />
                   Open in New Window
                 </Button>
+
                 <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 px-2 border-border/60">
+                    <Button variant="outline" size="sm" className="h-8 px-2">
                       <MoreHorizontal className="w-4 h-4" />
                       <span className="sr-only">More actions</span>
                     </Button>
@@ -394,22 +375,6 @@ export default function DocumentDetail() {
                       )}
                       Re-Index
                     </DropdownMenuItem>
-                    {canPrint && (
-                      <DropdownMenuItem
-                        disabled={printLoading}
-                        onClick={() => {
-                          setMoreOpen(false);
-                          handlePrint();
-                        }}
-                      >
-                        {printLoading ? (
-                          <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                        ) : (
-                          <Printer className="w-3.5 h-3.5 mr-2" />
-                        )}
-                        Print
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
@@ -434,320 +399,69 @@ export default function DocumentDetail() {
               )}
             </header>
 
-            {/* Tabs */}
-            <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
-              <div className="border-b border-border bg-white shrink-0">
-                <div className="px-4 md:px-6 pt-2 overflow-x-auto">
-                  <TabsList className="text-xs font-medium h-9 bg-transparent p-0 gap-0 w-max">
-                    {(["overview", "preview", "text", "metadata", "activity"] as const).map(
-                      (v) => {
-                        const labels: Record<string, string> = {
-                          overview: "Overview",
-                          preview: "Preview",
-                          text: "Extracted Text",
-                          metadata: "Metadata",
-                          activity: "Activity",
-                        };
-                        return (
-                          <TabsTrigger
-                            key={v}
-                            value={v}
-                            className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                          >
-                            {labels[v]}
-                          </TabsTrigger>
-                        );
-                      },
-                    )}
-                  </TabsList>
-                </div>
-              </div>
-
-              {/* ── Overview ── */}
-              <TabsContent value="overview" className="flex-1 overflow-auto p-4 md:p-6 m-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
-                <div className="max-w-2xl space-y-6">
-
-                  {/* Document Summary */}
-                  <section>
-                    <h2 className="text-sm font-semibold text-foreground mb-3">Document Summary</h2>
-                    {summaryText ? (
-                      <Card className="bg-card border-border/50">
-                        <CardContent className="p-4">
-                          <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
-                            {summaryText}
-                            {doc.extractedText && doc.extractedText.length > 500 && (
-                              <span className="text-muted-foreground"> …</span>
-                            )}
-                          </p>
-                          {doc.extractedText && doc.extractedText.length > 500 && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Full text available in the Extracted Text tab.
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card className="bg-card border-border/50">
-                        <CardContent className="p-4">
-                          <p className="text-sm text-muted-foreground">
-                            {extractionOk
-                              ? "No preview available. Use the AI Analysis panel to generate a summary."
-                              : "Document has not been successfully extracted yet."}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </section>
-
-                  {/* Key Details */}
-                  <section>
-                    <h2 className="text-sm font-semibold text-foreground mb-3">Key Details</h2>
-                    <Card className="bg-card border-border/50">
-                      <CardContent className="p-4">
-                        <MetaRow label="File name" value={doc.fileName} />
-                        <MetaRow label="Type" value={doc.fileType.toUpperCase()} />
-                        <MetaRow label="Size" value={formatBytes(doc.fileSize)} />
-                        <MetaRow
-                          label="Uploaded"
-                          value={format(uploadDate, "MMMM d, yyyy 'at' HH:mm")}
-                        />
-                        <MetaRow
-                          label="Extraction status"
-                          value={
-                            <Badge
-                              variant={extractionOk ? "secondary" : "destructive"}
-                              className="text-[11px] px-1.5 h-5"
-                            >
-                              {doc.extractionStatus?.toUpperCase() || "UNKNOWN"}
-                            </Badge>
-                          }
-                        />
-                        <MetaRow
-                          label="Original stored"
-                          value={doc.originalFileAvailable ? "Yes" : "No"}
-                        />
-                        {doc.storageProvider && (
-                          <MetaRow label="Storage" value={doc.storageProvider} />
-                        )}
-                      </CardContent>
-                    </Card>
-                  </section>
-
-                  {/* Key Parties */}
-                  <section>
-                    <h2 className="text-sm font-semibold text-foreground mb-3">Key Parties</h2>
-                    <Card className="bg-card border-border/50">
-                      <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Party extraction is not available automatically.{" "}
-                          {isReady
-                            ? "Use the AI Analysis panel and ask the agent to identify the key parties."
-                            : "Index this document first, then use AI Analysis to identify key parties."}
+            {/* ── Viewer area ─────────────────────────────────────────── */}
+            <div
+              className={`flex-1 min-h-0 overflow-hidden flex flex-col${highlightMode ? " cursor-text" : ""}`}
+              onMouseUp={handleMouseUp}
+            >
+              {isPdf ? (
+                !originalAvailable ? (
+                  <div className="flex-1 flex items-center justify-center p-6">
+                    <div className="flex items-start gap-3 rounded-md border border-border/50 bg-card p-4 max-w-md">
+                      <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Original PDF not stored</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          This document was uploaded before durable file storage was enabled.
+                          Re-upload the PDF to enable the in-platform viewer.
                         </p>
-                      </CardContent>
-                    </Card>
-                  </section>
-
-                  {/* Related Documents */}
-                  <section>
-                    <h2 className="text-sm font-semibold text-foreground mb-3">
-                      Related Documents
-                    </h2>
-                    <Card className="bg-card border-border/50">
-                      <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          No related documents found.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </section>
-                </div>
-              </TabsContent>
-
-              {/* ── Preview ── */}
-              <TabsContent value="preview" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
-                {isPdf ? (
-                  !originalAvailable ? (
-                    <div className="flex-1 overflow-auto flex flex-col gap-4">
-                      <div className="flex items-start gap-3 rounded-md border border-border/50 bg-card p-4">
-                        <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-foreground">
-                            Original PDF not stored
-                          </p>
-                          <p className="text-xs text-muted-foreground leading-relaxed max-w-prose">
-                            This document was uploaded before durable file storage was enabled.
-                            Re-upload the PDF to enable the in-platform viewer.
-                            {doc.extractedText ? " Extracted text is available in the Extracted Text tab." : ""}
-                          </p>
-                        </div>
                       </div>
                     </div>
-                  ) : pdfLoading ? (
-                    <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Loading preview…
-                    </div>
-                  ) : pdfError || !pdfUrl ? (
-                    <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
-                      <AlertCircle className="w-8 h-8 text-destructive" />
-                      <p className="text-sm text-destructive">Failed to load preview</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs gap-2 border-border/50"
-                        onClick={handleDownload}
-                      >
-                        <Download className="w-3 h-3" />
-                        Download Original
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex-1 min-h-0">
-                      <PdfViewer fileUrl={pdfUrl} onDownload={handleDownload} />
-                    </div>
-                  )
-                ) : doc.extractedText ? (
-                  <Card className="bg-card border-border/50 flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
-                    <CardContent className="p-5">
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {isSpreadsheet
-                          ? "Spreadsheet contents (sheet-by-sheet readable view)"
-                          : "Extracted text (original format not embeddable)"}
-                      </p>
-                      <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
-                        {doc.extractedText}
-                      </pre>
-                    </CardContent>
-                  </Card>
+                  </div>
+                ) : pdfLoading ? (
+                  <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+                  </div>
+                ) : pdfError || !pdfUrl ? (
+                  <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+                    <AlertCircle className="w-8 h-8 text-destructive" />
+                    <p className="text-sm text-destructive">Failed to load preview</p>
+                    <Button variant="outline" size="sm" className="text-xs gap-2" onClick={handleDownload}>
+                      <Download className="w-3 h-3" />
+                      Download Original
+                    </Button>
+                  </div>
                 ) : (
-                  <div className="text-center text-sm text-muted-foreground p-8">
-                    No preview available
+                  <div className="flex-1 min-h-0">
+                    <PdfViewer fileUrl={pdfUrl} onDownload={handleDownload} />
                   </div>
-                )}
-              </TabsContent>
-
-              {/* ── Extracted Text ── */}
-              <TabsContent value="text" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
-                <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                    <Badge
-                      variant={extractionOk ? "secondary" : "destructive"}
-                      className="text-[11px]"
-                    >
-                      {doc.extractionStatus?.toUpperCase() || "UNKNOWN"}
-                    </Badge>
-                    <span>Indexed {format(uploadDate, "yyyy-MM-dd HH:mm")}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs gap-2 border-border/50 h-8"
-                    disabled={!doc.extractedText}
-                    onClick={handleCopyText}
-                  >
-                    <Copy className="w-3 h-3" />
-                    Copy Text
-                  </Button>
-                </div>
-                {doc.extractedText ? (
-                  <ScrollArea className="flex-1 rounded border border-border/50 bg-card">
-                    <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90 p-5">
+                )
+              ) : doc.extractedText ? (
+                <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+                  <div className="max-w-3xl mx-auto px-6 py-6">
+                    <p className="text-xs text-muted-foreground mb-4">
+                      {isSpreadsheet
+                        ? "Spreadsheet contents (sheet-by-sheet readable view)"
+                        : "Extracted text"}
+                    </p>
+                    <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
                       {doc.extractedText}
                     </pre>
-                  </ScrollArea>
-                ) : (
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
                   <div className="text-center text-sm text-muted-foreground p-8">
-                    No extracted text available
-                    {doc.extractionError ? (
-                      <p className="text-destructive mt-2 text-xs">{doc.extractionError}</p>
-                    ) : null}
+                    <FileText className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                    <p>No preview available</p>
                   </div>
-                )}
-              </TabsContent>
-
-              {/* ── Metadata ── */}
-              <TabsContent value="metadata" className="flex-1 overflow-auto p-4 md:p-6 m-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
-                <Card className="bg-card border-border/50 max-w-xl">
-                  <CardContent className="p-5">
-                    <p className="text-xs text-muted-foreground mb-4">Document metadata</p>
-                    <SysRow label="DOCUMENT_ID" value={doc.id} />
-                    <SysRow label="FILE_TYPE" value={doc.fileType.toUpperCase()} />
-                    <SysRow label="FILE_SIZE" value={formatBytes(doc.fileSize)} />
-                    <SysRow label="UPLOADED_AT" value={format(uploadDate, "yyyy-MM-dd HH:mm:ss")} />
-                    <SysRow
-                      label="EXTRACTION_STATUS"
-                      value={doc.extractionStatus?.toUpperCase() || "UNKNOWN"}
-                    />
-                    {doc.extractionError && (
-                      <SysRow label="EXTRACTION_ERROR" value={doc.extractionError} />
-                    )}
-                    <SysRow
-                      label="ORIGINAL_STORED"
-                      value={doc.originalFileAvailable ? "YES" : "NO"}
-                    />
-                    {doc.storageProvider && (
-                      <SysRow label="STORAGE_PROVIDER" value={doc.storageProvider} />
-                    )}
-                    {doc.storageKey && (
-                      <SysRow label="STORAGE_KEY" value={doc.storageKey} />
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* ── Activity ── */}
-              <TabsContent value="activity" className="flex-1 overflow-hidden p-4 md:p-6 m-0 flex flex-col">
-                <p className="text-xs text-muted-foreground mb-4">
-                  Prior chat sessions on this document
-                </p>
-                {historyLoading ? (
-                  <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-20 w-full" />
-                    ))}
-                  </div>
-                ) : historyError ? (
-                  <div className="text-center text-sm text-destructive p-8">
-                    Could not load activity
-                  </div>
-                ) : messagePairs.length > 0 ? (
-                  <ScrollArea className="flex-1">
-                    <div className="space-y-3 pr-3">
-                      {messagePairs.map((pair, i) => (
-                        <Card key={i} className="bg-card border-border/50">
-                          <CardContent className="p-4 space-y-2">
-                            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                              <span className="font-medium text-foreground/70">Q</span>
-                              <span>{format(new Date(pair.at), "yyyy-MM-dd HH:mm")}</span>
-                            </div>
-                            <p className="text-sm font-medium text-foreground break-words">
-                              {pair.question}
-                            </p>
-                            <p className="text-sm text-foreground/80 break-words line-clamp-4">
-                              {pair.answer}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="text-center text-sm text-muted-foreground p-8">
-                    No chat activity yet.{" "}
-                    <Link href={`/documents/${doc.id}/chat`}>
-                      <span className="underline underline-offset-2 cursor-pointer hover:text-foreground transition-colors">
-                        Start a conversation
-                      </span>
-                    </Link>
-                    .
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* ── Right column: AI Analysis Panel ────────────────────── */}
-          <aside className="shrink-0 flex flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-white w-full lg:w-[38%] lg:min-w-[340px] lg:max-w-[480px] h-[60vh] lg:h-auto">
+          {/* ── Right column: AI Analysis Panel ─────────────────────── */}
+          <aside className="shrink-0 flex flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-card w-full lg:w-[38%] lg:min-w-[340px] lg:max-w-[480px] h-[60vh] lg:h-auto">
             <DocumentIntelligencePanel
               documentId={doc.id}
               documentName={doc.fileName}

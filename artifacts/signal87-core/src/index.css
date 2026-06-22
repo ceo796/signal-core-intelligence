@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* CSS Custom Highlight API — text highlighting in PDF viewer */
+::highlight(user-highlight) {
+  background-color: #FFE066;
+  color: #000;
+}
+
 /* Mobile native feel */
 html {
   -webkit-tap-highlight-color: transparent;
