@@ -41,7 +41,7 @@ const FT_STYLE: Record<string, { bg: string; fg: string }> = {
 };
 
 function fileTypeStyle(ft: string): { bg: string; fg: string } {
-  return FT_STYLE[ft.toLowerCase()] ?? { bg: "#EEEDFE", fg: "#534AB7" };
+  return FT_STYLE[ft.toLowerCase()] ?? { bg: "#F4F2FF", fg: "#4F3FF0" };
 }
 
 function FileTypeIcon({ fileType }: { fileType: string }) {

@@ -116,7 +116,7 @@ function CitationChip({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/5 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/40 transition-colors"
       >
         <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary text-[10px] font-semibold shrink-0">
           {citation.chunkIndex + 1}
@@ -466,7 +466,7 @@ export default function DocumentChat() {
                       className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center ${
                         isUser
                           ? "bg-primary text-primary-foreground"
-                          : "bg-[#EEEDFE] text-[#534AB7]"
+                          : "bg-primary/10 text-primary"
                       }`}
                     >
                       {isUser ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -500,7 +500,7 @@ export default function DocumentChat() {
 
             {chatMutation.isPending && (
               <div className="flex gap-4">
-                <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center bg-[#EEEDFE] text-[#534AB7]">
+                <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center bg-primary/10 text-primary">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1">

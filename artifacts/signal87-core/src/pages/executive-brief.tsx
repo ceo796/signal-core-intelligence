@@ -121,7 +121,7 @@ function CitationChip({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/5 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/40 transition-colors"
       >
         <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-primary/15 text-primary text-[10px] font-semibold shrink-0">
           {citation.citationNumber}
@@ -532,7 +532,7 @@ export default function ExecutiveBrief() {
                             ? "border-primary/50 bg-primary/5"
                             : atMax
                             ? "border-border/40 opacity-40 cursor-not-allowed"
-                            : "border-border/50 hover:border-primary/40 hover:bg-black/5 cursor-pointer"
+                            : "border-border/50 hover:border-primary/40 hover:bg-muted/40 cursor-pointer"
                         }`}
                       >
                         <Checkbox checked={isChecked} className="pointer-events-none" />
@@ -574,7 +574,7 @@ export default function ExecutiveBrief() {
                         className={`text-left p-3 rounded-md border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                           active
                             ? "border-primary/50 bg-primary/5"
-                            : "border-border/50 hover:border-primary/40 hover:bg-black/5"
+                            : "border-border/50 hover:border-primary/40 hover:bg-muted/40"
                         }`}
                       >
                         <div className="text-sm font-medium flex items-center gap-1.5">
@@ -611,7 +611,7 @@ export default function ExecutiveBrief() {
               </div>
 
               {comparisonBlocked && (
-                <div className="flex items-start gap-2 p-3 rounded-md border border-yellow-500/40 bg-yellow-500/5 text-yellow-300/90">
+                <div className="flex items-start gap-2 p-3 rounded-md border border-yellow-500/40 bg-yellow-500/5 text-yellow-700">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <p className="text-xs">{COMPARISON_MIN_DOCS_MESSAGE}</p>
                 </div>

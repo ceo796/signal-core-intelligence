@@ -32,7 +32,7 @@ import {
   BookOpen,
 } from "lucide-react";
 
-const ACCENT = "#1e3a5f";
+const ACCENT = "#4F3FF0";
 
 interface TabConfig {
   id: string;
@@ -96,7 +96,7 @@ function CitationItem({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-border/50 rounded-md bg-card overflow-hidden">
+    <div className="border border-border rounded-md bg-card overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -296,12 +296,9 @@ export function DocumentIntelligencePanel({
   });
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Panel header */}
-      <div
-        className="px-4 py-3 border-b border-border shrink-0"
-        style={{ backgroundColor: "#f8fafc" }}
-      >
+      <div className="px-4 py-3 border-b border-border bg-card/60 shrink-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div
@@ -319,9 +316,9 @@ export function DocumentIntelligencePanel({
           </div>
           <Link href={`/documents/${documentId}/chat`}>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="text-xs gap-1.5 h-7 shrink-0 border-border/60"
+              className="text-xs gap-1.5 h-7 shrink-0 text-muted-foreground hover:text-foreground"
             >
               <MessageSquare className="w-3 h-3" />
               Ask

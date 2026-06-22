@@ -2,6 +2,37 @@
 
 ---
 
+## [Signal87_Light_Theme_Reskin_v6] — 2026-06-22  *(Notion/Dropbox-style light UI for logged-in app; frontend-only)*
+
+### Summary
+Replaced the dark theme of the authenticated app with a light Notion/Dropbox-style palette, primary accent #4F3FF0 (indigo). The public landing page (`/`) remains byte-for-byte untouched (dark Retool-style). No backend changes.
+
+### Changed
+- **`src/index.css`** — Added scoped `.signal-app` CSS token block (light background, #4F3FF0 primary, 0.5rem radius). Notion/Dropbox-style surfaces with restrained indigo accent. The existing `:root`/`.dark` and `.s87-landing` blocks are untouched; landing is self-scoped and unaffected.
+- **`src/components/layout.tsx`** — Root container class swapped from `dark` to `signal-app`; sidebar reskinned to light (sidebar tokens, real Clerk user in footer, mobile bottom nav unchanged).
+- **Portal UI components** — `dropdown-menu.tsx`, `popover.tsx`, `dialog.tsx`, `alert-dialog.tsx`, `select.tsx`, `toast.tsx` — all portaled content carries `signal-app` class so tokens inherit correctly.
+- **`src/pages/dashboard.tsx`** — Light theme, real data, file-type default badge now uses Signal87 purple (`#F4F2FF` bg + `#4F3FF0` fg). Honest empty state preserved.
+- **`src/pages/documents.tsx`** — Light theme, real data, search/filter toolbar, view toggle, file-type chips. No hardcoded dark colors.
+- **`src/pages/document-detail.tsx`** — Restructured to AI-primary left panel + PDF-secondary right panel with cleaner top bar and mobile toggle. Citations, tabs, hybrid panel, Verification Trace all intact.
+- **`src/pages/hybrid-agent.tsx`** — Message bubble colors (`bg-primary/10`, `text-primary`), composer, source pills, Verification Trace — all token-based. No hardcoded dark colors.
+- **`src/pages/document-chat.tsx`** — Token-based colors (primary accent, muted surfaces), `text-green-600`/`text-amber-600` for status indicators (light-readable).
+- **`src/pages/multi-document-chat.tsx`** — Same token-based color fixes.
+- **`src/pages/executive-brief.tsx`** — `text-yellow-700` for light-theme readability, token-based surfaces.
+- **`src/components/ui/sonner.tsx`** — Removed `next-themes` dependency; hardcoded `theme="light"`. `App.tsx` imports Toaster from `ui/sonner`.
+- **`src/components/document-intelligence-panel.tsx`** — Token-based colors, uses the same hybrid agent endpoint.
+
+### Scope
+- Frontend-only. Zero backend changes. Zero schema changes. No new AI provider.
+- Auth, upload, download, delete, re-index, citations, verification trace all unchanged.
+- Landing page (`/`) untouched. Sign-in / sign-up untouched.
+- All data real; no fake stat cards, no fake conversations, no mock data.
+
+### Verification
+- `pnpm run typecheck` — clean across all packages.
+- Landing page (`/`) verified dark and unchanged; logged-in routes (`/dashboard`, `/documents`, `/agents/hybrid`, etc.) render light theme.
+
+---
+
 ## [Signal87_MobileUX_v5] — 2026-06-21  *(Native-feel mobile UX: safe-area, dvh, tap feedback, scroll padding; frontend/CSS only)*
 
 ### Summary

@@ -49,6 +49,10 @@ import {
   MoreHorizontal,
   Printer,
   Highlighter,
+  MessageSquare,
+  Eye,
+  EyeOff,
+  FileSearch,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -89,6 +93,7 @@ export default function DocumentDetail() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [printLoading, setPrintLoading] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
+  const [showPdf, setShowPdf] = useState(false);
   const highlightRanges = useRef<Range[]>([]);
 
   useEffect(() => {
@@ -162,7 +167,6 @@ export default function DocumentDetail() {
       const blob = await getDocumentOriginal(id);
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener");
-      // Release the blob after a short delay so the new tab can load it.
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
     } catch {
       toast.error("Could not open file in new window");
@@ -197,7 +201,6 @@ export default function DocumentDetail() {
     const range = sel.getRangeAt(0).cloneRange();
     highlightRanges.current = [...highlightRanges.current, range];
     if ("highlights" in CSS) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const h = new (window as any).Highlight(...highlightRanges.current);
       (CSS as unknown as { highlights: Map<string, unknown> }).highlights.set("user-highlight", h);
     }
@@ -239,216 +242,295 @@ export default function DocumentDetail() {
   const canPrint = canPrintDocument(doc);
   const uploadDate = new Date(doc.uploadedAt);
 
+  const hasPdfViewer = isPdf && originalAvailable;
+  const hasSource = hasPdfViewer || doc.extractedText;
+
+  const renderSourcePanel = () => {
+    if (isPdf) {
+      if (!originalAvailable) {
+        return (
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="flex items-start gap-3 rounded-lg border border-border/50 bg-card p-4 max-w-md">
+              <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Original PDF not stored</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  This document was uploaded before durable file storage was enabled.
+                  Re-upload the PDF to enable the in-platform viewer.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      if (pdfLoading) {
+        return (
+          <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+          </div>
+        );
+      }
+      if (pdfError || !pdfUrl) {
+        return (
+          <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+            <AlertCircle className="w-8 h-8 text-destructive" />
+            <p className="text-sm text-destructive">Failed to load preview</p>
+            <Button variant="outline" size="sm" className="text-xs gap-2" onClick={handleDownload}>
+              <Download className="w-3 h-3" />
+              Download Original
+            </Button>
+          </div>
+        );
+      }
+      return (
+        <div className="flex-1 min-h-0">
+          <PdfViewer fileUrl={pdfUrl} onDownload={handleDownload} />
+        </div>
+      );
+    }
+    if (doc.extractedText) {
+      return (
+        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="max-w-3xl mx-auto px-6 py-6">
+            <p className="text-xs text-muted-foreground mb-4">
+              {isSpreadsheet
+                ? "Spreadsheet contents (sheet-by-sheet readable view)"
+                : "Extracted text"}
+            </p>
+            <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
+              {doc.extractedText}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center text-sm text-muted-foreground p-8">
+          <FileText className="w-8 h-8 mx-auto mb-3 opacity-30" />
+          <p>No preview available</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
 
-          {/* ── Left column: PDF viewer ─────────────────────────────── */}
-          <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
+        {/* ── Top bar: document info + actions ───────────────────────── */}
+        <header className="shrink-0 border-b border-border bg-card/60 px-4 md:px-6 py-2.5">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Breadcrumb back */}
+            <Link href="/documents">
+              <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Documents
+              </button>
+            </Link>
 
-            {/* Header */}
-            <header className="shrink-0 border-b border-border bg-card px-4 md:px-6 py-3">
-              {/* Top bar: breadcrumb + title + actions in a single compact row */}
-              <div className="flex items-center gap-2">
-                <Link href="/documents">
-                  <button className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors">
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Documents
-                  </button>
-                </Link>
-                <span className="text-muted-foreground text-[12px]">/</span>
-                <h1
-                  className="text-[14px] font-medium text-foreground truncate max-w-[300px]"
-                  title={doc.fileName}
+            {/* Divider */}
+            <span className="text-muted-foreground/50 text-[12px] shrink-0">/</span>
+
+            {/* Title */}
+            <h1
+              className="text-[14px] font-medium text-foreground truncate max-w-[200px] md:max-w-[320px]"
+              title={doc.fileName}
+            >
+              {doc.fileName}
+            </h1>
+
+            {/* File type pill */}
+            <span
+              className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+              style={{ backgroundColor: "#FAECE7", color: "#993C1D" }}
+            >
+              <FileText className="w-3 h-3" />
+              {doc.fileType.toUpperCase()}
+            </span>
+
+            {/* Status badge */}
+            <DocumentStatusBadge doc={doc} />
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Primary: Ask */}
+              <Link href={`/documents/${doc.id}/chat`}>
+                <Button size="sm" className="text-xs gap-1.5 h-8">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Ask
+                </Button>
+              </Link>
+
+              {/* View Source toggle (mobile only) */}
+              {hasSource && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 h-8 lg:hidden"
+                  onClick={() => setShowPdf((v) => !v)}
                 >
-                  {doc.fileName}
-                </h1>
-                <span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
-                  style={{ backgroundColor: "#FAECE7", color: "#993C1D" }}
-                >
-                  <FileText className="w-3 h-3" />
-                  {doc.fileType.toUpperCase()}
-                </span>
-                <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-[12px] gap-1 h-7 px-2.5"
+                  {showPdf ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5" />
+                      Hide Source
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5" />
+                      View Source
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {/* More menu */}
+              <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-2">
+                    <MoreHorizontal className="w-4 h-4" />
+                    <span className="sr-only">More</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
                     disabled={!originalAvailable}
-                    onClick={handleDownload}
+                    onClick={() => {
+                      setMoreOpen(false);
+                      handleDownload();
+                    }}
                   >
-                    <Download className="w-3 h-3" />
+                    <Download className="w-3.5 h-3.5 mr-2" />
                     Download
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-[12px] gap-1 h-7 px-2.5"
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     disabled={!originalAvailable}
-                    onClick={handleOpenInNewWindow}
+                    onClick={() => {
+                      setMoreOpen(false);
+                      handleOpenInNewWindow();
+                    }}
                   >
-                    <ExternalLink className="w-3 h-3" />
-                    Open
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2"
+                    <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                    Open Original
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!originalAvailable || reindexMutation.isPending}
                     onClick={() => {
                       setMoreOpen(false);
                       handleReindex();
                     }}
-                    disabled={!originalAvailable || reindexMutation.isPending}
                   >
                     {reindexMutation.isPending ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
                     ) : (
-                      <RefreshCw className="w-3 h-3" />
+                      <RefreshCw className="w-3.5 h-3.5 mr-2" />
                     )}
                     Re-Index
-                  </Button>
-                  <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 px-2">
-                        <MoreHorizontal className="w-4 h-4" />
-                        <span className="sr-only">More</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      {canPrint && (
-                        <DropdownMenuItem
-                          disabled={printLoading}
-                          onClick={() => {
-                            setMoreOpen(false);
-                            handlePrint();
-                          }}
-                        >
-                          <Printer className="w-3.5 h-3.5 mr-2" />
-                          Print
-                        </DropdownMenuItem>
-                      )}
-                      {isPdf && originalAvailable && (
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setMoreOpen(false);
-                            if (highlightMode) clearHighlights();
-                            setHighlightMode((v) => !v);
-                          }}
-                        >
-                          <Highlighter className="w-3.5 h-3.5 mr-2" />
-                          {highlightMode ? "Stop Highlighting" : "Highlight"}
-                        </DropdownMenuItem>
-                      )}
+                  </DropdownMenuItem>
+                  {canPrint && (
+                    <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                        disabled={printLoading}
                         onClick={() => {
                           setMoreOpen(false);
-                          setDeleteOpen(true);
+                          handlePrint();
                         }}
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Delete
+                        <Printer className="w-3.5 h-3.5 mr-2" />
+                        Print
                       </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-
-              {/* Meta row */}
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <DocumentStatusBadge doc={doc} />
-                {doc.fileSize != null && (
-                  <span className="text-[11px] text-muted-foreground">{formatBytes(doc.fileSize)}</span>
-                )}
-                <span
-                  className="text-[11px] text-muted-foreground"
-                  title={format(uploadDate, "yyyy-MM-dd HH:mm")}
-                >
-                  Uploaded {formatDistanceToNow(uploadDate, { addSuffix: true })}
-                </span>
-              </div>
-
-              {/* Status alert */}
-              {!status.isReady && (
-                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 mt-2">
-                  <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-foreground/80 leading-relaxed">{status.description}</p>
-                </div>
-              )}
-            </header>
-
-            {/* ── Viewer area ─────────────────────────────────────────── */}
-            <div
-              className={`flex-1 min-h-0 overflow-hidden flex flex-col${highlightMode ? " cursor-text" : ""}`}
-              onMouseUp={handleMouseUp}
-            >
-              {isPdf ? (
-                !originalAvailable ? (
-                  <div className="flex-1 flex items-center justify-center p-6">
-                    <div className="flex items-start gap-3 rounded-md border border-border/50 bg-card p-4 max-w-md">
-                      <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Original PDF not stored</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          This document was uploaded before durable file storage was enabled.
-                          Re-upload the PDF to enable the in-platform viewer.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : pdfLoading ? (
-                  <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-                  </div>
-                ) : pdfError || !pdfUrl ? (
-                  <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
-                    <AlertCircle className="w-8 h-8 text-destructive" />
-                    <p className="text-sm text-destructive">Failed to load preview</p>
-                    <Button variant="outline" size="sm" className="text-xs gap-2" onClick={handleDownload}>
-                      <Download className="w-3 h-3" />
-                      Download Original
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex-1 min-h-0">
-                    <PdfViewer fileUrl={pdfUrl} onDownload={handleDownload} />
-                  </div>
-                )
-              ) : doc.extractedText ? (
-                <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
-                  <div className="max-w-3xl mx-auto px-6 py-6">
-                    <p className="text-xs text-muted-foreground mb-4">
-                      {isSpreadsheet
-                        ? "Spreadsheet contents (sheet-by-sheet readable view)"
-                        : "Extracted text"}
-                    </p>
-                    <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
-                      {doc.extractedText}
-                    </pre>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center text-sm text-muted-foreground p-8">
-                    <FileText className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                    <p>No preview available</p>
-                  </div>
-                </div>
-              )}
+                    </>
+                  )}
+                  {isPdf && originalAvailable && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setMoreOpen(false);
+                        if (highlightMode) clearHighlights();
+                        setHighlightMode((v) => !v);
+                      }}
+                    >
+                      <Highlighter className="w-3.5 h-3.5 mr-2" />
+                      {highlightMode ? "Stop Highlighting" : "Highlight"}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setDeleteOpen(true);
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
-          {/* ── Right column: AI Analysis Panel ─────────────────────── */}
-          <aside className="shrink-0 flex flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-card w-full lg:w-[40%] lg:min-w-[340px] lg:max-w-[480px] h-[60vh] lg:h-auto">
+          {/* Meta row */}
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
+            {doc.fileSize != null && (
+              <span className="text-[11px] text-muted-foreground">{formatBytes(doc.fileSize)}</span>
+            )}
+            <span
+              className="text-[11px] text-muted-foreground"
+              title={format(uploadDate, "yyyy-MM-dd HH:mm")}
+            >
+              Uploaded {formatDistanceToNow(uploadDate, { addSuffix: true })}
+            </span>
+          </div>
+
+          {/* Status alert */}
+          {!status.isReady && (
+            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 mt-2">
+              <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+              <p className="text-[11px] text-foreground/80 leading-relaxed">{status.description}</p>
+            </div>
+          )}
+        </header>
+
+        {/* ── Main content: AI primary + PDF secondary ─────────────── */}
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+
+          {/* AI Analysis Panel — primary */}
+          <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
             <DocumentIntelligencePanel
               documentId={doc.id}
               documentName={doc.fileName}
               isReady={isReady}
             />
-          </aside>
+          </div>
+
+          {/* PDF / Source Panel — secondary, collapsible on mobile */}
+          {/* Always visible on desktop, toggle on mobile */}
+          <div className={`shrink-0 flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border bg-card w-full lg:w-[40%] lg:min-w-[340px] lg:max-w-[520px] ${showPdf ? "flex h-[50vh]" : "hidden lg:flex h-auto"}`}>
+            {/* PDF header */}
+            <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/20">
+              <FileSearch className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[11px] font-medium text-muted-foreground">Source Document</span>
+              <div className="flex-1" />
+              {/* Mobile close button */}
+              <button
+                className="lg:hidden text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPdf(false)}
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {/* PDF content */}
+            <div
+              className={`flex-1 min-h-0 overflow-hidden flex flex-col${highlightMode ? " cursor-text" : ""}`}
+              onMouseUp={handleMouseUp}
+            >
+              {renderSourcePanel()}
+            </div>
+          </div>
         </div>
       </div>
 
