@@ -1,0 +1,132 @@
+Redesign the following existing pages in this codebase to match these mockups exactly. Do not change any functionality, routing, data fetching, or backend logic — only update the UI/layout/styling.
+
+Pages to redesign:
+1. Home / document dashboard
+2. AI chat
+3. Document detail
+
+Design specs:
+- Sidebar: 220px wide, light secondary background, persistent across all pages
+- Brand accent color: #4F3FF0
+- Font: system sans-serif
+- Cards: rounded-xl, 0.5px border, white background
+- Buttons: flat, rounded-lg. Primary = #4F3FF0 background, white text
+- No gradients, no shadows, no decorative effects
+- All text in sentence case
+- Icons: @tabler/icons-react
+
+Sidebar structure (same on every page):
+- Logo: lightning bolt icon + "Signal87" wordmark
+- Nav items: Home, Documents (with count badge), AI Chat, Activity
+- Workspaces section: Agentic AI R&D, Finance, Lending, + New workspace
+- Bottom: user avatar initials circle, name, role, settings icon
+
+--- PAGE 1: HOME DASHBOARD ---
+
+Topbar:
+- Search input (full width)
+- Upload button
+- Analyze button (accent color)
+
+Ask Signal bar:
+- Full-width input with sparkle icon on left and arrow send button on right
+
+3 stat cards in a row:
+- Total documents (value: 12, subtitle: "3 added this week")
+- AI analyses run (value: 47, subtitle: "Last run 3d ago")
+- Workspaces (value: 3, subtitle: "Agentic AI, Finance, Lending")
+
+Quick actions row (3 cards):
+- Summarize — "Any document, fast" — file-text icon, purple background
+- Compare — "Side-by-side insights" — git-compare icon, green background
+- Extract data — "Tables, figures, terms" — receipt icon, coral background
+
+Recent documents table:
+Columns: Name (with workspace subtitle), Type (pill), Updated, Actions
+Rows:
+- Invoice 2 — Agentic AI R&D (2) | Agentic AI R&D | PDF | 3d ago | sparkle + download buttons
+- Invoice 1 — Agentic AI R&D (4) | Agentic AI R&D | PDF | 3d ago | sparkle + download buttons
+- Invoice 3 — Agentic AI R&D (1) | Agentic AI R&D | PDF | 3d ago | sparkle + download buttons
+- auth-transport-check | Uncategorized | TXT | 3d ago | sparkle + download buttons
+- Lending Parameters | Lending | PDF | 6d ago | sparkle + download buttons
+
+--- PAGE 2: AI CHAT ---
+
+Layout: two columns inside main area
+Left column (conversation list):
+- "New chat" button in topbar
+- Grouped list: Today / Earlier
+- Each item: conversation title + timestamp
+- Active item has white background highlight
+
+Today:
+- "Invoice comparison — Q2" — 2h ago (active)
+- "Lending parameters review" — 5h ago
+
+Earlier:
+- "Auth transport check summary" — 3d ago
+- "Agentic AI R&D invoice 1" — 3d ago
+- "Lending parameters deep dive" — 6d ago
+
+Right column (chat thread):
+Topbar: conversation title "Invoice comparison — Q2", "3 sources" button, "New chat" button
+
+Messages:
+1. User (right-aligned, #4F3FF0 bubble, white text):
+"Compare the three Agentic AI R&D invoices and tell me the total billed."
+
+2. AI (left-aligned, light background bubble):
+"Across the three invoices, the total billed for Agentic AI R&D services is $47,250. Invoice 1 covers foundational model research ($18,000), Invoice 2 covers infrastructure and tooling ($15,750), and Invoice 3 covers evaluation and deployment ($13,500). All three are dated within the same billing cycle and reference the same SOW number."
+Source pills below: "Invoice 1 · p.1", "Invoice 2 · p.1", "Invoice 3 · p.2"
+
+3. User:
+"Are there any discrepancies in the payment terms?"
+
+4. AI:
+"Yes — Invoices 1 and 3 specify Net 30 payment terms, while Invoice 2 lists Net 45. This may cause a mismatch if you're processing them together. Worth flagging with your AP team before submission."
+Source pill: "Invoice 2 · p.2"
+
+Bottom input bar:
+- Paperclip attach icon on left
+- Text input: "Ask about your documents…"
+- Round send button (#4F3FF0) on right
+
+--- PAGE 3: DOCUMENT DETAIL ---
+
+Topbar:
+- Back arrow + "Documents" label
+- Slash separator
+- Document title: "Invoice 2 — Agentic AI R&D"
+- PDF type pill (coral background)
+- Download button
+- Analyze button (accent color)
+
+Two-column layout:
+Left (document viewer):
+- Simulated page area with gray placeholder lines representing document content
+- Page controls at bottom: previous chevron, "Page 1 of 3", next chevron
+
+Right (tabbed panel):
+Three tabs: Summary | Extracted data | Ask
+
+Summary tab (default):
+4 finding cards, each with icon + label + value:
+1. Purple icon — "Total billed" — "$15,750 — infrastructure and tooling services"
+2. Green icon — "Billing period" — "May 1 – May 31, 2026"
+3. Amber icon — "Payment terms" — "Net 45 — differs from Invoice 1 and 3 (Net 30)"
+4. Blue icon — "SOW reference" — "SOW-2026-004, consistent with other invoices"
+
+Below findings, extracted data table:
+Field | Value
+Invoice # | INV-2026-0042
+Vendor | Signal87 AI, Inc.
+Amount | $15,750.00
+Due date | Jul 14, 2026
+Tax (0%) | $0.00
+
+Below table, ask input:
+- Context label: "Ask anything about this document"
+- Text input: "e.g. What services are itemized?"
+- Round send button (#4F3FF0)
+
+Keep all existing props, state, API calls, and event handlers intact. Only replace JSX structure and className styling. Do not delete or move any existing logic.
