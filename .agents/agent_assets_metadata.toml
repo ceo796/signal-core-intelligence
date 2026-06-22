@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "MVDcQwg3PMb3myyc1h680"
+uri = "file://SITE_BRIEF_FOR_OPENAI.md"
+type = "text"
+title = "Signal87 — Full Site Brief for OpenAI"
