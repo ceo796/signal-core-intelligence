@@ -1,0 +1,83 @@
+Please redesign the Signal87 document detail / PDF page to make the experience cleaner, calmer, and more product-grade.
+
+Do not remove PDF support. The PDF viewer is important for source verification, citations, legal review, diligence, invoices, and trust. However, the PDF should no longer dominate the default experience.
+
+Primary goal:
+Make the AI analysis feel like the main product experience, with the PDF viewer available as a source-verification layer.
+
+Requirements:
+
+1. Preserve all existing functionality
+
+* Do not break document preview
+* Do not break PDF viewing
+* Do not break citations
+* Do not break AI analysis tabs
+* Do not break Ask functionality
+* Do not break Download, Open Original, Re-index, or document status
+* Do not break authentication, document ownership, API routes, or document lifecycle behavior
+
+2. Simplify the default layout
+
+* Reduce visual clutter
+* Make the page feel less like an admin/debug interface
+* Make it feel more like a polished AI document workspace
+* Use more whitespace, cleaner grouping, and fewer visible controls
+
+3. Recommended layout
+
+* Top bar: document title, status, primary Ask button, and a small “More” menu
+* Move secondary actions into the More menu:
+
+  * Download
+  * Open Original
+  * Re-index
+  * Any advanced document controls
+* Main content: AI Analysis should be visually primary
+* PDF/source viewer: keep it available, but demote it into a collapsible or secondary source panel
+
+4. AI Analysis panel
+
+* Keep the existing tabs:
+
+  * Summary
+  * Key Clauses
+  * Risks
+  * Actions
+  * Citations
+* Make this section feel like the main workspace
+* Improve hierarchy, spacing, and readability
+* Avoid cramped text and excessive borders
+
+5. PDF viewer behavior
+
+* Keep PDF viewer accessible for verification
+* On desktop, it can appear as a side panel or collapsible source panel
+* On smaller screens, stack it below or behind a “View Source” control
+* The user should be able to inspect the original document, but the PDF should not overwhelm the AI output
+
+6. Design direction
+
+* Minimalist
+* Enterprise-grade
+* Calm and polished
+* Not overly technical
+* Avoid unnecessary animations or major refactors
+* Keep the current product’s clean visual direction
+
+7. Implementation guardrails
+
+* Make lightweight frontend changes only unless absolutely necessary
+* Do not refactor unrelated code
+* Do not change backend behavior unless required
+* Do not alter database schema
+* Do not remove working features
+* Confirm that the document page still loads, PDF preview works, AI analysis renders, Ask works, and advanced actions remain available
+
+Acceptance criteria:
+
+* The page feels less busy at first glance
+* AI analysis is clearly the primary experience
+* PDF viewing still exists and works
+* Advanced document actions are still available but less prominent
+* Existing document functionality remains intact

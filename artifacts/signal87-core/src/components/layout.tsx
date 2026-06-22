@@ -48,7 +48,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="hidden md:flex px-4 py-4 border-b border-border items-center shrink-0">
           <Link href="/documents">
             <img
-              src="/signal87-logo.png"
+              src="/signal87-logo-black.svg"
               alt="Signal87"
               className="h-8 w-auto cursor-pointer"
             />
