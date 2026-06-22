@@ -735,13 +735,6 @@ export default function HybridAgent() {
                     <p className="text-xs font-medium uppercase tracking-wider text-primary/80">
                       Hybrid AI Chat
                     </p>
-                    <h1 className="text-2xl md:text-[28px] font-semibold tracking-tight">
-                      What can I help you find?
-                    </h1>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Grounded answers from your documents (with citations), with GPT reasoning.
-                      No web research.
-                    </p>
                   </div>
                 </div>
                 <Composer {...composerProps} autoFocus />
