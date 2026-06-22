@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PdfViewer } from "@/components/pdf-viewer";
+import { SpreadsheetViewer } from "@/components/spreadsheet-viewer";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
@@ -165,7 +166,7 @@ export default function DocumentDetail() {
   const hybridMutation = usePostAgentHybrid();
 
   const isPdf = doc?.fileType?.toLowerCase() === "pdf";
-  const isSpreadsheet = ["xlsx", "xls"].includes(doc?.fileType?.toLowerCase() ?? "");
+  const isSpreadsheet = ["xlsx", "xls", "csv"].includes(doc?.fileType?.toLowerCase() ?? "");
   const originalAvailable = doc?.originalFileAvailable ?? false;
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -400,15 +401,24 @@ export default function DocumentDetail() {
         </div>
       );
     }
+    if (isSpreadsheet) {
+      return (
+        <SpreadsheetViewer
+          documentId={doc.id}
+          fileType={doc.fileType}
+          originalAvailable={originalAvailable}
+          extractedText={doc.extractedText}
+          extractionStatus={doc.extractionStatus}
+          chunkCount={doc.chunkCount}
+          onDownload={handleDownload}
+        />
+      );
+    }
     if (doc.extractedText) {
       return (
         <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           <div className="max-w-3xl mx-auto px-6 py-6">
-            <p className="text-xs text-muted-foreground mb-4">
-              {isSpreadsheet
-                ? "Spreadsheet contents (sheet-by-sheet readable view)"
-                : "Extracted text"}
-            </p>
+            <p className="text-xs text-muted-foreground mb-4">Extracted text</p>
             <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">
               {doc.extractedText}
             </pre>
