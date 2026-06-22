@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { PrintDocumentButton } from "@/components/print-document-button";
+import { DocumentCardThumbnail } from "@/components/document-card-thumbnail";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
 import { format } from "date-fns";
@@ -707,10 +708,7 @@ export default function DocumentsList() {
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
                   <Card key={i} className="overflow-hidden border-border">
-                    <div className="px-4 py-3 flex items-center gap-2.5 border-b border-border">
-                      <Skeleton className="h-7 w-7 rounded shrink-0" />
-                      <Skeleton className="h-5 w-10 rounded" />
-                    </div>
+                    <Skeleton className="h-44 w-full rounded-none" />
                     <CardContent className="p-4 space-y-2">
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-3 w-1/2" />
@@ -810,43 +808,45 @@ export default function DocumentsList() {
                         : "border-border hover:border-primary/30"
                     }`}
                   >
-                    {/* Compact icon header */}
-                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border relative">
-                      {/* Checkbox — top-left, visible on hover or when checked */}
+                    {/* Thumbnail header */}
+                    <div className="relative border-b border-border">
                       <div
-                        className={`shrink-0 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                        className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSelect(doc.id); }}
                       >
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleSelect(doc.id)}
                           aria-label={`Select ${doc.fileName}`}
-                          className="w-4 h-4"
+                          className="w-4 h-4 bg-white/90 border-white/60 shadow-sm"
                         />
                       </div>
-                      <Link
-                        href={`/documents/${doc.id}`}
-                        className="flex items-center gap-2 flex-1 min-w-0"
-                      >
-                        <FileTypeIcon fileType={doc.fileType} className="w-7 h-7 shrink-0" />
-                        <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
-                          {chip.label}
-                        </span>
+                      <Link href={`/documents/${doc.id}`}>
+                        <DocumentCardThumbnail
+                          id={doc.id}
+                          fileType={doc.fileType}
+                          originalFileAvailable={doc.originalFileAvailable}
+                          className="h-44 w-full"
+                        />
                       </Link>
                     </div>
 
                     <CardContent className="p-4 flex-1 flex flex-col">
                       <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col min-w-0">
                         <h3
-                          className="font-medium text-[13px] leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1"
+                          className="font-medium text-[13px] leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1.5"
                           title={doc.fileName}
                         >
                           {highlightMatch(doc.fileName, search)}
                         </h3>
-                        <p className="text-[11px] text-muted-foreground mb-2">{inferDocumentKind(doc.fileName, doc.fileType)}</p>
+                        <div className="flex items-center gap-1.5 mb-2 min-w-0">
+                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-mono font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
+                            {chip.label}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground truncate">{inferDocumentKind(doc.fileName, doc.fileType)}</span>
+                        </div>
                         <DocumentStatusBadge doc={doc} />
-                        <div className="mt-auto pt-3 flex justify-between text-[11px] font-mono text-muted-foreground">
-                          <span>{doc.chunkCount} chunks</span>
+                        <div className="mt-auto pt-3 text-[11px] font-mono text-muted-foreground text-right">
                           <span>{format(new Date(doc.uploadedAt), "MMM d, yyyy")}</span>
                         </div>
                       </Link>
