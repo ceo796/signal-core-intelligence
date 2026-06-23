@@ -44,3 +44,6 @@ APPROVED_EMAILS = "ceo@signal87.ai"
 
 [nix]
 channel = "stable-25_05"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-1be14a02-536f-46a9-8c14-38b4dc7006a5"
