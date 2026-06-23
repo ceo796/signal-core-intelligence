@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth, RedirectToSignIn } from "@clerk/react";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 
 import Home from "@/pages/home";
 import DocumentsList from "@/pages/documents";
@@ -64,6 +64,20 @@ function isPublicRoute(path: string): boolean {
   return publicRoutes.some(
     (route) => path === route || path.startsWith(route + "/"),
   );
+}
+
+// Bridges environment configuration into the centralized API fetch layer.
+// In Replit dev, API calls can stay relative. On Render, the static frontend
+// and API service are separate services/domains, so VITE_API_BASE_URL must
+// point to the deployed signal87-api URL.
+function ApiBaseUrlBridge() {
+  useEffect(() => {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+    setBaseUrl(apiBaseUrl || null);
+    return () => setBaseUrl(null);
+  }, []);
+
+  return null;
 }
 
 // Bridges Clerk's session token into the centralized API fetch layer so every
@@ -173,6 +187,7 @@ function SignUpPage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ApiBaseUrlBridge />
       <ApiAuthBridge />
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
