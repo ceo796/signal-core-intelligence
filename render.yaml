@@ -31,9 +31,9 @@ services:
   - type: web
     name: signal87-web
     runtime: static
-    rootDir: artifacts/mockup-sandbox
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm run build
-    staticPublishPath: ./dist
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/signal87-core run build
+    staticPublishPath: artifacts/signal87-core/dist/public
     routes:
       - type: rewrite
         source: /*
@@ -43,5 +43,7 @@ services:
         value: /
       - key: PORT
         value: 3000
+      - key: VITE_API_BASE_URL
+        sync: false
       - key: VITE_CLERK_PUBLISHABLE_KEY
         sync: false
