@@ -33,6 +33,20 @@ app.use(
   }),
 );
 
+// Public health endpoints for deployment platforms. Keep these before Clerk so
+// Railway/Render health checks can verify the container without auth.
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({ ok: true, service: "signal87-api" });
+});
+
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({ ok: true, service: "signal87-api" });
+});
+
+app.get("/healthz", (_req: Request, res: Response) => {
+  res.status(200).json({ ok: true, service: "signal87-api" });
+});
+
 // Clerk proxy must be mounted BEFORE express.json()
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
