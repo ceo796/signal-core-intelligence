@@ -1,5 +1,5 @@
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { chunkText } from "./chunker";
 import { extractSpreadsheet } from "./spreadsheet";
 
