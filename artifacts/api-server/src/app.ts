@@ -34,11 +34,7 @@ app.use(
 );
 
 // Public health endpoints for deployment platforms. Keep these before Clerk so
-// Railway/Render health checks can verify the container without auth.
-app.get("/", (_req: Request, res: Response) => {
-  res.status(200).json({ ok: true, service: "signal87-api" });
-});
-
+// Railway/Render/Emergent health checks can verify the container without auth.
 app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "signal87-api" });
 });
