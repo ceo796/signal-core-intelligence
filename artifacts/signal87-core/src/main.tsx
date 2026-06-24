@@ -5,12 +5,30 @@ import { dark } from "@clerk/themes";
 import App from "./App";
 import "./index.css";
 
+declare global {
+  interface Window {
+    __SIGNAL87_RUNTIME_CONFIG__?: {
+      VITE_CLERK_PUBLISHABLE_KEY?: string;
+      VITE_CLERK_PROXY_URL?: string;
+    };
+  }
+}
+
+const runtimeConfig = window.__SIGNAL87_RUNTIME_CONFIG__ || {};
+const configuredPublishableKey =
+  runtimeConfig.VITE_CLERK_PUBLISHABLE_KEY || import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
 // Resolve the publishable key from the current host so the same build works
-// across the dev domain and custom/production domains.
-const publishableKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
+// across the dev domain and custom/production domains. On generic hosts such
+// as Render, fall back to the configured publishable key so the client does not
+// blank-screen when Vite build-time env is unavailable inside Docker builds.
+let publishableKey = configuredPublishableKey;
+try {
+  publishableKey =
+    publishableKeyFromHost(window.location.hostname, configuredPublishableKey) || configuredPublishableKey;
+} catch {
+  publishableKey = configuredPublishableKey;
+}
 
 const baseUrl = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 
@@ -25,7 +43,7 @@ const clerkOptions = {
   redirectUrl,
   // Clerk frontend API proxy URL. Empty in dev (Clerk talks to its dev FAPI
   // directly); auto-populated by the deploy pipeline in production.
-  proxyUrl: import.meta.env.VITE_CLERK_PROXY_URL,
+  proxyUrl: runtimeConfig.VITE_CLERK_PROXY_URL || import.meta.env.VITE_CLERK_PROXY_URL,
   appearance: {
     baseTheme: dark,
     variables: {
@@ -45,8 +63,16 @@ const clerkOptions = {
   },
 };
 
-createRoot(document.getElementById("root")!).render(
-  <ClerkProvider {...clerkOptions}>
-    <App />
-  </ClerkProvider>,
-);
+if (!publishableKey) {
+  createRoot(document.getElementById("root")!).render(
+    <div style={{ padding: 24, fontFamily: "Inter, system-ui, sans-serif" }}>
+      Signal87 is missing the Clerk publishable key. Please set VITE_CLERK_PUBLISHABLE_KEY or CLERK_PUBLISHABLE_KEY.
+    </div>,
+  );
+} else {
+  createRoot(document.getElementById("root")!).render(
+    <ClerkProvider {...clerkOptions}>
+      <App />
+    </ClerkProvider>,
+  );
+}
