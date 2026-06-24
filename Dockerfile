@@ -7,7 +7,7 @@ ENV PNPM_HOME=/usr/local/bin
 
 RUN npm install -g pnpm@10.12.1
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY artifacts ./artifacts
 COPY lib ./lib
 COPY scripts ./scripts
