@@ -5,7 +5,7 @@ services:
     plan: starter
     region: oregon
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
+    buildCommand: npm install --location=global pnpm@10.12.1 && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
     startCommand: pnpm --filter @workspace/api-server run start
     healthCheckPath: /api/healthz
     disk:
@@ -32,7 +32,7 @@ services:
     name: signal87-web
     runtime: static
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/signal87-core run build
+    buildCommand: npm install --location=global pnpm@10.12.1 && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/signal87-core run build
     staticPublishPath: artifacts/signal87-core/dist/public
     routes:
       - type: rewrite
