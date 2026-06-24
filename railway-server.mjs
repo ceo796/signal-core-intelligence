@@ -23,7 +23,32 @@ const contentTypes = new Map([
   [".woff2", "font/woff2"],
 ]);
 
+function runtimeConfigScript() {
+  const config = {
+    VITE_CLERK_PUBLISHABLE_KEY:
+      process.env.VITE_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY || "",
+    VITE_CLERK_PROXY_URL: process.env.VITE_CLERK_PROXY_URL || "",
+  };
+
+  return `<script>window.__SIGNAL87_RUNTIME_CONFIG__=${JSON.stringify(config).replace(/</g, "\\u003c")};</script>`;
+}
+
+function sendIndexHtml(res) {
+  const html = fs.readFileSync(indexHtmlPath, "utf8");
+  const injectedHtml = html.includes("</head>")
+    ? html.replace("</head>", `${runtimeConfigScript()}\n  </head>`)
+    : `${runtimeConfigScript()}\n${html}`;
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.end(injectedHtml);
+}
+
 function sendFile(res, filePath) {
+  if (filePath === indexHtmlPath) {
+    sendIndexHtml(res);
+    return;
+  }
+
   const ext = path.extname(filePath).toLowerCase();
   const contentType = contentTypes.get(ext) || "application/octet-stream";
   res.setHeader("Content-Type", contentType);
@@ -46,7 +71,7 @@ if (fs.existsSync(indexHtmlPath)) {
       return;
     }
 
-    sendFile(res, indexHtmlPath);
+    sendIndexHtml(res);
   });
 }
 
