@@ -5,8 +5,8 @@ services:
     plan: starter
     region: oregon
     rootDir: .
-    buildCommand: npx --yes pnpm@10.12.1 install --frozen-lockfile && npx --yes pnpm@10.12.1 --filter @workspace/api-server run build
-    startCommand: npx --yes pnpm@10.12.1 --filter @workspace/api-server run start
+    buildCommand: npm install --prefix /opt/render/project/.pnpm pnpm@10.12.1 && /opt/render/project/.pnpm/node_modules/.bin/pnpm install --frozen-lockfile && /opt/render/project/.pnpm/node_modules/.bin/pnpm --filter @workspace/api-server run build
+    startCommand: node --enable-source-maps ./artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     disk:
       name: signal87-uploads
@@ -32,7 +32,7 @@ services:
     name: signal87-web
     runtime: static
     rootDir: .
-    buildCommand: npx --yes pnpm@10.12.1 install --frozen-lockfile && PORT=3000 BASE_PATH=/ npx --yes pnpm@10.12.1 --filter @workspace/signal87-core run build
+    buildCommand: npm install --prefix /opt/render/project/.pnpm pnpm@10.12.1 && /opt/render/project/.pnpm/node_modules/.bin/pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ /opt/render/project/.pnpm/node_modules/.bin/pnpm --filter @workspace/signal87-core run build
     staticPublishPath: artifacts/signal87-core/dist/public
     routes:
       - type: rewrite
