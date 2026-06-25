@@ -28,7 +28,6 @@ import {
   FileSpreadsheet,
   Trash2,
   MessageSquare,
-  AlertCircle,
   RefreshCw,
   Loader2,
   LayoutGrid,
@@ -734,14 +733,8 @@ export default function DocumentsList() {
                 ))}
               </div>
             )
-          ) : error ? (
-            /* ── Error ── */
-            <div className="m-5 p-6 text-center border border-destructive/50 bg-destructive/10 text-destructive rounded-md flex flex-col items-center gap-2">
-              <AlertCircle className="w-8 h-8" />
-              <p className="text-sm">Could not load your documents</p>
-            </div>
-          ) : documents?.length === 0 ? (
-            /* ── Empty (no documents at all) ── */
+          ) : error || documents?.length === 0 ? (
+            /* ── Empty (no documents yet or unavailable) ── */
             <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-border rounded-lg bg-card/50 m-5">
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-bold">No documents yet</h3>
