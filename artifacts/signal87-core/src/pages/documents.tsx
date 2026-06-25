@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@clerk/react";
 import { Layout } from "@/components/layout";
 import { FileUploadModal } from "@/components/file-upload";
 import {
@@ -249,7 +250,19 @@ function DeleteDialog({ fileName, onConfirm }: { fileName: string; onConfirm: ()
   );
 }
 
+function getApiErrorStatus(error: unknown): number | null {
+  return typeof error === "object" && error !== null && "status" in error
+    ? Number((error as { status?: unknown }).status) || null
+    : null;
+}
+
+function getApiErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return "Documents are temporarily unavailable. Please try again.";
+}
+
 export default function DocumentsList() {
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
   const { data: listData, isLoading, error } = useListDocuments();
   const documents = listData?.items;
   const deleteMutation = useDeleteDocument();
@@ -502,6 +515,21 @@ export default function DocumentsList() {
     }
   };
 
+  const documentsError = useMemo(() => {
+    if (!error) return null;
+    const status = getApiErrorStatus(error);
+    if (status === 401) {
+      return { title: "Sign-in required", message: "Your session could not be verified. Please sign in again.", auth: true };
+    }
+    if (status === 403) {
+      return { title: "Access not approved", message: "Your account is signed in but is not approved for Signal87 access.", auth: false };
+    }
+    if (status === 503) {
+      return { title: "Documents temporarily unavailable", message: getApiErrorMessage(error), auth: false };
+    }
+    return { title: "Documents could not be loaded", message: getApiErrorMessage(error), auth: false };
+  }, [error]);
+
   const selectionCount = selectedIds.size;
   const showActionBar = fromHybrid ? selectionCount >= 1 : selectionCount >= 2;
 
@@ -705,7 +733,7 @@ export default function DocumentsList() {
 
         <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           {/* ── Loading ── */}
-          {isLoading ? (
+          {!authLoaded || (authLoaded && !isSignedIn) || isLoading ? (
             view === "grid" ? (
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
@@ -734,11 +762,17 @@ export default function DocumentsList() {
                 ))}
               </div>
             )
-          ) : error ? (
+          ) : documentsError ? (
             /* ── Error ── */
             <div className="m-5 p-6 text-center border border-destructive/50 bg-destructive/10 text-destructive rounded-md flex flex-col items-center gap-2">
               <AlertCircle className="w-8 h-8" />
-              <p className="text-sm">Could not load your documents</p>
+              <p className="text-sm font-semibold">{documentsError.title}</p>
+              <p className="text-sm text-destructive/80 max-w-lg">{documentsError.message}</p>
+              {documentsError.auth && (
+                <Link href="/sign-in" className="mt-2 text-sm font-medium underline underline-offset-4">
+                  Go to sign in
+                </Link>
+              )}
             </div>
           ) : documents?.length === 0 ? (
             /* ── Empty (no documents at all) ── */

@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
 
@@ -25,12 +25,14 @@ const missingDatabaseProxy = new Proxy(
       throw missingDatabaseError();
     },
   },
-) as any;
+) as unknown;
 
 export const pool = databaseUrl
   ? new Pool({ connectionString: databaseUrl })
   : (missingDatabaseProxy as pg.Pool);
 
-export const db = databaseUrl ? drizzle(pool, { schema }) : missingDatabaseProxy;
+export const db: NodePgDatabase<typeof schema> = databaseUrl
+  ? drizzle(pool, { schema })
+  : (missingDatabaseProxy as NodePgDatabase<typeof schema>);
 
 export * from "./schema";

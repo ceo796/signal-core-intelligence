@@ -10,6 +10,10 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
+function configStatus(key: string) {
+  return { configured: Boolean(process.env[key]) };
+}
+
 router.get("/runtime-check", (_req, res) => {
   const storage = getRuntimeStorageStatus();
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
@@ -25,8 +29,20 @@ router.get("/runtime-check", (_req, res) => {
       model: PROVIDER_CONFIG.model,
       openaiApiKey: process.env.OPENAI_API_KEY ? "set" : "missing",
     },
+    requiredConfig: {
+      DATABASE_URL: configStatus("DATABASE_URL"),
+      OPENAI_API_KEY: configStatus("OPENAI_API_KEY"),
+      CLERK_SECRET_KEY: configStatus("CLERK_SECRET_KEY"),
+      CLERK_PUBLISHABLE_KEY: configStatus("CLERK_PUBLISHABLE_KEY"),
+      FILE_STORAGE_DIR: configStatus("FILE_STORAGE_DIR"),
+      STORAGE_PROVIDER: configStatus("STORAGE_PROVIDER"),
+    },
     database: {
       configured: Boolean(process.env.DATABASE_URL),
+    },
+    clerk: {
+      secretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
+      publishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
     },
     storage,
     replitDependency: detectedReplitEnvVars.length > 0 || storage.provider === "replit-object-storage",

@@ -1,7 +1,4 @@
-declare module "pdf-parse" {
-  function pdfParse(
-    dataBuffer: Buffer,
-    options?: Record<string, unknown>
-  ): Promise<{ text: string; numpages: number; info: Record<string, unknown> }>;
-  export = pdfParse;
+declare module "pdf-parse/lib/pdf-parse.js" {
+  import pdfParse from "pdf-parse";
+  export default pdfParse;
 }
