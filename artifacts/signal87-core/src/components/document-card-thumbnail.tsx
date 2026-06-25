@@ -65,13 +65,28 @@ function PdfPageThumb({ id, width }: { id: number; width: number }) {
     };
   }, [id]);
 
-  if (error || !url) return <FallbackThumb fileType="pdf" />;
+  if (error) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-destructive/10 px-4 text-center text-destructive">
+        <FileText className="w-10 h-10 opacity-50" />
+        <span className="text-[11px] font-semibold">PDF failed to load</span>
+      </div>
+    );
+  }
+
+  if (!url) return <FallbackThumb fileType="pdf" />;
 
   return (
     <Document
       file={url}
       loading={<FallbackThumb fileType="pdf" />}
-      error={<FallbackThumb fileType="pdf" />}
+      error={
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-destructive/10 px-4 text-center text-destructive">
+          <FileText className="w-10 h-10 opacity-50" />
+          <span className="text-[11px] font-semibold">PDF failed to load</span>
+        </div>
+      }
+      onLoadError={() => setError(true)}
     >
       <Page
         pageNumber={1}
