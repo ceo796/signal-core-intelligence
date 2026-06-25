@@ -1,11 +1,32 @@
 import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
+import { userHasActiveSubscription } from "../lib/billing";
 
 const approvedEmails = new Set(
   (process.env.APPROVED_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean),
 );
 
 const bypassAuth = process.env.CLERK_BYPASS_AUTH === "true";
+
+export function isApprovedEmail(email: string | null | undefined): boolean {
+  return Boolean(email && approvedEmails.has(email.toLowerCase()));
+}
+
+export async function resolveRequestEmail(req: Request): Promise<string | null> {
+  const auth = getAuth(req);
+
+  let email =
+    (auth.sessionClaims?.email as string | undefined) ||
+    (auth.sessionClaims?.primaryEmail as string | undefined) ||
+    null;
+
+  if (!email && auth.userId) {
+    const user = await clerkClient.users.getUser(auth.userId);
+    email = user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? null;
+  }
+
+  return email;
+}
 
 export async function requireApprovedEmail(
   req: Request,
@@ -25,32 +46,27 @@ export async function requireApprovedEmail(
       return;
     }
 
-    // Clerk's default session token does NOT include the email claim, so we
-    // fetch the user record to resolve their primary verified email.
-    let email =
-      (auth.sessionClaims?.email as string | undefined) ||
-      (auth.sessionClaims?.primaryEmail as string | undefined) ||
-      null;
+    const email = await resolveRequestEmail(req);
 
-    if (!email) {
-      const user = await clerkClient.users.getUser(auth.userId);
-      email =
-        user.primaryEmailAddress?.emailAddress ??
-        user.emailAddresses[0]?.emailAddress ??
-        null;
+    if (isApprovedEmail(email)) {
+      next();
+      return;
     }
 
-    if (!email || !approvedEmails.has(email.toLowerCase())) {
-      req.log.info({ resolvedEmail: email ?? null }, "auth denied: email not approved");
-      res.status(403).json({
-        error: "Access denied. Your email is not approved for this application.",
+    const hasSubscription = await userHasActiveSubscription(auth.userId);
+    if (!hasSubscription) {
+      req.log.info({ resolvedEmail: email ?? null }, "subscription required");
+      res.status(402).json({
+        error: "Subscription required. Please choose a plan to continue.",
+        code: "subscription_required",
+        upgradeUrl: "/pricing",
       });
       return;
     }
 
     next();
   } catch (err) {
-    req.log.error({ err }, "auth middleware error");
+    req.log.error({ err }, "access middleware error");
     res.status(401).json({ error: "Authentication failed." });
   }
 }

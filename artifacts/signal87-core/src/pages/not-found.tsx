@@ -1,8 +1,13 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
+import Pricing from "@/pages/pricing";
 
 export default function NotFound() {
+  if (window.location.pathname === "/pricing") {
+    return <Pricing />;
+  }
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground">
       <div className="flex flex-col items-center gap-4 text-center p-8">
