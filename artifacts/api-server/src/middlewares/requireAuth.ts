@@ -25,8 +25,6 @@ export async function requireApprovedEmail(
       return;
     }
 
-    // Clerk's default session token does NOT include the email claim, so we
-    // fetch the user record to resolve their primary verified email.
     let email =
       (auth.sessionClaims?.email as string | undefined) ||
       (auth.sessionClaims?.primaryEmail as string | undefined) ||
