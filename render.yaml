@@ -5,6 +5,7 @@ services:
     plan: starter
     region: oregon
     rootDir: .
+    autoDeployTrigger: off
     buildCommand: |
       cat > render-placeholder.mjs <<'EOF'
       import http from "node:http";
@@ -31,6 +32,7 @@ services:
     name: signal87-web
     runtime: static
     rootDir: .
+    autoDeployTrigger: off
     buildCommand: |
       mkdir -p render-disabled
       cat > render-disabled/index.html <<'EOF'
