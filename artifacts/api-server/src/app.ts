@@ -44,6 +44,10 @@ app.get("/healthz", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "signal87-api" });
 });
 
+app.get("/api/healthz", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Stripe webhooks must receive the raw body. This route must stay before
 // express.json(), express.urlencoded(), and Clerk auth middleware.
 app.post("/api/billing/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
@@ -57,14 +61,20 @@ app.use(cors({ credentials: true, origin: true }));
 // Resolve the publishable key from the request host so the same server works
 // across the dev domain and custom/production domains. Falls back to
 // CLERK_PUBLISHABLE_KEY when the host doesn't map to a custom domain.
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+//
+// In local/smoke environments without Clerk secrets, skip the middleware so
+// public SPA and health routes still work. Protected routes fail closed in
+// requireApprovedEmail/getCurrentUserId with 401 instead of crashing.
+if (process.env.CLERK_SECRET_KEY) {
+  app.use(
+    clerkMiddleware((req) => ({
+      publishableKey: publishableKeyFromHost(
+        getClerkProxyHost(req) ?? "",
+        process.env.CLERK_PUBLISHABLE_KEY,
+      ),
+    })),
+  );
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

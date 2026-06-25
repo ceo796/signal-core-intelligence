@@ -7,7 +7,8 @@ import {
   useReindexDocument,
   useDeleteDocument,
   usePostAgentHybrid,
-  getDocumentOriginal,
+  customFetch,
+  getGetDocumentOriginalUrl,
   getGetDocumentQueryKey,
   getListDocumentsQueryKey,
   getListTrashQueryKey,
@@ -64,6 +65,13 @@ import {
   Quote,
 } from "lucide-react";
 import { toast } from "sonner";
+
+async function fetchOriginalBlob(documentId: number): Promise<Blob> {
+  return customFetch<Blob>(getGetDocumentOriginalUrl(documentId), {
+    method: "GET",
+    responseType: "blob",
+  });
+}
 
 function formatBytes(bytes?: number | null): string {
   if (bytes == null) return "—";
@@ -225,7 +233,7 @@ export default function DocumentDetail() {
     let objectUrl: string | null = null;
     setPdfLoading(true);
     setPdfError(false);
-    getDocumentOriginal(id)
+    fetchOriginalBlob(id)
       .then((blob) => {
         if (revoked) return;
         objectUrl = URL.createObjectURL(blob);
@@ -283,7 +291,7 @@ export default function DocumentDetail() {
         window.open(pdfUrl, "_blank", "noopener");
         return;
       }
-      const blob = await getDocumentOriginal(id);
+      const blob = await fetchOriginalBlob(id);
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener");
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
