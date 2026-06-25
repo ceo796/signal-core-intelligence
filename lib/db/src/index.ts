@@ -4,13 +4,33 @@ import * as schema from "./schema";
 
 const { Pool } = pg;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+const missingDatabaseError = () =>
+  new Error("DATABASE_URL must be set before database-backed routes can be used.");
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.warn(
+    "DATABASE_URL is not set. Server will boot for health checks, but database-backed routes will fail until DATABASE_URL is configured.",
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+const missingDatabaseProxy = new Proxy(
+  {},
+  {
+    get() {
+      throw missingDatabaseError();
+    },
+    apply() {
+      throw missingDatabaseError();
+    },
+  },
+) as any;
+
+export const pool = databaseUrl
+  ? new Pool({ connectionString: databaseUrl })
+  : (missingDatabaseProxy as pg.Pool);
+
+export const db = databaseUrl ? drizzle(pool, { schema }) : missingDatabaseProxy;
 
 export * from "./schema";
