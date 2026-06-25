@@ -1,135 +1,35 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useListDocuments } from "@workspace/api-client-react";
-import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { useUser, UserButton } from "@clerk/react";
-import { Document, Page, pdfjs } from "react-pdf";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
   Search,
   Upload,
   ScrollText,
   ArrowRight,
   FileText,
-  FileSpreadsheet,
   Sparkles,
   GitCompare,
 } from "lucide-react";
+import DocumentVectorCard from "@/components/document-vector-card";
 import { inferDocumentKind } from "@/lib/document-kind";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+function getDashboardInsight(doc: any): string {
+  const status = doc.extractionStatus === "success" && doc.chunkCount > 0
+    ? `Indexed into ${doc.chunkCount} searchable ${doc.chunkCount === 1 ? "section" : "sections"}.`
+    : doc.extractionStatus === "failed"
+      ? "Extraction needs attention before Signal can analyze this document."
+      : "Uploaded and queued for document intelligence processing.";
 
-function formatUploadDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return `${status} Open the document to preview it, chat with it, or run a deeper analysis.`;
 }
 
-const FT_STYLE: Record<string, { bg: string; fg: string }> = {
-  pdf: { bg: "#FAECE7", fg: "#993C1D" },
-  docx: { bg: "#E6F1FB", fg: "#185FA5" },
-  doc: { bg: "#E6F1FB", fg: "#185FA5" },
-  xlsx: { bg: "#E1F5EE", fg: "#0F6E56" },
-  xls: { bg: "#E1F5EE", fg: "#0F6E56" },
-  csv: { bg: "#E1F5EE", fg: "#0F6E56" },
-  txt: { bg: "#EEF1F4", fg: "#475569" },
-  pptx: { bg: "#FDF0E6", fg: "#B45309" },
-  ppt: { bg: "#FDF0E6", fg: "#B45309" },
-};
-
-function fileTypeStyle(ft: string): { bg: string; fg: string } {
-  return FT_STYLE[ft.toLowerCase()] ?? { bg: "#F4F2FF", fg: "#4F3FF0" };
-}
-
-function FileTypeIcon({ fileType }: { fileType: string }) {
-  const ft = fileType.toLowerCase();
-  if (ft === "xlsx" || ft === "xls" || ft === "csv") return <FileSpreadsheet className="w-4 h-4" />;
-  return <FileText className="w-4 h-4" />;
-}
-
-function FallbackThumbnail({ fileType }: { fileType: string }) {
-  const { bg, fg } = fileTypeStyle(fileType);
-  return (
-    <div
-      className="w-11 h-14 rounded-md flex items-center justify-center shrink-0 border border-border"
-      style={{ backgroundColor: bg, color: fg }}
-    >
-      <FileTypeIcon fileType={fileType} />
-    </div>
-  );
-}
-
-function DocumentThumbnail({ doc }: { doc: any }) {
-  const ft = doc.fileType?.toLowerCase() || "";
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { rootMargin: "100px", threshold: 0 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  if (ft !== "pdf" || !visible) {
-    return <div ref={ref}><FallbackThumbnail fileType={ft} /></div>;
-  }
-
-  return (
-    <div ref={ref} className="w-11 h-14 rounded-md overflow-hidden shrink-0 border border-border bg-muted flex items-center justify-center">
-      <PdfThumbnailLazy id={doc.id} />
-    </div>
-  );
-}
-
-function PdfThumbnailLazy({ id }: { id: number }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    let objectUrl: string | null = null;
-    customFetch<Blob>(getGetDocumentOriginalUrl(id), { method: "GET", responseType: "blob" })
-      .then((blob) => {
-        if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
-      })
-      .catch(() => { if (!cancelled) setError(true); });
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [id]);
-
-  if (error || !url) return <FallbackThumbnail fileType="pdf" />;
-
-  return (
-    <div className="w-full h-full flex items-center justify-center overflow-hidden">
-      <PdfPreviewMini fileUrl={url} onError={() => setError(true)} />
-    </div>
-  );
-}
-
-function PdfPreviewMini({ fileUrl, onError }: { fileUrl: string; onError: () => void }) {
-  return (
-    <Document file={fileUrl} onLoadError={onError} loading={null} error={null}>
-      <Page
-        pageNumber={1}
-        scale={0.18}
-        renderTextLayer={false}
-        renderAnnotationLayer={false}
-        className="[&_canvas]:!rounded-sm [&_canvas]:!shadow-none"
-      />
-    </Document>
-  );
+function getDashboardSimilarity(doc: any): number {
+  if (doc.extractionStatus === "success" && doc.chunkCount > 0) return 96;
+  if (doc.extractionStatus === "failed") return 35;
+  if (doc.chunkCount > 0) return 78;
+  return 62;
 }
 
 export default function Dashboard() {
@@ -140,11 +40,11 @@ export default function Dashboard() {
 
   const firstName = user?.firstName ?? user?.fullName?.split(" ")[0] ?? "there";
 
-  const recentDocs = useMemo(
+  const uploadedDocs = useMemo(
     () =>
-      [...(documents ?? [])]
-        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-        .slice(0, 5),
+      [...(documents ?? [])].sort(
+        (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+      ),
     [documents],
   );
 
@@ -188,7 +88,7 @@ export default function Dashboard() {
 
         {/* ── Scrollable content ─────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto bg-background">
-          <div className="w-full px-4 md:px-8 py-6 space-y-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
+          <div className="w-full px-4 py-5 space-y-5 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-5 md:px-8 md:py-6 md:pb-6">
 
             {/* Welcome */}
             <div>
@@ -214,7 +114,7 @@ export default function Dashboard() {
             </Link>
 
             {/* Quick actions — compact cards with colored icons */}
-            <div className="grid grid-cols-3 gap-2.5 pt-1">
+            <div className="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-3">
               {quickActions.map((action) => (
                 <button
                   key={action.label}
@@ -232,30 +132,26 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Recent documents — compact table, mockup style */}
-            <div className="rounded-lg border border-border bg-card flex flex-col">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <h2 className="text-[13px] font-medium text-foreground">Recent documents</h2>
-                <Link href="/documents" className="text-[12px] font-medium text-primary hover:underline">
+            {/* Recent documents — responsive 3D vector cards */}
+            <div className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm sm:p-5">
+              <div className="flex items-center justify-between gap-3 px-1 pb-3">
+                <div>
+                  <h2 className="text-[13px] font-medium text-foreground">Recent documents</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">All uploaded documents shown as Signal87 vector cards.</p>
+                </div>
+                <Link href="/documents" className="shrink-0 text-[12px] font-medium text-primary hover:underline">
                   View all →
                 </Link>
               </div>
 
-              {/* Column headers — compact, subtle */}
-              <div className="grid grid-cols-[1fr_80px_80px] gap-2 px-4 py-2 border-b border-border">
-                <span className="text-[11px] text-muted-foreground font-medium">Name</span>
-                <span className="text-[11px] text-muted-foreground font-medium">Type</span>
-                <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
-              </div>
-
-              <div className="flex-1 px-1 py-0.5">
+              <div className="flex-1">
                 {docsLoading ? (
-                  <div className="px-3 py-3 space-y-2">
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
                     {[0, 1, 2].map((i) => (
-                      <div key={i} className="h-12 rounded bg-muted animate-pulse" />
+                      <div key={i} className="h-56 rounded-3xl bg-muted animate-pulse" />
                     ))}
                   </div>
-                ) : recentDocs.length === 0 ? (
+                ) : uploadedDocs.length === 0 ? (
                   <div className="py-10 text-center px-4">
                     <FileText className="w-7 h-7 mx-auto mb-2 text-muted-foreground/30" />
                     <p className="text-sm text-muted-foreground font-medium">No documents yet</p>
@@ -268,35 +164,20 @@ export default function Dashboard() {
                     </button>
                   </div>
                 ) : (
-                  recentDocs.map((doc) => {
-                    const { bg, fg } = fileTypeStyle(doc.fileType);
-                    return (
-                      <Link
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+                    {uploadedDocs.map((doc) => (
+                      <DocumentVectorCard
                         key={doc.id}
-                        href={`/documents/${doc.id}`}
-                        className="grid grid-cols-[1fr_80px_80px] gap-2 items-center px-3 py-2 rounded-md hover:bg-muted/40 transition-colors group"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div
-                            className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: bg, color: fg }}
-                          >
-                            <FileTypeIcon fileType={doc.fileType} />
-                          </div>
-                          <span
-                            className="text-[13px] text-foreground/80 truncate group-hover:text-foreground"
-                            title={doc.fileName}
-                          >
-                            {doc.fileName}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
-                        <span className="text-[11px] text-muted-foreground text-right tabular-nums">
-                          {formatUploadDate(doc.uploadedAt)}
-                        </span>
-                      </Link>
-                    );
-                  })
+                        doc={{
+                          title: doc.fileName,
+                          folder: inferDocumentKind(doc.fileName, doc.fileType),
+                          insight: getDashboardInsight(doc),
+                          similarity: getDashboardSimilarity(doc),
+                        }}
+                        onClick={() => navigate(`/documents/${doc.id}`)}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
