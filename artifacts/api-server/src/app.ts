@@ -10,6 +10,7 @@ import {
 } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { handleStripeWebhook } from "./lib/billing";
 
 const app: Express = express();
 
@@ -42,6 +43,10 @@ app.get("/health", (_req: Request, res: Response) => {
 app.get("/healthz", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "signal87-api" });
 });
+
+// Stripe webhooks must receive the raw body. This route must stay before
+// express.json(), express.urlencoded(), and Clerk auth middleware.
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
 
 // Clerk proxy must be mounted BEFORE express.json()
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
