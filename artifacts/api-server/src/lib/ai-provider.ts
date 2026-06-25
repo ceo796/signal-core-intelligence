@@ -1,11 +1,15 @@
 import OpenAI from "openai";
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY must be set.");
+const openAiApiKey = process.env.OPENAI_API_KEY;
+
+if (!openAiApiKey) {
+  console.warn(
+    "OPENAI_API_KEY is not set. Server will boot for health checks, but AI-backed routes will fail until OPENAI_API_KEY is configured.",
+  );
 }
 
 export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: openAiApiKey || "missing-openai-api-key",
 });
 
 export const PROVIDER_CONFIG = {

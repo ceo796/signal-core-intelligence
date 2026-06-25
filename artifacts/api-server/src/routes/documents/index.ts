@@ -40,6 +40,19 @@ function docToResponse(
   };
 }
 
+function isDatabaseConfigError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes("DATABASE_URL must be set");
+}
+
+function isDatabaseConnectionError(err: unknown): boolean {
+  if (isDatabaseConfigError(err)) return true;
+  if (!(err instanceof Error)) return false;
+  const message = err.message.toLowerCase();
+  return ["econnrefused", "enotfound", "timeout", "terminating connection", "database"].some((token) =>
+    message.includes(token),
+  );
+}
+
 router.get("/documents", async (req, res): Promise<void> => {
   const userId = getCurrentUserId(req);
   if (!userId) {
@@ -80,7 +93,11 @@ router.get("/documents", async (req, res): Promise<void> => {
     res.json({ items, total, limit, offset });
   } catch (err) {
     req.log.error({ err }, "Failed to list documents");
-    res.status(500).json({ error: "Failed to list documents" });
+    if (isDatabaseConnectionError(err)) {
+      res.status(503).json({ error: "Documents are temporarily unavailable because the database is not reachable." });
+      return;
+    }
+    res.status(500).json({ error: "Failed to list documents due to a server error." });
   }
 });
 
