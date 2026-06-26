@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import "@/lib/pdfjs-worker";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -15,7 +15,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
