@@ -76,6 +76,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { inferDocumentKind } from "@/lib/document-kind";
+import { cn } from "@/lib/utils";
 
 type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "ready" | "processing" | "error";
@@ -616,32 +617,32 @@ export default function DocumentsList() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#1a1f1c] text-[#f4f3ef]">
-        <header className="px-4 md:px-6 py-4 border-b border-white/10 bg-[#1a1f1c]">
+      <div className="s87-page">
+        <header className="s87-page-header">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               {fromHybrid && (
-                <Link href="/agents/hybrid" className="mb-2 inline-flex items-center gap-1 text-[11px] font-medium text-white/60 hover:text-white">
+                <Link href="/agents/hybrid" className="mb-2 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="w-3 h-3" /> Back to AI Chat
                 </Link>
               )}
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">Signal87 workspace</p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#f4f3ef]">Documents</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Signal87 workspace</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Documents</h1>
             </div>
             <div className="flex flex-1 flex-wrap items-center gap-2 lg:max-w-3xl lg:justify-end">
               <div className="relative min-w-[220px] flex-1 lg:max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
-                <Input placeholder="Search documents…" value={search} onChange={(e) => handleSearch(e.target.value)} className="h-10 rounded-[20px] border-white/12 bg-white/[0.08] pl-10 pr-9 text-sm text-white placeholder:text-white/45 focus-visible:ring-[#3d7a5e]" />
-                {search && <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white" aria-label="Clear search"><X className="h-3.5 w-3.5" /></button>}
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search documents…" value={search} onChange={(e) => handleSearch(e.target.value)} className="h-10 rounded-md bg-background pl-10 pr-9 text-sm text-foreground placeholder:text-muted-foreground" />
+                {search && <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="h-3.5 w-3.5" /></button>}
               </div>
               <Select value={view === "grid" ? gridSortColumn : sortColumn} onValueChange={(v) => view === "grid" ? handleGridSortColumn(v as SortColumn) : handleSort(v as SortColumn)}>
-                <SelectTrigger className="h-10 w-[126px] rounded-[20px] border-white/12 bg-white/[0.08] text-sm text-white"><SelectValue placeholder="Sort" /></SelectTrigger>
+                <SelectTrigger className="h-10 w-[126px] rounded-md bg-background text-sm text-foreground"><SelectValue placeholder="Sort" /></SelectTrigger>
                 <SelectContent><SelectItem value="uploaded">Uploaded</SelectItem><SelectItem value="name">Name</SelectItem><SelectItem value="status">Status</SelectItem><SelectItem value="chunks">Chunks</SelectItem></SelectContent>
               </Select>
-              <button onClick={view === "grid" ? handleGridSortDirection : () => handleSort(sortColumn)} className="h-10 rounded-[20px] border border-white/12 bg-white/[0.08] px-4 text-sm font-medium text-white hover:bg-white/[0.12]">Sort {view === "grid" ? (gridSortDirection === "asc" ? "↑" : "↓") : (sortDirection === "asc" ? "↑" : "↓")}</button>
+              <button onClick={view === "grid" ? handleGridSortDirection : () => handleSort(sortColumn)} className="s87-toolbar-control">Sort {view === "grid" ? (gridSortDirection === "asc" ? "↑" : "↓") : (sortDirection === "asc" ? "↑" : "↓")}</button>
               <FileUploadModal />
-              <Link href="/analyze" className="inline-flex h-10 items-center gap-2 rounded-[20px] border border-white/12 bg-white/[0.08] px-4 text-sm font-medium text-white hover:bg-white/[0.12]"><Plus className="h-4 w-4" /> New doc</Link>
-              <DropdownMenu><DropdownMenuTrigger asChild><button className="h-10 w-10 rounded-[20px] border border-white/12 bg-white/[0.08] text-white/70 hover:text-white" title="Preferences" aria-label="Preferences"><SlidersHorizontal className="mx-auto h-4 w-4" /></button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-48"><DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer"><RotateCcw className="w-3.5 h-3.5" />Reset to defaults</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+              <Link href="/analyze" className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground shadow-xs hover:bg-muted"><Plus className="h-4 w-4" /> New doc</Link>
+              <DropdownMenu><DropdownMenuTrigger asChild><button className="h-10 w-10 rounded-md border border-border bg-card text-muted-foreground shadow-xs hover:bg-muted hover:text-foreground" title="Preferences" aria-label="Preferences"><SlidersHorizontal className="mx-auto h-4 w-4" /></button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-48"><DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer"><RotateCcw className="w-3.5 h-3.5" />Reset to defaults</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
             </div>
           </div>
         </header>
@@ -728,11 +729,11 @@ export default function DocumentsList() {
                   { label: "AI Processed", value: processedCount, meta: `${Math.max((documents?.length ?? 0) - processedCount, 0)} pending or queued` },
                   { label: "Storage", value: formatSize(totalStorageBytes), meta: "Original files indexed" },
                 ].map((stat) => (
-                  <Card key={stat.label} className="rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f]">
+                  <Card key={stat.label} className="s87-card">
                     <CardContent className="p-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6b7068]">{stat.label}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</p>
                       <div className="mt-3 text-3xl font-semibold tracking-tight">{stat.value}</div>
-                      <p className="mt-2 font-mono text-[11px] text-[#6b7068]">{stat.meta}</p>
+                      <p className="mt-2 font-mono text-[11px] text-muted-foreground">{stat.meta}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -753,7 +754,12 @@ export default function DocumentsList() {
                     <button
                       key={filter.label}
                       onClick={() => { handleTypeFilter(filter.value); handleStatusFilter(filter.status ?? "all"); }}
-                      className={`rounded-[20px] border px-4 py-2 text-sm font-medium transition-colors ${active ? "border-[#3d7a5e] bg-[#3d7a5e] text-white" : "border-white/12 bg-white/[0.08] text-white/70 hover:bg-white/[0.12] hover:text-white"}`}
+                      className={cn(
+                        "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
                     >
                       {filter.label}
                     </button>

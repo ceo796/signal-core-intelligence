@@ -1,10 +1,10 @@
 # Signal87 Render Production Runbook
 
-Signal87 production stays on Render, Clerk auth, and Neon/Postgres. Do not add MongoDB or switch the production entrypoint away from `railway-server.mjs` unless a separate deployment change explicitly requires it.
+Signal87 production runs outside Replit on Render, Clerk auth, OpenAI, and Postgres. The checked-in `render.yaml` uses two services: a Node API service and a static frontend service. Do not add Replit runtime dependencies or Replit object storage for new uploads.
 
 ## Required Render environment variables
 
-Set these on the Render web service before deploying:
+Set these on `signal87-api` before deploying:
 
 | Variable | Required value / notes |
 | --- | --- |
@@ -12,11 +12,18 @@ Set these on the Render web service before deploying:
 | `OPENAI_API_KEY` | OpenAI API key used by AI/chat/analyze features. |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Keep this secret. |
 | `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key available to the browser build. |
 | `APPROVED_EMAILS` | Comma-separated allowlist of approved user email addresses. |
 | `FILE_STORAGE_DIR` | Persistent Render Disk path for uploaded originals, for example `/var/data/uploads`. |
 | `STORAGE_PROVIDER` | Use `local` on Render with a persistent disk mounted at `FILE_STORAGE_DIR`. |
 | `NODE_ENV` | `production`. |
+
+Set these on `signal87-web` before deploying:
+
+| Variable | Required value / notes |
+| --- | --- |
+| `VITE_API_BASE_URL` | Deployed API URL, for example `https://signal87-api.onrender.com`. |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key available to the browser build. |
+| `BASE_PATH` | `/` unless serving the app from a subpath. |
 
 Never commit `.env` files, API keys, database URLs, Clerk secrets, or credentials.
 
@@ -29,11 +36,18 @@ Never commit `.env` files, API keys, database URLs, Clerk secrets, or credential
 
 ## Deploy
 
-1. Confirm the Render service build command uses `pnpm install --frozen-lockfile && pnpm build` or the equivalent project setting.
-2. Confirm the start command runs the combined SPA/API entrypoint: `node railway-server.mjs`.
-3. Confirm a persistent Render Disk is mounted at `FILE_STORAGE_DIR`.
-4. Deploy the selected Git branch from Render.
-5. After deploy, run the smoke test below.
+1. Confirm `render.yaml` has two services: `signal87-api` and `signal87-web`.
+2. Confirm `signal87-api` has a persistent Render Disk mounted at `/var/data`.
+3. Confirm `FILE_STORAGE_DIR=/var/data/uploads` and `STORAGE_PROVIDER=local` on `signal87-api`.
+4. Confirm `VITE_API_BASE_URL` on `signal87-web` points to the deployed API service.
+5. Deploy the selected Git branch from Render.
+6. When database schema changes are included, push the Drizzle schema against production Postgres:
+
+```bash
+DATABASE_URL="<production-postgres-url>" pnpm --filter @workspace/db push
+```
+
+7. After deploy, run the smoke test below.
 
 ## Smoke test
 

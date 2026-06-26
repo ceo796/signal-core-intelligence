@@ -3,9 +3,10 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PNPM_HOME=/usr/local/bin
+ENV STORAGE_PROVIDER=local
+ENV FILE_STORAGE_DIR=/data/uploads
 
-RUN npm install -g pnpm@10.12.1
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY railway-server.mjs ./railway-server.mjs

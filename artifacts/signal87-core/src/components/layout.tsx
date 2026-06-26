@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth, UserButton, useUser } from "@clerk/react";
-import { FileText, Sparkles, BarChart2, Trash2, Settings, ClipboardList } from "lucide-react";
+import { FileText, Sparkles, BarChart2, Trash2, Settings, ClipboardList, NotebookPen } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,6 +14,7 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { href: "/documents", label: "Documents", icon: FileText },
+    { href: "/notes", label: "Notes", icon: NotebookPen },
     { href: "/agents/hybrid", label: "AI Chat", icon: Sparkles },
     { href: "/analyze", label: "Analyze", icon: BarChart2 },
     { href: "/skills", label: "Skills", icon: ClipboardList },
@@ -25,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "Signed in";
 
   return (
-    <div className="signal-app h-[100dvh] bg-[#1a1f1c] text-[#f4f3ef] flex flex-col md:flex-row font-sans overflow-hidden">
+    <div className="signal-app h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Main content — first in DOM so it fills the top area on mobile and the right panel on desktop */}
       <main className="relative z-10 flex-1 flex flex-col overflow-hidden min-h-0">
         {children}
@@ -33,11 +34,11 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Navigation shell — bottom bar on mobile, left sidebar on desktop (md:order-first) */}
       <aside
-        className="shrink-0 w-full md:w-60 border-t md:border-t-0 md:border-r border-white/10 bg-[#1a1f1c] flex flex-row md:flex-col md:order-first"
+        className="shrink-0 w-full md:w-60 border-t md:border-t-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-row md:flex-col md:order-first"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Logo — shown only on desktop sidebar */}
-        <div className="hidden md:flex px-4 py-4 border-b border-white/10 items-center shrink-0">
+        <div className="hidden md:flex px-4 py-4 border-b border-sidebar-border items-center shrink-0">
           <Link href="/documents">
             <img
               src="/signal87-logo.png"
@@ -55,10 +56,10 @@ export function Layout({ children }: LayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-0.5 md:gap-2.5 px-1 py-3 md:py-2 md:px-3 rounded-[20px] transition-all duration-150 min-w-0 select-none active:scale-[0.94] ${
+                className={`flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-0.5 md:gap-2.5 px-1 py-3 md:py-2 md:px-3 rounded-md transition-all duration-150 min-w-0 select-none active:scale-[0.98] ${
                   isActive
-                    ? "bg-[#3d7a5e] text-white font-medium"
-                    : "text-white/60 hover:bg-white/[0.08] hover:text-white"
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 }`}
               >
                 <item.icon className="w-5 h-5 md:w-4 md:h-4 shrink-0" />
@@ -78,13 +79,13 @@ export function Layout({ children }: LayoutProps) {
         )}
 
         {/* Desktop footer — Settings link + real user identity, pinned at the bottom */}
-        <div className="hidden md:flex md:flex-col gap-1 px-3 pb-3 pt-2 border-t border-white/10 mt-auto shrink-0">
+        <div className="hidden md:flex md:flex-col gap-1 px-3 pb-3 pt-2 border-t border-sidebar-border mt-auto shrink-0">
           <Link
             href="/settings"
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-[20px] text-xs transition-all duration-150 w-full select-none active:scale-[0.94] ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-xs transition-all duration-150 w-full select-none active:scale-[0.98] ${
               location.startsWith("/settings")
-                ? "bg-[#3d7a5e] text-white font-medium"
-                : "text-white/60 hover:bg-white/[0.08] hover:text-white"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             }`}
           >
             <Settings className="w-4 h-4 shrink-0" />
@@ -96,10 +97,10 @@ export function Layout({ children }: LayoutProps) {
                 appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }}
               />
               <div className="min-w-0 leading-tight">
-                <div className="text-xs font-medium text-white truncate" title={userName}>
+                <div className="text-xs font-medium text-sidebar-foreground truncate" title={userName}>
                   {userName}
                 </div>
-                <div className="text-[11px] text-white/50 truncate" title={userEmail}>
+                <div className="text-[11px] text-sidebar-foreground/55 truncate" title={userEmail}>
                   {userEmail}
                 </div>
               </div>

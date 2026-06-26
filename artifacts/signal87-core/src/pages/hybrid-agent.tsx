@@ -32,6 +32,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DocumentIntelligenceOrbit } from "@/components/document-intelligence-orbit";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -64,9 +65,9 @@ const SOURCE_LABELS = {
 } as const;
 
 const PILL_CLASS =
-  "inline-flex items-center gap-1.5 h-8 rounded-[20px] border border-[#d8d5ce] bg-[#eceae4] px-3 text-xs font-medium text-[#6b7068] hover:bg-white hover:text-[#1f1f1f] transition-colors select-none active:scale-[0.94] touch-manipulation";
+  "inline-flex items-center gap-1.5 h-8 rounded-md border border-border bg-card px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors select-none active:scale-[0.98] touch-manipulation";
 
-const POPOVER_CLASS = "border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f] shadow-none";
+const POPOVER_CLASS = "border-border bg-popover text-popover-foreground shadow-md";
 
 interface DocOption {
   id: number;
@@ -115,7 +116,7 @@ function Composer({
 
   return (
     <form onSubmit={onSubmit} className="w-full">
-      <div className="rounded-[20px] border border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f] transition-colors focus-within:border-[#3d7a5e]">
+      <div className="rounded-lg border border-border bg-card text-card-foreground transition-colors focus-within:border-primary">
         <Textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -123,7 +124,7 @@ function Composer({
           disabled={isPending}
           autoFocus={autoFocus}
           rows={1}
-          className="resize-none border-0 bg-transparent text-[#1f1f1f] shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-[15px] sm:text-[14px] placeholder:text-[#6b7068]/70"
+          className="resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-[15px] sm:text-[14px] placeholder:text-muted-foreground"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -146,14 +147,14 @@ function Composer({
                 <DropdownMenuItem
                   key={m.value}
                   onClick={() => setMode(m.value as HybridAgentInputMode)}
-                  className="flex items-start gap-2 focus:bg-[#eceae4]"
+                  className="flex items-start gap-2 focus:bg-muted"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-[#1f1f1f]">{m.label}</div>
-                    <div className="text-xs text-[#6b7068]">{m.description}</div>
+                    <div className="text-sm font-medium text-foreground">{m.label}</div>
+                    <div className="text-xs text-muted-foreground">{m.description}</div>
                   </div>
                   {mode === m.value && (
-                    <Check className="w-4 h-4 text-[#3d7a5e] shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   )}
                 </DropdownMenuItem>
               ))}
@@ -170,14 +171,14 @@ function Composer({
             </PopoverTrigger>
             <PopoverContent align="start" className={`w-[calc(100vw-2rem)] sm:w-72 p-2 ${POPOVER_CLASS}`}>
               <div className="flex items-center justify-between px-1 pb-1.5">
-                <span className="text-xs font-medium text-[#6b7068]">
+                <span className="text-xs font-medium text-muted-foreground">
                   Documents to search
                 </span>
                 {selectedDocIds.size > 0 && (
                   <button
                     type="button"
                     onClick={clearDocSelection}
-                    className="text-xs text-[#3d7a5e] hover:underline"
+                    className="text-xs text-primary hover:underline"
                   >
                     Clear
                   </button>
@@ -185,48 +186,48 @@ function Composer({
               </div>
               {docsLoading ? (
                 <div className="space-y-1.5 px-1 py-1">
-                  <Skeleton className="h-7 w-full bg-[#eceae4]" />
-                  <Skeleton className="h-7 w-full bg-[#eceae4]" />
+                  <Skeleton className="h-7 w-full bg-muted" />
+                  <Skeleton className="h-7 w-full bg-muted" />
                 </div>
               ) : readyDocs.length === 0 ? (
-                <p className="px-1 py-2 text-xs text-[#6b7068]">
+                <p className="px-1 py-2 text-xs text-muted-foreground">
                   No indexed documents yet. Upload and index a document first.
                 </p>
               ) : (
                 <>
-                  <div className="max-h-60 overflow-y-auto rounded-[12px] border border-[#d8d5ce] divide-y divide-[#d8d5ce] bg-white">
+                  <div className="max-h-60 overflow-y-auto rounded-md border border-border divide-y divide-border bg-card">
                     {readyDocs.map((doc) => (
                       <label
                         key={doc.id}
-                        className="flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 hover:bg-[#eceae4] cursor-pointer min-h-[44px]"
+                        className="flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 hover:bg-muted cursor-pointer min-h-[44px]"
                       >
                         <Checkbox
                           checked={selectedDocIds.has(doc.id)}
                           onCheckedChange={() => toggleDoc(doc.id)}
                         />
-                        <span className="text-sm truncate flex-1 text-[#1f1f1f]" title={doc.fileName}>
+                        <span className="text-sm truncate flex-1 text-foreground" title={doc.fileName}>
                           {doc.fileName}
                         </span>
                         {doc.chunkCount != null && (
-                          <span className="font-mono text-[10px] text-[#6b7068] shrink-0 tabular-nums">
+                          <span className="font-mono text-[10px] text-muted-foreground shrink-0 tabular-nums">
                             {doc.chunkCount}c
                           </span>
                         )}
                       </label>
                     ))}
                   </div>
-                  <p className="px-1 pt-2 text-[11px] text-[#6b7068]">
+                  <p className="px-1 pt-2 text-[11px] text-muted-foreground">
                     {selectedDocIds.size === 0
                       ? "Searching all indexed documents."
                       : `${selectedDocIds.size} of ${readyDocs.length} selected.`}
                   </p>
                 </>
               )}
-              <div className="border-t border-[#d8d5ce] mt-2 pt-2">
+              <div className="border-t border-border mt-2 pt-2">
                 <button
                   type="button"
                   onClick={onBrowse}
-                  className="flex items-center gap-1.5 w-full px-2 py-2 sm:py-1.5 rounded-[12px] text-xs text-[#3d7a5e] hover:bg-[#eceae4] transition-colors min-h-[44px] sm:min-h-0"
+                  className="flex items-center gap-1.5 w-full px-2 py-2 sm:py-1.5 rounded-md text-xs text-primary hover:bg-muted transition-colors min-h-[44px] sm:min-h-0"
                 >
                   <ExternalLink className="w-3 h-3 shrink-0" />
                   Browse all documents
@@ -236,7 +237,7 @@ function Composer({
           </Popover>
 
           <span
-            className="hidden sm:inline-flex items-center gap-1.5 h-8 rounded-[20px] border border-[#d8d5ce] bg-[#eceae4] px-3 text-xs font-medium text-[#6b7068]/70 cursor-not-allowed select-none"
+            className="hidden sm:inline-flex items-center gap-1.5 h-8 rounded-md border border-border bg-muted px-3 text-xs font-medium text-muted-foreground cursor-not-allowed select-none"
             title="Web context coming soon"
             aria-disabled="true"
           >
@@ -248,7 +249,7 @@ function Composer({
             type="submit"
             size="icon"
             disabled={isPending || !query.trim()}
-            className="ml-auto rounded-[20px] h-10 w-10 sm:h-9 sm:w-9 shrink-0 bg-[#3d7a5e] text-white hover:bg-[#5a9e7a] disabled:bg-[#d8d5ce] disabled:text-[#6b7068]"
+            className="ml-auto rounded-md h-10 w-10 sm:h-9 sm:w-9 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
             aria-label="Send"
           >
             {isPending ? (
@@ -259,7 +260,7 @@ function Composer({
           </Button>
         </div>
       </div>
-      <p className="text-center text-[11px] text-[#f4f3ef]/55 mt-2 px-2">
+      <p className="text-center text-[11px] text-muted-foreground mt-2 px-2">
         Answers use your documents with citations and GPT reasoning — no web research.
       </p>
     </form>
@@ -671,12 +672,12 @@ export default function HybridAgent() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#1a1f1c] text-[#f4f3ef]">
-        <header className="shrink-0 px-4 py-4 border-b border-white/10 bg-[#1a1f1c] md:px-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
+      <div className="s87-page">
+        <header className="s87-page-header">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Signal87 workspace
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#f4f3ef]">
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             AI Chat
           </h1>
         </header>
@@ -693,7 +694,7 @@ export default function HybridAgent() {
                 )}
 
                 {isPending ? (
-                  <div className="flex items-center gap-2 text-[13px] text-[#f4f3ef]/60">
+                  <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
                     <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     Thinking…
                   </div>
@@ -707,7 +708,7 @@ export default function HybridAgent() {
               </div>
             </ScrollArea>
 
-            <div className="shrink-0 border-t border-white/10 bg-[#1a1f1c]/95">
+            <div className="shrink-0 border-t border-border bg-card/95">
               <div className="max-w-3xl mx-auto w-full px-4 py-3">
                 <Composer {...composerProps} />
               </div>
@@ -716,21 +717,24 @@ export default function HybridAgent() {
         ) : (
           <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-10">
-              <div className="w-full max-w-2xl space-y-7 rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-8 sm:px-6">
+              <div className="grid w-full max-w-5xl gap-6 md:grid-cols-[minmax(0,1fr)_360px] md:items-center">
+              <div className="s87-card space-y-7 px-4 py-8 sm:px-6">
                 <div className="flex justify-center">
-                  <div className="inline-flex items-center justify-center rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] p-3">
-                    <Sparkles className="w-6 h-6 text-[#3d7a5e]" />
+                  <div className="inline-flex items-center justify-center rounded-lg border border-border bg-accent p-3">
+                    <Sparkles className="w-6 h-6 text-accent-foreground" />
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <h1 className="text-xl font-semibold tracking-tight text-[#f4f3ef]">
+                  <h1 className="text-xl font-semibold tracking-tight text-foreground">
                     Hybrid AI Chat
                   </h1>
-                  <p className="text-sm text-[#f4f3ef]/60">
+                  <p className="text-sm text-muted-foreground">
                     Documents + GPT reasoning, no web research.
                   </p>
                 </div>
                 <Composer {...composerProps} autoFocus />
+              </div>
+              <DocumentIntelligenceOrbit className="hidden md:block" />
               </div>
             </div>
           </div>

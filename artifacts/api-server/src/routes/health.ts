@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
+import { pool } from "@workspace/db";
 import { PROVIDER_CONFIG } from "../lib/ai-provider";
 import { getRuntimeStorageStatus } from "../lib/file-store";
 
@@ -14,13 +15,37 @@ function configStatus(key: string) {
   return { configured: Boolean(process.env[key]) };
 }
 
-router.get("/runtime-check", (_req, res) => {
+async function checkDatabase() {
+  if (!process.env.DATABASE_URL) {
+    return { configured: false, connected: false, error: "DATABASE_URL missing" };
+  }
+
+  try {
+    await pool.query("select 1");
+    return { configured: true, connected: true, error: null };
+  } catch (err) {
+    const message = err instanceof Error && err.message ? err.message : "Database check failed";
+    return { configured: true, connected: false, error: message };
+  }
+}
+
+router.get("/runtime-check", async (_req, res) => {
   const storage = getRuntimeStorageStatus();
+  const database = await checkDatabase();
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
+  const replitDependency = detectedReplitEnvVars.length > 0;
+  const healthy =
+    Boolean(process.env.OPENAI_API_KEY) &&
+    Boolean(process.env.CLERK_SECRET_KEY) &&
+    Boolean(process.env.CLERK_PUBLISHABLE_KEY) &&
+    database.connected &&
+    storage.configured &&
+    storage.productionSafe &&
+    !replitDependency;
 
   res.json({
-    status: "ok",
+    status: healthy ? "ok" : "degraded",
     host: process.env.RENDER ? "render" : "unknown",
     nodeEnv: process.env.NODE_ENV ?? "unknown",
     ai: {
@@ -37,15 +62,13 @@ router.get("/runtime-check", (_req, res) => {
       FILE_STORAGE_DIR: configStatus("FILE_STORAGE_DIR"),
       STORAGE_PROVIDER: configStatus("STORAGE_PROVIDER"),
     },
-    database: {
-      configured: Boolean(process.env.DATABASE_URL),
-    },
+    database,
     clerk: {
       secretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
       publishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
     },
     storage,
-    replitDependency: detectedReplitEnvVars.length > 0 || storage.provider === "replit-object-storage",
+    replitDependency,
     detectedReplitEnvVars,
   });
 });

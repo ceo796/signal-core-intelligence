@@ -133,7 +133,7 @@ router.post(
     }
 
     let storageKey: string;
-    const storageProvider = "replit-object-storage";
+    const storageProvider = fileStore.getStorageProviderName();
     try {
       const mimeType = fileStore.getMimeType(fileType);
       storageKey = await fileStore.uploadFile(file.buffer, file.originalname, mimeType);
@@ -412,7 +412,7 @@ router.put(
     }
 
     let storageKey: string;
-    const storageProvider = "replit-object-storage";
+    const storageProvider = fileStore.getStorageProviderName();
     try {
       const mimeType = fileStore.getMimeType(fileType);
       storageKey = await fileStore.uploadFile(file.buffer, file.originalname, mimeType);
@@ -576,15 +576,15 @@ router.get("/system/info", (_req, res): void => {
       DATABASE_URL: envStatus("DATABASE_URL"),
       OPENAI_API_KEY: envStatus("OPENAI_API_KEY"),
       PORT: envStatus("PORT"),
-      DEFAULT_OBJECT_STORAGE_BUCKET_ID: envStatus("DEFAULT_OBJECT_STORAGE_BUCKET_ID"),
-      PRIVATE_OBJECT_DIR: envStatus("PRIVATE_OBJECT_DIR"),
+      STORAGE_PROVIDER: envStatus("STORAGE_PROVIDER"),
+      FILE_STORAGE_DIR: envStatus("FILE_STORAGE_DIR"),
       NODE_ENV: process.env["NODE_ENV"] ?? "not set",
     },
     fileStorage: fileStore.isConfigured()
-      ? "replit-object-storage (GCS-backed)"
-      : "none — PRIVATE_OBJECT_DIR not configured",
+      ? `${fileStore.getStorageProviderName()} durable storage`
+      : "none — durable file storage not configured",
     fileStorageConfig: {
-      provider: fileStore.isConfigured() ? "replit-object-storage" : "none",
+      provider: fileStore.getStorageProviderName(),
       bucketConfigured: fileStore.isConfigured(),
       originalFilesStored: fileStore.isConfigured(),
       embeddingsPersisted: false,
