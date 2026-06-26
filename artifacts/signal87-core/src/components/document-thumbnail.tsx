@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import { getGetDocumentOriginalUrl } from "@workspace/api-client-react";
+import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -110,8 +110,8 @@ function FileTypePlaceholder({ fileType }: { fileType: string }) {
  * - Lazy: uses IntersectionObserver — PDF loading only starts when the card
  *   is near the viewport (rootMargin 300 px).
  * - Safe: errors fall back silently to a PDF icon card; never blocks the list.
- * - Auth: the /api/documents/:id/original URL is same-origin so the browser
- *   includes the Clerk session cookie automatically — no token wiring needed.
+ * - Auth: fetches the original through customFetch so Clerk auth headers are
+ *   included before handing react-pdf an object URL.
  * - No text/annotation layers — render is lightweight and fast.
  */
 export function DocumentThumbnail({
@@ -124,6 +124,7 @@ export function DocumentThumbnail({
   const [containerWidth, setContainerWidth] = useState(0);
   const [rendered, setRendered] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   const isPdf = fileType.toLowerCase() === "pdf";
   const canRenderPdf = isPdf && originalFileAvailable;
@@ -145,6 +146,37 @@ export function DocumentThumbnail({
     io.observe(el);
     return () => io.disconnect();
   }, [canRenderPdf]);
+
+  useEffect(() => {
+    if (!inView || !canRenderPdf) {
+      setThumbnailUrl(null);
+      return;
+    }
+
+    let revoked = false;
+    let objectUrl: string | null = null;
+    setRendered(false);
+    setFailed(false);
+    setThumbnailUrl(null);
+
+    customFetch<Blob>(getGetDocumentOriginalUrl(id), {
+      method: "GET",
+      responseType: "blob",
+    })
+      .then((blob) => {
+        if (revoked) return;
+        objectUrl = URL.createObjectURL(blob);
+        setThumbnailUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!revoked) setFailed(true);
+      });
+
+    return () => {
+      revoked = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [id, inView, canRenderPdf]);
 
   // Measure the container once visible so the Page component gets the right width.
   useEffect(() => {
@@ -168,9 +200,9 @@ export function DocumentThumbnail({
       {failed && <FileTypePlaceholder fileType="pdf" />}
 
       {/* Only mount Document+Page after the card is visible and width is known */}
-      {inView && containerWidth > 0 && !failed && (
+      {thumbnailUrl && containerWidth > 0 && !failed && (
         <Document
-          file={getGetDocumentOriginalUrl(id)}
+          file={thumbnailUrl}
           onLoadError={() => setFailed(true)}
           loading={null}
           error={null}
