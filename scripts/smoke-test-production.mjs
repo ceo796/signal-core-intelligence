@@ -14,6 +14,7 @@ const checks = [
   { path: '/api/healthz', expected: 200, json: true },
   { path: '/api/runtime-check', expected: 200, json: true },
   { path: '/api/documents', expected: 401, json: true },
+  { path: '/api/documents/999999/original', expected: 401, json: true },
 ];
 
 let failures = 0;
