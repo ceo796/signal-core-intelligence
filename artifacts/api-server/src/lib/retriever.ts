@@ -76,14 +76,7 @@ async function persistEmbeddings(chunks: RetrievalChunk[], embeddings: number[][
   await db
     .insert(chunkEmbeddingsTable)
     .values(values)
-    .onConflictDoUpdate({
-      target: [chunkEmbeddingsTable.chunkId, chunkEmbeddingsTable.model],
-      set: {
-        dimensions: values[0].dimensions,
-        embedding: values[0].embedding,
-        updatedAt: now,
-      },
-    });
+    .onConflictDoNothing({ target: [chunkEmbeddingsTable.chunkId, chunkEmbeddingsTable.model] });
 }
 
 async function getOrCreateChunkEmbeddings(chunks: RetrievalChunk[]): Promise<Map<number, number[]>> {
