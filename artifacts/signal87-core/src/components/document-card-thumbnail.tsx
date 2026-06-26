@@ -6,6 +6,11 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
+// Live PDF thumbnails fetch and render the original PDF in the browser. That is
+// expensive on mobile and on document grids, so it stays opt-in until server-side
+// cached thumbnails are available.
+const ENABLE_LIVE_PDF_THUMBNAILS = import.meta.env.VITE_ENABLE_LIVE_PDF_THUMBNAILS === "true";
+
 const FT_STYLE: Record<string, { bg: string; fg: string }> = {
   pdf:  { bg: "#FAECE7", fg: "#8A3520" },
   docx: { bg: "#E6F1FB", fg: "#1558A5" },
@@ -119,6 +124,7 @@ export function DocumentCardThumbnail({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (!ENABLE_LIVE_PDF_THUMBNAILS) return;
     const el = containerRef.current;
     if (!el) return;
     setWidth(el.clientWidth || 300);
@@ -128,24 +134,27 @@ export function DocumentCardThumbnail({
   }, []);
 
   useEffect(() => {
+    if (!ENABLE_LIVE_PDF_THUMBNAILS) return;
     const el = containerRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) setVisible(true);
       },
-      { rootMargin: "400px", threshold: 0 },
+      { rootMargin: "100px", threshold: 0 },
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  const shouldRenderLivePdfThumb = ENABLE_LIVE_PDF_THUMBNAILS && isPdf && originalFileAvailable && visible;
 
   return (
     <div
       ref={containerRef}
       className={`overflow-hidden flex items-start justify-center select-none ${className}`}
     >
-      {isPdf && originalFileAvailable && visible ? (
+      {shouldRenderLivePdfThumb ? (
         <PdfPageThumb id={id} width={width} />
       ) : (
         <FallbackThumb fileType={fileType} />
