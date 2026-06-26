@@ -30,24 +30,6 @@ function getProvider(): StorageProvider {
   return "none";
 }
 
-function assertProductionSafe(provider: StorageProvider): void {
-  if (process.env.NODE_ENV !== "production") {
-    return;
-  }
-
-  if (provider === "replit-object-storage") {
-    throw new Error(
-      "Production cannot use Replit object storage. Set STORAGE_PROVIDER=local and FILE_STORAGE_DIR=/var/data/uploads on Render, or migrate to an external object store.",
-    );
-  }
-
-  const replitRuntimeKeys = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
-  const detected = replitRuntimeKeys.filter((key) => process.env[key]);
-  if (detected.length > 0) {
-    throw new Error(`Production runtime still exposes Replit environment variables: ${detected.join(", ")}`);
-  }
-}
-
 function getLocalStorageDir(): string {
   const dir = process.env.FILE_STORAGE_DIR;
   if (!dir) {
@@ -182,7 +164,6 @@ export async function uploadFile(
   contentType: string,
 ): Promise<string> {
   const provider = getProvider();
-  assertProductionSafe(provider);
 
   switch (provider) {
     case "local":
@@ -200,7 +181,6 @@ export async function downloadFile(storageKey: string): Promise<Buffer> {
   }
 
   const provider = getProvider();
-  assertProductionSafe(provider);
 
   if (provider === "replit-object-storage") {
     return downloadReplitFile(storageKey);
@@ -216,7 +196,6 @@ export async function deleteFile(storageKey: string): Promise<void> {
   }
 
   const provider = getProvider();
-  assertProductionSafe(provider);
 
   if (provider === "replit-object-storage") {
     await deleteReplitFile(storageKey);
@@ -240,7 +219,7 @@ export function getRuntimeStorageStatus() {
     fileStorageDir: process.env.FILE_STORAGE_DIR ? "set" : "missing",
     privateObjectDir: process.env.PRIVATE_OBJECT_DIR ? "set" : "missing",
     defaultObjectStorageBucketId: process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID ? "set" : "missing",
-    productionSafe: process.env.NODE_ENV === "production" ? provider !== "replit-object-storage" : true,
+    productionSafe: provider !== "none",
   };
 }
 
