@@ -25,16 +25,7 @@ export function Layout({ children }: LayoutProps) {
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "Signed in";
 
   return (
-    <div className="signal-app h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
-      {/* Very subtle indigo ambiance — restrained, matches the #4F3FF0 accent */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 30% at 50% -6%, rgba(79,63,240,0.04), transparent 62%)",
-        }}
-      />
+    <div className="signal-app h-[100dvh] bg-[#1a1f1c] text-foreground flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Main content — first in DOM so it fills the top area on mobile and the right panel on desktop */}
       <main className="relative z-10 flex-1 flex flex-col overflow-hidden min-h-0">
         {children}
@@ -42,16 +33,16 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Navigation shell — bottom bar on mobile, left sidebar on desktop (md:order-first) */}
       <aside
-        className="shrink-0 w-full md:w-60 border-t md:border-t-0 md:border-r border-border bg-sidebar flex flex-row md:flex-col md:order-first"
+        className="shrink-0 w-full md:w-60 border-t md:border-t-0 md:border-r border-[#2b312d] bg-[#1a1f1c] text-[#f4f3ef] flex flex-row md:flex-col md:order-first"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Logo — shown only on desktop sidebar */}
-        <div className="hidden md:flex px-4 py-4 border-b border-border items-center shrink-0">
+        <div className="hidden md:flex px-4 py-4 border-b border-[#2b312d] items-center shrink-0">
           <Link href="/documents">
             <img
               src="/signal87-logo-black.svg"
               alt="Signal87"
-              className="h-8 w-auto cursor-pointer"
+              className="h-8 w-auto cursor-pointer invert"
             />
           </Link>
         </div>
@@ -66,8 +57,8 @@ export function Layout({ children }: LayoutProps) {
                 href={item.href}
                 className={`flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-0.5 md:gap-2.5 px-1 py-3 md:py-2 md:px-3 rounded-lg transition-all duration-150 min-w-0 select-none active:scale-[0.94] ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                    ? "bg-[#f4f3ef] text-[#1f1f1f] font-medium"
+                    : "text-[#b8bdb5] hover:bg-[#252b27] hover:text-[#f4f3ef]"
                 }`}
               >
                 <item.icon className="w-5 h-5 md:w-4 md:h-4 shrink-0" />
@@ -79,7 +70,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* UserButton — mobile bottom bar only, separated at the right edge */}
         {isSignedIn && (
-          <div className="md:hidden flex items-center justify-center px-3 shrink-0 border-l border-border/60">
+          <div className="md:hidden flex items-center justify-center px-3 shrink-0 border-l border-[#2b312d]">
             <UserButton
               appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }}
             />
@@ -87,13 +78,13 @@ export function Layout({ children }: LayoutProps) {
         )}
 
         {/* Desktop footer — Settings link + real user identity, pinned at the bottom */}
-        <div className="hidden md:flex md:flex-col gap-1 px-3 pb-3 pt-2 border-t border-border mt-auto shrink-0">
+        <div className="hidden md:flex md:flex-col gap-1 px-3 pb-3 pt-2 border-t border-[#2b312d] mt-auto shrink-0">
           <Link
             href="/settings"
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-150 w-full select-none active:scale-[0.94] ${
               location.startsWith("/settings")
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                ? "bg-[#f4f3ef] text-[#1f1f1f] font-medium"
+                : "text-[#b8bdb5] hover:bg-[#252b27] hover:text-[#f4f3ef]"
             }`}
           >
             <Settings className="w-4 h-4 shrink-0" />
@@ -105,10 +96,10 @@ export function Layout({ children }: LayoutProps) {
                 appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }}
               />
               <div className="min-w-0 leading-tight">
-                <div className="text-xs font-medium text-foreground truncate" title={userName}>
+                <div className="text-xs font-medium text-[#f4f3ef] truncate" title={userName}>
                   {userName}
                 </div>
-                <div className="text-[11px] text-muted-foreground truncate" title={userEmail}>
+                <div className="text-[11px] text-[#b8bdb5] truncate" title={userEmail}>
                   {userEmail}
                 </div>
               </div>
