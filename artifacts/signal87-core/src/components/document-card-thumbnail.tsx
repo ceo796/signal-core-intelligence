@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
-import { FileText, FileSpreadsheet } from "lucide-react";
+import { FileText, FileSpreadsheet, Loader2 } from "lucide-react";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-// Live PDF thumbnails fetch and render the original PDF in the browser. That is
-// expensive on mobile and on document grids, so it stays opt-in until server-side
-// cached thumbnails are available.
-const ENABLE_LIVE_PDF_THUMBNAILS = import.meta.env.VITE_ENABLE_LIVE_PDF_THUMBNAILS === "true";
+// PDF thumbnails are a core document-list feature. They are still lazy-rendered
+// and can be disabled with an explicit kill switch if a production device class
+// needs the lightweight icon fallback temporarily.
+const DISABLE_LIVE_PDF_THUMBNAILS = import.meta.env.VITE_DISABLE_LIVE_PDF_THUMBNAILS === "true";
 
 const FT_STYLE: Record<string, { bg: string; fg: string }> = {
   pdf:  { bg: "#FAECE7", fg: "#8A3520" },
@@ -45,61 +45,74 @@ function FallbackThumb({ fileType }: { fileType: string }) {
   );
 }
 
+function LoadingThumb() {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#FAECE7] text-[#8A3520]">
+      <Loader2 className="w-8 h-8 animate-spin opacity-50" />
+      <span className="text-[11px] font-semibold opacity-60">PDF</span>
+    </div>
+  );
+}
+
 function PdfPageThumb({ id, width }: { id: number; width: number }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     let objectUrl: string | null = null;
+
+    setUrl(null);
+    setError(false);
+    setRendered(false);
+
     customFetch<Blob>(getGetDocumentOriginalUrl(id), {
       method: "GET",
       responseType: "blob",
+      signal: controller.signal,
     })
       .then((blob) => {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
       })
-      .catch(() => {
-        if (!cancelled) setError(true);
+      .catch((err) => {
+        if (controller.signal.aborted || err?.name === "AbortError") return;
+        setError(true);
       });
+
     return () => {
-      cancelled = true;
+      controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [id]);
 
-  if (error) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-destructive/10 px-4 text-center text-destructive">
-        <FileText className="w-10 h-10 opacity-50" />
-        <span className="text-[11px] font-semibold">PDF failed to load</span>
-      </div>
-    );
-  }
-
-  if (!url) return <FallbackThumb fileType="pdf" />;
+  if (error) return <FallbackThumb fileType="pdf" />;
+  if (!url) return <LoadingThumb />;
 
   return (
-    <Document
-      file={url}
-      loading={<FallbackThumb fileType="pdf" />}
-      error={
-        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-destructive/10 px-4 text-center text-destructive">
-          <FileText className="w-10 h-10 opacity-50" />
-          <span className="text-[11px] font-semibold">PDF failed to load</span>
-        </div>
-      }
-      onLoadError={() => setError(true)}
-    >
-      <Page
-        pageNumber={1}
-        width={width}
-        renderAnnotationLayer={false}
-        renderTextLayer={false}
-      />
-    </Document>
+    <div className="relative h-full w-full bg-white">
+      {!rendered && <LoadingThumb />}
+      <Document
+        file={url}
+        loading={null}
+        error={<FallbackThumb fileType="pdf" />}
+        onLoadError={() => setError(true)}
+        className="min-h-full w-full"
+      >
+        <Page
+          pageNumber={1}
+          width={width}
+          renderAnnotationLayer={false}
+          renderTextLayer={false}
+          onRenderSuccess={() => setRendered(true)}
+          onRenderError={() => setError(true)}
+          loading={null}
+          className="pointer-events-none select-none"
+        />
+      </Document>
+    </div>
   );
 }
 
@@ -123,31 +136,41 @@ export function DocumentCardThumbnail({
   const [width, setWidth] = useState(300);
   const [visible, setVisible] = useState(false);
 
+  const canRenderPdfThumb = !DISABLE_LIVE_PDF_THUMBNAILS && isPdf && originalFileAvailable;
+
   useEffect(() => {
-    if (!ENABLE_LIVE_PDF_THUMBNAILS) return;
+    if (!canRenderPdfThumb) return;
     const el = containerRef.current;
     if (!el) return;
-    setWidth(el.clientWidth || 300);
-    const ro = new ResizeObserver(() => setWidth(el.clientWidth || 300));
+
+    const updateWidth = () => setWidth(Math.max(1, el.clientWidth || 300));
+    updateWidth();
+
+    const ro = new ResizeObserver(updateWidth);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [canRenderPdfThumb]);
 
   useEffect(() => {
-    if (!ENABLE_LIVE_PDF_THUMBNAILS) return;
+    if (!canRenderPdfThumb) return;
     const el = containerRef.current;
     if (!el) return;
+
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) setVisible(true);
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
       },
-      { rootMargin: "100px", threshold: 0 },
+      { rootMargin: "200px", threshold: 0 },
     );
+
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [canRenderPdfThumb]);
 
-  const shouldRenderLivePdfThumb = ENABLE_LIVE_PDF_THUMBNAILS && isPdf && originalFileAvailable && visible;
+  const shouldRenderLivePdfThumb = canRenderPdfThumb && visible;
 
   return (
     <div
