@@ -15,6 +15,10 @@ function configStatus(key: string) {
   return { configured: Boolean(process.env[key]) };
 }
 
+function isTestClerkKey(value: string | undefined) {
+  return Boolean(value?.startsWith("pk_test_") || value?.startsWith("sk_test_"));
+}
+
 async function checkDatabase() {
   if (!process.env.DATABASE_URL) {
     return { configured: false, connected: false, error: "DATABASE_URL missing" };
@@ -35,10 +39,16 @@ router.get("/runtime-check", async (_req, res) => {
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
   const replitDependency = detectedReplitEnvVars.length > 0;
+  const productionMode = process.env.NODE_ENV === "production";
+  const clerkUsesTestKeys =
+    isTestClerkKey(process.env.CLERK_SECRET_KEY) ||
+    isTestClerkKey(process.env.CLERK_PUBLISHABLE_KEY);
+  const clerkProductionSafe = !productionMode || !clerkUsesTestKeys;
   const healthy =
     Boolean(process.env.OPENAI_API_KEY) &&
     Boolean(process.env.CLERK_SECRET_KEY) &&
     Boolean(process.env.CLERK_PUBLISHABLE_KEY) &&
+    clerkProductionSafe &&
     database.connected &&
     storage.configured &&
     storage.productionSafe &&
@@ -66,6 +76,8 @@ router.get("/runtime-check", async (_req, res) => {
     clerk: {
       secretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
       publishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
+      productionSafe: clerkProductionSafe,
+      testKeysDetected: clerkUsesTestKeys,
     },
     storage,
     replitDependency,

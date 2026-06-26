@@ -10,8 +10,8 @@ Set these on `signal87-api` before deploying:
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string. Keep this secret. |
 | `OPENAI_API_KEY` | OpenAI API key used by AI/chat/analyze features. |
-| `CLERK_SECRET_KEY` | Clerk backend secret key. Keep this secret. |
-| `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. |
+| `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |
+| `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. Use `pk_live_...` in production. |
 | `APPROVED_EMAILS` | Comma-separated allowlist of approved user email addresses. |
 | `FILE_STORAGE_DIR` | Persistent Render Disk path for uploaded originals, for example `/var/data/uploads`. |
 | `STORAGE_PROVIDER` | Use `local` on Render with a persistent disk mounted at `FILE_STORAGE_DIR`. |
@@ -22,7 +22,7 @@ Set these on `signal87-web` before deploying:
 | Variable | Required value / notes |
 | --- | --- |
 | `VITE_API_BASE_URL` | Deployed API URL, for example `https://signal87-api.onrender.com`. |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key available to the browser build. |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key available to the browser build. Use `pk_live_...` in production. |
 | `BASE_PATH` | `/` unless serving the app from a subpath. |
 
 Never commit `.env` files, API keys, database URLs, Clerk secrets, or credentials.
