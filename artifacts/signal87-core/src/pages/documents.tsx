@@ -48,6 +48,7 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -89,7 +90,7 @@ function getInitialView(): ViewMode {
     const stored = localStorage.getItem("docs-view");
     if (stored === "grid" || stored === "list") return stored;
   } catch {}
-  return "list";
+  return "grid";
 }
 
 const STATUS_FILTER_VALUES: StatusFilter[] = ["all", "ready", "processing", "error"];
@@ -259,6 +260,21 @@ function getApiErrorStatus(error: unknown): number | null {
 function getApiErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) return error.message;
   return "Documents are temporarily unavailable. Please try again.";
+}
+
+function formatSize(bytes: number | null | undefined): string {
+  if (!bytes || bytes <= 0) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function compactTypeLabel(fileType: string): string {
+  const ft = fileType.toLowerCase();
+  if (ft === "xlsx" || ft === "xls" || ft === "csv") return "XLS";
+  if (ft === "docx") return "DOC";
+  if (ft === "txt") return "RPT";
+  return (ft || "AI").slice(0, 3).toUpperCase();
 }
 
 export default function DocumentsList() {
@@ -532,204 +548,103 @@ export default function DocumentsList() {
 
   const selectionCount = selectedIds.size;
   const showActionBar = fromHybrid ? selectionCount >= 1 : selectionCount >= 2;
+  const totalStorageBytes = (documents ?? []).reduce((total, doc) => total + (doc.fileSize ?? 0), 0);
+  const processedCount = (documents ?? []).filter((doc) => getDocumentStatus(doc).isReady).length;
+  const pinnedDocuments = (filteredDocuments ?? []).slice(0, 4);
+  const recentDocuments = (filteredDocuments ?? []).slice(4);
+
+  const renderDocumentCard = (doc: NonNullable<typeof filteredDocuments>[number], pinned = false) => {
+    const status = getDocumentStatus(doc);
+    const isReindexing = reindexingId === doc.id;
+    const isSelected = selectedIds.has(doc.id);
+    const typeLabel = compactTypeLabel(doc.fileType);
+    return (
+      <Card
+        key={doc.id}
+        className={`group overflow-hidden rounded-[18px] border bg-[#f4f3ef] text-[#1f1f1f] transition-colors ${
+          isSelected ? "border-[#3d7a5e] ring-1 ring-[#3d7a5e]" : "border-[#d8d5ce] hover:border-[#3d7a5e]"
+        }`}
+      >
+        <div className="relative bg-[#eceae4] p-3 border-b border-[#d8d5ce]">
+          <div className={`absolute left-4 top-4 z-10 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} onClick={(e) => e.stopPropagation()}>
+            <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(doc.id)} aria-label={`Select ${doc.fileName}`} className="h-4 w-4 rounded-[6px] border-[#d8d5ce] bg-white" />
+          </div>
+          <span className="absolute right-4 top-4 z-10 rounded-[10px] border border-[#d8d5ce] bg-white px-2 py-1 font-mono text-[10px] font-medium tracking-[0.12em] text-[#1f1f1f]">
+            {typeLabel}
+          </span>
+          {pinned && <span className="absolute bottom-4 left-4 z-10 rounded-[10px] bg-[#3d7a5e] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white">Pinned</span>}
+          <Link href={`/documents/${doc.id}`} className="block overflow-hidden rounded-[14px] border border-[#d8d5ce] bg-white">
+            <DocumentCardThumbnail id={doc.id} fileType={doc.fileType} originalFileAvailable={doc.originalFileAvailable} className="h-44 w-full" />
+          </Link>
+        </div>
+        <CardContent className="flex flex-1 flex-col p-4">
+          <Link href={`/documents/${doc.id}`} className="min-w-0">
+            <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-[#1f1f1f] transition-colors group-hover:text-[#3d7a5e]" title={doc.fileName}>
+              {highlightMatch(doc.fileName, search)}
+            </h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#6b7068]">
+              <span>{inferDocumentKind(doc.fileName, doc.fileType)}</span>
+              <span className="h-1 w-1 rounded-full bg-[#d8d5ce]" />
+              <DocumentStatusBadge doc={doc} />
+            </div>
+            <div className="mt-3 font-mono text-[11px] text-[#6b7068]">
+              {format(new Date(doc.uploadedAt), "MMM d, yyyy · h:mm a")} · {formatSize(doc.fileSize)}
+            </div>
+          </Link>
+          <div className="mt-4 flex items-center gap-1.5 border-t border-[#d8d5ce] pt-3">
+            {status.canReindex ? (
+              <Button variant="secondary" size="sm" className="h-8 flex-1 rounded-[20px] bg-white text-xs text-[#1f1f1f] hover:bg-[#eceae4]" onClick={() => handleReindex(doc.id)} disabled={isReindexing}>
+                {isReindexing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} Re-index
+              </Button>
+            ) : (
+              <Link href={`/documents/${doc.id}/chat`} className="flex-1">
+                <Button variant="secondary" size="sm" className="h-8 w-full rounded-[20px] bg-white text-xs text-[#1f1f1f] hover:bg-[#eceae4]" disabled={!status.isReady} title={status.description}>
+                  <MessageSquare className="h-3 w-3" /> Ask AI
+                </Button>
+              </Link>
+            )}
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-[20px] text-[#6b7068] hover:bg-white hover:text-[#1f1f1f]" disabled={!doc.originalFileAvailable} title="Download original" aria-label={`Download ${doc.fileName}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadOriginal(doc.id, doc.fileName).catch(() => toast.error("Download failed")); }}>
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+            <PrintDocumentButton document={doc} variant="icon" className="h-8 w-8 rounded-[20px]" />
+            <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="px-4 md:px-6 py-3 border-b border-border flex items-center justify-between bg-card">
-          <div>
-            {fromHybrid && (
-              <Link
-                href="/agents/hybrid"
-                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline mb-1"
-              >
-                <ArrowLeft className="w-3 h-3" />
-                Back to AI Chat
-              </Link>
-            )}
-            <h1 className="text-[15px] font-medium tracking-tight text-foreground">Documents</h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {fromHybrid
-                ? "Select documents, then click Use in AI Chat."
-                : "Your uploaded documents"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* View toggle — hidden on mobile (always grid on mobile) */}
-            <div className="hidden md:flex items-center rounded-full border border-border overflow-hidden p-0.5 gap-0.5">
-              <button
-                onClick={() => switchView("list")}
-                className={`p-1.5 rounded-full transition-colors ${
-                  view === "list"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
-                title="List view"
-                aria-pressed={view === "list"}
-              >
-                <List className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => switchView("grid")}
-                className={`p-1.5 rounded-full transition-colors ${
-                  view === "grid"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
-                title="Grid view"
-                aria-pressed={view === "grid"}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#1a1f1c] text-[#f4f3ef]">
+        <header className="px-4 md:px-6 py-4 border-b border-white/10 bg-[#1a1f1c]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              {fromHybrid && (
+                <Link href="/agents/hybrid" className="mb-2 inline-flex items-center gap-1 text-[11px] font-medium text-white/60 hover:text-white">
+                  <ArrowLeft className="w-3 h-3" /> Back to AI Chat
+                </Link>
+              )}
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">Signal87 workspace</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#f4f3ef]">Documents</h1>
             </div>
-            {/* Preferences overflow menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="p-2 rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors"
-                  title="Preferences"
-                  aria-label="Preferences"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={handleResetPreferences}
-                  className="gap-2 text-sm cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 shrink-0" />
-                  Reset to defaults
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <FileUploadModal />
+            <div className="flex flex-1 flex-wrap items-center gap-2 lg:max-w-3xl lg:justify-end">
+              <div className="relative min-w-[220px] flex-1 lg:max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
+                <Input placeholder="Search documents…" value={search} onChange={(e) => handleSearch(e.target.value)} className="h-10 rounded-[20px] border-white/12 bg-white/[0.08] pl-10 pr-9 text-sm text-white placeholder:text-white/45 focus-visible:ring-[#3d7a5e]" />
+                {search && <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white" aria-label="Clear search"><X className="h-3.5 w-3.5" /></button>}
+              </div>
+              <Select value={view === "grid" ? gridSortColumn : sortColumn} onValueChange={(v) => view === "grid" ? handleGridSortColumn(v as SortColumn) : handleSort(v as SortColumn)}>
+                <SelectTrigger className="h-10 w-[126px] rounded-[20px] border-white/12 bg-white/[0.08] text-sm text-white"><SelectValue placeholder="Sort" /></SelectTrigger>
+                <SelectContent><SelectItem value="uploaded">Uploaded</SelectItem><SelectItem value="name">Name</SelectItem><SelectItem value="status">Status</SelectItem><SelectItem value="chunks">Chunks</SelectItem></SelectContent>
+              </Select>
+              <button onClick={view === "grid" ? handleGridSortDirection : () => handleSort(sortColumn)} className="h-10 rounded-[20px] border border-white/12 bg-white/[0.08] px-4 text-sm font-medium text-white hover:bg-white/[0.12]">Sort {view === "grid" ? (gridSortDirection === "asc" ? "↑" : "↓") : (sortDirection === "asc" ? "↑" : "↓")}</button>
+              <FileUploadModal />
+              <Link href="/analyze" className="inline-flex h-10 items-center gap-2 rounded-[20px] border border-white/12 bg-white/[0.08] px-4 text-sm font-medium text-white hover:bg-white/[0.12]"><Plus className="h-4 w-4" /> New doc</Link>
+              <DropdownMenu><DropdownMenuTrigger asChild><button className="h-10 w-10 rounded-[20px] border border-white/12 bg-white/[0.08] text-white/70 hover:text-white" title="Preferences" aria-label="Preferences"><SlidersHorizontal className="mx-auto h-4 w-4" /></button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-48"><DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer"><RotateCcw className="w-3.5 h-3.5" />Reset to defaults</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+            </div>
           </div>
         </header>
-
-        {/* Search + filter toolbar — compact, only shown when documents exist */}
-        {!isLoading && !error && documents && documents.length > 0 && (
-          <div className="px-4 md:px-6 py-2.5 border-b border-border bg-card/60 flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-0 sm:min-w-[160px]">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search by name…"
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9 h-9 text-sm rounded-full"
-              />
-              {search && (
-                <button
-                  onClick={() => handleSearch("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Select value={statusFilter} onValueChange={(v) => handleStatusFilter(v as StatusFilter)}>
-                <SelectTrigger className="h-9 w-32 sm:w-36 text-sm rounded-full">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="ready">Ready</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="error">Error</SelectItem>
-                </SelectContent>
-              </Select>
-              {availableTypes.length > 0 && (
-                <Select value={typeFilter} onValueChange={(v) => handleTypeFilter(v as TypeFilter)}>
-                  <SelectTrigger className="h-9 w-28 sm:w-32 text-sm rounded-full">
-                    <SelectValue placeholder="File type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
-                    {availableTypes.map((ft) => (
-                      <SelectItem key={ft} value={ft}>
-                        {fileTypeChip(ft).label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {view === "grid" && (
-                <div className="hidden sm:flex items-center gap-1.5">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                  <Select
-                    value={gridSortColumn}
-                    onValueChange={(v) => handleGridSortColumn(v as SortColumn)}
-                  >
-                    <SelectTrigger className="h-9 w-36 text-sm rounded-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="status">Status</SelectItem>
-                      <SelectItem value="chunks">Chunks</SelectItem>
-                      <SelectItem value="uploaded">Uploaded</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <button
-                    onClick={handleGridSortDirection}
-                    className="h-9 w-9 flex items-center justify-center rounded-full border border-input bg-background hover:bg-muted transition-colors shrink-0"
-                    title={gridSortDirection === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
-                    aria-label={gridSortDirection === "asc" ? "Sort ascending" : "Sort descending"}
-                  >
-                    {gridSortDirection === "asc" ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Active filter chips row */}
-        {!isLoading && !error && documents && documents.length > 0 && activeFilterChips.length > 0 && (
-          <div className="px-6 py-2 border-b border-border bg-muted/30 flex items-center gap-2 flex-wrap">
-            {activeFilterChips.map((f) => (
-              <span
-                key={f.key}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary"
-              >
-                {f.label}
-                <button
-                  onClick={f.onRemove}
-                  className="ml-0.5 hover:text-primary/70 transition-colors"
-                  aria-label={`Remove ${f.label} filter`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-            {activeFilterChips.length >= 2 && (
-              <button
-                onClick={() => { handleSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
-                className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors ml-1"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* AI Chat discovery CTA — subtle, compact, only when documents exist */}
-        {!isLoading && !error && documents && documents.length > 0 && (
-          <Link
-            href="/agents/hybrid"
-            className="group mx-4 md:mx-6 mt-2 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:border-primary/30 hover:shadow-sm transition-colors"
-          >
-            <Sparkles className="w-4 h-4 text-primary shrink-0" />
-            <span className="font-medium text-[13px] text-foreground">Ask across your documents</span>
-            <ArrowRight className="w-3.5 h-3.5 text-primary ml-auto shrink-0 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        )}
 
         <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
           {/* ── Loading ── */}
@@ -805,288 +720,73 @@ export default function DocumentsList() {
                 Clear filters
               </button>
             </div>
-          ) : view === "grid" ? (
-            /* ══════════════════════════════
-               GRID VIEW — compact icon cards
-               ══════════════════════════════ */
-            <>
-            <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <ArrowUpDown className="w-3 h-3 shrink-0" />
-              <span>
-                Sorted by{" "}
-                <span className="text-foreground font-medium">
-                  {{ name: "Name", status: "Status", chunks: "Chunks", uploaded: "Uploaded" }[gridSortColumn]}
-                </span>
-                {" "}{gridSortDirection === "asc" ? "↑" : "↓"}
-              </span>
-              {visibleSelectableIds.length > 0 && (
-                <button
-                  onClick={handleSelectAll}
-                  className="ml-auto text-[11px] text-primary hover:underline underline-offset-2 transition-colors"
-                  aria-label={allVisibleSelected ? "Deselect all" : "Select all visible (up to 5)"}
-                >
-                  {allVisibleSelected ? "Deselect all" : `Select all${visibleSelectableIds.length < (filteredDocuments?.length ?? 0) ? ` (top ${visibleSelectableIds.length})` : ""}`}
-                </button>
-              )}
-            </div>
-            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredDocuments?.map((doc) => {
-                const status = getDocumentStatus(doc);
-                const isReindexing = reindexingId === doc.id;
-                const chip = fileTypeChip(doc.fileType);
-                const isSelected = selectedIds.has(doc.id);
-                return (
-                  <Card
-                    key={doc.id}
-                    className={`bg-card border hover:shadow-md motion-safe:hover:-translate-y-0.5 transition-all group flex flex-col overflow-hidden ${
-                      isSelected
-                        ? "border-primary/50 ring-1 ring-primary/30"
-                        : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    {/* Thumbnail header */}
-                    <div className="relative border-b border-border">
-                      <div
-                        className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelect(doc.id)}
-                          aria-label={`Select ${doc.fileName}`}
-                          className="w-4 h-4 bg-white/90 border-white/60 shadow-sm"
-                        />
-                      </div>
-                      <Link href={`/documents/${doc.id}`}>
-                        <DocumentCardThumbnail
-                          id={doc.id}
-                          fileType={doc.fileType}
-                          originalFileAvailable={doc.originalFileAvailable}
-                          className="h-44 w-full"
-                        />
-                      </Link>
-                    </div>
-
-                    <CardContent className="p-4 flex-1 flex flex-col">
-                      <Link href={`/documents/${doc.id}`} className="flex-1 flex flex-col min-w-0">
-                        <h3
-                          className="font-medium text-[13px] leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-1.5"
-                          title={doc.fileName}
-                        >
-                          {highlightMatch(doc.fileName, search)}
-                        </h3>
-                        <div className="flex items-center gap-1.5 mb-2 min-w-0">
-                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-semibold ${chip.bg} ${chip.text}`}>
-                            {chip.label}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground truncate">{inferDocumentKind(doc.fileName, doc.fileType)}</span>
-                        </div>
-                        <DocumentStatusBadge doc={doc} />
-                        <div className="mt-auto pt-3 text-[11px] text-muted-foreground text-right">
-                          <span>{format(new Date(doc.uploadedAt), "MMM d, yyyy")}</span>
-                        </div>
-                      </Link>
-
-                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
-                        {status.canReindex ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 text-xs gap-1.5"
-                            onClick={() => handleReindex(doc.id)}
-                            disabled={isReindexing}
-                          >
-                            {isReindexing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                            Re-Index
-                          </Button>
-                        ) : status.isReady ? (
-                          <Link href={`/documents/${doc.id}/chat`} className="flex-1">
-                            <Button variant="secondary" size="sm" className="w-full text-xs gap-1.5">
-                              <MessageSquare className="w-3 h-3" />
-                              Ask
-                            </Button>
-                          </Link>
-                        ) : (
-                          <Button variant="secondary" size="sm" className="flex-1 text-xs gap-1.5" disabled title={status.description}>
-                            <MessageSquare className="w-3 h-3" />
-                            Ask
-                          </Button>
-                        )}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                          disabled={!doc.originalFileAvailable}
-                          title="Download original"
-                          aria-label={`Download ${doc.fileName}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            downloadOriginal(doc.id, doc.fileName).catch(() =>
-                              toast.error("Download failed")
-                            );
-                          }}
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </Button>
-                        <PrintDocumentButton document={doc} variant="icon" />
-                        <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
-                      </div>
+          ) : (
+            <div className="space-y-6 p-4 md:p-6">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                {[
+                  { label: "Documents", value: (documents?.length ?? 0), meta: `${filteredDocuments?.length ?? 0} visible` },
+                  { label: "AI Processed", value: processedCount, meta: `${Math.max((documents?.length ?? 0) - processedCount, 0)} pending or queued` },
+                  { label: "Storage", value: formatSize(totalStorageBytes), meta: "Original files indexed" },
+                ].map((stat) => (
+                  <Card key={stat.label} className="rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f]">
+                    <CardContent className="p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6b7068]">{stat.label}</p>
+                      <div className="mt-3 text-3xl font-semibold tracking-tight">{stat.value}</div>
+                      <p className="mt-2 font-mono text-[11px] text-[#6b7068]">{stat.meta}</p>
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
-            </>
-          ) : (
-            /* ══════════════════════════════
-               LIST VIEW — compact table
-               ══════════════════════════════ */
-            <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-sm border-collapse min-w-[520px]">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  {/* Checkbox column header — select all (up to 5) */}
-                  <th className="pl-4 pr-2 py-2.5 w-8" aria-label="Select all">
-                    {visibleSelectableIds.length > 0 && (
-                      <Checkbox
-                        checked={headerCheckboxState}
-                        onCheckedChange={handleSelectAll}
-                        aria-label={allVisibleSelected ? "Deselect all" : "Select all visible (up to 5)"}
-                        className="w-4 h-4"
-                      />
-                    )}
-                  </th>
-                  {(
-                    [
-                      { col: "name" as SortColumn, label: "Name", align: "left", className: "px-3 py-2.5 w-[40%]" },
-                      { col: "status" as SortColumn, label: "Status", align: "left", className: "px-3 py-2.5" },
-                      { col: "chunks" as SortColumn, label: "Chunks", align: "right", className: "px-3 py-2.5" },
-                      { col: "uploaded" as SortColumn, label: "Uploaded", align: "left", className: "px-3 py-2.5" },
-                    ] as const
-                  ).map(({ col, label, align, className }) => {
-                    const active = sortColumn === col;
-                    const Icon = active
-                      ? sortDirection === "asc"
-                        ? ChevronUp
-                        : ChevronDown
-                      : ChevronsUpDown;
-                    return (
-                      <th
-                        key={col}
-                        className={`text-${align} ${className} text-xs font-medium text-muted-foreground select-none`}
-                      >
-                        <button
-                          onClick={() => handleSort(col)}
-                          className={`inline-flex items-center gap-1 hover:text-foreground transition-colors ${active ? "text-foreground" : ""}`}
-                        >
-                          {label}
-                          <Icon className={`w-3 h-3 shrink-0 ${active ? "opacity-100" : "opacity-40"}`} />
-                        </button>
-                      </th>
-                    );
-                  })}
-                  <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left whitespace-nowrap">Kind</th>
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredDocuments?.map((doc) => {
-                  const status = getDocumentStatus(doc);
-                  const isReindexing = reindexingId === doc.id;
-                  const chip = fileTypeChip(doc.fileType);
-                  const isSelected = selectedIds.has(doc.id);
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "All", value: "all" },
+                  { label: "PDFs", value: "pdf" },
+                  { label: "Spreadsheets", value: availableTypes.includes("xlsx") ? "xlsx" : availableTypes.includes("xls") ? "xls" : "csv" },
+                  { label: "Reports", value: "txt" },
+                  { label: "Contracts", value: "docx" },
+                  { label: "AI-tagged", value: "all", status: "ready" as StatusFilter },
+                  { label: "Shared", value: "all" },
+                ].map((filter) => {
+                  const active = filter.status ? statusFilter === filter.status : typeFilter === filter.value && (filter.value !== "all" || statusFilter === "all");
                   return (
-                    <tr
-                      key={doc.id}
-                      className={`group transition-colors ${
-                        isSelected ? "bg-primary/5 hover:bg-primary/8" : "hover:bg-muted/50"
-                      }`}
+                    <button
+                      key={filter.label}
+                      onClick={() => { handleTypeFilter(filter.value); handleStatusFilter(filter.status ?? "all"); }}
+                      className={`rounded-[20px] border px-4 py-2 text-sm font-medium transition-colors ${active ? "border-[#3d7a5e] bg-[#3d7a5e] text-white" : "border-white/12 bg-white/[0.08] text-white/70 hover:bg-white/[0.12] hover:text-white"}`}
                     >
-                      {/* Checkbox cell */}
-                      <td className="pl-4 pr-2 py-2.5">
-                        <div
-                          className={`transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleSelect(doc.id)}
-                            aria-label={`Select ${doc.fileName}`}
-                            className="w-4 h-4"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <Link href={`/documents/${doc.id}`} className="flex items-center gap-2 min-w-0">
-                          <FileTypeIcon fileType={doc.fileType} className="w-4 h-4 shrink-0" />
-                          <span className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-semibold ${chip.bg} ${chip.text}`}>
-                            {chip.label}
-                          </span>
-                          <span className="truncate font-medium text-sm group-hover:text-primary transition-colors" title={doc.fileName}>
-                            {highlightMatch(doc.fileName, search)}
-                          </span>
-                        </Link>
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <DocumentStatusBadge doc={doc} />
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-xs text-muted-foreground tabular-nums">
-                        {doc.chunkCount}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
-                        {format(new Date(doc.uploadedAt), "MMM d, yyyy")}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted-foreground">
-                        {inferDocumentKind(doc.fileName, doc.fileType)}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {status.canReindex ? (
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2.5" onClick={() => handleReindex(doc.id)} disabled={isReindexing}>
-                              {isReindexing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                              Re-Index
-                            </Button>
-                          ) : status.isReady ? (
-                            <Link href={`/documents/${doc.id}/chat`}>
-                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2.5">
-                                <MessageSquare className="w-3 h-3" />
-                                Ask
-                              </Button>
-                            </Link>
-                          ) : (
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2.5" disabled title={status.description}>
-                              <MessageSquare className="w-3 h-3" />
-                              Ask
-                            </Button>
-                          )}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-                            disabled={!doc.originalFileAvailable}
-                            title="Download original"
-                            aria-label={`Download ${doc.fileName}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              downloadOriginal(doc.id, doc.fileName).catch(() =>
-                                toast.error("Download failed")
-                              );
-                            }}
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                          </Button>
-                          <PrintDocumentButton document={doc} variant="icon" className="h-7 w-7" />
-                          <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
-                        </div>
-                      </td>
-                    </tr>
+                      {filter.label}
+                    </button>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+
+              <Link href="/agents/hybrid" className="flex items-center gap-3 rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] px-4 py-3 text-[#1f1f1f] hover:border-[#3d7a5e]">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#3d7a5e]" />
+                <span className="text-sm font-semibold">Ask across your documents</span>
+                <ArrowRight className="ml-auto h-4 w-4 text-[#3d7a5e]" />
+              </Link>
+
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Pinned</h2>
+                  {visibleSelectableIds.length > 0 && <button onClick={handleSelectAll} className="text-[11px] font-medium text-white/60 hover:text-white">{allVisibleSelected ? "Deselect all" : "Select top documents"}</button>}
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {pinnedDocuments.map((doc) => renderDocumentCard(doc, true))}
+                </div>
+              </section>
+
+              <section>
+                <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Recent</h2>
+                {recentDocuments.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {recentDocuments.map((doc) => renderDocumentCard(doc))}
+                  </div>
+                ) : (
+                  <div className="rounded-[18px] border border-white/12 bg-white/[0.08] p-5 text-sm text-white/60">Pinned documents are your most recent files. Upload more to fill Recent.</div>
+                )}
+              </section>
             </div>
           )}
         </div>
