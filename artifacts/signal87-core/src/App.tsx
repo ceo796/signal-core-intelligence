@@ -12,6 +12,7 @@ import DocumentDetail from "@/pages/document-detail";
 import DocumentChat from "@/pages/document-chat";
 import Activity from "@/pages/activity";
 import AnalyzePage from "@/pages/analyze";
+import SkillsPage from "@/pages/skills";
 import HybridAgent from "@/pages/hybrid-agent";
 import About from "@/pages/about";
 import Privacy from "@/pages/privacy";
@@ -143,6 +144,7 @@ function Router() {
       <Route path="/documents/:id/chat" component={DocumentChat} />
       <Route path="/documents/:id" component={DocumentDetail} />
       <Route path="/analyze" component={AnalyzePage} />
+      <Route path="/skills" component={SkillsPage} />
       <Route path="/agents/hybrid" component={HybridAgent} />
       <Route path="/activity" component={Activity} />
       <Route path="/trash" component={TrashPage} />
