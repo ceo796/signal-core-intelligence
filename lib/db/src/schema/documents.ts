@@ -20,6 +20,8 @@ export const documentsTable = pgTable("documents", {
   index("idx_documents_owner_user_id").on(table.ownerUserId),
   index("idx_documents_extraction_status").on(table.extractionStatus),
   index("idx_documents_deleted_at").on(table.deletedAt),
+  index("idx_documents_owner_deleted_uploaded").on(table.ownerUserId, table.deletedAt, table.uploadedAt),
+  index("idx_documents_owner_status_deleted_uploaded").on(table.ownerUserId, table.extractionStatus, table.deletedAt, table.uploadedAt),
 ]);
 
 export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, uploadedAt: true, deletedAt: true, deletedBy: true });
