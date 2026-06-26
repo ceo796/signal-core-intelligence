@@ -7,6 +7,9 @@ import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever
 import { getCurrentUserId } from "../../lib/ownership";
 
 const ROUTE = "POST /api/agent/hybrid";
+const RETRIEVAL_TIMEOUT_MS = 10_000;
+const LLM_TIMEOUT_MS = 22_000;
+const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
 const MODE_PROMPTS: Record<string, string> = {
   auto: `You are a precise document intelligence assistant. Answer the user's question using the provided source excerpts below as your primary evidence. Cite every claim drawn from a source with [Source N]. Be concise and accurate.`,
@@ -30,6 +33,66 @@ const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
 - DATE REASONING: If asked "how often," "how many times," or about frequency/pattern, count the occurrences, sort the dates, and describe the observed interval. Do not require the document to explicitly state "weekly" or "bi-weekly" — infer from the dates. If the pattern is irregular, state that clearly.`;
 
 const router: IRouter = Router();
+
+function isRecentUploadSummaryQuery(query: string, mode: string): boolean {
+  const q = query.toLowerCase();
+  return (
+    mode === "summarize" ||
+    (q.includes("summarize") && (q.includes("recent") || q.includes("latest") || q.includes("upload"))) ||
+    q.includes("most recent document") ||
+    q.includes("recent document upload") ||
+    q.includes("latest document upload")
+  );
+}
+
+function capChunksForEmbedding(groups: DocumentGroup[]): DocumentGroup[] {
+  return groups.map((group) => {
+    if (group.chunks.length <= MAX_CHUNKS_PER_DOC_FOR_EMBEDDING) return group;
+
+    const head = group.chunks.slice(0, 8);
+    const middleStart = Math.max(0, Math.floor(group.chunks.length / 2) - 4);
+    const middle = group.chunks.slice(middleStart, middleStart + 8);
+    const tail = group.chunks.slice(-8);
+    const byId = new Map([...head, ...middle, ...tail].map((chunk) => [chunk.id, chunk]));
+
+    return { ...group, chunks: [...byId.values()] };
+  });
+}
+
+function fallbackRetrieval(groups: DocumentGroup[], perDocTopK: number) {
+  return groups.map((g) => ({
+    documentId: g.documentId,
+    documentName: g.documentName,
+    chunksSearched: g.chunks.length,
+    retrieved: g.chunks.slice(0, perDocTopK).map((c) => ({ ...c, relevanceScore: 0 })),
+  }));
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timeout: NodeJS.Timeout;
+  const timer = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timer]).finally(() => clearTimeout(timeout!));
+}
+
+function buildFallbackAnswer(query: string, citations: Array<{ citationNumber: number; documentName: string; excerpt: string }>): string {
+  if (citations.length === 0) {
+    return "I found indexed documents, but no usable excerpts were available for this request. Please try again or select a specific document.";
+  }
+
+  const intro = query.toLowerCase().includes("recent") || query.toLowerCase().includes("upload")
+    ? "Here are the most recent indexed document uploads I could review:"
+    : "I found relevant document excerpts, but the GPT response took too long. Here is a grounded extractive answer:";
+
+  const bullets = citations.slice(0, 8).map((c) => {
+    const excerpt = c.excerpt.replace(/\s+/g, " ").trim();
+    const preview = excerpt.length > 220 ? `${excerpt.slice(0, 217)}…` : excerpt;
+    return `- ${c.documentName}: ${preview} [Source ${c.citationNumber}]`;
+  });
+
+  return `${intro}\n\n${bullets.join("\n")}`;
+}
 
 router.post("/agent/hybrid", async (req, res): Promise<void> => {
   const totalStart = Date.now();
@@ -124,17 +187,21 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
   let fallbackUsed = false;
   let retrievalError: string | null = null;
   try {
-    perDocResults = await retrieveAcrossDocuments(query, groups, perDocTopK);
+    if (isRecentUploadSummaryQuery(query, mode)) {
+      fallbackUsed = true;
+      perDocResults = fallbackRetrieval(groups, perDocTopK);
+    } else {
+      perDocResults = await withTimeout(
+        retrieveAcrossDocuments(query, capChunksForEmbedding(groups), perDocTopK),
+        RETRIEVAL_TIMEOUT_MS,
+        "Hybrid retrieval",
+      );
+    }
   } catch (err) {
     req.log.error({ err }, "Hybrid agent retrieval failed");
     retrievalError = err instanceof Error ? err.message : String(err);
     fallbackUsed = true;
-    perDocResults = groups.map((g) => ({
-      documentId: g.documentId,
-      documentName: g.documentName,
-      chunksSearched: g.chunks.length,
-      retrieved: g.chunks.slice(0, perDocTopK).map((c) => ({ ...c, relevanceScore: 0 })),
-    }));
+    perDocResults = fallbackRetrieval(groups, perDocTopK);
   }
   const retrievalLatencyMs = Date.now() - retrievalStart;
 
@@ -191,19 +258,23 @@ ${sourceBlocks}`;
   let answer: string;
   let llmError: string | null = null;
   try {
-    const completion = await openai.chat.completions.create({
-      model: PROVIDER_CONFIG.model,
-      max_tokens: PROVIDER_CONFIG.maxTokens,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: query },
-      ],
-    });
+    const completion = await withTimeout(
+      openai.chat.completions.create({
+        model: PROVIDER_CONFIG.model,
+        max_tokens: Math.min(PROVIDER_CONFIG.maxTokens, 1200),
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: query },
+        ],
+      }),
+      LLM_TIMEOUT_MS,
+      "Hybrid LLM call",
+    );
     answer = completion.choices[0]?.message?.content ?? "No response generated.";
   } catch (err) {
     req.log.error({ err }, "Hybrid agent LLM call failed");
     llmError = err instanceof Error ? err.message : String(err);
-    answer = "I was unable to generate a response. Please try again.";
+    answer = buildFallbackAnswer(query, citations);
     fallbackUsed = true;
   }
   const llmLatencyMs = Date.now() - llmStart;
@@ -217,6 +288,7 @@ ${sourceBlocks}`;
       mode,
       documentsConsidered: eligibleDocs.length,
       chunksConsidered: citations.length,
+      totalChunksSearched,
       totalLatencyMs,
       fallbackUsed,
       errors: retrievalError ?? llmError ?? null,
