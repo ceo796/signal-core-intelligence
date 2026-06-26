@@ -30,24 +30,6 @@ function getProvider(): StorageProvider {
   return "none";
 }
 
-function assertProductionSafe(provider: StorageProvider): void {
-  if (process.env.NODE_ENV !== "production") {
-    return;
-  }
-
-  if (provider === "replit-object-storage") {
-    throw new Error(
-      "Production cannot use Replit object storage. Set STORAGE_PROVIDER=local and FILE_STORAGE_DIR=/var/data/uploads on Render, or migrate to an external object store.",
-    );
-  }
-
-  const replitRuntimeKeys = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
-  const detected = replitRuntimeKeys.filter((key) => process.env[key]);
-  if (detected.length > 0) {
-    throw new Error(`Production runtime still exposes Replit environment variables: ${detected.join(", ")}`);
-  }
-}
-
 function getLocalStorageDir(): string {
   const dir = process.env.FILE_STORAGE_DIR;
   if (!dir) {
@@ -139,6 +121,10 @@ function getPrivateDir(): string {
   return dir.endsWith("/") ? dir.slice(0, -1) : dir;
 }
 
+function isReplitStorageKey(storageKey: string): boolean {
+  return !storageKey.startsWith(LOCAL_STORAGE_PREFIX);
+}
+
 async function uploadReplitFile(buffer: Buffer, originalName: string, contentType: string): Promise<string> {
   const privateDir = getPrivateDir();
   const objectId = randomUUID();
@@ -182,7 +168,6 @@ export async function uploadFile(
   contentType: string,
 ): Promise<string> {
   const provider = getProvider();
-  assertProductionSafe(provider);
 
   switch (provider) {
     case "local":
@@ -200,13 +185,14 @@ export async function downloadFile(storageKey: string): Promise<Buffer> {
   }
 
   const provider = getProvider();
-  assertProductionSafe(provider);
 
-  if (provider === "replit-object-storage") {
+  if (provider === "replit-object-storage" && isReplitStorageKey(storageKey)) {
     return downloadReplitFile(storageKey);
   }
 
-  throw new Error(`Unsupported or unavailable storage key: ${storageKey}`);
+  throw new Error(
+    `Stored file is not available in the current runtime. key=${storageKey.startsWith(LOCAL_STORAGE_PREFIX) ? "local" : "object-storage"}; provider=${provider}`,
+  );
 }
 
 export async function deleteFile(storageKey: string): Promise<void> {
@@ -216,9 +202,8 @@ export async function deleteFile(storageKey: string): Promise<void> {
   }
 
   const provider = getProvider();
-  assertProductionSafe(provider);
 
-  if (provider === "replit-object-storage") {
+  if (provider === "replit-object-storage" && isReplitStorageKey(storageKey)) {
     await deleteReplitFile(storageKey);
   }
 }
@@ -240,7 +225,7 @@ export function getRuntimeStorageStatus() {
     fileStorageDir: process.env.FILE_STORAGE_DIR ? "set" : "missing",
     privateObjectDir: process.env.PRIVATE_OBJECT_DIR ? "set" : "missing",
     defaultObjectStorageBucketId: process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID ? "set" : "missing",
-    productionSafe: process.env.NODE_ENV === "production" ? provider !== "replit-object-storage" : true,
+    productionSafe: provider !== "none",
   };
 }
 
