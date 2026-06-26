@@ -7,6 +7,7 @@ import chatRouter from "./chat";
 import multiChatRouter from "./multi-chat";
 import briefRouter from "./brief";
 import agentRouter from "./agent";
+import skillsRouter from "./skills";
 import trashRouter from "./trash";
 import { requireApprovedEmail } from "../middlewares/requireAuth";
 
@@ -21,6 +22,7 @@ router.use(documentsRouter);
 router.use(multiChatRouter);
 router.use(briefRouter);
 router.use(agentRouter);
+router.use(skillsRouter);
 router.use(chatRouter);
 router.use(trashRouter);
 
