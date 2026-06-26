@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { Document, Page } from "react-pdf";
+import "@/lib/pdfjs-worker";
 import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Configure the pdfjs worker (idempotent — same URL as pdf-viewer.tsx).
-// Required here because documents.tsx does not import pdf-viewer.tsx.
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export interface DocumentThumbnailProps {
   id: number;

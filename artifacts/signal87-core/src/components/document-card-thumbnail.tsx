@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { FileText, FileSpreadsheet } from "lucide-react";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+import "@/lib/pdfjs-worker";
 
 // Live PDF thumbnails fetch and render the original PDF in the browser. That is
-// expensive on mobile and on document grids, so it stays opt-in until server-side
-// cached thumbnails are available.
-const ENABLE_LIVE_PDF_THUMBNAILS = import.meta.env.VITE_ENABLE_LIVE_PDF_THUMBNAILS === "true";
+// expensive on mobile and on document grids, so operators can disable it
+// with VITE_ENABLE_LIVE_PDF_THUMBNAILS=false until server-side cached thumbnails are available.
+const ENABLE_LIVE_PDF_THUMBNAILS = import.meta.env.VITE_ENABLE_LIVE_PDF_THUMBNAILS !== "false";
 
 const FT_STYLE: Record<string, { bg: string; fg: string }> = {
   pdf:  { bg: "#FAECE7", fg: "#8A3520" },

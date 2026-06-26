@@ -4,8 +4,8 @@ import { Layout } from "@/components/layout";
 import { useListDocuments } from "@workspace/api-client-react";
 import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { useUser, UserButton } from "@clerk/react";
-import { Document, Page, pdfjs } from "react-pdf";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { Document, Page } from "react-pdf";
+import "@/lib/pdfjs-worker";
 import {
   Search,
   Upload,
@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { inferDocumentKind } from "@/lib/document-kind";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 function formatUploadDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -78,7 +77,7 @@ function DocumentThumbnail({ doc }: { doc: any }) {
     return () => obs.disconnect();
   }, []);
 
-  if (ft !== "pdf" || !visible) {
+  if (ft !== "pdf" || !doc.originalFileAvailable || !visible) {
     return <div ref={ref}><FallbackThumbnail fileType={ft} /></div>;
   }
 
