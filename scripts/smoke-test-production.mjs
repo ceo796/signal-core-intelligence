@@ -1,26 +1,38 @@
 #!/usr/bin/env node
 
-const baseUrl = (process.argv[2] || process.env.SMOKE_BASE_URL || '').replace(/\/+$/, '');
+const webBaseUrl = (
+  process.argv[2] ||
+  process.env.SMOKE_WEB_BASE_URL ||
+  process.env.SMOKE_BASE_URL ||
+  ''
+).replace(/\/+$/, '');
 
-if (!baseUrl) {
-  console.error('Usage: pnpm smoke:production https://signal87.ai');
-  console.error('   or: SMOKE_BASE_URL=https://signal87.ai pnpm smoke:production');
+const apiBaseUrl = (
+  process.argv[3] ||
+  process.env.SMOKE_API_BASE_URL ||
+  webBaseUrl ||
+  ''
+).replace(/\/+$/, '');
+
+if (!webBaseUrl || !apiBaseUrl) {
+  console.error('Usage: pnpm smoke:production https://signal87.ai [https://signal87-api.onrender.com]');
+  console.error('   or: SMOKE_WEB_BASE_URL=https://signal87.ai SMOKE_API_BASE_URL=https://signal87-api.onrender.com pnpm smoke:production');
   process.exit(2);
 }
 
 const checks = [
-  { path: '/', expected: 200 },
-  { path: '/sign-in', expected: 200 },
-  { path: '/api/healthz', expected: 200, json: true },
-  { path: '/api/runtime-check', expected: 200, json: true, runtimeHealthy: true },
-  { path: '/api/documents', expected: 401, json: true },
-  { path: '/api/documents/999999/original', expected: 401, json: true },
+  { service: 'web', baseUrl: webBaseUrl, path: '/', expected: 200 },
+  { service: 'web', baseUrl: webBaseUrl, path: '/sign-in', expected: 200 },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/healthz', expected: 200, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/runtime-check', expected: 200, json: true, runtimeHealthy: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents', expected: 401, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents/999999/original', expected: 401, json: true },
 ];
 
 let failures = 0;
 
 for (const check of checks) {
-  const url = `${baseUrl}${check.path}`;
+  const url = `${check.baseUrl}${check.path}`;
   try {
     const response = await fetch(url, {
       headers: { accept: check.json ? 'application/json' : 'text/html,application/xhtml+xml' },
@@ -53,18 +65,18 @@ for (const check of checks) {
     }
 
     if (statusOk && bodyOk && runtimeOk) {
-      console.log(`PASS ${check.path} -> ${response.status}`);
+      console.log(`PASS ${check.service} ${check.path} -> ${response.status}`);
     } else {
       failures += 1;
       console.error(
-        `FAIL ${check.path} -> ${response.status}; expected ${check.expected}` +
+        `FAIL ${check.service} ${check.path} -> ${response.status}; expected ${check.expected}` +
           (check.json && !bodyOk ? '; expected JSON response' : '') +
           (check.runtimeHealthy && !runtimeOk ? '; expected runtime status ok' : ''),
       );
     }
   } catch (error) {
     failures += 1;
-    console.error(`FAIL ${check.path} -> ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`FAIL ${check.service} ${check.path} -> ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -73,4 +85,4 @@ if (failures > 0) {
   process.exit(1);
 }
 
-console.log(`Smoke test passed for ${baseUrl}.`);
+console.log(`Smoke test passed for web=${webBaseUrl} api=${apiBaseUrl}.`);

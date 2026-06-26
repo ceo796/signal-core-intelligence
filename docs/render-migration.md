@@ -1,6 +1,6 @@
 # Render migration notes
 
-This repository is prepared to run production outside Replit.
+This repository is prepared to run production outside Replit and Railway.
 
 ## Services
 
@@ -10,6 +10,8 @@ The `render.yaml` blueprint defines two services:
 2. `signal87-web` — static Vite frontend service from `@workspace/signal87-core`
 
 The frontend is intentionally pointed at the real Signal87 app package, not the mockup sandbox.
+
+The root `Dockerfile` remains available only as a Render-compatible production fallback for an existing single-service deployment. The Railway-specific server file and Railway config are retired.
 
 ## Required Render environment variables
 
@@ -35,6 +37,12 @@ VITE_CLERK_PUBLISHABLE_KEY=<Clerk publishable key>
 ```
 
 `VITE_API_BASE_URL` is required because Render static sites and Render API services run on separate domains. The frontend now reads this value and configures the generated API client at startup.
+
+## Domain mapping
+
+Attach `signal87.ai` and `www.signal87.ai` to `signal87-web`. Attach only the API hostname, for example `api.signal87.ai` or the default `signal87-api.onrender.com` URL, to `signal87-api`.
+
+If a public page such as `/` or `/sign-in` returns Express headers or Clerk handshake redirects, the public web domain is attached to the API service or an old API deploy is still live.
 
 ## Render build details
 
@@ -66,6 +74,12 @@ After deployment, verify:
 ```text
 GET /api/healthz
 GET /api/runtime-check
+```
+
+Then verify both services together:
+
+```bash
+pnpm smoke:production https://www.signal87.ai https://signal87-api.onrender.com
 ```
 
 `/api/runtime-check` should show:

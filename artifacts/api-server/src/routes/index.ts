@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import healthRouter from "./health";
 import demoRouter from "./demo";
 import billingRouter from "./billing";
 import documentsRouter from "./documents";
@@ -14,7 +13,6 @@ import { requireApprovedEmail } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
-router.use(healthRouter);
 router.use(demoRouter);
 router.use(billingRouter);
 
