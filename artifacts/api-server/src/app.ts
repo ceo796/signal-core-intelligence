@@ -67,6 +67,7 @@ app.use(cors({ credentials: true, origin: true }));
 // requireApprovedEmail/getCurrentUserId with 401 instead of crashing.
 if (process.env.CLERK_SECRET_KEY) {
   app.use(
+    "/api",
     clerkMiddleware((req) => ({
       publishableKey: publishableKeyFromHost(
         getClerkProxyHost(req) ?? "",

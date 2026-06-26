@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, Build, Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: signal87
+          POSTGRES_PASSWORD: signal87
+          POSTGRES_DB: signal87_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U signal87 -d signal87_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://signal87:signal87@localhost:5432/signal87_test
+      NODE_ENV: test
+      CLERK_BYPASS_AUTH: "true"
+      DEV_USER_ID: test-user-bypass
+      APPROVED_EMAILS: test@signal87.test
+      OPENAI_API_KEY: sk-test-placeholder
+      STORAGE_PROVIDER: local
+      FILE_STORAGE_DIR: ${{ runner.temp }}/signal87-uploads
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare database schema
+        run: pnpm --filter @workspace/db push
+
+      - name: Check peer dependencies
+        run: pnpm peers check
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build API
+        run: pnpm --filter @workspace/api-server run build
+
+      - name: Build web app
+        run: pnpm --filter @workspace/signal87-core run build
+
+      - name: Test API
+        run: pnpm --filter @workspace/api-server run test
