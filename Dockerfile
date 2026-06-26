@@ -9,7 +9,7 @@ ENV FILE_STORAGE_DIR=/data/uploads
 RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-COPY railway-server.mjs ./railway-server.mjs
+COPY production-server.mjs ./production-server.mjs
 COPY artifacts ./artifacts
 COPY lib ./lib
 COPY scripts ./scripts
@@ -20,4 +20,4 @@ RUN PORT=3000 BASE_PATH=/ pnpm --filter @workspace/signal87-core run build
 
 EXPOSE 3000
 
-CMD ["node", "--enable-source-maps", "./railway-server.mjs"]
+CMD ["node", "--enable-source-maps", "./production-server.mjs"]

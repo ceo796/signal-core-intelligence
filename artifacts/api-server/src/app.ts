@@ -8,6 +8,7 @@ import {
   clerkProxyMiddleware,
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
+import healthRouter from "./routes/health";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { handleStripeWebhook } from "./lib/billing";
@@ -35,17 +36,13 @@ app.use(
 );
 
 // Public health endpoints for deployment platforms. Keep these before Clerk so
-// Railway/Render/Emergent health checks can verify the container without auth.
+// Render and uptime checks can verify the container without auth.
 app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "signal87-api" });
 });
 
 app.get("/healthz", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "signal87-api" });
-});
-
-app.get("/api/healthz", (_req: Request, res: Response) => {
-  res.status(200).json({ status: "ok" });
 });
 
 // Stripe webhooks must receive the raw body. This route must stay before
@@ -56,6 +53,10 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), hand
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 app.use(cors({ credentials: true, origin: true }));
+
+// Runtime health/config checks must stay public so deployment failures can be
+// diagnosed even when Clerk auth is misconfigured.
+app.use("/api", healthRouter);
 
 // Clerk session middleware — attaches auth state to request.
 // Resolve the publishable key from the request host so the same server works
