@@ -57,9 +57,6 @@ const MODES = [
 const modeLabel = (value: string) =>
   MODES.find((m) => m.value === value)?.label ?? "Auto";
 
-// Internal source labels surfaced on each answer. This assistant is OpenAI/GPT-only:
-// it grounds answers in your documents (document_context, with citations) and may add the
-// GPT model's own reasoning (gpt_reasoning).
 const SOURCE_LABELS = {
   document_context: "Document context",
   gpt_reasoning: "GPT reasoning",
@@ -67,7 +64,9 @@ const SOURCE_LABELS = {
 } as const;
 
 const PILL_CLASS =
-  "inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors select-none active:scale-[0.94] touch-manipulation";
+  "inline-flex items-center gap-1.5 h-8 rounded-[20px] border border-[#d8d5ce] bg-[#eceae4] px-3 text-xs font-medium text-[#6b7068] hover:bg-white hover:text-[#1f1f1f] transition-colors select-none active:scale-[0.94] touch-manipulation";
+
+const POPOVER_CLASS = "border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f] shadow-none";
 
 interface DocOption {
   id: number;
@@ -116,7 +115,7 @@ function Composer({
 
   return (
     <form onSubmit={onSubmit} className="w-full">
-      <div className="rounded-lg border border-border bg-card shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md">
+      <div className="rounded-[20px] border border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f] transition-colors focus-within:border-[#3d7a5e]">
         <Textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -124,7 +123,7 @@ function Composer({
           disabled={isPending}
           autoFocus={autoFocus}
           rows={1}
-          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 min-h-[48px] sm:min-h-[44px] max-h-[220px] px-3.5 sm:px-4 pt-3 pb-1 text-[14px] sm:text-[13px]"
+          className="resize-none border-0 bg-transparent text-[#1f1f1f] shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-[15px] sm:text-[14px] placeholder:text-[#6b7068]/70"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -132,8 +131,7 @@ function Composer({
             }
           }}
         />
-        <div className="flex items-center gap-2 px-2 sm:px-3 pb-2.5 sm:pb-3 pt-1 flex-wrap">
-          {/* Mode — pill button */}
+        <div className="flex items-center gap-2 px-3 pb-3 pt-1 flex-wrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button type="button" className={PILL_CLASS} aria-label="Answer mode">
@@ -143,26 +141,25 @@ function Composer({
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
+            <DropdownMenuContent align="start" className={`w-64 ${POPOVER_CLASS}`}>
               {MODES.map((m) => (
                 <DropdownMenuItem
                   key={m.value}
                   onClick={() => setMode(m.value as HybridAgentInputMode)}
-                  className="flex items-start gap-2"
+                  className="flex items-start gap-2 focus:bg-[#eceae4]"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">{m.label}</div>
-                    <div className="text-xs text-muted-foreground">{m.description}</div>
+                    <div className="text-sm font-medium text-[#1f1f1f]">{m.label}</div>
+                    <div className="text-xs text-[#6b7068]">{m.description}</div>
                   </div>
                   {mode === m.value && (
-                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[#3d7a5e] shrink-0 mt-0.5" />
                   )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Documents — dropdown */}
           <Popover>
             <PopoverTrigger asChild>
               <button type="button" className={PILL_CLASS} aria-label="Documents to search">
@@ -171,16 +168,16 @@ function Composer({
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-[calc(100vw-2rem)] sm:w-72 p-2">
+            <PopoverContent align="start" className={`w-[calc(100vw-2rem)] sm:w-72 p-2 ${POPOVER_CLASS}`}>
               <div className="flex items-center justify-between px-1 pb-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-medium text-[#6b7068]">
                   Documents to search
                 </span>
                 {selectedDocIds.size > 0 && (
                   <button
                     type="button"
                     onClick={clearDocSelection}
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-[#3d7a5e] hover:underline"
                   >
                     Clear
                   </button>
@@ -188,48 +185,48 @@ function Composer({
               </div>
               {docsLoading ? (
                 <div className="space-y-1.5 px-1 py-1">
-                  <Skeleton className="h-7 w-full" />
-                  <Skeleton className="h-7 w-full" />
+                  <Skeleton className="h-7 w-full bg-[#eceae4]" />
+                  <Skeleton className="h-7 w-full bg-[#eceae4]" />
                 </div>
               ) : readyDocs.length === 0 ? (
-                <p className="px-1 py-2 text-xs text-muted-foreground">
+                <p className="px-1 py-2 text-xs text-[#6b7068]">
                   No indexed documents yet. Upload and index a document first.
                 </p>
               ) : (
                 <>
-                  <div className="max-h-60 overflow-y-auto rounded-md border border-border/50 divide-y divide-border/30">
+                  <div className="max-h-60 overflow-y-auto rounded-[12px] border border-[#d8d5ce] divide-y divide-[#d8d5ce] bg-white">
                     {readyDocs.map((doc) => (
                       <label
                         key={doc.id}
-                        className="flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 hover:bg-muted/50 cursor-pointer min-h-[44px]"
+                        className="flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 hover:bg-[#eceae4] cursor-pointer min-h-[44px]"
                       >
                         <Checkbox
                           checked={selectedDocIds.has(doc.id)}
                           onCheckedChange={() => toggleDoc(doc.id)}
                         />
-                        <span className="text-sm truncate flex-1" title={doc.fileName}>
+                        <span className="text-sm truncate flex-1 text-[#1f1f1f]" title={doc.fileName}>
                           {doc.fileName}
                         </span>
                         {doc.chunkCount != null && (
-                          <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                          <span className="font-mono text-[10px] text-[#6b7068] shrink-0 tabular-nums">
                             {doc.chunkCount}c
                           </span>
                         )}
                       </label>
                     ))}
                   </div>
-                  <p className="px-1 pt-2 text-[11px] text-muted-foreground">
+                  <p className="px-1 pt-2 text-[11px] text-[#6b7068]">
                     {selectedDocIds.size === 0
                       ? "Searching all indexed documents."
                       : `${selectedDocIds.size} of ${readyDocs.length} selected.`}
                   </p>
                 </>
               )}
-              <div className="border-t border-border/40 mt-2 pt-2">
+              <div className="border-t border-[#d8d5ce] mt-2 pt-2">
                 <button
                   type="button"
                   onClick={onBrowse}
-                  className="flex items-center gap-1.5 w-full px-2 py-2 sm:py-1.5 rounded-md text-xs text-primary hover:bg-primary/5 transition-colors min-h-[44px] sm:min-h-0"
+                  className="flex items-center gap-1.5 w-full px-2 py-2 sm:py-1.5 rounded-[12px] text-xs text-[#3d7a5e] hover:bg-[#eceae4] transition-colors min-h-[44px] sm:min-h-0"
                 >
                   <ExternalLink className="w-3 h-3 shrink-0" />
                   Browse all documents
@@ -238,9 +235,8 @@ function Composer({
             </PopoverContent>
           </Popover>
 
-          {/* Web placeholder — disabled, never calls external APIs */}
           <span
-            className="hidden sm:inline-flex items-center gap-1.5 h-8 rounded-full border border-border/60 bg-muted/50 px-3 text-xs font-medium text-muted-foreground/60 cursor-not-allowed select-none"
+            className="hidden sm:inline-flex items-center gap-1.5 h-8 rounded-[20px] border border-[#d8d5ce] bg-[#eceae4] px-3 text-xs font-medium text-[#6b7068]/70 cursor-not-allowed select-none"
             title="Web context coming soon"
             aria-disabled="true"
           >
@@ -252,7 +248,7 @@ function Composer({
             type="submit"
             size="icon"
             disabled={isPending || !query.trim()}
-            className="ml-auto rounded-full h-10 w-10 sm:h-8 sm:w-8 shrink-0"
+            className="ml-auto rounded-[20px] h-10 w-10 sm:h-9 sm:w-9 shrink-0 bg-[#3d7a5e] text-white hover:bg-[#5a9e7a] disabled:bg-[#d8d5ce] disabled:text-[#6b7068]"
             aria-label="Send"
           >
             {isPending ? (
@@ -263,13 +259,12 @@ function Composer({
           </Button>
         </div>
       </div>
-      <p className="text-center text-[11px] text-muted-foreground mt-2 px-2">
-        Answers use your documents (with citations) and GPT reasoning — no web research.
+      <p className="text-center text-[11px] text-[#f4f3ef]/55 mt-2 px-2">
+        Answers use your documents with citations and GPT reasoning — no web research.
       </p>
     </form>
   );
 }
-
 
 function CitationCard({
   citation,
@@ -281,28 +276,28 @@ function CitationCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="border border-border/50 rounded-md bg-card overflow-hidden">
+    <div className="border border-[#d8d5ce] rounded-[16px] bg-[#f4f3ef] text-[#1f1f1f] overflow-hidden shadow-none">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-muted/40 transition-colors select-none active:scale-[0.98] touch-manipulation"
+        className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-[#eceae4] transition-colors select-none active:scale-[0.98] touch-manipulation"
       >
-        <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-primary/15 text-primary">
+        <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-[10px] bg-white text-[#3d7a5e] border border-[#d8d5ce]">
           {citation.citationNumber}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
-            <span className="text-xs font-medium text-muted-foreground truncate">
+            <FileText className="w-3 h-3 text-[#6b7068] shrink-0" />
+            <span className="text-xs font-medium text-[#6b7068] truncate">
               {citation.documentName}
             </span>
-            <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular-nums">
+            <span className="ml-auto shrink-0 font-mono text-[10px] text-[#6b7068] tabular-nums">
               {(citation.relevanceScore * 100).toFixed(0)}%
             </span>
           </div>
-          <p className="text-xs text-foreground/80 line-clamp-2">{citation.excerpt}</p>
+          <p className="text-xs text-[#1f1f1f]/80 line-clamp-2">{citation.excerpt}</p>
         </div>
-        <span className="shrink-0 mt-0.5 text-muted-foreground">
+        <span className="shrink-0 mt-0.5 text-[#6b7068]">
           {expanded ? (
             <ChevronDown className="w-3.5 h-3.5" />
           ) : (
@@ -311,8 +306,8 @@ function CitationCard({
         </span>
       </button>
       {expanded && (
-        <div className="px-3 pb-3 pt-1 border-t border-border/40 bg-muted/20">
-          <p className="text-xs text-foreground/70 whitespace-pre-wrap leading-relaxed">
+        <div className="px-3 pb-3 pt-1 border-t border-[#d8d5ce] bg-white">
+          <p className="text-xs text-[#1f1f1f]/75 whitespace-pre-wrap leading-relaxed">
             {citation.excerpt}
           </p>
         </div>
@@ -331,7 +326,7 @@ function TracePanel({ trace, open, onOpenChange }: {
       <CollapsibleTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors select-none active:scale-[0.97] touch-manipulation"
+          className="flex items-center gap-2 text-xs text-[#f4f3ef]/55 hover:text-[#f4f3ef] transition-colors select-none active:scale-[0.97] touch-manipulation"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>Verification Trace</span>
@@ -339,30 +334,30 @@ function TracePanel({ trace, open, onOpenChange }: {
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-2 rounded-md border border-border/50 bg-muted/30 p-3 text-[11px] space-y-1 text-muted-foreground">
+        <div className="mt-2 rounded-[16px] border border-[#d8d5ce] bg-[#f4f3ef] p-3 font-mono text-[11px] space-y-1 text-[#6b7068] shadow-none">
           <div className="flex gap-2">
-            <span className="text-foreground/50 w-36 shrink-0">provider</span>
+            <span className="text-[#1f1f1f]/50 w-36 shrink-0">provider</span>
             <span>{trace.provider}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-foreground/50 w-36 shrink-0">model</span>
+            <span className="text-[#1f1f1f]/50 w-36 shrink-0">model</span>
             <span>{trace.model}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-foreground/50 w-36 shrink-0">documents considered</span>
+            <span className="text-[#1f1f1f]/50 w-36 shrink-0">documents considered</span>
             <span>{trace.documentsConsidered}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-foreground/50 w-36 shrink-0">chunks considered</span>
+            <span className="text-[#1f1f1f]/50 w-36 shrink-0">chunks considered</span>
             <span>{trace.chunksConsidered}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-foreground/50 w-36 shrink-0">latency</span>
+            <span className="text-[#1f1f1f]/50 w-36 shrink-0">latency</span>
             <span>{trace.latencyMs.toFixed(0)} ms</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-foreground/50 w-36 shrink-0">fallback used</span>
-            <span className={trace.fallbackUsed ? "text-yellow-600" : "text-green-600"}>
+            <span className="text-[#1f1f1f]/50 w-36 shrink-0">fallback used</span>
+            <span className={trace.fallbackUsed ? "text-yellow-700" : "text-[#3d7a5e]"}>
               {trace.fallbackUsed ? "yes" : "no"}
             </span>
           </div>
@@ -375,14 +370,11 @@ function TracePanel({ trace, open, onOpenChange }: {
 function ResultView({ result }: { result: HybridAgentResult }) {
   const [expandedCitation, setExpandedCitation] = useState<number | null>(null);
   const [traceOpen, setTraceOpen] = useState(false);
-
-  // Sources filter. null = citations hidden; "all" = show all; Set<string> = by doc name.
   const [sourceFilter, setSourceFilter] = useState<"all" | Set<string> | null>(null);
 
   const toggleCitation = (n: number) =>
     setExpandedCitation((prev) => (prev === n ? null : n));
 
-  // Only true when [Source N] tags actually appear in the answer text.
   const answerCitesDocuments =
     result.citations.length > 0 && /\[Source\s+\d+\]/.test(result.answer);
 
@@ -422,17 +414,16 @@ function ResultView({ result }: { result: HybridAgentResult }) {
     (sourceFilter instanceof Set && sourceFilter.size === citationDocs.length);
 
   const PILL =
-    "inline-flex items-center gap-1.5 h-7 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer select-none active:scale-[0.94] touch-manipulation";
+    "inline-flex items-center gap-1.5 h-7 rounded-[20px] border border-white/12 bg-white/[0.08] px-2.5 text-xs font-medium text-[#f4f3ef]/70 hover:bg-white/[0.12] hover:text-[#f4f3ef] transition-colors cursor-pointer select-none active:scale-[0.94] touch-manipulation";
 
   return (
     <div className="space-y-4">
-      {/* AI Answer — always the first thing shown */}
-      <Card className="bg-card border-border/50">
+      <Card className="rounded-[18px] border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f] shadow-none">
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-primary shrink-0" />
-            <span className="text-sm font-medium text-primary">AI Answer</span>
-            <span className="ml-auto text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">
+            <Sparkles className="w-4 h-4 text-[#3d7a5e] shrink-0" />
+            <span className="text-sm font-medium text-[#3d7a5e]">AI Answer</span>
+            <span className="ml-auto rounded-[10px] border border-[#d8d5ce] bg-white px-2 py-0.5 text-[11px] text-[#6b7068]">
               {result.mode}
             </span>
           </div>
@@ -440,10 +431,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
         </CardContent>
       </Card>
 
-      {/* Control pills — all collapsed by default, positioned below the answer */}
       <div className="flex flex-wrap gap-2 items-center">
-
-        {/* Answer sources */}
         <Popover>
           <PopoverTrigger asChild>
             <button type="button" className={PILL}>
@@ -452,15 +440,15 @@ function ResultView({ result }: { result: HybridAgentResult }) {
               <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-60 p-3 space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground mb-2">
+          <PopoverContent align="start" className={`w-60 p-3 space-y-1.5 ${POPOVER_CLASS}`}>
+            <p className="text-[11px] font-medium text-[#6b7068] mb-2">
               Sources used
             </p>
             <div
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs ${
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs ${
                 answerCitesDocuments
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
+                  ? "bg-white text-[#3d7a5e] border border-[#d8d5ce]"
+                  : "bg-[#eceae4] text-[#6b7068]"
               }`}
             >
               <FileText className="w-3 h-3 shrink-0" />
@@ -469,11 +457,11 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                 <span className="opacity-70 text-[10px]">· not used</span>
               )}
             </div>
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-primary/10 text-primary">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-white text-[#3d7a5e] border border-[#d8d5ce]">
               <Sparkles className="w-3 h-3 shrink-0" />
               <span className="flex-1">{SOURCE_LABELS.gpt_reasoning}</span>
             </div>
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs bg-muted text-muted-foreground/70">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-[#eceae4] text-[#6b7068]/70">
               <ShieldCheck className="w-3 h-3 shrink-0 opacity-50" />
               <span className="flex-1">{SOURCE_LABELS.web_context_placeholder_disabled}</span>
               <span className="text-[10px] opacity-60">Coming soon</span>
@@ -481,7 +469,6 @@ function ResultView({ result }: { result: HybridAgentResult }) {
           </PopoverContent>
         </Popover>
 
-        {/* Searched */}
         {result.documentsUsed.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
@@ -492,18 +479,18 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-72 p-3">
-              <p className="text-[11px] font-medium text-muted-foreground mb-2">
+            <PopoverContent align="start" className={`w-72 p-3 ${POPOVER_CLASS}`}>
+              <p className="text-[11px] font-medium text-[#6b7068] mb-2">
                 Documents searched
               </p>
               <div className="space-y-1">
                 {result.documentsUsed.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-secondary/60 text-xs"
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] bg-white border border-[#d8d5ce] text-xs"
                   >
-                    <FileText className="w-3 h-3 shrink-0 text-muted-foreground" />
-                    <span className="truncate" title={doc.name}>
+                    <FileText className="w-3 h-3 shrink-0 text-[#6b7068]" />
+                    <span className="truncate text-[#1f1f1f]" title={doc.name}>
                       {doc.name}
                     </span>
                   </div>
@@ -513,7 +500,6 @@ function ResultView({ result }: { result: HybridAgentResult }) {
           </Popover>
         )}
 
-        {/* Sources — filter popover; citation cards expand below the pill row */}
         {result.citations.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
@@ -522,27 +508,27 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                 Sources
                 <span className="opacity-60">({result.citations.length})</span>
                 {sourceFilter !== null && (
-                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-[#3d7a5e] shrink-0" />
                 )}
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 p-3">
-              <p className="text-[11px] font-medium text-muted-foreground mb-2">
+            <PopoverContent align="start" className={`w-64 p-3 ${POPOVER_CLASS}`}>
+              <p className="text-[11px] font-medium text-[#6b7068] mb-2">
                 Filter by document
               </p>
               <div className="space-y-0.5">
-                <label className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-muted/50 rounded cursor-pointer">
+                <label className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-[#eceae4] rounded-[10px] cursor-pointer">
                   <Checkbox
                     checked={allDocsChecked}
                     onCheckedChange={(v) => setSourceFilter(v ? "all" : null)}
                   />
-                  <span className="text-xs">All documents</span>
+                  <span className="text-xs text-[#1f1f1f]">All documents</span>
                 </label>
                 {citationDocs.map((name) => (
                   <label
                     key={name}
-                    className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-muted/50 rounded cursor-pointer"
+                    className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-[#eceae4] rounded-[10px] cursor-pointer"
                   >
                     <Checkbox
                       checked={
@@ -551,7 +537,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                       }
                       onCheckedChange={() => toggleDocFilter(name)}
                     />
-                    <span className="text-xs truncate" title={name}>
+                    <span className="text-xs truncate text-[#1f1f1f]" title={name}>
                       {name}
                     </span>
                   </label>
@@ -561,7 +547,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                 <button
                   type="button"
                   onClick={() => setSourceFilter(null)}
-                  className="mt-2 w-full py-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline transition-colors text-center"
+                  className="mt-2 w-full py-1 text-[11px] text-[#6b7068] hover:text-[#1f1f1f] hover:underline transition-colors text-center"
                 >
                   Hide citations
                 </button>
@@ -569,14 +555,12 @@ function ResultView({ result }: { result: HybridAgentResult }) {
             </PopoverContent>
           </Popover>
         )}
-
       </div>
 
-      {/* Citation cards — expand below the controls when filter is active */}
       {filteredCitations.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-primary/70 shrink-0" />
+          <div className="flex items-center gap-2 text-[#f4f3ef]">
+            <ShieldCheck className="w-4 h-4 text-[#3d7a5e] shrink-0" />
             <span className="text-sm font-medium">
               {sourceFilter === "all"
                 ? `All sources · ${result.citations.length} chunk${result.citations.length !== 1 ? "s" : ""}`
@@ -626,8 +610,6 @@ export default function HybridAgent() {
 
   const clearDocSelection = () => setSelectedDocIds(new Set());
 
-  // Seed selection from ?preselect=1,2,3 when arriving from the Documents picker.
-  // Validated against the ready-doc list so phantom IDs never stay selected.
   const preSelectApplied = useRef(false);
   useEffect(() => {
     if (preSelectApplied.current || readyDocs.length === 0) return;
@@ -640,7 +622,6 @@ export default function HybridAgent() {
     window.history.replaceState(null, "", window.location.pathname);
   }, [readyDocs]);
 
-  // Navigate to Documents page in "picker" mode, carrying the current selection.
   const handleBrowse = () => {
     const ids = [...selectedDocIds].join(",");
     navigate(`/documents?from=hybrid${ids ? `&selected=${ids}` : ""}`);
@@ -690,26 +671,26 @@ export default function HybridAgent() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#1a1f1c] text-[#f4f3ef]">
         {showConversation ? (
           <>
             <ScrollArea className="flex-1">
               <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
-                    <div className="max-w-[90%] rounded-lg rounded-br-sm bg-primary text-primary-foreground px-3.5 py-2 text-[13px] whitespace-pre-wrap">
+                    <div className="max-w-[90%] rounded-[20px] rounded-br-[8px] bg-[#3d7a5e] text-white px-4 py-2.5 text-[13px] whitespace-pre-wrap">
                       {submittedQuery}
                     </div>
                   </div>
                 )}
 
                 {isPending ? (
-                  <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                  <div className="flex items-center gap-2 text-[13px] text-[#f4f3ef]/60">
                     <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     Thinking…
                   </div>
                 ) : error ? (
-                  <p className="text-[13px] text-destructive">
+                  <p className="text-[13px] text-red-300">
                     Something went wrong. Please try again.
                   </p>
                 ) : data ? (
@@ -718,7 +699,7 @@ export default function HybridAgent() {
               </div>
             </ScrollArea>
 
-            <div className="shrink-0 border-t border-border/60 bg-background/80 backdrop-blur">
+            <div className="shrink-0 border-t border-white/10 bg-[#1a1f1c]/95">
               <div className="max-w-3xl mx-auto w-full px-4 py-3">
                 <Composer {...composerProps} />
               </div>
@@ -729,15 +710,15 @@ export default function HybridAgent() {
             <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-10">
               <div className="w-full max-w-2xl space-y-7">
                 <div className="flex justify-center">
-                  <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl">
-                    <Sparkles className="w-6 h-6 text-primary" />
+                  <div className="inline-flex items-center justify-center rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] p-3">
+                    <Sparkles className="w-6 h-6 text-[#3d7a5e]" />
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                  <h1 className="text-xl font-semibold tracking-tight text-[#f4f3ef]">
                     Hybrid AI Chat
                   </h1>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-[#f4f3ef]/60">
                     Documents + GPT reasoning, no web research.
                   </p>
                 </div>
