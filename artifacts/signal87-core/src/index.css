@@ -283,6 +283,137 @@ html {
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+@layer components {
+  .signal-app .s87-page {
+    @apply flex-1 flex flex-col h-full overflow-hidden bg-background text-foreground;
+  }
+
+  .signal-app .s87-page-header {
+    @apply shrink-0 border-b border-border bg-card px-4 py-4 md:px-6;
+  }
+
+  .signal-app .s87-card {
+    @apply rounded-lg border border-card-border bg-card text-card-foreground shadow-xs;
+  }
+
+  .signal-app .s87-toolbar-control {
+    @apply h-10 rounded-md border border-border bg-card px-3 text-sm text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+  }
+
+  .signal-app .s87-muted {
+    @apply text-muted-foreground;
+  }
+}
+
+@keyframes s87-orbit-float {
+  0%, 100% { transform: rotateX(58deg) rotateZ(-18deg) translateY(0); }
+  50% { transform: rotateX(58deg) rotateZ(-12deg) translateY(-8px); }
+}
+
+@keyframes s87-orbit-node {
+  from { transform: rotate(var(--angle)) translateX(142px) rotate(calc(var(--angle) * -1)) translateZ(var(--depth)); }
+  to { transform: rotate(calc(var(--angle) + 360deg)) translateX(142px) rotate(calc((var(--angle) + 360deg) * -1)) translateZ(var(--depth)); }
+}
+
+@layer components {
+  .signal-app .s87-orbit {
+    perspective: 900px;
+  }
+
+  .signal-app .s87-orbit-stage {
+    transform-style: preserve-3d;
+    animation: s87-orbit-float 9s ease-in-out infinite;
+  }
+
+  .signal-app .s87-orbit-card,
+  .signal-app .s87-orbit-core,
+  .signal-app .s87-orbit-node {
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+
+  .signal-app .s87-orbit-card {
+    @apply absolute left-1/2 top-1/2 rounded-lg border border-border bg-background/95 p-4 shadow-lg;
+    height: 148px;
+    width: 116px;
+  }
+
+  .signal-app .s87-orbit-card-a {
+    transform: translate3d(-120px, -96px, 18px) rotateZ(-9deg);
+  }
+
+  .signal-app .s87-orbit-card-b {
+    transform: translate3d(18px, -66px, 56px) rotateZ(12deg);
+  }
+
+  .signal-app .s87-orbit-core {
+    @apply absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-full bg-primary text-primary-foreground shadow-xl;
+  }
+
+  .signal-app .s87-orbit-core span {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em];
+  }
+
+  .signal-app .s87-orbit-node {
+    @apply absolute left-1/2 top-1/2 flex h-10 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium text-foreground shadow-md;
+    animation: s87-orbit-node 18s linear infinite;
+    margin-left: -40px;
+    margin-top: -20px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .signal-app .s87-orbit-stage,
+    .signal-app .s87-orbit-node {
+      animation: none;
+    }
+  }
+}
+
+/* Legacy logged-in pages still carry older bespoke color utilities. Normalize
+   those values back to the shared Signal87 app tokens while the pages are
+   gradually converted to semantic classes. */
+.signal-app [class*="bg-[#1a1f1c]"] {
+  background-color: hsl(var(--background)) !important;
+}
+
+.signal-app [class*="bg-[#f4f3ef]"],
+.signal-app [class*="bg-[#eceae4]"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.signal-app [class*="bg-[#3d7a5e]"] {
+  background-color: hsl(var(--primary)) !important;
+}
+
+.signal-app [class*="hover:bg-[#5a9e7a]"]:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
+
+.signal-app [class*="text-[#f4f3ef]"],
+.signal-app [class*="text-[#1f1f1f]"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.signal-app [class*="text-[#6b7068]"] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.signal-app [class*="text-[#3d7a5e]"] {
+  color: hsl(var(--primary)) !important;
+}
+
+.signal-app [class*="border-[#d8d5ce]"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+.signal-app [class*="divide-[#d8d5ce]"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: hsl(var(--border)) !important;
+}
+
+.signal-app [class*="ring-[#3d7a5e]"] {
+  --tw-ring-color: hsl(var(--ring)) !important;
+}
+
 /* ── Signal87 hero animations ─────────────────────────────────────────── */
 @keyframes s87-gradient {
   0%   { background-position: 0% 50%; }

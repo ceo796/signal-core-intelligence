@@ -6,43 +6,43 @@ services:
     region: oregon
     rootDir: .
     autoDeployTrigger: off
-    buildCommand: |
-      cat > render-placeholder.mjs <<'EOF'
-      import http from "node:http";
-      const port = Number(process.env.PORT || 10000);
-      const server = http.createServer((req, res) => {
-        const path = req.url?.split("?")[0] || "/";
-        if (path === "/api/healthz" || path === "/healthz" || path === "/health") {
-          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-          res.end(JSON.stringify({ ok: true, service: "signal87-render-placeholder" }));
-          return;
-        }
-        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-        res.end("Signal87 production is not served from this Render deployment. This placeholder exists only to stop stale deployment failures.\n");
-      });
-      server.listen(port, () => console.log(`Signal87 Render placeholder listening on ${port}`));
-      EOF
-    startCommand: node --enable-source-maps ./render-placeholder.mjs
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
+    startCommand: pnpm --filter @workspace/api-server run start
     healthCheckPath: /api/healthz
+    disk:
+      name: signal87-uploads
+      mountPath: /var/data
+      sizeGB: 10
     envVars:
       - key: NODE_ENV
         value: production
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: FILE_STORAGE_DIR
+        value: /var/data/uploads
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
 
   - type: web
     name: signal87-web
     runtime: static
     rootDir: .
     autoDeployTrigger: off
-    buildCommand: |
-      mkdir -p render-disabled
-      cat > render-disabled/index.html <<'EOF'
-      <!doctype html>
-      <html lang="en">
-        <head><meta charset="utf-8"><title>Signal87 Render Placeholder</title></head>
-        <body>Signal87 production is not served from this Render deployment. This placeholder exists only to stop stale deployment failures.</body>
-      </html>
-      EOF
-    staticPublishPath: render-disabled
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/signal87-core run build
+    staticPublishPath: artifacts/signal87-core/dist/public
+    envVars:
+      - key: BASE_PATH
+        value: /
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
     routes:
       - type: rewrite
         source: /*

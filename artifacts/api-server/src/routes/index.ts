@@ -9,6 +9,7 @@ import briefRouter from "./brief";
 import agentRouter from "./agent";
 import skillsRouter from "./skills";
 import trashRouter from "./trash";
+import notesRouter from "./notes";
 import { requireApprovedEmail } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -24,6 +25,7 @@ router.use(briefRouter);
 router.use(agentRouter);
 router.use(skillsRouter);
 router.use(chatRouter);
+router.use(notesRouter);
 router.use(trashRouter);
 
 export default router;

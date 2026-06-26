@@ -93,13 +93,21 @@ export function PdfViewer({ fileUrl, onDownload }: PdfViewerProps) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
-        <AlertCircle className="w-8 h-8 text-destructive" />
-        <p className="text-sm text-destructive">Failed to render PDF</p>
-        <p className="text-xs text-muted-foreground max-w-sm">
-          The PDF could not be displayed in the viewer. You can still download the original file.
-        </p>
-        {downloadButton}
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-border bg-card rounded-t">
+          <div className="flex items-center gap-2 min-w-0 text-xs text-muted-foreground">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="truncate">Using browser PDF preview</span>
+          </div>
+          {downloadButton}
+        </div>
+        <div className="flex-1 min-h-[520px] overflow-hidden rounded-b border-x border-b border-border bg-white">
+          <iframe
+            src={fileUrl}
+            title="PDF preview"
+            className="h-full min-h-[520px] w-full border-0 bg-white"
+          />
+        </div>
       </div>
     );
   }

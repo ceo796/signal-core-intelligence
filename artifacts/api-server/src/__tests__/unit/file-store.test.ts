@@ -1,39 +1,47 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 describe("file-store (pure functions)", () => {
+  function restoreEnv(key: string, value: string | undefined) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+
   describe("isConfigured", () => {
-    const origPrivate = process.env.PRIVATE_OBJECT_DIR;
-    const origBucket = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+    const origProvider = process.env.STORAGE_PROVIDER;
+    const origDir = process.env.FILE_STORAGE_DIR;
 
     afterEach(() => {
-      process.env.PRIVATE_OBJECT_DIR = origPrivate;
-      process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID = origBucket;
+      restoreEnv("STORAGE_PROVIDER", origProvider);
+      restoreEnv("FILE_STORAGE_DIR", origDir);
     });
 
-    it("returns false when both env vars are missing", async () => {
-      delete process.env.PRIVATE_OBJECT_DIR;
-      delete process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+    it("returns false when durable storage env vars are missing", async () => {
+      delete process.env.STORAGE_PROVIDER;
+      delete process.env.FILE_STORAGE_DIR;
       const { isConfigured } = await import("../../lib/file-store.js");
       expect(isConfigured()).toBe(false);
     });
 
-    it("returns false when only PRIVATE_OBJECT_DIR is set", async () => {
-      process.env.PRIVATE_OBJECT_DIR = "/buckets/test";
-      delete process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+    it("returns false when STORAGE_PROVIDER is local but FILE_STORAGE_DIR is missing", async () => {
+      process.env.STORAGE_PROVIDER = "local";
+      delete process.env.FILE_STORAGE_DIR;
       const { isConfigured } = await import("../../lib/file-store.js");
       expect(isConfigured()).toBe(false);
     });
 
-    it("returns false when only DEFAULT_OBJECT_STORAGE_BUCKET_ID is set", async () => {
-      delete process.env.PRIVATE_OBJECT_DIR;
-      process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID = "my-bucket";
+    it("returns true when FILE_STORAGE_DIR is set", async () => {
+      delete process.env.STORAGE_PROVIDER;
+      process.env.FILE_STORAGE_DIR = "/tmp/signal87-test-uploads";
       const { isConfigured } = await import("../../lib/file-store.js");
-      expect(isConfigured()).toBe(false);
+      expect(isConfigured()).toBe(true);
     });
 
-    it("returns true when both env vars are set", async () => {
-      process.env.PRIVATE_OBJECT_DIR = "/buckets/test";
-      process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID = "my-bucket";
+    it("returns true when STORAGE_PROVIDER is render-disk and FILE_STORAGE_DIR is set", async () => {
+      process.env.STORAGE_PROVIDER = "render-disk";
+      process.env.FILE_STORAGE_DIR = "/tmp/signal87-test-uploads";
       const { isConfigured } = await import("../../lib/file-store.js");
       expect(isConfigured()).toBe(true);
     });

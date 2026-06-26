@@ -73,8 +73,8 @@
 3. Confirm `GET /api/system/info` (with signed-in session) shows:
    - `OPENAI_API_KEY: "set"`
    - `DATABASE_URL: "set"`
-   - `DEFAULT_OBJECT_STORAGE_BUCKET_ID: "set"`
-   - `PRIVATE_OBJECT_DIR: "set"`
+   - `STORAGE_PROVIDER: "set"`
+   - `FILE_STORAGE_DIR: "set"`
    - `fileStorageConfig.bucketConfigured: true`
    - `fileStorageConfig.originalFilesStored: true`
 
@@ -151,18 +151,17 @@
 
 ---
 
-## T64 — Embedded preview: authenticated reads succeed (was 401)
+## T64 — Retired: Replit embedded preview authenticated reads
 
-**Goal:** Confirm authenticated `/api/*` calls work inside the Replit embedded preview iframe via the Clerk bearer token.
+**Goal:** No longer applicable. Signal87 is no longer operated through Replit preview because Replit credits/runtime are unavailable.
 
 **Steps:**
-1. Open the app in the **embedded preview** (iframe), signed in as an approved user (`ceo@signal87.ai`).
-2. Navigate to `/documents`.
+1. Use the standalone deployed domain or local dev server.
+2. Navigate to `/documents` signed in as an approved user.
 
 **Expected:**
-- The document list loads; `GET /api/documents` returns **200/304** (not 401).
-- Server logs show the request authenticated; no "Could not load your documents" error inside the iframe.
-- Detail, chunks, history, single-doc chat, hybrid agent, brief, admin, and the in-app PDF preview blob all load (all share the same transport).
+- The document list loads; `GET /api/documents` returns **200/304**.
+- Detail, chunks, history, single-doc chat, hybrid agent, and the in-app PDF preview blob all load over the same authenticated transport.
 
 ---
 
@@ -224,7 +223,7 @@
 
 **Expected:**
 - Document card appears with an `XLSX` badge; `CHUNKS:` ≥ 1
-- API response: `fileType: "xlsx"`, `extractionStatus: "success"`, `originalFileAvailable: true`, `storageProvider: "replit-object-storage"`
+- API response: `fileType: "xlsx"`, `extractionStatus: "success"`, `originalFileAvailable: true`, `storageProvider: "local"`
 - `extractedTextPreview` begins `Workbook: <name> — N sheet(s): ...`
 
 ---
@@ -306,7 +305,7 @@
 **Expected:**
 - Document card appears with `TXT` badge
 - `CHUNKS:` ≥ 1
-- API response includes `originalFileAvailable: true`, `storageProvider: "replit-object-storage"`, `extractionStatus: "success"`
+- API response includes `originalFileAvailable: true`, `storageProvider: "local"`, `extractionStatus: "success"`
 
 ---
 
@@ -621,12 +620,12 @@ diff /tmp/original.txt /tmp/retrieved.txt  # should produce no output
 
 **Expected:**
 - FILE STORAGE card visible
-- Provider: `replit-object-storage` (green)
-- Bucket configured: `yes` (green)
+- Provider: `local` (green)
+- Durable storage configured: `yes` (green)
 - Original files stored: `yes` (green)
 - Embeddings persisted: `no` (red — expected)
 - Re-index available: `yes` (green)
-- ENVIRONMENT VARIABLES now shows `DEFAULT_OBJECT_STORAGE_BUCKET_ID: set` and `PRIVATE_OBJECT_DIR: set`
+- ENVIRONMENT VARIABLES now shows `STORAGE_PROVIDER: set` and `FILE_STORAGE_DIR: set`
 - ACTIVE API ROUTES shows 13 routes including `/documents/:id/original` (GET, green) and `/documents/:id/reindex` (POST, blue)
 
 ---
@@ -648,7 +647,7 @@ curl -s localhost:80/api/system/info
 **Expected:**
 - `env.OPENAI_API_KEY` is `"set"` — never the actual key
 - `env.DATABASE_URL` is `"set"` — never the connection string
-- `env.DEFAULT_OBJECT_STORAGE_BUCKET_ID` is `"set"` — never the bucket ID
+- `env.FILE_STORAGE_DIR` is `"set"` — never a secret path with credentials
 - `fileStorageConfig.bucketConfigured: true`
 
 ---

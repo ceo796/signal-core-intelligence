@@ -24,8 +24,15 @@ const configuredPublishableKey =
 // blank-screen when Vite build-time env is unavailable inside Docker builds.
 let publishableKey = configuredPublishableKey;
 try {
-  publishableKey =
-    publishableKeyFromHost(window.location.hostname, configuredPublishableKey) || configuredPublishableKey;
+  const hostname = window.location.hostname;
+  const isLocalHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.endsWith(".localhost");
+  publishableKey = isLocalHost
+    ? configuredPublishableKey
+    : publishableKeyFromHost(hostname, configuredPublishableKey) || configuredPublishableKey;
 } catch {
   publishableKey = configuredPublishableKey;
 }
@@ -65,9 +72,38 @@ const clerkOptions = {
 
 if (!publishableKey) {
   createRoot(document.getElementById("root")!).render(
-    <div style={{ padding: 24, fontFamily: "Inter, system-ui, sans-serif" }}>
-      Signal87 is missing the Clerk publishable key. Please set VITE_CLERK_PUBLISHABLE_KEY or CLERK_PUBLISHABLE_KEY.
-    </div>,
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        background: "#101312",
+        color: "#f5f7f2",
+        padding: 24,
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <section
+        style={{
+          width: "min(520px, 100%)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 12,
+          background: "rgba(255,255,255,0.06)",
+          padding: 24,
+          boxShadow: "0 24px 80px rgba(0,0,0,0.28)",
+        }}
+      >
+        <p style={{ margin: 0, color: "#6fd2ad", fontSize: 12, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+          Authentication setup required
+        </p>
+        <h1 style={{ margin: "10px 0 0", fontSize: 24, lineHeight: 1.2 }}>
+          Signal87 needs a Clerk publishable key.
+        </h1>
+        <p style={{ margin: "12px 0 0", color: "rgba(245,247,242,0.72)", lineHeight: 1.6 }}>
+          Set <code>VITE_CLERK_PUBLISHABLE_KEY</code> for local web builds or <code>CLERK_PUBLISHABLE_KEY</code> for runtime injection.
+        </p>
+      </section>
+    </main>,
   );
 } else {
   createRoot(document.getElementById("root")!).render(
