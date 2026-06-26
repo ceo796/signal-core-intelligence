@@ -672,6 +672,14 @@ export default function HybridAgent() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#1a1f1c] text-[#f4f3ef]">
+        <header className="shrink-0 px-4 py-4 border-b border-white/10 bg-[#1a1f1c] md:px-6">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
+            Signal87 workspace
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#f4f3ef]">
+            AI Chat
+          </h1>
+        </header>
         {showConversation ? (
           <>
             <ScrollArea className="flex-1">
@@ -708,7 +716,7 @@ export default function HybridAgent() {
         ) : (
           <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-10">
-              <div className="w-full max-w-2xl space-y-7">
+              <div className="w-full max-w-2xl space-y-7 rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-8 sm:px-6">
                 <div className="flex justify-center">
                   <div className="inline-flex items-center justify-center rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] p-3">
                     <Sparkles className="w-6 h-6 text-[#3d7a5e]" />
