@@ -1,11 +1,15 @@
+import { useEffect, useRef, useState } from "react";
+import { Document, Page } from "react-pdf";
+import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { FileText, FileSpreadsheet } from "lucide-react";
+import "@/lib/pdfjs-worker";
 
-// Stability note:
-// The document grid must never depend on fetching or rendering original PDFs.
-// Live PDF thumbnails created intermittent /original requests from many cards at
-// once, which made the dashboard look broken when storage retrieval briefly
-// failed. Keep thumbnails deterministic and local-only until a server-side
-// cached thumbnail pipeline exists.
+// Live PDF thumbnails must remain disabled in production until server-side
+// cached thumbnails are available. Rendering originals in every dashboard card
+// causes many concurrent /original calls and can make storage retrieval look
+// intermittently broken even when the document viewer itself is healthy.
+const ENABLE_LIVE_PDF_THUMBNAILS = false;
+
 const FT_STYLE: Record<string, { bg: string; fg: string }> = {
   pdf:  { bg: "#f4e8e1", fg: "#8a6f60" },
   docx: { bg: "#eceae4", fg: "#6b7068" },
@@ -27,7 +31,6 @@ function FallbackThumb({ fileType }: { fileType: string }) {
   const ft = fileType.toLowerCase();
   const Icon =
     ft === "xlsx" || ft === "xls" || ft === "csv" ? FileSpreadsheet : FileText;
-
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center gap-2"
@@ -41,6 +44,54 @@ function FallbackThumb({ fileType }: { fileType: string }) {
   );
 }
 
+function PdfPageThumb({ id, width }: { id: number; width: number }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    customFetch<Blob>(getGetDocumentOriginalUrl(id), {
+      method: "GET",
+      responseType: "blob",
+    })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [id]);
+
+  if (error) {
+    return <FallbackThumb fileType="pdf" />;
+  }
+
+  if (!url) return <FallbackThumb fileType="pdf" />;
+
+  return (
+    <Document
+      file={url}
+      loading={<FallbackThumb fileType="pdf" />}
+      error={<FallbackThumb fileType="pdf" />}
+      onLoadError={() => setError(true)}
+    >
+      <Page
+        pageNumber={1}
+        width={width}
+        renderAnnotationLayer={false}
+        renderTextLayer={false}
+      />
+    </Document>
+  );
+}
+
 export interface DocumentCardThumbnailProps {
   id: number;
   fileType: string;
@@ -49,12 +100,54 @@ export interface DocumentCardThumbnailProps {
 }
 
 export function DocumentCardThumbnail({
+  id,
   fileType,
+  originalFileAvailable,
   className = "",
 }: DocumentCardThumbnailProps) {
+  const ft = fileType.toLowerCase();
+  const isPdf = ft === "pdf";
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(300);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ENABLE_LIVE_PDF_THUMBNAILS) return;
+    const el = containerRef.current;
+    if (!el) return;
+    setWidth(el.clientWidth || 300);
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth || 300));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!ENABLE_LIVE_PDF_THUMBNAILS) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true);
+      },
+      { rootMargin: "100px", threshold: 0 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const shouldRenderLivePdfThumb = ENABLE_LIVE_PDF_THUMBNAILS && isPdf && originalFileAvailable && visible;
+
   return (
-    <div className={`overflow-hidden flex items-start justify-center select-none ${className}`}>
-      <FallbackThumb fileType={fileType} />
+    <div
+      ref={containerRef}
+      className={`overflow-hidden flex items-start justify-center select-none ${className}`}
+    >
+      {shouldRenderLivePdfThumb ? (
+        <PdfPageThumb id={id} width={width} />
+      ) : (
+        <FallbackThumb fileType={fileType} />
+      )}
     </div>
   );
 }
