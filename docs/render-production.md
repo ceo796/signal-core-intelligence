@@ -62,7 +62,7 @@ The script verifies:
 - `/` returns 200.
 - `/sign-in` returns 200.
 - `/api/healthz` returns 200 JSON.
-- `/api/runtime-check` returns 200 JSON without secret values.
+- `/api/runtime-check` returns 200 JSON, reports `status: "ok"`, and does not expose secret values.
 - Unauthenticated `/api/documents` returns 401.
 
 If a smoke check fails, do not consider the deploy healthy.
