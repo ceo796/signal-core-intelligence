@@ -8,6 +8,7 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "test": "pnpm --filter @workspace/api-server run test",
+    "smoke:api": "node scripts/smoke-test-api.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs"
   },
   "private": true,

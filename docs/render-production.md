@@ -16,6 +16,10 @@ Set these on `signal87-api` before deploying:
 | `EXTRACTION_PROVIDER` | Optional. Use `auto` to run local extraction first and escalate weak PDFs to OCR, `mistral` to prefer OCR, or `local` to disable external OCR. |
 | `MISTRAL_OCR_MODEL` | Optional. Defaults to `mistral-ocr-latest`. |
 | `MISTRAL_OCR_INCLUDE_BLOCKS` | Optional. Set `true` to request OCR 4 block-level extraction when available. |
+| `MISTRAL_OCR_TABLE_FORMAT` | Optional. Use `markdown` or `html` when preserving table structure is important. |
+| `MISTRAL_OCR_EXTRACT_HEADER` | Optional. Set `true` to request page header extraction. |
+| `MISTRAL_OCR_EXTRACT_FOOTER` | Optional. Set `true` to request page footer extraction. |
+| `MISTRAL_OCR_CONFIDENCE_SCORES` | Optional. Use `page` or `word` to request OCR confidence metadata. |
 | `MISTRAL_OCR_TIMEOUT_MS` | Optional. Defaults to `60000`. |
 | `OCR_LOCAL_MIN_CHARS` | Optional. Defaults to `500`; PDFs below this local text threshold escalate to OCR in `auto` mode. |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |

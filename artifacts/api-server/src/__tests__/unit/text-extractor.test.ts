@@ -167,24 +167,35 @@ describe("OCR provider selection", () => {
     process.env.EXTRACTION_PROVIDER = "mistral";
     process.env.MISTRAL_API_KEY = "test-key";
     process.env.MISTRAL_OCR_MODEL = "mistral-ocr-latest";
+    process.env.MISTRAL_OCR_TABLE_FORMAT = "markdown";
+    process.env.MISTRAL_OCR_EXTRACT_HEADER = "true";
+    process.env.MISTRAL_OCR_EXTRACT_FOOTER = "true";
+    process.env.MISTRAL_OCR_CONFIDENCE_SCORES = "page";
+    const fetchMock = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) => new Response(JSON.stringify({
+      pages: [
+        { index: 0, markdown: "# Invoice\nTotal due: $42" },
+        { index: 1, markdown: "Payment terms: Net 30" },
+      ],
+      usage_info: { pages_processed: 2 },
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response(JSON.stringify({
-        pages: [
-          { index: 0, markdown: "# Invoice\nTotal due: $42" },
-          { index: 1, markdown: "Payment terms: Net 30" },
-        ],
-        usage_info: { pages_processed: 2 },
-      }), { status: 200, headers: { "Content-Type": "application/json" } })),
+      fetchMock,
     );
 
     const result = await extractAndChunk(Buffer.from("%PDF-1.7"), "pdf", "invoice.pdf");
+    const fetchOptions = fetchMock.mock.calls[0]?.[1];
+    const requestBody = JSON.parse(String(fetchOptions?.body));
 
     expect(result.provider).toBe("mistral");
     expect(result.text).toContain("[Page 1]");
     expect(result.text).toContain("Total due");
     expect(result.text).toContain("Payment terms");
     expect(result.chunks.length).toBeGreaterThan(0);
+    expect(requestBody.table_format).toBe("markdown");
+    expect(requestBody.extract_header).toBe(true);
+    expect(requestBody.extract_footer).toBe(true);
+    expect(requestBody.confidence_scores_granularity).toBe("page");
     expect(fetch).toHaveBeenCalledOnce();
   });
 
