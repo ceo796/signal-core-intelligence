@@ -55,6 +55,10 @@ export function getMistralOcrStatus() {
     ready: provider === "local" || configured,
     model: process.env.MISTRAL_OCR_MODEL || DEFAULT_MISTRAL_OCR_MODEL,
     includeBlocks: process.env.MISTRAL_OCR_INCLUDE_BLOCKS === "true",
+    tableFormat: getTableFormat(),
+    extractHeader: getBooleanEnv("MISTRAL_OCR_EXTRACT_HEADER"),
+    extractFooter: getBooleanEnv("MISTRAL_OCR_EXTRACT_FOOTER"),
+    confidenceScoresGranularity: getConfidenceScoresGranularity(),
     localMinChars: parsePositiveInt(process.env.OCR_LOCAL_MIN_CHARS, 500),
     timeoutMs: parsePositiveInt(process.env.MISTRAL_OCR_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
   };
@@ -142,8 +146,26 @@ function buildMistralOcrRequest(buffer: Buffer, model: string) {
     include_image_base64: false,
   };
 
+  const tableFormat = getTableFormat();
+  if (tableFormat) {
+    request.table_format = tableFormat;
+  }
+
   if (process.env.MISTRAL_OCR_INCLUDE_BLOCKS === "true") {
     request.include_blocks = true;
+  }
+
+  if (getBooleanEnv("MISTRAL_OCR_EXTRACT_HEADER")) {
+    request.extract_header = true;
+  }
+
+  if (getBooleanEnv("MISTRAL_OCR_EXTRACT_FOOTER")) {
+    request.extract_footer = true;
+  }
+
+  const confidenceScoresGranularity = getConfidenceScoresGranularity();
+  if (confidenceScoresGranularity) {
+    request.confidence_scores_granularity = confidenceScoresGranularity;
   }
 
   return request;
@@ -197,4 +219,20 @@ function summarizeErrorBody(bodyText: string): string {
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function getTableFormat(): "markdown" | "html" | null {
+  const value = process.env.MISTRAL_OCR_TABLE_FORMAT?.trim().toLowerCase();
+  if (value === "html" || value === "markdown") return value;
+  return null;
+}
+
+function getConfidenceScoresGranularity(): "page" | "word" | null {
+  const value = process.env.MISTRAL_OCR_CONFIDENCE_SCORES?.trim().toLowerCase();
+  if (value === "page" || value === "word") return value;
+  return null;
+}
+
+function getBooleanEnv(key: string): boolean {
+  return process.env[key]?.trim().toLowerCase() === "true";
 }

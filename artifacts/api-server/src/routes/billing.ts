@@ -12,6 +12,11 @@ import { isApprovedEmail, resolveRequestEmail } from "../middlewares/requireAuth
 const router: IRouter = Router();
 
 function requireSignedIn(req: Request, res: Response, next: NextFunction): void {
+  if (!process.env.CLERK_SECRET_KEY) {
+    res.status(401).json({ error: "Unauthorized. Please sign in." });
+    return;
+  }
+
   const auth = getAuth(req);
   if (!auth.userId) {
     res.status(401).json({ error: "Unauthorized. Please sign in." });

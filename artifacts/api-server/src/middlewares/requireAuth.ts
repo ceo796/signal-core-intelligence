@@ -8,6 +8,10 @@ const approvedEmails = new Set(
 
 const bypassAuth = process.env.CLERK_BYPASS_AUTH === "true";
 
+function clerkRuntimeConfigured(): boolean {
+  return Boolean(process.env.CLERK_SECRET_KEY);
+}
+
 export function isApprovedEmail(email: string | null | undefined): boolean {
   return Boolean(email && approvedEmails.has(email.toLowerCase()));
 }
@@ -35,6 +39,11 @@ export async function requireApprovedEmail(
 ): Promise<void> {
   if (bypassAuth) {
     next();
+    return;
+  }
+
+  if (!clerkRuntimeConfigured()) {
+    res.status(401).json({ error: "Unauthorized. Please sign in." });
     return;
   }
 
