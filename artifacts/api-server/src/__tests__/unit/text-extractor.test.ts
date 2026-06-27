@@ -1,5 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { getFileType, extractText, extractAndChunk } from "../../lib/text-extractor.js";
+import { getExtractionProvider, shouldEscalateToOcr } from "../../lib/mistral-ocr.js";
+
+const originalEnv = { ...process.env };
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  process.env = { ...originalEnv };
+});
 
 describe("getFileType", () => {
   describe("by MIME type", () => {
@@ -132,5 +140,61 @@ describe("extractAndChunk", () => {
       expect(result.text).toContain("product");
       expect(result.chunks.length).toBeGreaterThan(0);
     });
+  });
+});
+
+describe("OCR provider selection", () => {
+  it("defaults to local when no Mistral key is configured", () => {
+    delete process.env.MISTRAL_API_KEY;
+    delete process.env.EXTRACTION_PROVIDER;
+    expect(getExtractionProvider()).toBe("local");
+  });
+
+  it("defaults to auto when a Mistral key is configured", () => {
+    process.env.MISTRAL_API_KEY = "test-key";
+    delete process.env.EXTRACTION_PROVIDER;
+    expect(getExtractionProvider()).toBe("auto");
+  });
+
+  it("detects low-text PDFs as OCR candidates", () => {
+    process.env.OCR_LOCAL_MIN_CHARS = "20";
+    expect(shouldEscalateToOcr("pdf", "tiny")).toBe(true);
+    expect(shouldEscalateToOcr("pdf", "this pdf has enough readable local text")).toBe(false);
+    expect(shouldEscalateToOcr("txt", "tiny")).toBe(false);
+  });
+
+  it("uses Mistral OCR when forced for PDFs", async () => {
+    process.env.EXTRACTION_PROVIDER = "mistral";
+    process.env.MISTRAL_API_KEY = "test-key";
+    process.env.MISTRAL_OCR_MODEL = "mistral-ocr-latest";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({
+        pages: [
+          { index: 0, markdown: "# Invoice\nTotal due: $42" },
+          { index: 1, markdown: "Payment terms: Net 30" },
+        ],
+        usage_info: { pages_processed: 2 },
+      }), { status: 200, headers: { "Content-Type": "application/json" } })),
+    );
+
+    const result = await extractAndChunk(Buffer.from("%PDF-1.7"), "pdf", "invoice.pdf");
+
+    expect(result.provider).toBe("mistral");
+    expect(result.text).toContain("[Page 1]");
+    expect(result.text).toContain("Total due");
+    expect(result.text).toContain("Payment terms");
+    expect(result.chunks.length).toBeGreaterThan(0);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("falls back to local extraction when forced OCR is unavailable", async () => {
+    process.env.EXTRACTION_PROVIDER = "mistral";
+    delete process.env.MISTRAL_API_KEY;
+
+    const result = await extractAndChunk(Buffer.from("plain fallback text"), "txt", "fallback.txt");
+
+    expect(result.provider).toBe("local");
+    expect(result.text).toBe("plain fallback text");
   });
 });
