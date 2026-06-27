@@ -45,14 +45,14 @@ function FallbackThumb({ fileType }: { fileType: string }) {
 
 function LoadingThumb() {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#f4e8e1] text-[#8a6f60]">
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#f6f4ef] text-[#8a6f60]">
       <Loader2 className="w-8 h-8 animate-spin opacity-55" />
       <span className="text-[11px] font-semibold opacity-70">PDF</span>
     </div>
   );
 }
 
-function PdfPageThumb({ id, width }: { id: number; width: number }) {
+function PdfPageThumb({ id, pageHeight }: { id: number; pageHeight: number }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [rendered, setRendered] = useState(false);
@@ -92,24 +92,28 @@ function PdfPageThumb({ id, width }: { id: number; width: number }) {
   if (!url) return <LoadingThumb />;
 
   return (
-    <div className="relative h-full w-full bg-white">
-      {!rendered && <LoadingThumb />}
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#f6f4ef] px-4 py-3">
+      {!rendered && (
+        <div className="absolute inset-0 z-10">
+          <LoadingThumb />
+        </div>
+      )}
       <Document
         file={url}
         loading={null}
         error={<FallbackThumb fileType="pdf" />}
         onLoadError={() => setError(true)}
-        className="min-h-full w-full"
+        className="flex h-full w-full items-center justify-center"
       >
         <Page
           pageNumber={1}
-          width={width}
+          height={pageHeight}
           renderAnnotationLayer={false}
           renderTextLayer={false}
           onRenderSuccess={() => setRendered(true)}
           onRenderError={() => setError(true)}
           loading={null}
-          className="pointer-events-none select-none"
+          className="pointer-events-none select-none rounded-[8px] bg-white shadow-[0_14px_30px_rgba(31,31,31,0.18)] [&_canvas]:!h-auto [&_canvas]:!max-h-full [&_canvas]:!max-w-full [&_canvas]:!rounded-[8px]"
         />
       </Document>
     </div>
@@ -133,7 +137,7 @@ export function DocumentCardThumbnail({
   const isPdf = ft === "pdf";
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(300);
+  const [pageHeight, setPageHeight] = useState(150);
   const [visible, setVisible] = useState(false);
   const canRenderPdfThumb = !DISABLE_LIVE_PDF_THUMBNAILS && isPdf && originalFileAvailable;
 
@@ -141,9 +145,12 @@ export function DocumentCardThumbnail({
     if (!canRenderPdfThumb) return;
     const el = containerRef.current;
     if (!el) return;
-    const updateWidth = () => setWidth(Math.max(1, el.clientWidth || 300));
-    updateWidth();
-    const ro = new ResizeObserver(updateWidth);
+    const updateSize = () => {
+      const height = el.clientHeight || 176;
+      setPageHeight(Math.max(1, height - 24));
+    };
+    updateSize();
+    const ro = new ResizeObserver(updateSize);
     ro.observe(el);
     return () => ro.disconnect();
   }, [canRenderPdfThumb]);
@@ -170,10 +177,10 @@ export function DocumentCardThumbnail({
   return (
     <div
       ref={containerRef}
-      className={`overflow-hidden flex items-start justify-center select-none ${className}`}
+      className={`overflow-hidden flex items-center justify-center select-none ${className}`}
     >
       {shouldRenderLivePdfThumb ? (
-        <PdfPageThumb id={id} width={width} />
+        <PdfPageThumb id={id} pageHeight={pageHeight} />
       ) : (
         <FallbackThumb fileType={fileType} />
       )}
