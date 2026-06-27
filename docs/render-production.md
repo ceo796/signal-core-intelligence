@@ -12,6 +12,12 @@ Set these on `signal87-api` before deploying:
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string. Keep this secret. |
 | `OPENAI_API_KEY` | OpenAI API key used by AI/chat/analyze features. |
+| `MISTRAL_API_KEY` | Optional. Enables Mistral OCR fallback for scanned/low-text PDFs. |
+| `EXTRACTION_PROVIDER` | Optional. Use `auto` to run local extraction first and escalate weak PDFs to OCR, `mistral` to prefer OCR, or `local` to disable external OCR. |
+| `MISTRAL_OCR_MODEL` | Optional. Defaults to `mistral-ocr-latest`. |
+| `MISTRAL_OCR_INCLUDE_BLOCKS` | Optional. Set `true` to request OCR 4 block-level extraction when available. |
+| `MISTRAL_OCR_TIMEOUT_MS` | Optional. Defaults to `60000`. |
+| `OCR_LOCAL_MIN_CHARS` | Optional. Defaults to `500`; PDFs below this local text threshold escalate to OCR in `auto` mode. |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |
 | `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. Use `pk_live_...` in production. |
 | `APPROVED_EMAILS` | Comma-separated allowlist of approved user email addresses. |
@@ -72,6 +78,7 @@ The script verifies:
 - `/sign-in` returns 200.
 - `/api/healthz` returns 200 JSON from the API base URL.
 - `/api/runtime-check` returns 200 JSON from the API base URL, reports `status: "ok"`, and does not expose secret values.
+- `/api/runtime-check` reports extraction provider status without exposing OCR keys.
 - Unauthenticated `/api/documents` returns 401 from the API base URL.
 
 If a smoke check fails, do not consider the deploy healthy.

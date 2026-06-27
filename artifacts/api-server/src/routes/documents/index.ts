@@ -14,6 +14,7 @@ import {
 import { extractAndChunk, getFileType, type SupportedFileType } from "../../lib/text-extractor";
 import * as fileStore from "../../lib/file-store";
 import { PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { getMistralOcrStatus } from "../../lib/mistral-ocr";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -154,7 +155,7 @@ router.post(
       extractedText = extraction.text;
       extractedChunks = extraction.chunks;
       for (const warning of extraction.warnings) {
-        req.log.warn({ fileName: file.originalname, fileType, warning }, "Spreadsheet extraction limit applied");
+        req.log.warn({ fileName: file.originalname, fileType, provider: extraction.provider, warning }, "Extraction warning");
       }
       if (!extractedText.trim()) {
         extractionError = "No text could be extracted from the file";
@@ -485,7 +486,7 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
     extractedText = extraction.text;
     chunks = extraction.chunks;
     for (const warning of extraction.warnings) {
-      req.log.warn({ documentId: id, fileType: doc.fileType, warning }, "Spreadsheet extraction limit applied");
+      req.log.warn({ documentId: id, fileType: doc.fileType, provider: extraction.provider, warning }, "Extraction warning");
     }
   } catch (err) {
     req.log.error({ err }, "Re-extraction failed");
@@ -540,6 +541,7 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
 
 router.get("/system/info", (_req, res): void => {
   const envStatus = (key: string) => (process.env[key] ? "set" : "missing");
+  const extraction = getMistralOcrStatus();
 
   res.json({
     framework: "Express 5",
@@ -572,9 +574,12 @@ router.get("/system/info", (_req, res): void => {
       embeddingModel: "text-embedding-3-small",
       maxTokens: 2048,
     },
+    extraction,
     env: {
       DATABASE_URL: envStatus("DATABASE_URL"),
       OPENAI_API_KEY: envStatus("OPENAI_API_KEY"),
+      MISTRAL_API_KEY: envStatus("MISTRAL_API_KEY"),
+      EXTRACTION_PROVIDER: extraction.provider,
       PORT: envStatus("PORT"),
       STORAGE_PROVIDER: envStatus("STORAGE_PROVIDER"),
       FILE_STORAGE_DIR: envStatus("FILE_STORAGE_DIR"),

@@ -2,6 +2,12 @@ import mammoth from "mammoth";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { chunkText } from "./chunker";
 import { extractSpreadsheet } from "./spreadsheet";
+import {
+  extractWithMistralOcr,
+  getExtractionProvider,
+  shouldEscalateToOcr,
+  supportsMistralOcr,
+} from "./mistral-ocr";
 
 export type SupportedFileType = "pdf" | "docx" | "txt" | "csv" | "xlsx" | "xls";
 
@@ -50,6 +56,7 @@ export interface ExtractionResult {
   text: string;
   chunks: string[];
   warnings: string[];
+  provider: "local" | "mistral";
 }
 
 /**
@@ -63,9 +70,37 @@ export async function extractAndChunk(
   fileName: string,
 ): Promise<ExtractionResult> {
   if (fileType === "xlsx" || fileType === "xls") {
-    return extractSpreadsheet(buffer, fileType, fileName);
+    const result = extractSpreadsheet(buffer, fileType, fileName);
+    return { ...result, provider: "local" };
   }
+
+  const provider = getExtractionProvider();
+  const warnings: string[] = [];
+
+  if (provider === "mistral" && supportsMistralOcr(fileType)) {
+    try {
+      return await extractWithMistralOcr(buffer, fileType, fileName);
+    } catch (err) {
+      warnings.push(`Mistral OCR unavailable; used local extraction. ${(err as Error).message}`);
+    }
+  }
+
   const text = await extractText(buffer, fileType);
+  if (provider === "auto" && shouldEscalateToOcr(fileType, text)) {
+    try {
+      const ocr = await extractWithMistralOcr(buffer, fileType, fileName);
+      return {
+        ...ocr,
+        warnings: [
+          `Local PDF extraction produced limited text; escalated to OCR.`,
+          ...ocr.warnings,
+        ],
+      };
+    } catch (err) {
+      warnings.push(`OCR fallback unavailable; kept local extraction. ${(err as Error).message}`);
+    }
+  }
+
   const chunks = text.trim() ? chunkText(text) : [];
-  return { text, chunks, warnings: [] };
+  return { text, chunks, warnings, provider: "local" };
 }
