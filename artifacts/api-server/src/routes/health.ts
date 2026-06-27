@@ -3,7 +3,6 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import { PROVIDER_CONFIG } from "../lib/ai-provider";
 import { getRuntimeStorageStatus } from "../lib/file-store";
-import { getMistralOcrStatus } from "../lib/mistral-ocr";
 
 const router: IRouter = Router();
 
@@ -36,7 +35,6 @@ async function checkDatabase() {
 
 router.get("/runtime-check", async (_req, res) => {
   const storage = getRuntimeStorageStatus();
-  const extraction = getMistralOcrStatus();
   const database = await checkDatabase();
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
@@ -54,7 +52,6 @@ router.get("/runtime-check", async (_req, res) => {
     database.connected &&
     storage.configured &&
     storage.productionSafe &&
-    extraction.ready &&
     !replitDependency;
 
   res.json({
@@ -83,7 +80,6 @@ router.get("/runtime-check", async (_req, res) => {
       testKeysDetected: clerkUsesTestKeys,
     },
     storage,
-    extraction,
     replitDependency,
     detectedReplitEnvVars,
   });

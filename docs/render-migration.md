@@ -23,16 +23,6 @@ STORAGE_PROVIDER=local
 FILE_STORAGE_DIR=/var/data/uploads
 DATABASE_URL=<Render Postgres or direct Neon URL>
 OPENAI_API_KEY=<OpenAI API key>
-MISTRAL_API_KEY=<optional Mistral OCR API key>
-EXTRACTION_PROVIDER=auto
-MISTRAL_OCR_MODEL=mistral-ocr-latest
-MISTRAL_OCR_INCLUDE_BLOCKS=false
-MISTRAL_OCR_TABLE_FORMAT=markdown
-MISTRAL_OCR_EXTRACT_HEADER=false
-MISTRAL_OCR_EXTRACT_FOOTER=false
-MISTRAL_OCR_CONFIDENCE_SCORES=page
-MISTRAL_OCR_TIMEOUT_MS=60000
-OCR_LOCAL_MIN_CHARS=500
 CLERK_SECRET_KEY=<Clerk secret key>
 CLERK_PUBLISHABLE_KEY=<Clerk publishable key>
 ```
@@ -77,11 +67,9 @@ Production uploads use local durable storage under `/var/data/uploads`, backed b
 
 Existing documents whose `storageKey` points to Replit Object Storage will not be retrievable from Render until those files are migrated from Replit storage into the new Render disk or another external object store.
 
-## Intelligent extraction
+## Extraction
 
-Local extraction remains the durable baseline for PDFs, DOCX, TXT, CSV, XLSX, and XLS. Set `EXTRACTION_PROVIDER=auto` with `MISTRAL_API_KEY` to escalate scanned or low-text PDFs to Mistral OCR while preserving local fallback behavior. Set `EXTRACTION_PROVIDER=mistral` to prefer OCR first for supported PDFs.
-
-When `MISTRAL_OCR_INCLUDE_BLOCKS=true`, OCR requests include the block-level extraction flag used by Mistral OCR 4. Keep it off if your account/model does not support block output yet.
+Local extraction is the durable baseline for PDFs, DOCX, TXT, CSV, XLSX, and XLS. The backend does not call an external OCR provider. Scanned or image-only PDFs may store successfully but return little or no searchable text until a separate OCR provider is intentionally added.
 
 ## Runtime checks
 
