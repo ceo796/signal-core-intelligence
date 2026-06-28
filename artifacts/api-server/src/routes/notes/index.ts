@@ -2,8 +2,19 @@ import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, isNotNull, isNull, or } from "drizzle-orm";
 import { db, notesTable } from "@workspace/db";
 import { getCurrentUserId } from "../../lib/ownership";
+import { ensureNotesTables } from "../../lib/notes-schema";
 
 const router: IRouter = Router();
+
+router.use(async (req, res, next) => {
+  try {
+    await ensureNotesTables();
+    next();
+  } catch (err) {
+    req.log.error({ err }, "Notes schema unavailable");
+    res.status(503).json({ error: "Notes storage is not ready. Try again shortly." });
+  }
+});
 
 interface NotePayload {
   title?: string;
@@ -54,8 +65,8 @@ function parsePayload(body: unknown, options: { allowArchived: boolean }): { ok:
   if ("title" in input) {
     if (typeof input.title !== "string") return { ok: false, error: "title must be a string" };
     const title = input.title.trim();
-    if (!title || title.length > 160) return { ok: false, error: "title must be 1-160 characters" };
-    data.title = title;
+    if (title.length > 160) return { ok: false, error: "title must be 160 characters or fewer" };
+    if (title) data.title = title;
   }
 
   if ("content" in input) {

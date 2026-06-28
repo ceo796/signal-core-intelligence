@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { isMobileViewport } from "@/lib/device";
-import { customFetch } from "@workspace/api-client-react";
+import { ApiError, customFetch } from "@workspace/api-client-react";
 import { toast } from "sonner";
 
 interface Note {
@@ -88,14 +88,18 @@ async function listNotes(mode: NotesMode, search: string): Promise<NotesListResp
 async function createNote(): Promise<Note> {
   return customFetch<Note>("/notes", {
     method: "POST",
-    body: JSON.stringify({
-      title: "Untitled",
-      content: "",
-      tags: [],
-      icon: "FileText",
-    }),
+    body: JSON.stringify({}),
     responseType: "json",
   });
+}
+
+function noteErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const payload = error.data as { error?: string; message?: string } | null;
+    return payload?.error ?? payload?.message ?? error.message ?? fallback;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
 }
 
 async function updateNote(id: number, patch: Partial<DraftState> & { isPinned?: boolean; archived?: boolean }): Promise<Note> {
@@ -204,7 +208,7 @@ export default function NotesPage() {
       invalidateNotes();
       toast.success("Note created");
     },
-    onError: () => toast.error("Could not create note"),
+    onError: (error) => toast.error(noteErrorMessage(error, "Could not create note")),
   });
 
   const saveMutation = useMutation({
@@ -219,9 +223,9 @@ export default function NotesPage() {
       });
       setSaveState("saved");
     },
-    onError: () => {
+    onError: (error) => {
       setSaveState("dirty");
-      toast.error("Could not save note");
+      toast.error(noteErrorMessage(error, "Could not save note"));
     },
   });
 

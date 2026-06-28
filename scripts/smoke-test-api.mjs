@@ -19,6 +19,7 @@ const checks = [
   { method: "POST", path: "/api/agent/hybrid", expected: 401, json: true, body: { query: "status" } },
   { method: "GET", path: "/api/skills", expected: 401, json: true },
   { method: "GET", path: "/api/notes", expected: 401, json: true },
+  { method: "POST", path: "/api/notes", expected: 401, json: true, body: {} },
   { method: "GET", path: "/api/trash", expected: 401, json: true },
   { method: "GET", path: "/api/system/info", expected: 401, json: true },
   { method: "GET", path: "/api/admin/stats", expected: 401, json: true },
