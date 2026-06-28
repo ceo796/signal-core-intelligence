@@ -179,7 +179,7 @@ export function SpreadsheetViewer({
           </p>
           {textButton}
         </div>
-        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="flex-1 overflow-auto md:pb-0">
           <div className="max-w-3xl mx-auto px-6 py-6">
             <pre className="whitespace-pre-wrap break-words text-sm font-mono leading-relaxed text-foreground/90">
               {extractedText}
@@ -342,7 +342,7 @@ export function SpreadsheetViewer({
       )}
 
       {/* Grid */}
-      <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div className="flex-1 overflow-auto md:pb-0">
         {totalCols === 0 ? (
           <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
             This sheet is empty

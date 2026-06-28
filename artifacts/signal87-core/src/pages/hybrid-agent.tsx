@@ -684,7 +684,7 @@ export default function HybridAgent() {
         {showConversation ? (
           <>
             <ScrollArea className="flex-1">
-              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
+              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
                     <div className="max-w-[90%] rounded-[20px] rounded-br-[8px] bg-[#3d7a5e] text-white px-4 py-2.5 text-[13px] whitespace-pre-wrap">
@@ -715,8 +715,8 @@ export default function HybridAgent() {
             </div>
           </>
         ) : (
-          <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
-            <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-10">
+          <div className="flex-1 overflow-y-auto md:pb-0">
+            <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 md:pb-10">
               <div className="grid w-full max-w-5xl gap-6 md:grid-cols-[minmax(0,1fr)_360px] md:items-center">
               <div className="s87-card space-y-7 px-4 py-8 sm:px-6">
                 <div className="flex justify-center">

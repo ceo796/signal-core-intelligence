@@ -87,3 +87,20 @@ export const APP_SETTINGS_NAV: AppNavItem = {
   icon: Settings,
   isActive: (location) => location.startsWith("/settings"),
 };
+
+/** Primary iOS tab bar destinations (max 4 + More). */
+export const APP_TAB_BAR_ITEMS: AppNavItem[] = APP_NAV_ITEMS.filter((item) =>
+  ["documents", "notes", "ai-chat", "analyze"].includes(item.id),
+);
+
+/** Overflow destinations opened from the More tab / sheet. */
+export const APP_MORE_ITEMS: AppNavItem[] = APP_NAV_ITEMS.filter((item) =>
+  ["skills", "trash", "activity"].includes(item.id),
+);
+
+export function isMoreSectionActive(location: string): boolean {
+  return (
+    APP_MORE_ITEMS.some((item) => item.isActive(location)) ||
+    APP_SETTINGS_NAV.isActive(location)
+  );
+}

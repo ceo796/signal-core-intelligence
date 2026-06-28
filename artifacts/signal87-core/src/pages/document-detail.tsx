@@ -426,7 +426,7 @@ export default function DocumentDetail() {
     }
     if (doc.extractedText) {
       return (
-        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="flex-1 overflow-auto md:pb-0">
           <div className="max-w-3xl mx-auto px-6 py-6">
             <p className="text-xs text-muted-foreground mb-4">Extracted text</p>
             <pre className="whitespace-pre-wrap break-words text-sm font-sans leading-relaxed text-foreground/90">

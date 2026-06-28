@@ -389,7 +389,7 @@ export default function NotesPage() {
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-auto p-2 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-2">
+              <div className="min-h-0 flex-1 overflow-auto p-2 md:pb-2">
                 {notesQuery.isLoading ? (
                   <div className="space-y-2 p-2">
                     {[...Array(6)].map((_, index) => (
