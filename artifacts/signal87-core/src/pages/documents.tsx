@@ -679,7 +679,7 @@ export default function DocumentsList() {
             </div>
           </header>
 
-        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="s87-ios-scroll flex-1 overflow-auto md:pb-0">
           <div className="space-y-8 px-4 pb-8 md:px-8">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <DashboardStat
@@ -857,7 +857,6 @@ export default function DocumentsList() {
             style={{
               borderColor: dashboardColors.border,
               background: dashboardColors.cardStrong,
-              paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
             }}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">

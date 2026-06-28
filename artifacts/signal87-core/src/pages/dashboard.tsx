@@ -187,7 +187,7 @@ export default function Dashboard() {
 
         {/* ── Scrollable content ─────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto bg-background">
-          <div className="w-full px-4 md:px-8 py-6 space-y-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
+          <div className="w-full px-4 md:px-8 py-6 space-y-4 md:pb-6">
 
             {/* Welcome */}
             <div>

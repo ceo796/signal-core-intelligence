@@ -362,6 +362,162 @@ html {
   }
 }
 
+/* ── iOS-style mobile shell (logged-in app, < md) ─────────────────────────── */
+@media (max-width: 767px) {
+  .signal-app.s87-mobile-shell {
+    --s87-tab-bar-height: 49px;
+    --s87-mobile-chrome-bottom: calc(var(--s87-tab-bar-height) + env(safe-area-inset-bottom, 0px));
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .signal-app.s87-mobile-shell .s87-mobile-main {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: var(--s87-mobile-chrome-bottom);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-tab-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    height: var(--s87-mobile-chrome-bottom);
+    padding-top: 2px;
+    padding-left: max(4px, env(safe-area-inset-left, 0px));
+    padding-right: max(4px, env(safe-area-inset-right, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    background: rgba(27, 27, 26, 0.78);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-tab-item {
+    @apply flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-0 bg-transparent p-0 no-underline;
+    min-height: var(--s87-tab-bar-height);
+    color: rgba(244, 244, 242, 0.42);
+    transition: color 120ms ease, transform 120ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-tab-item:active {
+    transform: scale(0.94);
+    opacity: 0.82;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-tab-item--active {
+    color: var(--s87-green);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-tab-icon {
+    @apply h-[22px] w-[22px] shrink-0;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-tab-label {
+    @apply max-w-full truncate text-[10px] font-medium leading-none tracking-tight;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-sheet {
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    background: rgba(36, 36, 35, 0.96);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+    max-height: min(78vh, 520px);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-sheet-grabber {
+    @apply mx-auto mt-2 mb-3 h-1 w-10 rounded-full;
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-row {
+    @apply flex items-center gap-3 px-4 py-3.5 text-[17px] text-foreground no-underline transition-colors;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+    touch-action: manipulation;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-row:last-child {
+    border-bottom: none;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-row:active {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-row--active {
+    color: var(--s87-green);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-row-icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--s87-ink);
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-more-row-label {
+    @apply min-w-0 flex-1 font-medium;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-scroll,
+  .signal-app.s87-mobile-shell .s87-mobile-main .overflow-auto,
+  .signal-app.s87-mobile-shell .s87-mobile-main .overflow-y-auto,
+  .signal-app.s87-mobile-shell .s87-mobile-main [data-radix-scroll-area-viewport] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  .signal-app.s87-mobile-shell .s87-page-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-radius: 0;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+    background: rgba(27, 27, 26, 0.82);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .signal-app.s87-mobile-shell .s87-page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
+  .signal-app.s87-mobile-shell .s87-docs-main > header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(27, 27, 26, 0.82);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .signal-app.s87-mobile-shell .s87-card {
+    border-radius: 1rem;
+  }
+
+  .signal-app.s87-mobile-shell button,
+  .signal-app.s87-mobile-shell a {
+    touch-action: manipulation;
+  }
+
+  .signal-app.s87-mobile-shell [data-radix-dialog-overlay] {
+    background: rgba(0, 0, 0, 0.42) !important;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+}
+
 @keyframes s87-orbit-float {
   0%, 100% { transform: rotateX(58deg) rotateZ(-18deg) translateY(0); }
   50% { transform: rotateX(58deg) rotateZ(-12deg) translateY(-8px); }

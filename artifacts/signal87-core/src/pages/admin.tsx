@@ -56,7 +56,7 @@ export default function AdminStats() {
           <p className="text-[11px] text-muted-foreground mt-0.5">Admin stats and backend architecture</p>
         </header>
 
-        <div className="flex-1 overflow-auto p-6 space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
+        <div className="flex-1 overflow-auto p-6 space-y-6 md:pb-6">
           {loading ? (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
