@@ -22,7 +22,6 @@ import { downloadOriginal } from "@/lib/download-original";
 import {
   FileText,
   Trash2,
-  MessageSquare,
   AlertCircle,
   RefreshCw,
   Loader2,
@@ -37,11 +36,6 @@ import {
   ScrollText,
   Sparkles,
   ArrowLeft,
-  Bell,
-  Bot,
-  FileSearch,
-  Files,
-  Grid3X3,
   Settings,
   Upload,
 } from "lucide-react";
@@ -66,9 +60,7 @@ import {
   accentForDocument,
   ControlPill,
   DashboardBottomComposer,
-  DashboardBrandMark,
   DashboardDocumentCard,
-  DashboardRailButton,
   DashboardStat,
   dashboardColors,
   dashboardStatusLabel,
@@ -564,74 +556,11 @@ export default function DocumentsList() {
   } as const;
 
   return (
-    <Layout minimalChrome>
+    <Layout>
       <div
-        className="s87-docs-dashboard"
+        className="s87-docs-main flex min-h-0 flex-1 flex-col"
         style={{ background: dashboardColors.panel, color: dashboardColors.ink }}
       >
-        <aside
-          className="s87-docs-rail hidden px-3 md:flex"
-          style={{ borderColor: dashboardColors.border, background: dashboardColors.rail }}
-        >
-          <DashboardBrandMark />
-          <DashboardRailButton icon={Files} active title="Documents" />
-          <DashboardRailButton icon={Grid3X3} active={view === "grid"} onClick={() => switchView("grid")} title="Grid view" />
-          <DashboardRailButton icon={FolderOpen} href="/documents" title="Archive" />
-          <DashboardRailButton icon={MessageSquare} href="/agents/hybrid" title="AI chat" />
-          <DashboardRailButton icon={Bot} href="/agents/hybrid" title="Hybrid agent" />
-          <DashboardRailButton icon={FileSearch} href="/analyze" title="Analyze" />
-          <div className="mt-auto flex flex-col items-center gap-2">
-            <DashboardRailButton icon={Bell} title="Notifications" />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  title="Settings"
-                  style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: 17,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: dashboardColors.faint,
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Settings size={22} strokeWidth={1.8} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem
-                  onClick={() => handleGridSortColumn("uploaded")}
-                  className="gap-2 text-sm cursor-pointer"
-                >
-                  Sort: Uploaded
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleGridSortColumn("name")} className="gap-2 text-sm cursor-pointer">
-                  Sort: Name
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleGridSortColumn("status")} className="gap-2 text-sm cursor-pointer">
-                  Sort: Status
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleGridSortColumn("chunks")} className="gap-2 text-sm cursor-pointer">
-                  Sort: Chunks
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleGridSortDirection} className="gap-2 text-sm cursor-pointer">
-                  Toggle sort direction ({gridSortDirection === "asc" ? "asc" : "desc"})
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer">
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Reset to defaults
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </aside>
-
-        <div className="s87-docs-main">
           <header className="shrink-0 px-4 py-5 md:px-8 md:pt-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
@@ -717,6 +646,35 @@ export default function DocumentsList() {
                   href="/analyze"
                   primary
                 />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <HeaderActionPill label="Sort" icon={<Settings size={16} />} onClick={() => undefined} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem
+                      onClick={() => handleGridSortColumn("uploaded")}
+                      className="gap-2 text-sm cursor-pointer"
+                    >
+                      Sort: Uploaded
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleGridSortColumn("name")} className="gap-2 text-sm cursor-pointer">
+                      Sort: Name
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleGridSortColumn("status")} className="gap-2 text-sm cursor-pointer">
+                      Sort: Status
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleGridSortColumn("chunks")} className="gap-2 text-sm cursor-pointer">
+                      Sort: Chunks
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleGridSortDirection} className="gap-2 text-sm cursor-pointer">
+                      Toggle sort direction ({gridSortDirection === "asc" ? "asc" : "desc"})
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset to defaults
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </header>
@@ -962,7 +920,6 @@ export default function DocumentsList() {
             </div>
           </div>
         )}
-        </div>
       </div>
 
       <AlertDialog
