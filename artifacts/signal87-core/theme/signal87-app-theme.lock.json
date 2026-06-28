@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "lockedAt": "2026-06-28",
+  "name": "Signal87 Dark Dashboard App Theme",
+  "directive": "LOCKED. Do not modify the logged-in app visual theme unless the user explicitly requests a theme change.",
+  "canonicalFiles": [
+    "artifacts/signal87-core/src/index.css",
+    "artifacts/signal87-core/src/components/documents-dashboard-ui.tsx",
+    "artifacts/signal87-core/src/components/layout.tsx",
+    "artifacts/signal87-core/src/main.tsx"
+  ],
+  "fingerprints": [
+    "Dark dashboard palette",
+    "--s87-panel: #1b1b1a",
+    "--s87-ink: #f4f4f2",
+    "--s87-green: #bdf58a",
+    "--s87-rose: #f6a0d7",
+    "--s87-on-accent: #111110",
+    "--background: 60 2% 10%",
+    "--primary: 92 82% 75%",
+    ".signal-app .s87-docs-dashboard",
+    ".signal-app .s87-warning-banner"
+  ],
+  "layoutFingerprints": [
+    "className=\"signal-app"
+  ],
+  "forbiddenWithoutDirective": [
+    "Reverting .signal-app to a light/white Notion-style palette",
+    "Replacing green primary (--s87-green / --primary: 92 82% 75%) with indigo or purple",
+    "Moving logged-in app tokens from .signal-app into :root or .dark",
+    "Removing theme verification from the build pipeline",
+    "Editing home.tsx .s87-landing styles as part of an app theme task"
+  ]
+}

@@ -7,8 +7,8 @@
 
 /* CSS Custom Highlight API — text highlighting in PDF viewer */
 ::highlight(user-highlight) {
-  background-color: #FFE066;
-  color: #000;
+  background-color: #bdf58a;
+  color: #111110;
 }
 
 /* Mobile native feel */
@@ -225,52 +225,74 @@ html {
   --shadow-2xl: 0px 24px 48px -8px hsl(0 0% 0% / 0.75);
 }
 
-/* ── Signal87 logged-in app theme ─────────────────────────────────────────
+/* ── Signal87 logged-in app theme — LOCKED ────────────────────────────────
+   Dark dashboard palette — matches the Documents dashboard design.
    Scoped to the authenticated platform only (applied via the Layout root).
-   Notion/Dropbox-style light surface with a restrained indigo accent (#4F3FF0).
    The public landing page (home.tsx) is self-scoped under .s87-landing and never
-   receives this class, so it is unaffected. Do NOT move these into :root/.dark. */
-.signal-app {
-  --button-outline: rgba(0,0,0, .08);
-  --badge-outline: rgba(0,0,0, .04);
-  --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .06);
+   receives this class, so it is unaffected. Do NOT move these into :root/.dark.
 
-  --background: 0 0% 100%;
-  --foreground: 240 6% 12%;
-  --border: 240 6% 90%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 6% 12%;
-  --card-border: 240 6% 91%;
-  --sidebar: 36 12% 98%;
-  --sidebar-foreground: 240 6% 12%;
-  --sidebar-border: 240 6% 91%;
-  --sidebar-primary: 246 84% 59%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 246 80% 96%;
-  --sidebar-accent-foreground: 245 55% 50%;
-  --sidebar-ring: 246 84% 59%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 6% 12%;
-  --popover-border: 240 6% 90%;
-  --primary: 246 84% 59%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 240 5% 96%;
-  --secondary-foreground: 240 6% 20%;
-  --muted: 240 5% 96%;
-  --muted-foreground: 240 4% 46%;
-  --accent: 246 80% 96%;
-  --accent-foreground: 245 50% 48%;
+   LOCK: Do not edit this block unless the user explicitly directs a theme change.
+   Fingerprints: artifacts/signal87-core/theme/signal87-app-theme.lock.json
+   Policy: artifacts/signal87-core/THEME_LOCK.md
+   Verified by: pnpm run verify:theme (part of pnpm run build) */
+.signal-app {
+  --button-outline: rgba(255,255,255, .08);
+  --badge-outline: rgba(255,255,255, .04);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .08);
+
+  /* Dashboard accent tokens (also exposed as raw values for inline styles) */
+  --s87-ink: #f4f4f2;
+  --s87-muted: rgba(244,244,242,0.58);
+  --s87-faint: rgba(244,244,242,0.34);
+  --s87-panel: #1b1b1a;
+  --s87-panel-soft: #242423;
+  --s87-rail: rgba(10,10,10,0.46);
+  --s87-card: rgba(255,255,255,0.07);
+  --s87-card-strong: rgba(255,255,255,0.11);
+  --s87-border: rgba(255,255,255,0.12);
+  --s87-green: #bdf58a;
+  --s87-rose: #f6a0d7;
+  --s87-gold: #ffd699;
+  --s87-paper: #fbfaf6;
+  --s87-paper-ink: #1e1e1d;
+  --s87-on-accent: #111110;
+
+  --background: 60 2% 10%;
+  --foreground: 60 7% 95%;
+  --border: 0 0% 100% / 0.12;
+  --card: 60 1% 14%;
+  --card-foreground: 60 7% 95%;
+  --card-border: 0 0% 100% / 0.12;
+  --sidebar: 0 0% 6%;
+  --sidebar-foreground: 60 7% 95%;
+  --sidebar-border: 0 0% 100% / 0.1;
+  --sidebar-primary: 92 82% 75%;
+  --sidebar-primary-foreground: 60 2% 7%;
+  --sidebar-accent: 0 0% 100% / 0.08;
+  --sidebar-accent-foreground: 60 7% 95%;
+  --sidebar-ring: 92 82% 75%;
+  --popover: 60 1% 14%;
+  --popover-foreground: 60 7% 95%;
+  --popover-border: 0 0% 100% / 0.12;
+  --primary: 92 82% 75%;
+  --primary-foreground: 60 2% 7%;
+  --secondary: 0 0% 100% / 0.08;
+  --secondary-foreground: 60 7% 95%;
+  --muted: 0 0% 100% / 0.06;
+  --muted-foreground: 60 5% 62%;
+  --accent: 0 0% 100% / 0.1;
+  --accent-foreground: 60 7% 95%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-  --input: 240 6% 90%;
-  --ring: 246 84% 59%;
-  --chart-1: 246 84% 59%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 28 80% 52%;
-  --chart-4: 210 80% 56%;
-  --chart-5: 340 72% 55%;
+  --input: 0 0% 100% / 0.1;
+  --ring: 92 82% 75%;
+  --chart-1: 92 82% 75%;
+  --chart-2: 320 75% 79%;
+  --chart-3: 38 100% 80%;
+  --chart-4: 24 82% 71%;
+  --chart-5: 200 90% 74%;
 
   --radius: 0.5rem;
 
@@ -315,6 +337,28 @@ html {
 
   .signal-app .s87-muted {
     @apply text-muted-foreground;
+  }
+
+  .signal-app .s87-warning-banner {
+    @apply rounded-md border border-[color:var(--s87-gold)]/35 bg-[color:var(--s87-gold)]/10 text-[color:var(--s87-gold)];
+  }
+
+  .signal-app .s87-pdf-stage {
+    @apply flex-1 overflow-auto rounded-b border-x border-b border-border flex justify-center;
+    background: hsl(var(--background));
+  }
+
+  .signal-app .s87-pdf-page {
+    @apply shadow-lg;
+  }
+
+  .signal-app .s87-pdf-page canvas {
+    @apply rounded-sm bg-[color:var(--s87-paper)];
+  }
+
+  .signal-app .react-pdf__Page__textContent,
+  .signal-app .react-pdf__Page__annotations {
+    @apply rounded-sm;
   }
 }
 
@@ -574,44 +618,44 @@ html {
 }
 
 .cl-userButtonPopoverCard {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04) !important;
+  background-color: #242423 !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25) !important;
   border-radius: 12px !important;
 }
 
 .cl-userButtonPopoverCard * {
-  color: #111827 !important;
+  color: #f4f4f2 !important;
 }
 
 .cl-userPreview {
-  color: #111827 !important;
+  color: #f4f4f2 !important;
 }
 
 .cl-userButtonPopoverActionButton {
-  color: #111827 !important;
+  color: #f4f4f2 !important;
   border-radius: 8px !important;
 }
 
 .cl-userButtonPopoverActionButton:hover {
-  background-color: #f9fafb !important;
+  background-color: rgba(255,255,255,0.08) !important;
 }
 
 .cl-userButtonPopoverActionButtonText {
-  color: #111827 !important;
+  color: #f4f4f2 !important;
 }
 
 .cl-userButtonPopoverActionButtonIcon {
-  color: #6b7280 !important;
+  color: rgba(244,244,242,0.58) !important;
 }
 
 .cl-userButtonPopoverFooter {
-  background-color: #f9fafb !important;
-  border-top: 1px solid #e5e7eb !important;
+  background-color: rgba(255,255,255,0.04) !important;
+  border-top: 1px solid rgba(255,255,255,0.1) !important;
 }
 
 .cl-userButtonPopoverFooter * {
-  color: #6b7280 !important;
+  color: rgba(244,244,242,0.58) !important;
 }
 
 /* ── Landing page: subtle, premium, CSS-only animated background ──────── */

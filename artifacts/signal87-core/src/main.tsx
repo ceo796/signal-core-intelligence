@@ -54,7 +54,7 @@ const clerkOptions = {
   appearance: {
     baseTheme: dark,
     variables: {
-      colorPrimary: "hsl(262 83% 58%)",
+      colorPrimary: "hsl(92 82% 75%)",
       colorBackground: "hsl(0 0% 4%)",
       colorText: "hsl(0 0% 90%)",
       colorTextSecondary: "hsl(0 0% 60%)",

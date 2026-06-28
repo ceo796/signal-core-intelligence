@@ -45,7 +45,7 @@ export function Layout({ children, minimalChrome = false }: LayoutProps) {
             <img
               src="/signal87-logo.png"
               alt="Signal87"
-              className="h-8 w-auto cursor-pointer"
+              className="h-8 w-auto cursor-pointer brightness-0 invert"
             />
           </Link>
         </div>

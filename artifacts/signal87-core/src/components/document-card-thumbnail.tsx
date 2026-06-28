@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Document, Page } from "react-pdf";
-import { customFetch, getGetDocumentOriginalUrl } from "@workspace/api-client-react";
 import { FileText, FileSpreadsheet, Loader2 } from "lucide-react";
 import "@/lib/pdfjs-worker";
+import { fetchDocumentOriginalBlob } from "@/lib/fetch-document-original";
+import { PDF_DOCUMENT_OPTIONS } from "@/lib/pdf-document-options";
 
 // Live PDF thumbnails fetch the protected original and render page 1 in the
 // browser. Keep them lazy and abortable, with an explicit production kill
@@ -10,15 +11,15 @@ import "@/lib/pdfjs-worker";
 const DISABLE_LIVE_PDF_THUMBNAILS = import.meta.env.VITE_DISABLE_LIVE_PDF_THUMBNAILS === "true";
 
 const FT_STYLE: Record<string, { bg: string; fg: string }> = {
-  pdf:  { bg: "#f4e8e1", fg: "#8a6f60" },
-  docx: { bg: "#eceae4", fg: "#6b7068" },
-  doc:  { bg: "#eceae4", fg: "#6b7068" },
-  xlsx: { bg: "#e7eee6", fg: "#58705f" },
-  xls:  { bg: "#e7eee6", fg: "#58705f" },
-  csv:  { bg: "#e7eee6", fg: "#58705f" },
-  txt:  { bg: "#eceae4", fg: "#6b7068" },
-  pptx: { bg: "#f0e8dc", fg: "#806b4d" },
-  ppt:  { bg: "#f0e8dc", fg: "#806b4d" },
+  pdf:  { bg: "rgba(242,160,118,0.18)", fg: "#f2a076" },
+  docx: { bg: "rgba(157,210,255,0.14)", fg: "#9dd2ff" },
+  doc:  { bg: "rgba(157,210,255,0.14)", fg: "#9dd2ff" },
+  xlsx: { bg: "rgba(189,245,138,0.12)", fg: "#bdf58a" },
+  xls:  { bg: "rgba(189,245,138,0.12)", fg: "#bdf58a" },
+  csv:  { bg: "rgba(189,245,138,0.12)", fg: "#bdf58a" },
+  txt:  { bg: "rgba(255,214,153,0.14)", fg: "#ffd699" },
+  pptx: { bg: "rgba(246,160,215,0.14)", fg: "#f6a0d7" },
+  ppt:  { bg: "rgba(246,160,215,0.14)", fg: "#f6a0d7" },
 };
 
 function fileTypeStyle(ft: string) {
@@ -45,7 +46,7 @@ function FallbackThumb({ fileType }: { fileType: string }) {
 
 function LoadingThumb() {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#f6f4ef] text-[#8a6f60]">
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
       <Loader2 className="w-8 h-8 animate-spin opacity-55" />
       <span className="text-[11px] font-semibold opacity-70">PDF</span>
     </div>
@@ -64,11 +65,7 @@ function PdfPageThumb({ id, pageHeight }: { id: number; pageHeight: number }) {
     setError(false);
     setRendered(false);
 
-    customFetch<Blob>(getGetDocumentOriginalUrl(id), {
-      method: "GET",
-      responseType: "blob",
-      signal: controller.signal,
-    })
+    fetchDocumentOriginalBlob(id)
       .then((blob) => {
         if (controller.signal.aborted) return;
         objectUrl = URL.createObjectURL(blob);
@@ -92,7 +89,7 @@ function PdfPageThumb({ id, pageHeight }: { id: number; pageHeight: number }) {
   if (!url) return <LoadingThumb />;
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#f6f4ef] px-4 py-3">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-muted px-4 py-3">
       {!rendered && (
         <div className="absolute inset-0 z-10">
           <LoadingThumb />
@@ -100,6 +97,7 @@ function PdfPageThumb({ id, pageHeight }: { id: number; pageHeight: number }) {
       )}
       <Document
         file={url}
+        options={PDF_DOCUMENT_OPTIONS}
         loading={null}
         error={<FallbackThumb fileType="pdf" />}
         onLoadError={() => setError(true)}

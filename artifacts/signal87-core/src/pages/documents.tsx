@@ -666,7 +666,7 @@ export default function DocumentsList() {
                       placeholder="Search documents…"
                       value={search}
                       onChange={(e) => handleSearch(e.target.value)}
-                      className="h-[42px] rounded-full border-white/12 bg-white/7 pl-10 pr-9 text-sm text-[#f4f4f2] placeholder:text-white/35"
+                      className="h-[42px] rounded-full border-white/12 bg-white/7 pl-10 pr-9 text-sm text-foreground placeholder:text-white/35"
                     />
                     <button
                       onClick={() => {
@@ -700,7 +700,7 @@ export default function DocumentsList() {
                         borderRadius: 999,
                         border: "none",
                         background: dashboardColors.ink,
-                        color: "#111110",
+                        color: "var(--s87-on-accent)",
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: "pointer",
@@ -905,7 +905,7 @@ export default function DocumentsList() {
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span
                 className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
-                style={{ background: dashboardColors.green, color: "#111110" }}
+                style={{ background: dashboardColors.green, color: "var(--s87-on-accent)" }}
               >
                 {selectionCount}
               </span>
