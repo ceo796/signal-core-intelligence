@@ -9,23 +9,25 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Document } from "@workspace/api-client-react";
+import { DocumentCardThumbnail } from "@/components/document-card-thumbnail";
 import { getDocumentStatus } from "@/lib/document-status";
 
+/** Reads dashboard palette from .signal-app CSS variables (index.css). */
 export const dashboardColors = {
-  ink: "#f4f4f2",
-  muted: "rgba(244,244,242,0.58)",
-  faint: "rgba(244,244,242,0.34)",
-  panel: "#1b1b1a",
-  panelSoft: "#242423",
-  rail: "rgba(10,10,10,0.46)",
-  card: "rgba(255,255,255,0.07)",
-  cardStrong: "rgba(255,255,255,0.11)",
-  border: "rgba(255,255,255,0.12)",
-  green: "#bdf58a",
-  rose: "#f6a0d7",
-  gold: "#ffd699",
-  paper: "#fbfaf6",
-  paperInk: "#1e1e1d",
+  ink: "var(--s87-ink)",
+  muted: "var(--s87-muted)",
+  faint: "var(--s87-faint)",
+  panel: "var(--s87-panel)",
+  panelSoft: "var(--s87-panel-soft)",
+  rail: "var(--s87-rail)",
+  card: "var(--s87-card)",
+  cardStrong: "var(--s87-card-strong)",
+  border: "var(--s87-border)",
+  green: "var(--s87-green)",
+  rose: "var(--s87-rose)",
+  gold: "var(--s87-gold)",
+  paper: "var(--s87-paper)",
+  paperInk: "var(--s87-paper-ink)",
 } as const;
 
 const accentByType: Record<string, string> = {
@@ -91,7 +93,7 @@ export function IconButton({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: active ? "#111110" : dashboardColors.faint,
+    color: active ? "var(--s87-on-accent)" : dashboardColors.faint,
     background: active ? dashboardColors.ink : "transparent",
     border: "none",
     cursor: onClick ? "pointer" : "default",
@@ -128,7 +130,7 @@ export function ControlPill({
         borderRadius: 999,
         border: `1px solid ${active ? "rgba(255,255,255,0.22)" : dashboardColors.border}`,
         background: active ? dashboardColors.ink : "transparent",
-        color: active ? "#111110" : dashboardColors.muted,
+        color: active ? "var(--s87-on-accent)" : dashboardColors.muted,
         fontSize: 12,
         fontWeight: 600,
         cursor: "pointer",
@@ -162,7 +164,7 @@ export function HeaderActionPill({
     borderRadius: 999,
     border: primary ? "none" : `1px solid ${dashboardColors.border}`,
     background: primary ? dashboardColors.ink : "transparent",
-    color: primary ? "#111110" : dashboardColors.ink,
+    color: primary ? "var(--s87-on-accent)" : dashboardColors.ink,
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
@@ -241,7 +243,7 @@ export function QuickAiReviewCard({ href = "/analyze" }: { href?: string }) {
         borderRadius: 22,
         padding: "20px 22px",
         textDecoration: "none",
-        color: "#111110",
+        color: "var(--s87-on-accent)",
         background: "linear-gradient(135deg, #f6a0d7 0%, #ffd699 58%, #bdf58a 100%)",
         boxShadow: "0 18px 48px rgba(246,160,215,0.18)",
       }}
@@ -359,7 +361,7 @@ export function DashboardDocumentCard({
               borderRadius: 8,
               border: `1px solid ${dashboardColors.border}`,
               background: isSelected ? dashboardColors.green : "rgba(0,0,0,0.28)",
-              color: isSelected ? "#111110" : dashboardColors.ink,
+              color: isSelected ? "var(--s87-on-accent)" : dashboardColors.ink,
               fontSize: 12,
               fontWeight: 700,
             }}
@@ -368,8 +370,17 @@ export function DashboardDocumentCard({
           </button>
         )}
         <Link href={`/documents/${doc.id}`} style={{ display: "block", textDecoration: "none" }}>
-          <div style={{ borderRadius: 18, border: `1px solid ${dashboardColors.border}`, overflow: "hidden" }}>
-            <DocumentPreviewIllustration accent={accent} />
+          <div style={{ borderRadius: 18, border: `1px solid ${dashboardColors.border}`, overflow: "hidden", minHeight: 168 }}>
+            {doc.fileType.toLowerCase() === "pdf" && doc.originalFileAvailable ? (
+              <DocumentCardThumbnail
+                id={doc.id}
+                fileType={doc.fileType}
+                originalFileAvailable={doc.originalFileAvailable}
+                className="min-h-[168px]"
+              />
+            ) : (
+              <DocumentPreviewIllustration accent={accent} />
+            )}
           </div>
         </Link>
       </div>
@@ -479,7 +490,7 @@ export function DashboardBrandMark() {
         marginBottom: 8,
       }}
     >
-      <Sparkles size={18} color="#111110" />
+      <Sparkles size={18} color="var(--s87-on-accent)" />
     </div>
   );
 }
@@ -527,7 +538,7 @@ export function DashboardBottomComposer({
           gap: 6,
           borderRadius: 999,
           background: dashboardColors.ink,
-          color: "#111110",
+          color: "var(--s87-on-accent)",
           padding: "10px 16px",
           fontSize: 13,
           fontWeight: 700,
