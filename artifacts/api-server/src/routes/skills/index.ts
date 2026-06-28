@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
-import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { aiRouter, loadAiConfig } from "../../lib/ai";
+import { taskTypeForSkillMode } from "../../lib/ai/task-map";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 import { getCurrentUserId } from "../../lib/ownership";
 
@@ -392,25 +393,34 @@ Sources:
 ${sourceBlocks}`;
 
   const llmStart = Date.now();
+  const aiConfig = loadAiConfig();
   let answer: string;
   let llmError: string | null = null;
+  let llmProvider = aiConfig.primaryReasoningProvider;
+  let llmModel = aiConfig.models[aiConfig.primaryReasoningProvider].chat;
 
   try {
-    const completion = await withTimeout(
-      openai.chat.completions.create({
-        model: PROVIDER_CONFIG.model,
-        max_tokens: Math.min(PROVIDER_CONFIG.maxTokens, 1400),
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: query },
-        ],
-      }),
+    const aiResult = await withTimeout(
+      aiRouter.runTask(
+        {
+          taskType: taskTypeForSkillMode(skill.mode),
+          maxTokens: Math.min(aiConfig.maxTokens, 1400),
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: query },
+          ],
+        },
+        (ctx) => req.log.info({ ...ctx, skillId: skill.skillId }, "AI task completed"),
+      ),
       LLM_TIMEOUT_MS,
-      "Skill LLM call",
+      "Skill AI task",
     );
-    answer = completion.choices[0]?.message?.content ?? "No response generated.";
+    answer = aiResult.answer || "No response generated.";
+    llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
+    llmModel = aiResult.modelUsed;
+    if (aiResult.fallbackUsed) fallbackUsed = true;
   } catch (err) {
-    req.log.error({ err, skillId: skill.skillId }, "Skill LLM call failed");
+    req.log.error({ err, skillId: skill.skillId }, "Skill AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     answer = buildFallbackAnswer(skill, citations);
     fallbackUsed = true;
@@ -426,8 +436,8 @@ ${sourceBlocks}`;
     citations: citations.map(({ fullContent, ...citation }) => citation),
     trace: {
       route: ROUTE,
-      provider: PROVIDER_CONFIG.provider,
-      model: PROVIDER_CONFIG.model,
+      provider: llmProvider,
+      model: llmModel,
       skillId: skill.skillId,
       mode: skill.mode,
       documentsSearched: eligibleDocs.length,

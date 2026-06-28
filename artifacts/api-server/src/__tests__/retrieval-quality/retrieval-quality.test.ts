@@ -14,27 +14,21 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
-vi.mock("../../lib/ai-provider.js", () => ({
-  openai: {
-    embeddings: {
-      create: vi.fn(),
-    },
-  },
-  PROVIDER_CONFIG: {
-    provider: "openai",
-    model: "gpt-4o-mini",
-    embeddingModel: "text-embedding-3-small",
-    maxTokens: 2048,
-  },
+const { mockGenerateEmbedding, mockGenerateEmbeddings } = vi.hoisted(() => ({
+  mockGenerateEmbedding: vi.fn(),
+  mockGenerateEmbeddings: vi.fn(),
+}));
+
+vi.mock("../../lib/ai/embedding.js", () => ({
+  generateEmbedding: mockGenerateEmbedding,
+  generateEmbeddings: mockGenerateEmbeddings,
+  getEmbeddingModelName: vi.fn(() => "text-embedding-3-small"),
 }));
 
 import { chunkText } from "../../lib/chunker.js";
 import { extractSpreadsheet } from "../../lib/spreadsheet.js";
 import { retrieveRelevantChunks } from "../../lib/retriever.js";
-import { openai } from "../../lib/ai-provider.js";
 import { makeXlsxBuffer } from "../helpers/make-xlsx.js";
-
-const mockCreate = vi.mocked(openai.embeddings.create);
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = join(__dir, "../fixtures");
@@ -67,11 +61,12 @@ function setupMockForChunks(question: string, chunks: string[]) {
   const questionEmbedding = pseudoEmbed(question);
   const chunkEmbeddings = chunks.map((c) => pseudoEmbed(c));
 
-  mockCreate
-    .mockResolvedValueOnce({ data: [{ embedding: questionEmbedding }] } as never)
-    .mockResolvedValueOnce({
-      data: chunkEmbeddings.map((e) => ({ embedding: e })),
-    } as never);
+  mockGenerateEmbedding.mockResolvedValueOnce(questionEmbedding);
+  mockGenerateEmbeddings.mockResolvedValueOnce({
+    embeddings: chunkEmbeddings,
+    providerUsed: "openai",
+    modelUsed: "text-embedding-3-small",
+  });
 }
 
 // ─── TXT fixture ─────────────────────────────────────────────────────────────
@@ -86,7 +81,10 @@ describe("TXT fixture — sample.txt retrieval quality", () => {
     content: c,
   }));
 
-  beforeEach(() => mockCreate.mockReset());
+  beforeEach(() => {
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
+  });
 
   it("retrieves a chunk containing pricing information when asked about price", async () => {
     const question = "What is the price of the platform?";
@@ -169,7 +167,10 @@ describe("Spreadsheet fixture — XLSX retrieval quality", () => {
     content: c,
   }));
 
-  beforeEach(() => mockCreate.mockReset());
+  beforeEach(() => {
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
+  });
 
   it("retrieves a chunk with sheet and row context (not just raw text)", async () => {
     const question = "What products are available?";
@@ -207,7 +208,10 @@ describe("Worrell fixture — tabular expenditure retrieval quality", () => {
     content: c,
   }));
 
-  beforeEach(() => mockCreate.mockReset());
+  beforeEach(() => {
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
+  });
 
   it("preserves Worrell payment rows in at least one chunk (line-aware chunking)", () => {
     const combined = chunks.join("\n");
@@ -274,7 +278,10 @@ describe("Insufficient evidence — unrelated question", () => {
     content: c,
   }));
 
-  beforeEach(() => mockCreate.mockReset());
+  beforeEach(() => {
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
+  });
 
   /**
    * When a question is completely unrelated to the document, the retriever should
@@ -299,7 +306,8 @@ describe("Insufficient evidence — unrelated question", () => {
       3
     );
 
-    mockCreate.mockReset();
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
 
     // Score for unrelated question
     setupMockForChunks(unrelatedQuestion, chunks);

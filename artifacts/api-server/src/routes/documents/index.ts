@@ -13,7 +13,8 @@ import {
 } from "@workspace/api-zod";
 import { extractAndChunk, getFileType, type SupportedFileType } from "../../lib/text-extractor";
 import * as fileStore from "../../lib/file-store";
-import { PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { loadAiConfig } from "../../lib/ai";
+import { getEmbeddingModelName } from "../../lib/ai/embedding";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -540,6 +541,7 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
 
 router.get("/system/info", (_req, res): void => {
   const envStatus = (key: string) => (process.env[key] ? "set" : "missing");
+  const aiConfig = loadAiConfig();
 
   res.json({
     framework: "Express 5",
@@ -567,10 +569,13 @@ router.get("/system/info", (_req, res): void => {
       tables: ["documents", "chunks", "chat_messages"],
     },
     ai: {
-      provider: "OpenAI",
-      chatModel: PROVIDER_CONFIG.model,
-      embeddingModel: "text-embedding-3-small",
-      maxTokens: 2048,
+      router: "aiRouter",
+      routingEnabled: aiConfig.routingEnabled,
+      primaryReasoningProvider: aiConfig.primaryReasoningProvider,
+      embeddingProvider: aiConfig.embeddingProvider,
+      models: aiConfig.models,
+      embeddingModel: getEmbeddingModelName(),
+      maxTokens: aiConfig.maxTokens,
     },
     env: {
       DATABASE_URL: envStatus("DATABASE_URL"),

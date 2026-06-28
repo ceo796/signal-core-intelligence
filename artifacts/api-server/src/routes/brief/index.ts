@@ -3,7 +3,7 @@ import { db, documentsTable, chunksTable } from "@workspace/db";
 import { inArray, and, eq, isNull } from "drizzle-orm";
 import { GenerateBriefBody } from "@workspace/api-zod";
 import { getCurrentUserId } from "../../lib/ownership";
-import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { aiRouter, loadAiConfig } from "../../lib/ai";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 import {
   BRIEF_TEMPLATES,
@@ -220,25 +220,34 @@ ${sourceBlocks}`;
     : `Generate the ${template.label}.`;
 
   const llmStart = Date.now();
+  const aiConfig = loadAiConfig();
   let title = template.titleHint;
   let sections: BriefSection[];
   let llmError: string | null = null;
+  let llmProvider = aiConfig.primaryReasoningProvider;
+  let llmModel = aiConfig.models[aiConfig.primaryReasoningProvider].chat;
   try {
-    const completion = await openai.chat.completions.create({
-      model: PROVIDER_CONFIG.model,
-      max_tokens: PROVIDER_CONFIG.maxTokens,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    });
-    const raw = completion.choices[0]?.message?.content ?? "";
+    const aiResult = await aiRouter.runTask(
+      {
+        taskType: "executive_brief",
+        maxTokens: aiConfig.maxTokens,
+        structuredOutput: true,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      },
+      (ctx) => req.log.info(ctx, "AI task completed"),
+    );
+    const raw = aiResult.answer ?? "";
+    llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
+    llmModel = aiResult.modelUsed;
+    if (aiResult.fallbackUsed) fallbackUsed = true;
     const parsed = parseBriefJson(raw, template.titleHint);
     title = parsed.title;
     sections = parsed.sections;
   } catch (err) {
-    req.log.error({ err }, "Brief LLM call failed");
+    req.log.error({ err }, "Brief AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     fallbackUsed = true;
     sections = [
@@ -263,8 +272,8 @@ ${sourceBlocks}`;
 
   const debug = {
     route: ROUTE,
-    provider: PROVIDER_CONFIG.provider,
-    model: PROVIDER_CONFIG.model,
+    provider: llmProvider,
+    model: llmModel,
     fallbackUsed,
     briefType,
     focusProvided: Boolean(focusText),
