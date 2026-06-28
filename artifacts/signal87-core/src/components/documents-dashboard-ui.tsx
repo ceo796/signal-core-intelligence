@@ -107,7 +107,11 @@ export function IconButton({
     );
   }
 
-  return <div style={style}>{children}</div>;
+  return (
+    <div style={style} title={title}>
+      {children}
+    </div>
+  );
 }
 
 export function ControlPill({
@@ -461,7 +465,7 @@ export function DashboardRailButton({
 }) {
   if (href) {
     return (
-      <Link href={href} title={title} style={{ textDecoration: "none" }}>
+      <Link href={href} title={title} className="no-underline" style={{ cursor: "pointer" }}>
         <IconButton active={active} title={title}>
           <Icon size={22} strokeWidth={1.8} />
         </IconButton>
