@@ -4,6 +4,7 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import "@/lib/pdfjs-worker";
 import { PDF_DOCUMENT_OPTIONS } from "@/lib/pdf-document-options";
+import { prefersNativePdfViewer } from "@/lib/device";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -14,6 +15,7 @@ import {
   Loader2,
   Download,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 
 const MIN_SCALE = 0.5;
@@ -23,21 +25,130 @@ const SCALE_STEP = 0.25;
 interface PdfViewerProps {
   /** Blob object-URL or file URL for the PDF. */
   fileUrl?: string;
-  /** Preferred source — more reliable than object URLs for react-pdf. */
+  /** Preferred source — more reliable than object URLs for react-pdf on desktop. */
   file?: Blob | ArrayBuffer | null;
   /** Invoked by the Download Original control. */
   onDownload: () => void;
+  /** Force native browser PDF embed (default: true on mobile / iOS). */
+  preferNativeViewer?: boolean;
 }
 
-export function PdfViewer({ fileUrl, file, onDownload }: PdfViewerProps) {
+function pdfEmbedSrc(url: string, page?: number): string {
+  const params = new URLSearchParams();
+  params.set("toolbar", "1");
+  params.set("navpanes", "0");
+  params.set("view", "FitH");
+  if (page != null) params.set("page", String(page));
+  const hash = params.toString();
+  const base = url.split("#")[0];
+  return `${base}#${hash}`;
+}
+
+function NativePdfViewer({
+  url,
+  pageNumber,
+  numPages,
+  onPrev,
+  onNext,
+  onDownload,
+  onOpenExternal,
+}: {
+  url: string;
+  pageNumber: number;
+  numPages: number | null;
+  onPrev: () => void;
+  onNext: () => void;
+  onDownload: () => void;
+  onOpenExternal: () => void;
+}) {
+  const embedSrc = pdfEmbedSrc(url, pageNumber);
+
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex items-center justify-between gap-2 flex-wrap px-3 py-2 border-b border-border bg-card rounded-t shrink-0">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onPrev}
+            disabled={pageNumber <= 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground tabular-nums px-1">
+            {pageNumber} / {numPages ?? "–"}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onNext}
+            disabled={numPages != null && pageNumber >= numPages}
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1.5 border-border/60 bg-card/80"
+            onClick={onOpenExternal}
+          >
+            <ExternalLink className="w-3 h-3" />
+            Open
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-2 border-border/60 bg-card/80"
+            onClick={onDownload}
+          >
+            <Download className="w-3 h-3" />
+            Download
+          </Button>
+        </div>
+      </div>
+
+      <div className="relative flex-1 min-h-0 overflow-hidden rounded-b border-x border-b border-border bg-[color:var(--s87-paper)]">
+        <iframe
+          key={embedSrc}
+          src={embedSrc}
+          title="PDF preview"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+        <object
+          data={embedSrc}
+          type="application/pdf"
+          className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+          aria-hidden
+        >
+          <p className="p-6 text-center text-sm text-muted-foreground">
+            PDF preview is not supported in this browser.
+          </p>
+        </object>
+      </div>
+    </div>
+  );
+}
+
+export function PdfViewer({
+  fileUrl,
+  file,
+  onDownload,
+  preferNativeViewer = prefersNativePdfViewer(),
+}: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1);
   const [fitWidth, setFitWidth] = useState(true);
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!preferNativeViewer);
   const [pageError, setPageError] = useState(false);
-  const [useBrowserFallback, setUseBrowserFallback] = useState(false);
+  const [useBrowserFallback, setUseBrowserFallback] = useState(preferNativeViewer);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const documentSource = useMemo(() => file ?? fileUrl ?? null, [file, fileUrl]);
@@ -57,21 +168,49 @@ export function PdfViewer({ fileUrl, file, onDownload }: PdfViewerProps) {
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || preferNativeViewer) return;
     const update = () => setContainerWidth(Math.max(0, el.clientWidth - 32));
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [preferNativeViewer]);
 
   useEffect(() => {
     setNumPages(null);
     setPageNumber(1);
-    setLoading(true);
+    setLoading(!preferNativeViewer);
     setPageError(false);
-    setUseBrowserFallback(false);
-  }, [documentSource]);
+    setUseBrowserFallback(preferNativeViewer);
+  }, [documentSource, preferNativeViewer]);
+
+  // Load page count for native viewer pagination controls.
+  useEffect(() => {
+    if (!preferNativeViewer || !documentSource) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { pdfjs } = await import("@/lib/pdfjs-worker");
+        let source: string | { data: ArrayBuffer };
+        if (file instanceof Blob) {
+          source = { data: await file.arrayBuffer() };
+        } else if (typeof fallbackUrl === "string") {
+          source = fallbackUrl;
+        } else if (typeof fileUrl === "string") {
+          source = fileUrl;
+        } else {
+          return;
+        }
+        const pdf = await pdfjs.getDocument(source).promise;
+        if (!cancelled) setNumPages(pdf.numPages);
+      } catch {
+        if (!cancelled) setNumPages(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [preferNativeViewer, documentSource, file, fileUrl, fallbackUrl]);
 
   const onLoadSuccess = ({ numPages: total }: { numPages: number }) => {
     setNumPages(total);
@@ -91,7 +230,7 @@ export function PdfViewer({ fileUrl, file, onDownload }: PdfViewerProps) {
   };
 
   const goPrev = () => setPageNumber((p) => Math.max(1, p - 1));
-  const goNext = () => setPageNumber((p) => Math.min(numPages ?? 1, p + 1));
+  const goNext = () => setPageNumber((p) => Math.min(numPages ?? p, p + 1));
   const zoomIn = () => {
     setFitWidth(false);
     setScale((s) => Math.min(MAX_SCALE, +(s + SCALE_STEP).toFixed(2)));
@@ -101,6 +240,11 @@ export function PdfViewer({ fileUrl, file, onDownload }: PdfViewerProps) {
     setScale((s) => Math.max(MIN_SCALE, +(s - SCALE_STEP).toFixed(2)));
   };
   const toggleFitWidth = () => setFitWidth((v) => !v);
+
+  const openExternal = () => {
+    if (!fallbackUrl) return;
+    window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+  };
 
   const canRenderPage =
     documentSource != null &&
@@ -133,22 +277,15 @@ export function PdfViewer({ fileUrl, file, onDownload }: PdfViewerProps) {
 
   if (useBrowserFallback && fallbackUrl) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-border bg-card rounded-t">
-          <div className="flex items-center gap-2 min-w-0 text-xs text-muted-foreground">
-            <AlertCircle className="w-4 h-4 text-[color:var(--s87-gold)] shrink-0" />
-            <span className="truncate">Using browser PDF preview</span>
-          </div>
-          {downloadButton}
-        </div>
-        <div className="flex-1 min-h-[520px] overflow-hidden rounded-b border-x border-b border-border bg-background">
-          <iframe
-            src={fallbackUrl}
-            title="PDF preview"
-            className="h-full min-h-[520px] w-full border-0 bg-[color:var(--s87-paper)]"
-          />
-        </div>
-      </div>
+      <NativePdfViewer
+        url={fallbackUrl}
+        pageNumber={pageNumber}
+        numPages={numPages}
+        onPrev={goPrev}
+        onNext={goNext}
+        onDownload={onDownload}
+        onOpenExternal={openExternal}
+      />
     );
   }
 
@@ -220,7 +357,7 @@ export function PdfViewer({ fileUrl, file, onDownload }: PdfViewerProps) {
         </div>
       </div>
 
-      <div ref={containerRef} className="s87-pdf-stage min-h-0">
+      <div ref={containerRef} className="s87-pdf-stage min-h-0 flex-1">
         <Document
           file={documentSource}
           options={PDF_DOCUMENT_OPTIONS}

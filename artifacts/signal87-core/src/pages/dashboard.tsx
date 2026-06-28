@@ -150,8 +150,8 @@ export default function Dashboard() {
   const quickActions = useMemo(
     () => [
       { label: "Upload", icon: Upload, onClick: () => navigate("/documents") },
-      { label: "Brief", icon: ScrollText, onClick: () => navigate("/brief") },
-      { label: "Analyze", icon: GitCompare, onClick: () => navigate("/compare") },
+      { label: "Brief", icon: ScrollText, onClick: () => navigate("/analyze?mode=executive_summary") },
+      { label: "Analyze", icon: GitCompare, onClick: () => navigate("/analyze?mode=comparison") },
     ],
     [navigate],
   );
