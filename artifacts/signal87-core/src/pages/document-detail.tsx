@@ -7,8 +7,6 @@ import {
   useReindexDocument,
   useDeleteDocument,
   usePostAgentHybrid,
-  customFetch,
-  getGetDocumentOriginalUrl,
   getGetDocumentQueryKey,
   getListDocumentsQueryKey,
   getListTrashQueryKey,
@@ -41,6 +39,7 @@ import { SpreadsheetViewer } from "@/components/spreadsheet-viewer";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
+import { fetchDocumentOriginalBlob } from "@/lib/fetch-document-original";
 import { printDocument, canPrintDocument } from "@/lib/print-document";
 import { MarkdownAnswer } from "@/components/markdown-answer";
 import { format, formatDistanceToNow } from "date-fns";
@@ -66,12 +65,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-async function fetchOriginalBlob(documentId: number): Promise<Blob> {
-  return customFetch<Blob>(getGetDocumentOriginalUrl(documentId), {
-    method: "GET",
-    responseType: "blob",
-  });
-}
+
 
 function formatBytes(bytes?: number | null): string {
   if (bytes == null) return "—";
@@ -178,6 +172,7 @@ export default function DocumentDetail() {
   const isSpreadsheet = ["xlsx", "xls", "csv"].includes(doc?.fileType?.toLowerCase() ?? "");
   const originalAvailable = doc?.originalFileAvailable ?? false;
 
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
@@ -224,6 +219,7 @@ export default function DocumentDetail() {
 
   useEffect(() => {
     if (!isPdf || !originalAvailable) {
+      setPdfBlob(null);
       setPdfUrl(null);
       setPdfLoading(false);
       setPdfError(false);
@@ -233,20 +229,25 @@ export default function DocumentDetail() {
     let objectUrl: string | null = null;
     setPdfLoading(true);
     setPdfError(false);
-    fetchOriginalBlob(id)
+    fetchDocumentOriginalBlob(id)
       .then((blob) => {
         if (revoked) return;
         objectUrl = URL.createObjectURL(blob);
+        setPdfBlob(blob);
         setPdfUrl(objectUrl);
       })
       .catch(() => {
-        if (!revoked) setPdfError(true);
+        if (!revoked) {
+          setPdfBlob(null);
+          setPdfError(true);
+        }
       })
       .finally(() => {
         if (!revoked) setPdfLoading(false);
       });
     return () => {
       revoked = true;
+      setPdfBlob(null);
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [id, isPdf, originalAvailable]);
@@ -291,7 +292,7 @@ export default function DocumentDetail() {
         window.open(pdfUrl, "_blank", "noopener");
         return;
       }
-      const blob = await fetchOriginalBlob(id);
+      const blob = await fetchDocumentOriginalBlob(id);
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener");
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
@@ -407,7 +408,7 @@ export default function DocumentDetail() {
       }
       return (
         <div className="flex-1 min-h-0">
-          <PdfViewer fileUrl={pdfUrl} onDownload={handleDownload} />
+          <PdfViewer file={pdfBlob} fileUrl={pdfUrl} onDownload={handleDownload} />
         </div>
       );
     }
@@ -768,7 +769,7 @@ export default function DocumentDetail() {
         </div>
 
         {/* Composer */}
-        <div className="shrink-0 border-t border-border p-3 bg-card">
+        <div className="shrink-0 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <form onSubmit={handleDrawerSubmit} className="flex items-end gap-2">
             <textarea
               value={drawerInput}

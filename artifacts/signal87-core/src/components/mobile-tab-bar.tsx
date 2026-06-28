@@ -12,10 +12,19 @@ import {
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-function TabButton({ item, active }: { item: AppNavItem; active: boolean }) {
+function TabButton({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: AppNavItem;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       role="tab"
       aria-selected={active}
       title={item.title}
@@ -59,7 +68,12 @@ export function MobileTabBar() {
     <>
       <nav className="s87-ios-tab-bar md:hidden" role="tablist" aria-label="Main">
         {APP_TAB_BAR_ITEMS.map((item) => (
-          <TabButton key={item.id} item={item} active={item.isActive(location)} />
+          <TabButton
+            key={item.id}
+            item={item}
+            active={item.isActive(location)}
+            onNavigate={closeMore}
+          />
         ))}
         <button
           type="button"

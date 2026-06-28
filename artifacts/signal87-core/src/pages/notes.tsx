@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import {
   Archive,
   ArchiveRestore,
+  ArrowLeft,
   Bold,
   CheckSquare,
   FileText,
@@ -34,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { isMobileViewport } from "@/lib/device";
 import { customFetch } from "@workspace/api-client-react";
 import { toast } from "sonner";
 
@@ -160,7 +162,7 @@ export default function NotesPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [draft, setDraft] = useState<DraftState>(emptyDraft);
   const [tagInput, setTagInput] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => !isMobileViewport());
   const [saveState, setSaveState] = useState<"idle" | "dirty" | "saving" | "saved">("idle");
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const hydratedNoteId = useRef<number | null>(null);
@@ -186,6 +188,19 @@ export default function NotesPage() {
       setMode("active");
       setSearch("");
       setSelectedId(note.id);
+      setSidebarOpen(false);
+      queryClient.setQueriesData<NotesListResponse>({ queryKey: ["notes"] }, (current) => {
+        if (!current) return current;
+        return {
+          items: [note, ...current.items.filter((item) => item.id !== note.id)],
+        };
+      });
+      hydratedNoteId.current = null;
+      setDraft({
+        title: note.title,
+        content: note.content,
+        tags: note.tags,
+      });
       invalidateNotes();
       toast.success("Note created");
     },
@@ -452,11 +467,44 @@ export default function NotesPage() {
                 <p className="mt-2 max-w-sm text-sm text-muted-foreground">
                   Select a note from the list or create a new page for your research trail.
                 </p>
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 md:hidden"
+                    onClick={() => setSidebarOpen(true)}
+                  >
+                    <PanelLeftOpen className="h-4 w-4" />
+                    Browse notes
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => createMutation.mutate()}
+                    disabled={createMutation.isPending}
+                  >
+                    {createMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    New note
+                  </Button>
+                </div>
               </div>
             ) : (
               <article className="mx-auto flex min-h-full w-full max-w-4xl flex-col px-4 py-5 md:px-10 md:py-8">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 md:hidden"
+                      onClick={() => setSidebarOpen(true)}
+                      aria-label="Back to notes list"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
                     <CurrentIcon className="h-4 w-4" />
                     <span>{saveState === "saving" ? "Saving..." : saveState === "dirty" ? "Unsaved" : "Saved"}</span>
                     <span aria-hidden="true">/</span>

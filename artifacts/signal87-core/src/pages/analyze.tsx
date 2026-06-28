@@ -443,7 +443,12 @@ export default function AnalyzePage() {
   const generateBrief = useGenerateBrief();
   const hybridQuery = usePostAgentHybrid();
 
-  const [mode, setMode] = useState<AnalyzeMode>("qa");
+  const [mode, setMode] = useState<AnalyzeMode>(() => {
+    if (typeof window === "undefined") return "qa";
+    const requested = new URLSearchParams(window.location.search).get("mode");
+    const allowed = MODES.map((item) => item.value);
+    return allowed.includes(requested as AnalyzeMode) ? (requested as AnalyzeMode) : "qa";
+  });
   const [selected, setSelected] = useState<number[]>(() => {
     if (typeof window === "undefined") return [];
     const params = new URLSearchParams(window.location.search);
