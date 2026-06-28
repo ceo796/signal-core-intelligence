@@ -5,9 +5,11 @@ import { FileText, Sparkles, BarChart2, Trash2, Settings, ClipboardList, Noteboo
 
 interface LayoutProps {
   children: ReactNode;
+  /** Hides the app sidebar so a page can provide its own navigation chrome. */
+  minimalChrome?: boolean;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, minimalChrome = false }: LayoutProps) {
   const [location] = useLocation();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
@@ -34,7 +36,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Navigation shell — bottom bar on mobile, left sidebar on desktop (md:order-first) */}
       <aside
-        className="shrink-0 w-full md:w-60 border-t md:border-t-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-row md:flex-col md:order-first"
+        className={`shrink-0 w-full md:w-60 border-t md:border-t-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-row md:flex-col md:order-first ${minimalChrome ? "md:hidden" : ""}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Logo — shown only on desktop sidebar */}

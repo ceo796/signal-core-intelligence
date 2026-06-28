@@ -288,6 +288,19 @@ html {
     @apply flex-1 flex flex-col h-full overflow-hidden bg-background text-foreground;
   }
 
+  .signal-app .s87-docs-dashboard {
+    @apply flex-1 flex h-full min-h-0 w-full overflow-hidden;
+    flex-direction: row;
+  }
+
+  .signal-app .s87-docs-rail {
+    @apply flex w-[78px] shrink-0 flex-col items-center gap-2 self-stretch border-r py-6;
+  }
+
+  .signal-app .s87-docs-main {
+    @apply flex min-h-0 min-w-0 flex-1 flex-col;
+  }
+
   .signal-app .s87-page-header {
     @apply shrink-0 border-b border-border bg-card px-4 py-4 md:px-6;
   }

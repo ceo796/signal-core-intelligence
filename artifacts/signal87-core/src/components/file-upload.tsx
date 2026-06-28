@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch, ApiError, getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ function extractErrorMessage(err: unknown): string {
   return "Upload failed. Please try again.";
 }
 
-export function FileUploadModal() {
+export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -227,10 +227,12 @@ export function FileUploadModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="gap-2 text-sm">
-          <UploadCloud className="w-4 h-4" />
-          Upload Documents
-        </Button>
+        {trigger ?? (
+          <Button className="gap-2 text-sm">
+            <UploadCloud className="w-4 h-4" />
+            Upload Documents
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>

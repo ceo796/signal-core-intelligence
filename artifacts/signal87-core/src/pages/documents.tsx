@@ -14,41 +14,36 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DocumentStatusBadge } from "@/components/document-status-badge";
-import { PrintDocumentButton } from "@/components/print-document-button";
-import { DocumentCardThumbnail } from "@/components/document-card-thumbnail";
+import { canPrintDocument, printDocument } from "@/lib/print-document";
 import { getDocumentStatus } from "@/lib/document-status";
 import { downloadOriginal } from "@/lib/download-original";
-import { format } from "date-fns";
 import {
   FileText,
-  FileSpreadsheet,
   Trash2,
   MessageSquare,
   AlertCircle,
   RefreshCw,
   Loader2,
-  LayoutGrid,
-  List,
   Search,
   X,
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown,
-  ArrowUpDown,
-  SlidersHorizontal,
   RotateCcw,
   Download,
+  Printer,
+  Check,
+  FolderOpen,
   GitCompare,
   ScrollText,
   Sparkles,
-  ArrowRight,
   ArrowLeft,
-  Plus,
+  Bell,
+  Bot,
+  FileSearch,
+  Files,
+  Grid3X3,
+  Settings,
+  Upload,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -66,17 +61,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { inferDocumentKind } from "@/lib/document-kind";
-import { cn } from "@/lib/utils";
+  accentForDocument,
+  ControlPill,
+  DashboardBottomComposer,
+  DashboardBrandMark,
+  DashboardDocumentCard,
+  DashboardRailButton,
+  DashboardStat,
+  dashboardColors,
+  dashboardStatusLabel,
+  HeaderActionPill,
+  pageEstimateLabel,
+  QuickAiReviewCard,
+  reviewedPercent,
+} from "@/components/documents-dashboard-ui";
 
 type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "ready" | "processing" | "error";
@@ -172,27 +172,6 @@ function fileTypeChip(fileType: string): FileTypeChipStyle {
   }
 }
 
-function FileTypeIcon({ fileType, className }: { fileType: string; className?: string }) {
-  const ft = fileType.toLowerCase();
-  const colorMap: Record<string, string> = {
-    pdf:  "text-red-500",
-    docx: "text-blue-500",
-    doc:  "text-blue-500",
-    xlsx: "text-green-600",
-    xls:  "text-green-600",
-    csv:  "text-green-600",
-    pptx: "text-orange-500",
-    ppt:  "text-orange-500",
-    txt:  "text-muted-foreground",
-  };
-  const color = colorMap[ft] ?? "text-violet-500";
-  const cls = `${color} ${className ?? ""}`;
-  if (ft === "xlsx" || ft === "xls" || ft === "csv") {
-    return <FileSpreadsheet className={cls} />;
-  }
-  return <FileText className={cls} />;
-}
-
 function highlightMatch(text: string, query: string) {
   const q = query.toLowerCase().trim();
   if (!q) return text;
@@ -219,39 +198,6 @@ function highlightMatch(text: string, query: string) {
   return segments;
 }
 
-function DeleteDialog({ fileName, onConfirm }: { fileName: string; onConfirm: () => void }) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="bg-card border-border font-sans">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Document?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {fileName} will be moved to Trash. You can restore it later if needed.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
 function getApiErrorStatus(error: unknown): number | null {
   return typeof error === "object" && error !== null && "status" in error
     ? Number((error as { status?: unknown }).status) || null
@@ -268,14 +214,6 @@ function formatSize(bytes: number | null | undefined): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function compactTypeLabel(fileType: string): string {
-  const ft = fileType.toLowerCase();
-  if (ft === "xlsx" || ft === "xls" || ft === "csv") return "XLS";
-  if (ft === "docx") return "DOC";
-  if (ft === "txt") return "RPT";
-  return (ft || "AI").slice(0, 3).toUpperCase();
 }
 
 export default function DocumentsList() {
@@ -301,6 +239,9 @@ export default function DocumentsList() {
   }>(getInitialGridSort);
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [searchOpen, setSearchOpen] = useState(() => getInitialSearch().length > 0);
+  const [composerQuery, setComposerQuery] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; fileName: string } | null>(null);
 
   // Detect picker mode: user arrived from Hybrid AI Chat to choose documents.
   const fromHybrid = new URLSearchParams(window.location.search).get("from") === "hybrid";
@@ -357,16 +298,6 @@ export default function DocumentsList() {
     } catch {}
   };
 
-  const handleSort = (col: SortColumn) => {
-    const nextDir: SortDirection =
-      sortColumn === col ? (sortDirection === "asc" ? "desc" : "asc") : "asc";
-    setSortState({ column: col, direction: nextDir });
-    try {
-      localStorage.setItem("docs-sort-col", col);
-      localStorage.setItem("docs-sort-dir", nextDir);
-    } catch {}
-  };
-
   const handleGridSortColumn = (col: SortColumn) => {
     setGridSortState((prev) => ({ ...prev, column: col }));
     try { localStorage.setItem("docs-grid-sort-col", col); } catch {}
@@ -393,7 +324,7 @@ export default function DocumentsList() {
     try {
       PREF_KEYS.forEach((k) => localStorage.removeItem(k));
     } catch {}
-    setView("list");
+    setView("grid");
     setSearch("");
     setStatusFilter("all");
     setTypeFilter("all");
@@ -467,14 +398,6 @@ export default function DocumentsList() {
     navigate(`/agents/hybrid?preselect=${ids}`);
   };
 
-  const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
-  if (search) activeFilterChips.push({ key: "search", label: `"${search}"`, onRemove: () => handleSearch("") });
-  if (typeFilter !== "all") activeFilterChips.push({ key: "type", label: fileTypeChip(typeFilter).label, onRemove: () => handleTypeFilter("all") });
-  if (statusFilter !== "all") {
-    const statusLabel = statusFilter === "ready" ? "Ready" : statusFilter === "processing" ? "Processing" : "Error";
-    activeFilterChips.push({ key: "status", label: statusLabel, onRemove: () => handleStatusFilter("all") });
-  }
-
   const filteredDocuments = documents
     ?.filter((doc) => {
       const nameMatch = doc.fileName.toLowerCase().includes(search.toLowerCase().trim());
@@ -507,12 +430,6 @@ export default function DocumentsList() {
   const allVisibleSelected =
     visibleSelectableIds.length > 0 && visibleSelectableIds.every((id) => selectedIds.has(id));
   const someVisibleSelected = visibleSelectableIds.some((id) => selectedIds.has(id));
-  const headerCheckboxState: boolean | "indeterminate" = allVisibleSelected
-    ? true
-    : someVisibleSelected
-    ? "indeterminate"
-    : false;
-
   const handleSelectAll = () => {
     if (allVisibleSelected) {
       setSelectedIds((prev) => {
@@ -554,247 +471,422 @@ export default function DocumentsList() {
   const pinnedDocuments = (filteredDocuments ?? []).slice(0, 4);
   const recentDocuments = (filteredDocuments ?? []).slice(4);
 
-  const renderDocumentCard = (doc: NonNullable<typeof filteredDocuments>[number], pinned = false) => {
+  const renderDocumentCard = (doc: NonNullable<typeof filteredDocuments>[number]) => {
     const status = getDocumentStatus(doc);
     const isReindexing = reindexingId === doc.id;
     const isSelected = selectedIds.has(doc.id);
-    const typeLabel = compactTypeLabel(doc.fileType);
+    const statusMeta = dashboardStatusLabel(doc);
+    const askHref = status.canReindex ? `/documents/${doc.id}` : `/documents/${doc.id}/chat`;
     return (
-      <Card
+      <DashboardDocumentCard
         key={doc.id}
-        className={`group overflow-hidden rounded-[18px] border bg-[#f4f3ef] text-[#1f1f1f] transition-colors ${
-          isSelected ? "border-[#3d7a5e] ring-1 ring-[#3d7a5e]" : "border-[#d8d5ce] hover:border-[#3d7a5e]"
-        }`}
-      >
-        <div className="relative bg-[#eceae4] p-3 border-b border-[#d8d5ce]">
-          <div className={`absolute left-4 top-4 z-10 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} onClick={(e) => e.stopPropagation()}>
-            <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(doc.id)} aria-label={`Select ${doc.fileName}`} className="h-4 w-4 rounded-[6px] border-[#d8d5ce] bg-white" />
-          </div>
-          <span className="absolute right-4 top-4 z-10 rounded-[10px] border border-[#d8d5ce] bg-white px-2 py-1 font-mono text-[10px] font-medium tracking-[0.12em] text-[#1f1f1f]">
-            {typeLabel}
-          </span>
-          {pinned && <span className="absolute bottom-4 left-4 z-10 rounded-[10px] bg-[#3d7a5e] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white">Pinned</span>}
-          <Link href={`/documents/${doc.id}`} className="block overflow-hidden rounded-[14px] border border-[#d8d5ce] bg-white">
-            <DocumentCardThumbnail id={doc.id} fileType={doc.fileType} originalFileAvailable={doc.originalFileAvailable} className="h-44 w-full" />
-          </Link>
-        </div>
-        <CardContent className="flex flex-1 flex-col p-4">
-          <Link href={`/documents/${doc.id}`} className="min-w-0">
-            <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-[#1f1f1f] transition-colors group-hover:text-[#3d7a5e]" title={doc.fileName}>
-              {highlightMatch(doc.fileName, search)}
-            </h3>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#6b7068]">
-              <span>{inferDocumentKind(doc.fileName, doc.fileType)}</span>
-              <span className="h-1 w-1 rounded-full bg-[#d8d5ce]" />
-              <DocumentStatusBadge doc={doc} />
-            </div>
-            <div className="mt-3 font-mono text-[11px] text-[#6b7068]">
-              {format(new Date(doc.uploadedAt), "MMM d, yyyy · h:mm a")} · {formatSize(doc.fileSize)}
-            </div>
-          </Link>
-          <div className="mt-4 flex items-center gap-1.5 border-t border-[#d8d5ce] pt-3">
-            {status.canReindex ? (
-              <Button variant="secondary" size="sm" className="h-8 flex-1 rounded-[20px] bg-white text-xs text-[#1f1f1f] hover:bg-[#eceae4]" onClick={() => handleReindex(doc.id)} disabled={isReindexing}>
-                {isReindexing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} Re-index
-              </Button>
-            ) : (
-              <Link href={`/documents/${doc.id}/chat`} className="flex-1">
-                <Button variant="secondary" size="sm" className="h-8 w-full rounded-[20px] bg-white text-xs text-[#1f1f1f] hover:bg-[#eceae4]" disabled={!status.isReady} title={status.description}>
-                  <MessageSquare className="h-3 w-3" /> Ask AI
-                </Button>
-              </Link>
-            )}
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-[20px] text-[#6b7068] hover:bg-white hover:text-[#1f1f1f]" disabled={!doc.originalFileAvailable} title="Download original" aria-label={`Download ${doc.fileName}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadOriginal(doc.id, doc.fileName).catch(() => toast.error("Download failed")); }}>
-              <Download className="h-3.5 w-3.5" />
-            </Button>
-            <PrintDocumentButton document={doc} variant="icon" className="h-8 w-8 rounded-[20px]" />
-            <DeleteDialog fileName={doc.fileName} onConfirm={() => handleDelete(doc.id)} />
-          </div>
-        </CardContent>
-      </Card>
+        doc={doc}
+        accent={accentForDocument(doc)}
+        isSelected={isSelected}
+        title={highlightMatch(doc.fileName, search)}
+        statusLabel={statusMeta.label}
+        statusColor={statusMeta.color}
+        showCheck={statusMeta.showCheck}
+        pageLabel={pageEstimateLabel(doc)}
+        askHref={askHref}
+        onToggleSelect={() => toggleSelect(doc.id)}
+        overflowActions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={`More actions for ${doc.fileName}`}
+                style={{ color: dashboardColors.faint, fontSize: 16, lineHeight: 1 }}
+              >
+                ···
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {status.canReindex && (
+                <DropdownMenuItem
+                  onClick={() => handleReindex(doc.id)}
+                  className="gap-2 text-sm cursor-pointer"
+                  disabled={isReindexing}
+                >
+                  {isReindexing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  Re-index
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => downloadOriginal(doc.id, doc.fileName).catch(() => toast.error("Download failed"))}
+                className="gap-2 text-sm cursor-pointer"
+                disabled={!doc.originalFileAvailable}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => printDocument(doc).catch(() => toast.error("Could not prepare the document for printing"))}
+                className="gap-2 text-sm cursor-pointer"
+                disabled={!canPrintDocument(doc)}
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Print
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setPendingDelete({ id: doc.id, fileName: doc.fileName })}
+                className="gap-2 text-sm cursor-pointer text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
     );
   };
 
+  const filterPills: { label: string; type: TypeFilter; status?: StatusFilter }[] = [
+    { label: "All", type: "all", status: "all" },
+    { label: "PDFs", type: "pdf" },
+    { label: "Contracts", type: "docx" },
+    { label: "Ready", type: "all", status: "ready" },
+  ];
+
+  const hybridHref =
+    selectionCount > 0
+      ? `/agents/hybrid?preselect=${Array.from(selectedIds).join(",")}`
+      : "/agents/hybrid";
+
+  const showDashboardShell =
+    authLoaded && isSignedIn && !isLoading && !documentsError && (documents?.length ?? 0) > 0;
+
+  const dashboardPanelStyle = {
+    borderColor: dashboardColors.border,
+    background: dashboardColors.card,
+    color: dashboardColors.muted,
+  } as const;
+
   return (
-    <Layout>
-      <div className="s87-page">
-        <header className="s87-page-header">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              {fromHybrid && (
-                <Link href="/agents/hybrid" className="mb-2 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground">
-                  <ArrowLeft className="w-3 h-3" /> Back to AI Chat
-                </Link>
-              )}
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Signal87 workspace</p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Documents</h1>
-            </div>
-            <div className="flex flex-1 flex-wrap items-center gap-2 lg:max-w-3xl lg:justify-end">
-              <div className="relative min-w-[220px] flex-1 lg:max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search documents…" value={search} onChange={(e) => handleSearch(e.target.value)} className="h-10 rounded-md bg-background pl-10 pr-9 text-sm text-foreground placeholder:text-muted-foreground" />
-                {search && <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="h-3.5 w-3.5" /></button>}
-              </div>
-              <Select value={view === "grid" ? gridSortColumn : sortColumn} onValueChange={(v) => view === "grid" ? handleGridSortColumn(v as SortColumn) : handleSort(v as SortColumn)}>
-                <SelectTrigger className="h-10 w-[126px] rounded-md bg-background text-sm text-foreground"><SelectValue placeholder="Sort" /></SelectTrigger>
-                <SelectContent><SelectItem value="uploaded">Uploaded</SelectItem><SelectItem value="name">Name</SelectItem><SelectItem value="status">Status</SelectItem><SelectItem value="chunks">Chunks</SelectItem></SelectContent>
-              </Select>
-              <button onClick={view === "grid" ? handleGridSortDirection : () => handleSort(sortColumn)} className="s87-toolbar-control">Sort {view === "grid" ? (gridSortDirection === "asc" ? "↑" : "↓") : (sortDirection === "asc" ? "↑" : "↓")}</button>
-              <FileUploadModal />
-              <Link href="/analyze" className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground shadow-xs hover:bg-muted"><Plus className="h-4 w-4" /> New doc</Link>
-              <DropdownMenu><DropdownMenuTrigger asChild><button className="h-10 w-10 rounded-md border border-border bg-card text-muted-foreground shadow-xs hover:bg-muted hover:text-foreground" title="Preferences" aria-label="Preferences"><SlidersHorizontal className="mx-auto h-4 w-4" /></button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-48"><DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer"><RotateCcw className="w-3.5 h-3.5" />Reset to defaults</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
-            </div>
+    <Layout minimalChrome>
+      <div
+        className="s87-docs-dashboard"
+        style={{ background: dashboardColors.panel, color: dashboardColors.ink }}
+      >
+        <aside
+          className="s87-docs-rail hidden px-3 md:flex"
+          style={{ borderColor: dashboardColors.border, background: dashboardColors.rail }}
+        >
+          <DashboardBrandMark />
+          <DashboardRailButton icon={Files} active title="Documents" />
+          <DashboardRailButton icon={Grid3X3} active={view === "grid"} onClick={() => switchView("grid")} title="Grid view" />
+          <DashboardRailButton icon={FolderOpen} href="/documents" title="Archive" />
+          <DashboardRailButton icon={MessageSquare} href="/agents/hybrid" title="AI chat" />
+          <DashboardRailButton icon={Bot} href="/agents/hybrid" title="Hybrid agent" />
+          <DashboardRailButton icon={FileSearch} href="/analyze" title="Analyze" />
+          <div className="mt-auto flex flex-col items-center gap-2">
+            <DashboardRailButton icon={Bell} title="Notifications" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  title="Settings"
+                  style={{
+                    width: 54,
+                    height: 54,
+                    borderRadius: 17,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: dashboardColors.faint,
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Settings size={22} strokeWidth={1.8} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem
+                  onClick={() => handleGridSortColumn("uploaded")}
+                  className="gap-2 text-sm cursor-pointer"
+                >
+                  Sort: Uploaded
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGridSortColumn("name")} className="gap-2 text-sm cursor-pointer">
+                  Sort: Name
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGridSortColumn("status")} className="gap-2 text-sm cursor-pointer">
+                  Sort: Status
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGridSortColumn("chunks")} className="gap-2 text-sm cursor-pointer">
+                  Sort: Chunks
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleGridSortDirection} className="gap-2 text-sm cursor-pointer">
+                  Toggle sort direction ({gridSortDirection === "asc" ? "asc" : "desc"})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleResetPreferences} className="gap-2 text-sm cursor-pointer">
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Reset to defaults
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </header>
+        </aside>
 
-        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
-          {/* ── Loading ── */}
-          {!authLoaded || (authLoaded && !isSignedIn) || isLoading ? (
-            view === "grid" ? (
-              <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="overflow-hidden border-border">
-                    <Skeleton className="h-44 w-full rounded-none" />
-                    <CardContent className="p-4 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                      <Skeleton className="h-3 w-1/3 mt-3" />
-                    </CardContent>
-                  </Card>
-                ))}
+        <div className="s87-docs-main">
+          <header className="shrink-0 px-4 py-5 md:px-8 md:pt-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                {fromHybrid && (
+                  <Link
+                    href="/agents/hybrid"
+                    className="mb-2 inline-flex items-center gap-1 text-[11px] font-medium"
+                    style={{ color: dashboardColors.muted }}
+                  >
+                    <ArrowLeft className="w-3 h-3" /> Back to AI Chat
+                  </Link>
+                )}
+                <p className="text-[12px] font-medium" style={{ color: dashboardColors.muted }}>
+                  Signal87 workspace
+                </p>
+                <h1
+                  className="mt-2 text-3xl font-semibold tracking-tight md:text-[40px] md:leading-[1.05]"
+                  style={{ color: dashboardColors.ink }}
+                >
+                  Documents that answer back.
+                </h1>
               </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-4 px-6 py-3">
-                    <Skeleton className="h-6 w-10 rounded shrink-0" />
-                    <Skeleton className="h-4 w-56" />
-                    <Skeleton className="h-5 w-20 rounded-full ml-auto" />
-                    <Skeleton className="h-4 w-12" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-7 w-20 rounded" />
-                    <Skeleton className="h-7 w-7 rounded" />
-                  </div>
-                ))}
-              </div>
-            )
-          ) : documentsError ? (
-            /* ── Error ── */
-            <div className="m-5 p-6 text-center border border-destructive/50 bg-destructive/10 text-destructive rounded-md flex flex-col items-center gap-2">
-              <AlertCircle className="w-8 h-8" />
-              <p className="text-sm font-semibold">{documentsError.title}</p>
-              <p className="text-sm text-destructive/80 max-w-lg">{documentsError.message}</p>
-              {documentsError.auth && (
-                <Link href="/sign-in" className="mt-2 text-sm font-medium underline underline-offset-4">
-                  Go to sign in
-                </Link>
-              )}
-            </div>
-          ) : documents?.length === 0 ? (
-            /* ── Empty (no documents at all) ── */
-            <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-border rounded-lg bg-card/50 m-5">
-              <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-bold">No documents yet</h3>
-              <p className="text-sm text-muted-foreground max-w-md mt-2 mb-6">
-                Upload a PDF, DOCX, TXT, CSV, or Excel (XLSX/XLS) file to get started. Ask questions and get cited answers.
-              </p>
-              <FileUploadModal />
-            </div>
-          ) : filteredDocuments?.length === 0 ? (
-            /* ── Empty (filters produced no results) ── */
-            <div className="flex flex-col items-center justify-center text-center p-10 gap-2 text-muted-foreground">
-              <Search className="w-8 h-8 mb-1 opacity-40" />
-              <p className="text-sm font-medium">No documents match your filters</p>
-              <p className="text-xs">
-                {(() => {
-                  const parts: string[] = [];
-                  if (search) parts.push(`named "${search}"`);
-                  if (typeFilter !== "all") parts.push(`of type ${fileTypeChip(typeFilter).label}`);
-                  if (statusFilter !== "all") parts.push(`with status "${statusFilter}"`);
-                  return parts.length > 0 ? `No documents ${parts.join(", ")}` : "No documents match the current filters";
-                })()}
-              </p>
-              <button
-                onClick={() => { handleSearch(""); handleStatusFilter("all"); handleTypeFilter("all"); }}
-                className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
-              >
-                Clear filters
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6 p-4 md:p-6">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                {[
-                  { label: "Documents", value: (documents?.length ?? 0), meta: `${filteredDocuments?.length ?? 0} visible` },
-                  { label: "AI Processed", value: processedCount, meta: `${Math.max((documents?.length ?? 0) - processedCount, 0)} pending or queued` },
-                  { label: "Storage", value: formatSize(totalStorageBytes), meta: "Original files indexed" },
-                ].map((stat) => (
-                  <Card key={stat.label} className="s87-card">
-                    <CardContent className="p-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</p>
-                      <div className="mt-3 text-3xl font-semibold tracking-tight">{stat.value}</div>
-                      <p className="mt-2 font-mono text-[11px] text-muted-foreground">{stat.meta}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: "All", value: "all" },
-                  { label: "PDFs", value: "pdf" },
-                  { label: "Spreadsheets", value: availableTypes.includes("xlsx") ? "xlsx" : availableTypes.includes("xls") ? "xls" : "csv" },
-                  { label: "Reports", value: "txt" },
-                  { label: "Contracts", value: "docx" },
-                  { label: "AI-tagged", value: "all", status: "ready" as StatusFilter },
-                  { label: "Shared", value: "all" },
-                ].map((filter) => {
-                  const active = filter.status ? statusFilter === filter.status : typeFilter === filter.value && (filter.value !== "all" || statusFilter === "all");
-                  return (
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {searchOpen ? (
+                  <div className="relative min-w-[220px] flex-1 sm:flex-none sm:w-64">
+                    <Search
+                      className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                      style={{ color: dashboardColors.faint }}
+                    />
+                    <Input
+                      autoFocus
+                      placeholder="Search documents…"
+                      value={search}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="h-[42px] rounded-full border-white/12 bg-white/7 pl-10 pr-9 text-sm text-[#f4f4f2] placeholder:text-white/35"
+                    />
                     <button
-                      key={filter.label}
-                      onClick={() => { handleTypeFilter(filter.value); handleStatusFilter(filter.status ?? "all"); }}
-                      className={cn(
-                        "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
+                      onClick={() => {
+                        handleSearch("");
+                        setSearchOpen(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      style={{ color: dashboardColors.faint }}
+                      aria-label="Close search"
                     >
-                      {filter.label}
+                      <X className="h-3.5 w-3.5" />
                     </button>
-                  );
-                })}
-              </div>
-
-              <Link href="/agents/hybrid" className="flex items-center gap-3 rounded-[18px] border border-[#d8d5ce] bg-[#f4f3ef] px-4 py-3 text-[#1f1f1f] hover:border-[#3d7a5e]">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#3d7a5e]" />
-                <span className="text-sm font-semibold">Ask across your documents</span>
-                <ArrowRight className="ml-auto h-4 w-4 text-[#3d7a5e]" />
-              </Link>
-
-              <section>
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Pinned</h2>
-                  {visibleSelectableIds.length > 0 && <button onClick={handleSelectAll} className="text-[11px] font-medium text-white/60 hover:text-white">{allVisibleSelected ? "Deselect all" : "Select top documents"}</button>}
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {pinnedDocuments.map((doc) => renderDocumentCard(doc, true))}
-                </div>
-              </section>
-
-              <section>
-                <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Recent</h2>
-                {recentDocuments.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {recentDocuments.map((doc) => renderDocumentCard(doc))}
                   </div>
                 ) : (
-                  <div className="rounded-[18px] border border-white/12 bg-white/[0.08] p-5 text-sm text-white/60">Pinned documents are your most recent files. Upload more to fill Recent.</div>
+                  <HeaderActionPill
+                    label="Search"
+                    icon={<Search size={16} />}
+                    onClick={() => setSearchOpen(true)}
+                  />
                 )}
-              </section>
+                <FileUploadModal
+                  trigger={
+                    <button
+                      type="button"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        height: 42,
+                        padding: "0 16px",
+                        borderRadius: 999,
+                        border: "none",
+                        background: dashboardColors.ink,
+                        color: "#111110",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Upload size={16} />
+                      Upload
+                    </button>
+                  }
+                />
+                <HeaderActionPill
+                  label="AI Review"
+                  icon={<Sparkles size={16} />}
+                  href="/analyze"
+                  primary
+                />
+              </div>
             </div>
-          )}
+          </header>
+
+        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="space-y-8 px-4 pb-8 md:px-8">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <DashboardStat
+                label="Documents"
+                value={documents?.length ?? 0}
+                meta={`${processedCount} AI-ready files`}
+                icon={<FolderOpen size={16} />}
+              />
+              <DashboardStat
+                label="Reviewed"
+                value={reviewedPercent(processedCount, documents?.length ?? 0)}
+                meta="Cited summaries complete"
+                icon={<Check size={16} />}
+              />
+              <DashboardStat
+                label="Storage"
+                value={formatSize(totalStorageBytes)}
+                meta="Original files indexed"
+                icon={<FolderOpen size={16} />}
+              />
+              <QuickAiReviewCard />
+            </div>
+
+            <section>
+              <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold" style={{ color: dashboardColors.ink }}>
+                    Pinned documents
+                  </h2>
+                  <p className="mt-1 text-sm" style={{ color: dashboardColors.muted }}>
+                    Full-page previews, selected for AI review
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {filterPills.map((filter) => {
+                    const active = filter.status
+                      ? statusFilter === filter.status && typeFilter === filter.type
+                      : typeFilter === filter.type && statusFilter === "all";
+                    return (
+                      <ControlPill
+                        key={filter.label}
+                        label={filter.label}
+                        active={active}
+                        onClick={() => {
+                          handleTypeFilter(filter.type);
+                          handleStatusFilter(filter.status ?? "all");
+                        }}
+                      />
+                    );
+                  })}
+                  {showDashboardShell && visibleSelectableIds.length > 0 && (
+                    <button
+                      onClick={handleSelectAll}
+                      className="ml-2 text-[11px] font-medium"
+                      style={{ color: dashboardColors.muted }}
+                    >
+                      {allVisibleSelected ? "Deselect all" : "Select top documents"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {!authLoaded || (authLoaded && !isSignedIn) || isLoading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="overflow-hidden rounded-[24px] border"
+                      style={{ borderColor: dashboardColors.border, background: dashboardColors.panelSoft }}
+                    >
+                      <Skeleton className="h-44 w-full rounded-none bg-white/10" />
+                      <div className="space-y-3 p-4">
+                        <Skeleton className="h-3 w-24 bg-white/10" />
+                        <Skeleton className="h-5 w-full bg-white/10" />
+                        <Skeleton className="h-4 w-32 bg-white/10" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : documentsError ? (
+                <div
+                  className="flex flex-col items-center gap-3 rounded-[24px] border px-6 py-10 text-center"
+                  style={{
+                    borderColor: "rgba(242,160,118,0.35)",
+                    background: "rgba(242,160,118,0.08)",
+                    color: dashboardColors.ink,
+                  }}
+                >
+                  <AlertCircle className="h-8 w-8" style={{ color: "#f2a076" }} />
+                  <p className="text-sm font-semibold">{documentsError.title}</p>
+                  <p className="max-w-lg text-sm" style={{ color: dashboardColors.muted }}>
+                    {documentsError.message}
+                  </p>
+                  {documentsError.auth && (
+                    <Link
+                      href="/sign-in"
+                      className="mt-1 text-sm font-medium underline underline-offset-4"
+                      style={{ color: dashboardColors.green }}
+                    >
+                      Go to sign in
+                    </Link>
+                  )}
+                </div>
+              ) : documents?.length === 0 ? (
+                <div
+                  className="flex flex-col items-center rounded-[24px] border border-dashed px-8 py-12 text-center"
+                  style={dashboardPanelStyle}
+                >
+                  <FileText className="mb-4 h-12 w-12" style={{ color: dashboardColors.faint }} />
+                  <h3 className="text-lg font-semibold" style={{ color: dashboardColors.ink }}>
+                    No documents yet
+                  </h3>
+                  <p className="mt-2 max-w-md text-sm">
+                    Upload a PDF, DOCX, TXT, CSV, or Excel file to get started.
+                  </p>
+                  <div className="mt-6">
+                    <FileUploadModal />
+                  </div>
+                </div>
+              ) : filteredDocuments?.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-[24px] border px-8 py-10 text-center" style={dashboardPanelStyle}>
+                  <Search className="mb-1 h-8 w-8 opacity-40" />
+                  <p className="text-sm font-medium" style={{ color: dashboardColors.ink }}>
+                    No documents match your filters
+                  </p>
+                  <button
+                    onClick={() => {
+                      handleSearch("");
+                      handleStatusFilter("all");
+                      handleTypeFilter("all");
+                    }}
+                    className="mt-2 text-xs underline-offset-2 hover:underline"
+                    style={{ color: dashboardColors.green }}
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {pinnedDocuments.map((doc) => renderDocumentCard(doc))}
+                  </div>
+                  {recentDocuments.length > 0 && (
+                    <div className="mt-8">
+                      <h3
+                        className="mb-4 text-sm font-semibold uppercase tracking-[0.14em]"
+                        style={{ color: dashboardColors.faint }}
+                      >
+                        More documents
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        {recentDocuments.map((doc) => renderDocumentCard(doc))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
+            <DashboardBottomComposer
+              href={hybridHref}
+              query={composerQuery}
+              onQueryChange={setComposerQuery}
+            />
+          </div>
         </div>
 
         {/* ══════════════════════════════════════════════════
@@ -802,22 +894,35 @@ export default function DocumentsList() {
             Appears when 2–5 documents are selected
             ══════════════════════════════════════════════════ */}
         {showActionBar && (
-          <div className="border-t border-primary/20 bg-primary/5 backdrop-blur-sm px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+          <div
+            className="flex items-center gap-3 flex-wrap border-t px-4 py-3 md:px-6"
+            style={{
+              borderColor: dashboardColors.border,
+              background: dashboardColors.cardStrong,
+              paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+            }}
+          >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shrink-0">
+              <span
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+                style={{ background: dashboardColors.green, color: "#111110" }}
+              >
                 {selectionCount}
               </span>
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-medium" style={{ color: dashboardColors.ink }}>
                 {selectionCount} document{selectionCount !== 1 ? "s" : ""} selected
               </span>
               {selectionCount === MAX_SELECT && (
-                <span className="text-xs text-muted-foreground">(max)</span>
+                <span className="text-xs" style={{ color: dashboardColors.muted }}>
+                  (max)
+                </span>
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
               <button
                 onClick={clearSelection}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                className="text-xs underline-offset-2 transition-colors hover:underline"
+                style={{ color: dashboardColors.muted }}
               >
                 Clear
               </button>
@@ -857,7 +962,36 @@ export default function DocumentsList() {
             </div>
           </div>
         )}
+        </div>
       </div>
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent className="bg-card border-border font-sans">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete document?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete?.fileName} will be moved to Trash. You can restore it later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingDelete) handleDelete(pendingDelete.id);
+                setPendingDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }
