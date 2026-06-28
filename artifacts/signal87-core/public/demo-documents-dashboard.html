@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal87 Documents Dashboard — Design Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: #121211;
+      color: #f4f4f2;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .frame {
+      width: 1200px;
+      max-width: 100%;
+      height: 720px;
+      border-radius: 28px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      background: #1b1b1a;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 40px 120px rgba(0,0,0,0.45);
+    }
+    .rail {
+      background: rgba(10,10,10,0.46);
+      border-right: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px 12px;
+      gap: 10px;
+    }
+    .brand {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: #f6a0d7;
+      display: grid; place-items: center;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    .icon-btn {
+      width: 54px; height: 54px; border-radius: 17px;
+      display: grid; place-items: center;
+      color: rgba(244,244,242,0.34);
+    }
+    .icon-btn.active { background: #f4f4f2; color: #111110; }
+    .rail-spacer { flex: 1; }
+    .main { display: flex; flex-direction: column; min-width: 0; }
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 32px 36px 20px;
+    }
+    .eyebrow { font-size: 12px; color: rgba(244,244,242,0.58); }
+    h1 {
+      margin-top: 8px;
+      font-size: 40px;
+      line-height: 1.05;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .actions { display: flex; gap: 10px; align-items: center; }
+    .pill {
+      height: 42px; padding: 0 16px; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; white-space: nowrap;
+    }
+    .pill.outline { border: 1px solid rgba(255,255,255,0.12); }
+    .pill.solid { background: #f4f4f2; color: #111110; border: none; }
+    .content { padding: 0 36px 28px; flex: 1; overflow: hidden; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat, .gradient-card {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.07);
+      padding: 18px 20px;
+      min-height: 132px;
+      position: relative;
+    }
+    .stat-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: rgba(244,244,242,0.34);
+    }
+    .stat-value { margin-top: 10px; font-size: 36px; font-weight: 600; }
+    .stat-meta { margin-top: 8px; font-size: 12px; color: rgba(244,244,242,0.58); }
+    .stat-icon {
+      position: absolute; right: 18px; top: 18px;
+      color: rgba(244,244,242,0.34); font-size: 14px;
+    }
+    .gradient-card {
+      border: none;
+      color: #111110;
+      background: linear-gradient(135deg, #f6a0d7 0%, #ffd699 58%, #bdf58a 100%);
+      box-shadow: 0 18px 48px rgba(246,160,215,0.18);
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .gradient-card strong { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .gradient-card p { font-size: 14px; line-height: 1.45; font-weight: 500; max-width: 220px; }
+    .section-head {
+      display: flex; justify-content: space-between; align-items: end;
+      margin-bottom: 18px;
+    }
+    .section-head h2 { font-size: 20px; font-weight: 600; }
+    .section-head p { margin-top: 4px; font-size: 14px; color: rgba(244,244,242,0.58); }
+    .filters { display: flex; gap: 8px; }
+    .filter {
+      padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.12); color: rgba(244,244,242,0.58);
+    }
+    .filter.active { background: #f4f4f2; color: #111110; border-color: rgba(255,255,255,0.22); }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .card {
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #242423;
+      overflow: hidden;
+    }
+    .preview-wrap { padding: 12px; background: rgba(255,255,255,0.07); }
+    .preview {
+      border-radius: 18px; border: 1px solid rgba(255,255,255,0.12);
+      background: #fbfaf6; padding: 18px 16px 16px; min-height: 148px;
+    }
+    .bar-top { height: 10px; border-radius: 6px; margin-bottom: 14px; }
+    .line { height: 5px; border-radius: 999px; background: rgba(30,30,29,0.1); margin-bottom: 9px; }
+    .block { margin-top: 16px; height: 28px; width: 58%; border-radius: 8px; opacity: 0.88; }
+    .card-body { padding: 16px 18px 18px; }
+    .meta { font-size: 11px; font-weight: 600; color: rgba(244,244,242,0.58); }
+    .title { margin-top: 8px; font-size: 15px; font-weight: 600; line-height: 1.35; }
+    .row { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .status { font-size: 12px; font-weight: 600; }
+    .ask { font-size: 12px; font-weight: 600; color: #f4f4f2; }
+    .composer {
+      margin-top: 22px;
+      display: flex; align-items: center; gap: 12px;
+      border-radius: 22px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.11);
+      padding: 10px 12px 10px 16px;
+    }
+    .composer input {
+      flex: 1; border: none; outline: none; background: transparent;
+      color: #f4f4f2; font-size: 14px;
+    }
+    .composer button {
+      border: none; border-radius: 999px; background: #f4f4f2; color: #111110;
+      padding: 10px 16px; font-size: 13px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <aside class="rail">
+      <div class="brand">✦</div>
+      <div class="icon-btn active">📁</div>
+      <div class="icon-btn">▦</div>
+      <div class="icon-btn">📄</div>
+      <div class="icon-btn">💬</div>
+      <div class="rail-spacer"></div>
+      <div class="icon-btn">🔔</div>
+      <div class="icon-btn">⚙</div>
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#9b7bff,#f6a0d7);margin-top:8px;"></div>
+    </aside>
+    <div class="main">
+      <header class="header">
+        <div>
+          <div class="eyebrow">Signal87 workspace</div>
+          <h1>Documents that answer back.</h1>
+        </div>
+        <div class="actions">
+          <div class="pill outline">🔍 Search</div>
+          <div class="pill solid">⬆ Upload</div>
+          <div class="pill solid">✦ AI Review</div>
+        </div>
+      </header>
+      <div class="content">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-icon">📁</div>
+            <div class="stat-label">Documents</div>
+            <div class="stat-value">128</div>
+            <div class="stat-meta">94 AI-ready files</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">✓</div>
+            <div class="stat-label">Reviewed</div>
+            <div class="stat-value">71%</div>
+            <div class="stat-meta">Cited summaries complete</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">📁</div>
+            <div class="stat-label">Storage</div>
+            <div class="stat-value">8.4 GB</div>
+            <div class="stat-meta">Original files indexed</div>
+          </div>
+          <div class="gradient-card">
+            <strong>✦ Quick AI Review</strong>
+            <p>Summarize selected files, surface risk, and prepare a cited brief.</p>
+          </div>
+        </div>
+        <div class="section-head">
+          <div>
+            <h2>Pinned documents</h2>
+            <p>Full-page previews, selected for AI review</p>
+          </div>
+          <div class="filters">
+            <div class="filter active">All</div>
+            <div class="filter">PDFs</div>
+            <div class="filter">Contracts</div>
+            <div class="filter">Ready</div>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="preview-wrap">
+              <div class="preview">
+                <div class="bar-top" style="background:#f2a076"></div>
+                <div class="line" style="width:92%"></div>
+                <div class="line" style="width:78%"></div>
+                <div class="line" style="width:86%"></div>
+                <div class="block" style="background:#f2a076"></div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="meta">PDF 38 pages</div>
+              <div class="title">Series A diligence packet.pdf</div>
+              <div class="row">
+                <div class="status" style="color:#bdf58a">✓ Ready</div>
+                <div class="ask">Ask AI →</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="preview-wrap">
+              <div class="preview">
+                <div class="bar-top" style="background:#9dd2ff"></div>
+                <div class="line" style="width:92%"></div>
+                <div class="line" style="width:78%"></div>
+                <div class="line" style="width:64%"></div>
+                <div class="block" style="background:#9dd2ff"></div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="meta">PDF 16 pages</div>
+              <div class="title">Q3 operating agreement.pdf</div>
+              <div class="row">
+                <div class="status" style="color:#bdf58a">✓ AI tagged</div>
+                <div class="ask">Ask AI →</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="preview-wrap">
+              <div class="preview">
+                <div class="bar-top" style="background:#bdf58a"></div>
+                <div class="line" style="width:92%"></div>
+                <div class="line" style="width:78%"></div>
+                <div class="line" style="width:86%"></div>
+                <div class="block" style="background:#bdf58a"></div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="meta">PDF 9 pages</div>
+              <div class="title">Residential lease summary.pdf</div>
+              <div class="row">
+                <div class="status" style="color:#bdf58a">✓ Ready</div>
+                <div class="ask">Ask AI →</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="preview-wrap">
+              <div class="preview">
+                <div class="bar-top" style="background:#f6a0d7"></div>
+                <div class="line" style="width:92%"></div>
+                <div class="line" style="width:78%"></div>
+                <div class="line" style="width:64%"></div>
+                <div class="block" style="background:#f6a0d7"></div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="meta">PDF 24 pages</div>
+              <div class="title">Investor correspondence.pdf</div>
+              <div class="row">
+                <div class="status" style="color:#f2a076">Needs review</div>
+                <div class="ask">Ask AI →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <span style="color:#bdf58a">✦</span>
+          <input placeholder="Ask across selected documents" />
+          <button>Ask Signal87 +</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
