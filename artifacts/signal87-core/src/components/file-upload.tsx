@@ -1,16 +1,45 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { customFetch, ApiError, getListDocumentsQueryKey } from "@workspace/api-client-react";
+import {
+  customFetch,
+  ApiError,
+  formatApiErrorMessage,
+  getListDocumentsQueryKey,
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { UploadCloud, Loader2, AlertCircle, CheckCircle2, X, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 const ALLOWED_EXTENSIONS = ["pdf", "docx", "txt", "csv", "xlsx", "xls"];
 const MAX_SIZE_MB = 20;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+const UPLOAD_STAGE_LABELS = [
+  "Uploading",
+  "Saving document",
+  "Extracting text",
+  "Indexing",
+] as const;
+
+type UploadStageLabel = (typeof UPLOAD_STAGE_LABELS)[number] | "Complete" | "Failed";
+
+type ItemStatus =
+  | "pending"
+  | "invalid"
+  | "uploading"
+  | "success"
+  | "warning"
+  | "error";
+
+interface UploadItem {
+  id: string;
+  file: File;
+  status: ItemStatus;
+  stage?: UploadStageLabel;
+  message?: string;
+}
 
 function validateFile(f: File): string | null {
   const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
@@ -23,29 +52,48 @@ function validateFile(f: File): string | null {
   return null;
 }
 
-type ItemStatus = "pending" | "invalid" | "uploading" | "success" | "warning" | "error";
-
-interface UploadItem {
-  id: string;
-  file: File;
-  status: ItemStatus;
-  message?: string;
-}
-
 function fileKey(f: File): string {
   return `${f.name}-${f.size}-${f.lastModified}`;
 }
 
 function extractErrorMessage(err: unknown): string {
-  if (
-    err instanceof ApiError &&
-    err.data &&
-    typeof (err.data as { error?: unknown }).error === "string"
-  ) {
-    return (err.data as { error: string }).error;
+  if (err instanceof ApiError) {
+    return formatApiErrorMessage(err.data, err.message);
   }
   if (err instanceof Error) return err.message;
   return "Upload failed. Please try again.";
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function animateUploadStages(
+  itemId: string,
+  setItemState: (id: string, status: ItemStatus, stage?: UploadStageLabel, message?: string) => void,
+  uploadPromise: Promise<unknown>,
+): Promise<unknown> {
+  const stageTimers: ReturnType<typeof setTimeout>[] = [];
+  let stageIndex = 0;
+
+  setItemState(itemId, "uploading", UPLOAD_STAGE_LABELS[0]);
+
+  const advanceStage = () => {
+    stageIndex += 1;
+    if (stageIndex < UPLOAD_STAGE_LABELS.length) {
+      setItemState(itemId, "uploading", UPLOAD_STAGE_LABELS[stageIndex]);
+    }
+  };
+
+  for (let i = 1; i < UPLOAD_STAGE_LABELS.length; i += 1) {
+    stageTimers.push(setTimeout(advanceStage, i * 900));
+  }
+
+  try {
+    return await uploadPromise;
+  } finally {
+    stageTimers.forEach(clearTimeout);
+  }
 }
 
 export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
@@ -63,19 +111,30 @@ export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
       const formData = new FormData();
       formData.append("file", uploadFile);
 
-      // Route through the shared API client so the Clerk bearer token is
-      // attached centrally — a raw fetch() would 401 inside the embedded
-      // preview iframe, where the session cookie isn't available.
-      return customFetch<{ warning?: string } & Record<string, unknown>>(
+      return customFetch<{ warning?: string; message?: string } & Record<string, unknown>>(
         "/api/documents/upload",
         { method: "POST", body: formData, responseType: "json" },
       );
     },
   });
 
-  const setItemState = (id: string, status: ItemStatus, message?: string) => {
+  const setItemState = (
+    id: string,
+    status: ItemStatus,
+    stage?: UploadStageLabel,
+    message?: string,
+  ) => {
     setItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, status, message } : it)),
+      prev.map((it) =>
+        it.id === id
+          ? {
+              ...it,
+              status,
+              stage: status === "uploading" ? stage : undefined,
+              message,
+            }
+          : it,
+      ),
     );
   };
 
@@ -102,7 +161,6 @@ export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     addFiles(Array.from(e.target.files ?? []));
-    // Reset so re-selecting the same file (after removal) fires onChange again.
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -161,20 +219,28 @@ export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
     for (let i = 0; i < toUpload.length; i++) {
       const item = toUpload[i];
       setProgress({ done: i, total: toUpload.length });
-      setItemState(item.id, "uploading");
       try {
-        const data = await uploadOne.mutateAsync(item.file);
-        if (data && typeof data.warning === "string" && data.warning) {
+        const data = await animateUploadStages(
+          item.id,
+          setItemState,
+          uploadOne.mutateAsync(item.file),
+        );
+        if (data && typeof (data as { warning?: string }).warning === "string" && (data as { warning: string }).warning) {
           warningCount++;
-          setItemState(item.id, "warning", "Stored — not AI-searchable. File may be scanned or image-only.");
+          const warningText =
+            (data as { warning: string }).warning ||
+            "Stored, but text extraction failed. Use Re-Index to retry.";
+          setItemState(item.id, "warning", "Complete", warningText);
         } else {
           successCount++;
-          setItemState(item.id, "success");
+          setItemState(item.id, "success", "Complete", "Upload complete.");
         }
       } catch (err) {
         errorCount++;
-        setItemState(item.id, "error", extractErrorMessage(err));
+        const reason = extractErrorMessage(err);
+        setItemState(item.id, "error", "Failed", reason);
       }
+      await delay(0);
     }
 
     setProgress(null);
@@ -201,8 +267,6 @@ export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
           `${uploaded} document${uploaded !== 1 ? "s" : ""} uploaded successfully.${skippedNote}`,
         );
       }
-      // Only auto-close on a fully clean batch. If invalid files were skipped,
-      // keep the dialog open so the user can see what didn't go through.
       if (invalidRemaining === 0) {
         handleOpenChange(false);
       }
@@ -223,6 +287,14 @@ export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
   };
 
   const validCount = items.filter((it) => it.status !== "invalid").length;
+
+  const stageLine = (it: UploadItem): string | null => {
+    if (it.status === "uploading" && it.stage) return it.stage;
+    if (it.status === "success") return "Complete";
+    if (it.status === "warning") return "Complete — extraction failed";
+    if (it.status === "error") return "Failed";
+    return null;
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -324,9 +396,11 @@ export function FileUploadModal({ trigger }: { trigger?: ReactNode }) {
                     ) : (
                       <p className="text-[11px] text-muted-foreground">
                         {(it.file.size / 1024 / 1024).toFixed(1)} MB
-                        {it.status === "success" ? " · Uploaded" : ""}
                       </p>
                     )}
+                    {stageLine(it) ? (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{stageLine(it)}</p>
+                    ) : null}
                   </div>
                   {!isUploading && (it.status !== "success" && it.status !== "warning") && (
                     <button

@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { userHasActiveSubscription } from "../lib/billing";
+import { uploadErrorResponse } from "../lib/upload-errors";
 
 function parseEmailList(raw: string | undefined): Set<string> {
   return new Set(
@@ -82,11 +83,15 @@ export async function requireApprovedEmail(
     const hasSubscription = await userHasActiveSubscription(auth.userId);
     if (!hasSubscription) {
       req.log.info({ resolvedEmail: email ?? null }, "subscription required");
-      res.status(402).json({
-        error: "Subscription required. Please choose a plan to continue.",
-        code: "subscription_required",
-        upgradeUrl: "/pricing",
-      });
+      uploadErrorResponse(
+        req,
+        res,
+        402,
+        "subscription",
+        "Subscription required. Start your free trial on the pricing page to upload documents.",
+        null,
+        { code: "subscription_required", upgradeUrl: "/pricing" },
+      );
       return;
     }
 

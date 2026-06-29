@@ -150,25 +150,46 @@ function truncate(text: string, maxLength = 300): string {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
-function buildErrorMessage(response: Response, data: unknown): string {
-  const prefix = `HTTP ${response.status} ${response.statusText}`;
+function getStageField(value: unknown): string | undefined {
+  return getStringField(value, "stage");
+}
 
+/** Prefer structured API error bodies (upload + billing) for user-facing text. */
+export function formatApiErrorMessage(data: unknown, fallback = "Request failed. Please try again."): string {
+  if (typeof data === "string") {
+    const text = data.trim();
+    return text || fallback;
+  }
+
+  const message =
+    getStringField(data, "message") ??
+    getStringField(data, "error_description") ??
+    getStringField(data, "error") ??
+    getStringField(data, "detail") ??
+    getStringField(data, "title");
+
+  if (!message) return fallback;
+
+  const stage = getStageField(data);
+  if (stage) {
+    const stageLabel = stage.charAt(0).toUpperCase() + stage.slice(1);
+    return `${stageLabel}: ${message}`;
+  }
+
+  return message;
+}
+
+function buildErrorMessage(response: Response, data: unknown): string {
+  const formatted = formatApiErrorMessage(data);
+  if (formatted !== "Request failed. Please try again.") {
+    return formatted;
+  }
+
+  const prefix = `HTTP ${response.status} ${response.statusText}`;
   if (typeof data === "string") {
     const text = data.trim();
     return text ? `${prefix}: ${truncate(text)}` : prefix;
   }
-
-  const title = getStringField(data, "title");
-  const detail = getStringField(data, "detail");
-  const message =
-    getStringField(data, "message") ??
-    getStringField(data, "error_description") ??
-    getStringField(data, "error");
-
-  if (title && detail) return `${prefix}: ${title} — ${detail}`;
-  if (detail) return `${prefix}: ${detail}`;
-  if (message) return `${prefix}: ${message}`;
-  if (title) return `${prefix}: ${title}`;
 
   return prefix;
 }

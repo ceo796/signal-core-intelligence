@@ -1,5 +1,4 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import multer from "multer";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { eq, and, count, inArray, sql, isNull } from "drizzle-orm";
 import { getCurrentUserId } from "../../lib/ownership";
@@ -15,9 +14,10 @@ import { extractAndChunk, getFileType, type SupportedFileType } from "../../lib/
 import * as fileStore from "../../lib/file-store";
 import { loadAiConfig } from "../../lib/ai";
 import { getEmbeddingModelName } from "../../lib/ai/embedding";
+import { uploadErrorResponse, uploadLogContext } from "../../lib/upload-errors";
+import { singleFileUpload } from "../../middlewares/multer-upload";
 
 const router: IRouter = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 function docToResponse(
   doc: typeof documentsTable.$inferSelect,
@@ -104,72 +104,163 @@ router.get("/documents", async (req, res): Promise<void> => {
 
 router.post(
   "/documents/upload",
-  upload.single("file"),
+  singleFileUpload("file"),
   async (req: Request, res: Response): Promise<void> => {
+    const file = (req as Request & { file?: Express.Multer.File }).file;
+
+    req.log.info(
+      uploadLogContext(req, {
+        stage: "received",
+        hasFile: Boolean(file),
+      }),
+      "Upload request received",
+    );
+
     const userId = getCurrentUserId(req);
     if (!userId) {
-      res.status(401).json({ error: "Unauthorized." });
+      req.log.warn(uploadLogContext(req, { stage: "auth" }), "Upload rejected — unauthenticated");
+      uploadErrorResponse(req, res, 401, "auth", "Unauthorized. Please sign in.", file?.originalname ?? null);
       return;
     }
 
-    const file = (req as Request & { file?: Express.Multer.File }).file;
+    req.log.info(
+      uploadLogContext(req, {
+        stage: "auth",
+        userId,
+      }),
+      "Upload authenticated user resolved",
+    );
+
     if (!file) {
-      res.status(400).json({ error: "No file uploaded" });
+      uploadErrorResponse(req, res, 400, "validation", "No file uploaded. Choose a file and try again.", null, {
+        code: "missing_file",
+      });
       return;
     }
+
+    req.log.info(
+      uploadLogContext(req, {
+        stage: "validation",
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      }),
+      "Upload file metadata",
+    );
 
     const fileType = getFileType(file.mimetype, file.originalname);
     if (!fileType) {
-      res
-        .status(400)
-        .json({ error: "Unsupported file type. Allowed: PDF, DOCX, TXT, CSV, XLSX, XLS" });
+      uploadErrorResponse(
+        req,
+        res,
+        400,
+        "validation",
+        "Unsupported file type. Allowed: PDF, DOCX, TXT, CSV, XLSX, XLS.",
+        file.originalname,
+        { code: "unsupported_file_type" },
+      );
       return;
     }
 
-    // ── 1. Save original file to object storage (durable storage is required) ──
     if (!fileStore.isConfigured()) {
-      req.log.error("Object storage is not configured — refusing non-durable upload");
-      res.status(503).json({ error: "Durable file storage is not configured. Upload rejected." });
+      req.log.error(
+        uploadLogContext(req, { stage: "storage", fileName: file.originalname }),
+        "Object storage is not configured — refusing non-durable upload",
+      );
+      uploadErrorResponse(
+        req,
+        res,
+        503,
+        "storage",
+        "Durable file storage is not configured on the server. Upload rejected.",
+        file.originalname,
+        { code: "storage_not_configured" },
+      );
       return;
     }
 
     let storageKey: string;
     const storageProvider = fileStore.getStorageProviderName();
+    req.log.info(
+      uploadLogContext(req, { stage: "storage", fileName: file.originalname, fileType }),
+      "Storage write started",
+    );
     try {
       const mimeType = fileStore.getMimeType(fileType);
       storageKey = await fileStore.uploadFile(file.buffer, file.originalname, mimeType);
+      req.log.info(
+        uploadLogContext(req, {
+          stage: "storage",
+          fileName: file.originalname,
+          storageProvider,
+          storageKey,
+        }),
+        "Storage write succeeded",
+      );
     } catch (err) {
-      req.log.error({ err }, "Failed to save original file to object storage");
-      res.status(500).json({ error: "Failed to store uploaded file" });
+      req.log.error(
+        uploadLogContext(req, { stage: "storage", fileName: file.originalname, err }),
+        "Storage write failed",
+      );
+      uploadErrorResponse(
+        req,
+        res,
+        500,
+        "storage",
+        "Failed to store the uploaded file. Please try again.",
+        file.originalname,
+        { code: "storage_write_failed" },
+      );
       return;
     }
 
-    // ── 2. Extract text + chunks ──────────────────────────────────────────────
     let extractedText: string | null = null;
     let extractedChunks: string[] = [];
     let extractionStatus = "failed";
     let extractionError: string | null = null;
 
+    req.log.info(
+      uploadLogContext(req, { stage: "extraction", fileName: file.originalname, fileType }),
+      "Text extraction started",
+    );
     try {
       const extraction = await extractAndChunk(file.buffer, fileType, file.originalname);
       extractedText = extraction.text;
       extractedChunks = extraction.chunks;
       for (const warning of extraction.warnings) {
-        req.log.warn({ fileName: file.originalname, fileType, warning }, "Extraction warning");
+        req.log.warn(
+          uploadLogContext(req, { fileName: file.originalname, fileType, warning }),
+          "Extraction warning",
+        );
       }
       if (!extractedText.trim()) {
         extractionError = "No text could be extracted from the file";
       } else {
         extractionStatus = "success";
       }
+      req.log.info(
+        uploadLogContext(req, {
+          stage: "extraction",
+          fileName: file.originalname,
+          extractionStatus,
+          chunkCandidates: extractedChunks.length,
+        }),
+        "Text extraction finished",
+      );
     } catch (err) {
-      req.log.error({ err }, "Failed to extract text");
-      extractionError = (err as Error).message ?? "Extraction failed";
+      extractionError = err instanceof Error ? err.message : "Extraction failed";
+      req.log.error(
+        uploadLogContext(req, { stage: "extraction", fileName: file.originalname, err }),
+        "Text extraction failed — continuing with stored file",
+      );
     }
 
-    // ── 3 & 4. Persist document + chunks; clean up stored file on failure ──────
     let doc: typeof documentsTable.$inferSelect;
     let chunkCount = 0;
+    req.log.info(
+      uploadLogContext(req, { stage: "database", fileName: file.originalname }),
+      "Database insert started",
+    );
     try {
       [doc] = await db
         .insert(documentsTable)
@@ -186,41 +277,107 @@ router.post(
         })
         .returning();
 
+      req.log.info(
+        uploadLogContext(req, {
+          stage: "database",
+          fileName: file.originalname,
+          documentId: doc.id,
+        }),
+        "Database insert succeeded",
+      );
+
       if (extractionStatus === "success" && extractedChunks.length > 0) {
+        req.log.info(
+          uploadLogContext(req, {
+            stage: "indexing",
+            fileName: file.originalname,
+            documentId: doc.id,
+            chunkCount: extractedChunks.length,
+          }),
+          "Chunk indexing started",
+        );
         await db.insert(chunksTable).values(
-          extractedChunks.map((content, i) => ({ documentId: doc.id, chunkIndex: i, content }))
+          extractedChunks.map((content, i) => ({ documentId: doc.id, chunkIndex: i, content })),
         );
         chunkCount = extractedChunks.length;
+        req.log.info(
+          uploadLogContext(req, {
+            stage: "indexing",
+            fileName: file.originalname,
+            documentId: doc.id,
+            chunkCount,
+          }),
+          "Chunk indexing succeeded",
+        );
       }
     } catch (err) {
-      req.log.error({ err }, "Failed to persist document — removing orphaned file from storage");
+      req.log.error(
+        uploadLogContext(req, { stage: "database", fileName: file.originalname, err }),
+        "Database insert failed — removing orphaned file from storage",
+      );
       try {
         await fileStore.deleteFile(storageKey);
       } catch (cleanupErr) {
-        req.log.error({ err: cleanupErr, storageKey }, "Failed to clean up orphaned file after DB error");
+        req.log.error(
+          uploadLogContext(req, { storageKey, err: cleanupErr }),
+          "Failed to clean up orphaned file after DB error",
+        );
       }
-      res.status(500).json({ error: "Failed to save document" });
+      uploadErrorResponse(
+        req,
+        res,
+        500,
+        "database",
+        "Failed to save the document record. Please try again.",
+        file.originalname,
+        { code: "database_insert_failed" },
+      );
       return;
     }
 
     if (extractionStatus === "failed") {
+      const warning =
+        "Original file stored, but text extraction failed. Use Re-Index to retry. " +
+        (extractionError ?? "");
       req.log.warn(
-        { documentId: doc.id, fileName: file.originalname, fileType, fileSize: file.size, extractionError },
-        "Upload stored but text extraction failed",
+        uploadLogContext(req, {
+          stage: "complete",
+          documentId: doc.id,
+          fileName: file.originalname,
+          fileType,
+          fileSize: file.size,
+          extractionError,
+        }),
+        "Upload complete with extraction failure",
       );
       res.status(207).json({
         ...docToResponse(doc, chunkCount),
-        warning: "Original file stored, but text extraction failed. Re-index to retry. " + (extractionError ?? ""),
+        warning,
+        stage: "complete",
+        message: warning,
+        requestId: uploadLogContext(req).requestId,
       });
       return;
     }
 
     req.log.info(
-      { documentId: doc.id, fileName: file.originalname, fileType, fileSize: file.size, chunkCount },
+      uploadLogContext(req, {
+        stage: "complete",
+        documentId: doc.id,
+        fileName: file.originalname,
+        fileType,
+        fileSize: file.size,
+        chunkCount,
+      }),
       "Upload succeeded",
     );
-    res.status(201).json(docToResponse(doc, chunkCount));
-  }
+    res.status(201).json({
+      ...docToResponse(doc, chunkCount),
+      stage: "complete",
+      message: "Upload complete.",
+      requestId: uploadLogContext(req).requestId,
+    });
+  },
 );
 
 router.get("/documents/:id", async (req, res): Promise<void> => {
@@ -361,7 +518,7 @@ router.get("/documents/:id/original", async (req, res): Promise<void> => {
 // ── PUT /documents/:id/original — attach or replace the stored original file ─
 router.put(
   "/documents/:id/original",
-  upload.single("file"),
+  singleFileUpload("file"),
   async (req: Request, res: Response): Promise<void> => {
     const userId = getCurrentUserId(req);
     if (!userId) {
