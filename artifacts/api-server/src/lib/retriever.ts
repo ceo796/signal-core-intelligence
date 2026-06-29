@@ -92,10 +92,18 @@ async function getOrCreateChunkEmbeddings(chunks: RetrievalChunk[]): Promise<Map
   if (missing.length === 0) return existing;
 
   const generated = await getEmbeddings(missing.map((chunk) => chunk.content));
-  generated.forEach((embedding, i) => existing.set(missing[i].id, embedding));
+  const count = Math.min(generated.length, missing.length);
+  if (count !== missing.length) {
+    console.warn(
+      `Embedding count mismatch for chunk retrieval: expected ${missing.length}, got ${generated.length}`,
+    );
+  }
+  for (let i = 0; i < count; i++) {
+    existing.set(missing[i].id, generated[i]);
+  }
 
   try {
-    await persistEmbeddings(missing, generated);
+    await persistEmbeddings(missing.slice(0, count), generated.slice(0, count));
   } catch (err) {
     // Retrieval must not fail because cache persistence failed.
     if (!isMissingEmbeddingsTable(err)) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const baseUrl = (process.argv[2] || process.env.API_BASE_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
+const baseUrl = (process.argv[2] || process.env.API_BASE_URL || "http://127.0.0.1:8080").replace(/\/+$/, "");
 
 const checks = [
   { method: "GET", path: "/health", expected: 200, json: true },
@@ -15,7 +15,7 @@ const checks = [
   { method: "POST", path: "/api/documents/1/reindex", expected: 401, json: true },
   { method: "POST", path: "/api/documents/1/chat", expected: 401, json: true, body: { question: "status" } },
   { method: "POST", path: "/api/documents/multi-chat", expected: 401, json: true, body: { documentIds: [1, 2], question: "status" } },
-  { method: "POST", path: "/api/documents/brief", expected: 401, json: true, body: { documentIds: [1], briefType: "Executive Brief" } },
+  { method: "POST", path: "/api/documents/brief", expected: 401, json: true, body: { documentIds: [1], briefType: "executive_summary" } },
   { method: "POST", path: "/api/agent/hybrid", expected: 401, json: true, body: { query: "status" } },
   { method: "GET", path: "/api/skills", expected: 401, json: true },
   { method: "GET", path: "/api/notes", expected: 401, json: true },
