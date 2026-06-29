@@ -6,55 +6,21 @@ services:
     region: oregon
     rootDir: .
     autoDeployTrigger: off
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/db push && pnpm --filter @workspace/api-server run build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
     startCommand: pnpm --filter @workspace/api-server run start
     healthCheckPath: /api/healthz
     disk:
       name: signal87-uploads
       mountPath: /var/data
       sizeGB: 10
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: STORAGE_PROVIDER
-        value: local
-      - key: FILE_STORAGE_DIR
-        value: /var/data/uploads
-      - key: DATABASE_URL
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: XAI_API_KEY
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: AI_PROVIDER_ROUTING_ENABLED
-        value: "true"
-      - key: AI_PRIMARY_REASONING_PROVIDER
-        value: openai
-      - key: AI_FINAL_FALLBACK_PROVIDER
-        value: xai
-      - key: AI_EMBEDDING_PROVIDER
-        value: openai
-      - key: CLERK_SECRET_KEY
-        sync: false
-      - key: CLERK_PUBLISHABLE_KEY
-        sync: false
 
   - type: web
     name: signal87-web
     runtime: static
     rootDir: .
     autoDeployTrigger: off
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/signal87-core run build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/signal87-core run build
     staticPublishPath: artifacts/signal87-core/dist/public
-    envVars:
-      - key: BASE_PATH
-        value: /
-      - key: VITE_API_BASE_URL
-        sync: false
-      - key: VITE_CLERK_PUBLISHABLE_KEY
-        sync: false
     routes:
       - type: rewrite
         source: /*
