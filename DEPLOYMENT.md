@@ -58,6 +58,14 @@ Set `VITE_API_BASE_URL` only as an **optional escape hatch** for:
 
 **Do not set `VITE_API_BASE_URL` in normal same-origin production.**
 
+### CORS policy
+
+| Environment | CORS behavior |
+| --- | --- |
+| **Production** (same-origin) | **Disabled** — no `Access-Control-Allow-Origin` headers |
+| **Production** (split-origin) | Allowlist from `CORS_ALLOWED_ORIGINS` only — never `origin: true` |
+| **Development** | Local origins only (`localhost` / `127.0.0.1` on ports 5173, 8080, 3000) unless overridden by `CORS_DEV_ORIGINS` |
+
 ### External / split-origin API mode (optional)
 
 Only when the SPA and API run on **different origins**:

@@ -23,13 +23,26 @@ if (!webBaseUrl) {
   process.exit(2);
 }
 
+const sameOrigin = webBaseUrl === apiBaseUrl;
+
 const checks = [
   { service: 'web', baseUrl: webBaseUrl, path: '/', expected: 200 },
   { service: 'web', baseUrl: webBaseUrl, path: '/sign-in', expected: 200 },
-  { service: 'api', baseUrl: apiBaseUrl, path: '/api/healthz', expected: 200, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/health', expected: 200, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/healthz', expected: 200, json: true },
+  {
+    service: 'api',
+    baseUrl: apiBaseUrl,
+    path: '/api/healthz',
+    expected: 200,
+    json: true,
+    sameOriginNoCors: sameOrigin,
+  },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/health', expected: [200, 503], json: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/runtime-check', expected: 200, json: true, runtimeHealthy: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents', expected: 401, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/notes', expected: 401, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/trash', expected: 401, json: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents/999999/original', expected: 401, json: true },
 ];
 
@@ -38,9 +51,8 @@ let failures = 0;
 for (const check of checks) {
   const url = `${check.baseUrl}${check.path}`;
   try {
-    const response = await fetch(url, {
-      headers: { accept: check.json ? 'application/json' : 'text/html,application/xhtml+xml' },
-    });
+    const headers = { accept: check.json ? 'application/json' : 'text/html,application/xhtml+xml' };
+    const response = await fetch(url, { headers });
 
     const expectedStatuses = Array.isArray(check.expected) ? check.expected : [check.expected];
     const statusOk = expectedStatuses.includes(response.status);
@@ -73,7 +85,16 @@ for (const check of checks) {
       }
     }
 
-    if (statusOk && bodyOk && runtimeOk) {
+    let corsOk = true;
+    if (check.sameOriginNoCors) {
+      const acao = response.headers.get('access-control-allow-origin');
+      if (acao) {
+        corsOk = false;
+        console.error(`Same-origin smoke expected no Access-Control-Allow-Origin header; got ${acao}`);
+      }
+    }
+
+    if (statusOk && bodyOk && runtimeOk && corsOk) {
       console.log(`PASS ${check.service} ${check.path} -> ${response.status}`);
     } else {
       failures += 1;
