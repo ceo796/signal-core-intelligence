@@ -16,6 +16,8 @@ services:
     startCommand: node --enable-source-maps ./production-server.mjs
     healthCheckPath: /api/healthz
     envVars:
+      - key: AI_PRIMARY_REASONING_PROVIDER
+        value: xai
       - key: STORAGE_PROVIDER
         value: local
       - key: FILE_STORAGE_DIR

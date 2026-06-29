@@ -42,13 +42,14 @@ const REASONING_TASKS = new Set<AiTaskType>([
   "document_summary",
   "document_compare",
   "diligence_memo",
+  "fact_extraction",
   "executive_brief",
 ]);
 
 const LOCAL_TASKS = new Set<AiTaskType>(["document_extraction", "table_extraction"]);
 
-/** Default runtime chain: Gemini → Grok (OpenAI excluded unless ALLOW_OPENAI=true). */
-const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["xai"];
+/** Default runtime chain: Grok → Gemini (OpenAI excluded unless ALLOW_OPENAI=true). */
+const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["google"];
 
 export interface AiRuntimeConfig {
   routingEnabled: boolean;
@@ -69,24 +70,24 @@ export function loadAiConfig(): AiRuntimeConfig {
   return {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
     primaryReasoningProvider: effectiveProviderId(
-      parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
-      "google",
-    ),
-    primaryExtractionProvider: effectiveProviderId(
-      parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
-      "google",
-    ),
-    finalFallbackProvider: effectiveProviderId(
-      parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
+      parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "xai"),
       "xai",
     ),
-    evidenceCompilerProvider: effectiveProviderId(
-      parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
+    primaryExtractionProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "xai"),
+      "xai",
+    ),
+    finalFallbackProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "google"),
       "google",
     ),
+    evidenceCompilerProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "xai"),
+      "xai",
+    ),
     qualityReviewProvider: effectiveProviderId(
-      parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "google"),
-      "google",
+      parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
+      "xai",
     ),
     embeddingProvider: effectiveProviderId(rawEmbeddingProvider, "google"),
     fallbackProviderOrder: filterOpenAiFromChain(

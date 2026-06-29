@@ -8,6 +8,8 @@ export function taskTypeForAgentMode(mode: string): AiTaskType {
       return "document_compare";
     case "diligence":
       return "diligence_memo";
+    case "extract":
+      return "fact_extraction";
     default:
       return "document_chat";
   }

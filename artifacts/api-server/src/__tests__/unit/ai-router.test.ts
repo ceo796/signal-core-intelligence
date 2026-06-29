@@ -46,9 +46,11 @@ describe("aiRouter", () => {
     delete process.env.AI_PROVIDER_TIMEOUT_MS;
   });
 
-  it("uses Gemini first when configured", async () => {
-    process.env.GEMINI_API_KEY = "test-gemini-key";
-    mockFetch.mockResolvedValue(geminiResponse("gemini answer"));
+  it("uses Grok first when configured", async () => {
+    process.env.XAI_API_KEY = "xai-key";
+    mockGrokCreate.mockResolvedValue({
+      choices: [{ message: { content: "grok answer" } }],
+    });
 
     const { aiRouter } = await import("../../lib/ai/router.js");
     const result = await aiRouter.runTask({
@@ -58,25 +60,19 @@ describe("aiRouter", () => {
 
     expect(result).toMatchObject({
       taskType: "document_chat",
-      answer: "gemini answer",
-      providerUsed: "google",
+      answer: "grok answer",
+      providerUsed: "xai",
       fallbackUsed: false,
     });
-    expect(mockGrokCreate).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
     expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
-  it("falls back to Grok when Gemini fails", async () => {
+  it("falls back to Gemini when Grok fails", async () => {
     process.env.GEMINI_API_KEY = "test-gemini-key";
     process.env.XAI_API_KEY = "xai-key";
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: async () => "gemini timeout",
-    });
-    mockGrokCreate.mockResolvedValue({
-      choices: [{ message: { content: "grok answer" } }],
-    });
+    mockGrokCreate.mockRejectedValue(new Error("grok timeout"));
+    mockFetch.mockResolvedValue(geminiResponse("gemini answer"));
 
     const { aiRouter } = await import("../../lib/ai/router.js");
     const result = await aiRouter.runTask({
@@ -84,22 +80,22 @@ describe("aiRouter", () => {
       userPrompt: "compare",
     });
 
-    expect(result.providerUsed).toBe("xai");
+    expect(result.providerUsed).toBe("google");
     expect(result.fallbackUsed).toBe(true);
-    expect(result.answer).toBe("grok answer");
+    expect(result.answer).toBe("gemini answer");
     expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
-  it("throws after Gemini and Grok fail without calling OpenAI", async () => {
+  it("throws after Grok and Gemini fail without calling OpenAI", async () => {
     process.env.GEMINI_API_KEY = "test-gemini-key";
     process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
+    mockGrokCreate.mockRejectedValue(new Error("grok down"));
     mockFetch.mockResolvedValue({
       ok: false,
       status: 500,
       text: async () => "gemini down",
     });
-    mockGrokCreate.mockRejectedValue(new Error("grok down"));
 
     const { aiRouter } = await import("../../lib/ai/router.js");
     await expect(
@@ -111,26 +107,34 @@ describe("aiRouter", () => {
     expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
-  it("works when xai is primary", async () => {
-    process.env.AI_PRIMARY_REASONING_PROVIDER = "xai";
+  it("passes Grok task agents and formatting policy when Grok answers", async () => {
     process.env.XAI_API_KEY = "xai-key";
     mockGrokCreate.mockResolvedValue({
-      choices: [{ message: { content: "grok only" } }],
+      choices: [{ message: { content: "formatted grok answer" } }],
     });
 
     const { aiRouter } = await import("../../lib/ai/router.js");
-    const result = await aiRouter.runTask({
-      taskType: "document_chat",
-      userPrompt: "hello",
+    await aiRouter.runTask({
+      taskType: "diligence_memo",
+      messages: [
+        { role: "system", content: "Base diligence prompt" },
+        { role: "user", content: "Review risks" },
+      ],
     });
 
-    expect(result.providerUsed).toBe("xai");
-    expect(mockFetch).not.toHaveBeenCalled();
+    const grokCall = mockGrokCreate.mock.calls[0]?.[0];
+    const systemMessage = grokCall?.messages?.find((m: { role: string }) => m.role === "system");
+    expect(systemMessage?.content).toContain("Base diligence prompt");
+    expect(systemMessage?.content).toContain("Grok Diligence Agent");
+    expect(systemMessage?.content).toContain("DOCUMENT READER CAPABILITIES");
+    expect(systemMessage?.content).toContain("Sources");
   });
 
-  it("parses structured output into structuredData via Gemini", async () => {
-    process.env.GEMINI_API_KEY = "test-gemini-key";
-    mockFetch.mockResolvedValue(geminiResponse("{\"title\":\"Brief\",\"sections\":[]}"));
+  it("parses structured output into structuredData via Grok", async () => {
+    process.env.XAI_API_KEY = "xai-key";
+    mockGrokCreate.mockResolvedValue({
+      choices: [{ message: { content: "{\"title\":\"Brief\",\"sections\":[]}" } }],
+    });
 
     const { aiRouter } = await import("../../lib/ai/router.js");
     const result = await aiRouter.generateStructuredOutput({
@@ -139,5 +143,6 @@ describe("aiRouter", () => {
     });
 
     expect(result.structuredData).toEqual({ title: "Brief", sections: [] });
+    expect(result.providerUsed).toBe("xai");
   });
 });

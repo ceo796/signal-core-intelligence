@@ -25,7 +25,7 @@ if (!webBaseUrl) {
 
 const sameOrigin = webBaseUrl === apiBaseUrl;
 
-const EXPECTED_PROVIDER_CHAIN = ['google', 'xai'];
+const EXPECTED_PROVIDER_CHAIN = ['xai', 'google'];
 
 function validateAiRuntime(body) {
   const errors = [];
@@ -111,7 +111,7 @@ for (const check of checks) {
               console.error(`AI runtime-check: ${message}`);
             }
           } else {
-            console.log('PASS ai runtime-check openai disabled; google→xai chains; local embeddings');
+            console.log('PASS ai runtime-check openai disabled; xai→google chains; local embeddings');
           }
         }
         if (check.runtimeHealthy) {
