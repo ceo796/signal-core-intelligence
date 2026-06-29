@@ -1,27 +1,21 @@
+# Signal87 — single-origin production deployment.
+# Serves the React SPA and /api/* from one Node process via production-server.mjs.
+# See DEPLOYMENT.md for required environment variables and architecture notes.
 services:
   - type: web
-    name: signal87-api
+    name: signal87
     runtime: node
     plan: starter
     region: oregon
     rootDir: .
     autoDeployTrigger: off
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
-    startCommand: pnpm --filter @workspace/api-server run start
+    buildCommand: >-
+      pnpm install --frozen-lockfile
+      && pnpm --filter @workspace/api-server run build
+      && pnpm --filter @workspace/signal87-core run build
+    startCommand: node --enable-source-maps production-server.mjs
     healthCheckPath: /api/healthz
     disk:
       name: signal87-uploads
       mountPath: /var/data
       sizeGB: 10
-
-  - type: web
-    name: signal87-web
-    runtime: static
-    rootDir: .
-    autoDeployTrigger: off
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/signal87-core run build
-    staticPublishPath: artifacts/signal87-core/dist/public
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html

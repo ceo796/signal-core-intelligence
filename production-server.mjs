@@ -75,7 +75,14 @@ if (fs.existsSync(indexHtmlPath)) {
   });
 }
 
+if (!fs.existsSync(indexHtmlPath)) {
+  console.warn(
+    `Signal87: frontend build not found at ${indexHtmlPath}. ` +
+      "Run pnpm build:production before starting production-server.mjs.",
+  );
+}
+
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
-  console.log(`Signal87 listening on port ${port}`);
+  console.log(`Signal87 unified server listening on port ${port} (API + static)`);
 });

@@ -47,6 +47,7 @@ function isPublicRoute(path: string): boolean {
   return publicRoutes.some((route) => path === route || path.startsWith(route + "/"));
 }
 
+/** Same-origin production leaves VITE_API_BASE_URL blank so /api/* hits the current host. */
 function ApiBaseUrlBridge() {
   useEffect(() => {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();

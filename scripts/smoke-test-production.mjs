@@ -7,6 +7,7 @@ const webBaseUrl = (
   ''
 ).replace(/\/+$/, '');
 
+// Same-origin production: API checks use the web base URL when no separate API URL is given.
 const apiBaseUrl = (
   process.argv[3] ||
   process.env.SMOKE_API_BASE_URL ||
@@ -14,9 +15,11 @@ const apiBaseUrl = (
   ''
 ).replace(/\/+$/, '');
 
-if (!webBaseUrl || !apiBaseUrl) {
-  console.error('Usage: pnpm smoke:production https://signal87.ai [https://signal87-api.onrender.com]');
-  console.error('   or: SMOKE_WEB_BASE_URL=https://signal87.ai SMOKE_API_BASE_URL=https://signal87-api.onrender.com pnpm smoke:production');
+if (!webBaseUrl) {
+  console.error('Usage: pnpm smoke:production <production-base-url> [api-base-url]');
+  console.error('   Same-origin (recommended): pnpm smoke:production https://your-domain.example');
+  console.error('   Split-origin (legacy):     pnpm smoke:production https://app.example https://api.example');
+  console.error('   Env: SMOKE_WEB_BASE_URL=... [SMOKE_API_BASE_URL=...] pnpm smoke:production');
   process.exit(2);
 }
 
@@ -24,6 +27,7 @@ const checks = [
   { service: 'web', baseUrl: webBaseUrl, path: '/', expected: 200 },
   { service: 'web', baseUrl: webBaseUrl, path: '/sign-in', expected: 200 },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/healthz', expected: 200, json: true },
+  { service: 'api', baseUrl: apiBaseUrl, path: '/api/health', expected: [200, 503], json: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/runtime-check', expected: 200, json: true, runtimeHealthy: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents', expected: 401, json: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents/999999/original', expected: 401, json: true },
@@ -38,7 +42,8 @@ for (const check of checks) {
       headers: { accept: check.json ? 'application/json' : 'text/html,application/xhtml+xml' },
     });
 
-    const statusOk = response.status === check.expected;
+    const expectedStatuses = Array.isArray(check.expected) ? check.expected : [check.expected];
+    const statusOk = expectedStatuses.includes(response.status);
     let bodyOk = true;
     let runtimeOk = true;
     if (check.json) {
@@ -69,7 +74,7 @@ for (const check of checks) {
     } else {
       failures += 1;
       console.error(
-        `FAIL ${check.service} ${check.path} -> ${response.status}; expected ${check.expected}` +
+        `FAIL ${check.service} ${check.path} -> ${response.status}; expected ${expectedStatuses.join(' or ')}` +
           (check.json && !bodyOk ? '; expected JSON response' : '') +
           (check.runtimeHealthy && !runtimeOk ? '; expected runtime status ok' : ''),
       );
@@ -81,8 +86,8 @@ for (const check of checks) {
 }
 
 if (failures > 0) {
-  console.error(`Smoke test failed with ${failures} failure(s).`);
+  console.error(`\n${failures} production smoke check(s) failed.`);
   process.exit(1);
 }
 
-console.log(`Smoke test passed for web=${webBaseUrl} api=${apiBaseUrl}.`);
+console.log('\nAll production smoke checks passed.');
