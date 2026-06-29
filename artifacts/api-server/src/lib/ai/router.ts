@@ -1,9 +1,9 @@
 import { providerSupportsTask } from "./capabilities";
 import { loadAiConfig, resolveTaskProviderChain } from "./config";
-import { AiRouterError, classifyProviderError, isFallbackEligible } from "./errors";
+import { AiRouterError, classifyProviderError } from "./errors";
 import { buildMessages, buildNormalizedResponse } from "./normalize";
 import { getProvider } from "./providers";
-import type { AiRouterLogContext, AiTaskRequest, AiTaskResponse } from "./types";
+import type { AiRouterLogContext, AiTaskRequest, AiTaskResponse, ProviderGenerateTextResult } from "./types";
 
 export type AiRouterLogger = (context: AiRouterLogContext) => void;
 
@@ -22,6 +22,19 @@ function defaultLogger(context: AiRouterLogContext): void {
   } else {
     console.info("ai_router_task_completed", payload);
   }
+}
+
+function providerTimeoutMs(): number {
+  const parsed = Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "18000");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 18_000;
+}
+
+function withProviderTimeout<T>(promise: Promise<T>, ms: number, providerId: string): Promise<T> {
+  let timeout: NodeJS.Timeout;
+  const timer = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(`${providerId} provider timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timer]).finally(() => clearTimeout(timeout!));
 }
 
 async function invokeProviderTask(
@@ -48,6 +61,8 @@ async function invokeProviderTask(
   }
 
   const errors: string[] = [];
+  const timeoutMs = providerTimeoutMs();
+
   for (let i = 0; i < chain.length; i++) {
     const providerId = chain[i];
     const provider = getProvider(providerId);
@@ -57,11 +72,15 @@ async function invokeProviderTask(
     }
 
     try {
-      const result = await provider.generateText({
-        messages,
-        maxTokens: request.maxTokens ?? config.maxTokens,
-        responseFormat: request.structuredOutput ? "json_object" : "text",
-      });
+      const result = await withProviderTimeout<ProviderGenerateTextResult>(
+        provider.generateText({
+          messages,
+          maxTokens: request.maxTokens ?? config.maxTokens,
+          responseFormat: request.structuredOutput ? "json_object" : "text",
+        }),
+        timeoutMs,
+        providerId,
+      );
       return {
         content: result.content,
         providerUsed: provider.id,
@@ -73,9 +92,15 @@ async function invokeProviderTask(
       const classified = classifyProviderError(err);
       errors.push(`${providerId}: ${classified.message}`);
       const hasAnotherProvider = chain.slice(i + 1).some((nextId) => getProvider(nextId)?.isAvailable());
-      if (!isFallbackEligible(err) || !hasAnotherProvider) {
-        throw classified;
+
+      // Do not drop to the local extractive fallback while another configured LLM is available.
+      // Provider auth, quota, timeout, model, network, and permission failures should all advance
+      // to the next provider in the chain: Gemini -> OpenAI -> Grok. Local extraction is last resort.
+      if (hasAnotherProvider && classified.errorClass !== "validation" && classified.errorClass !== "unsupported") {
+        continue;
       }
+
+      throw new AiRouterError(errors.join("; "), classified.errorClass, false);
     }
   }
 
