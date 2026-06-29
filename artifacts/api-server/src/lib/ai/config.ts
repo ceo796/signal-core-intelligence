@@ -32,6 +32,8 @@ const REASONING_TASKS = new Set<AiTaskType>([
 
 const LOCAL_TASKS = new Set<AiTaskType>(["document_extraction", "table_extraction"]);
 
+const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["openai", "xai"];
+
 export interface AiRuntimeConfig {
   routingEnabled: boolean;
   primaryReasoningProvider: ProviderId;
@@ -41,11 +43,13 @@ export interface AiRuntimeConfig {
   qualityReviewProvider: ProviderId;
   embeddingProvider: ProviderId;
   fallbackProviderOrder: ProviderId[];
+  providerTimeoutMs: number;
   models: Record<ProviderId, { chat: string; embedding?: string }>;
   maxTokens: number;
 }
 
 export function loadAiConfig(): AiRuntimeConfig {
+  const parsedFallbackOrder = parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER);
   return {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
     primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
@@ -54,7 +58,9 @@ export function loadAiConfig(): AiRuntimeConfig {
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
     qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
     embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
-    fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER),
+    fallbackProviderOrder:
+      parsedFallbackOrder.length > 0 ? parsedFallbackOrder : DEFAULT_FALLBACK_ORDER,
+    providerTimeoutMs: Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000"),
     models: {
       openai: {
         chat: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",

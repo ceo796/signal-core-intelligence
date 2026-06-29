@@ -50,13 +50,20 @@ export function geminiServiceAccountConfigured(): boolean {
 }
 
 export function getServiceAccountProjectId(): string | null {
+  const fromEnv = process.env.GEMINI_PROJECT_ID?.trim();
+  if (fromEnv) return fromEnv;
+
   const credentials = readServiceAccountCredentials();
   const projectId = credentials?.project_id;
   return typeof projectId === "string" && projectId.trim() ? projectId.trim() : null;
 }
 
 export function getVertexLocation(): string {
-  return process.env.GEMINI_VERTEX_LOCATION?.trim() || "us-central1";
+  return (
+    process.env.GEMINI_LOCATION?.trim() ||
+    process.env.GEMINI_VERTEX_LOCATION?.trim() ||
+    "us-central1"
+  );
 }
 
 export function getVertexOpenAiBaseUrl(projectId: string): string {

@@ -1,9 +1,15 @@
 import { providerSupportsTask } from "./capabilities";
 import { loadAiConfig, resolveTaskProviderChain } from "./config";
-import { AiRouterError, classifyProviderError, isFallbackEligible } from "./errors";
+import { AiRouterError, classifyProviderError } from "./errors";
 import { buildMessages, buildNormalizedResponse } from "./normalize";
 import { getProvider } from "./providers";
-import type { AiRouterLogContext, AiTaskRequest, AiTaskResponse } from "./types";
+import type {
+  AiRouterLogContext,
+  AiTaskRequest,
+  AiTaskResponse,
+  ProviderAttemptLog,
+  ProviderId,
+} from "./types";
 
 export type AiRouterLogger = (context: AiRouterLogContext) => void;
 
@@ -24,6 +30,26 @@ function defaultLogger(context: AiRouterLogContext): void {
   }
 }
 
+function logProviderAttempt(attempt: ProviderAttemptLog, onAttempt?: (attempt: ProviderAttemptLog) => void): void {
+  console.info("ai_router_provider_attempt", attempt);
+  onAttempt?.(attempt);
+}
+
+function withProviderTimeout<T>(promise: Promise<T>, ms: number, providerId: string): Promise<T> {
+  let timeout: NodeJS.Timeout;
+  const timer = new Promise<never>((_, reject) => {
+    timeout = setTimeout(
+      () => reject(new Error(`${providerId} timed out after ${ms}ms`)),
+      ms,
+    );
+  });
+  return Promise.race([promise, timer]).finally(() => clearTimeout(timeout!));
+}
+
+function hasUsableText(content: string | undefined | null): boolean {
+  return Boolean(content?.trim());
+}
+
 async function invokeProviderTask(
   request: AiTaskRequest,
 ): Promise<{
@@ -32,11 +58,13 @@ async function invokeProviderTask(
   modelUsed: string;
   tokenUsage: AiTaskResponse["tokenUsage"];
   latencyMs: number;
+  primary: ProviderId | undefined;
 }> {
   const config = loadAiConfig();
   const chain = resolveTaskProviderChain(request.taskType, config).filter((providerId) =>
     providerSupportsTask(providerId, request.taskType),
   );
+  const primary = chain[0];
 
   if (chain.length === 0) {
     throw new AiRouterError(`Task ${request.taskType} does not use an LLM provider`, "unsupported", false);
@@ -48,38 +76,84 @@ async function invokeProviderTask(
   }
 
   const errors: string[] = [];
+  const started = Date.now();
+
   for (let i = 0; i < chain.length; i++) {
     const providerId = chain[i];
+    const fallbackTarget = chain[i + 1];
     const provider = getProvider(providerId);
+
     if (!provider?.isAvailable()) {
-      errors.push(`${providerId}: unavailable`);
+      const message = `${providerId}: unavailable`;
+      errors.push(message);
+      logProviderAttempt(
+        { provider: providerId, success: false, error: message, fallbackTarget },
+        request.onProviderAttempt,
+      );
       continue;
     }
 
     try {
-      const result = await provider.generateText({
-        messages,
-        maxTokens: request.maxTokens ?? config.maxTokens,
-        responseFormat: request.structuredOutput ? "json_object" : "text",
-      });
+      const result = await withProviderTimeout(
+        provider.generateText({
+          messages,
+          maxTokens: request.maxTokens ?? config.maxTokens,
+          responseFormat: request.structuredOutput ? "json_object" : "text",
+        }),
+        config.providerTimeoutMs,
+        providerId,
+      );
+
+      if (!hasUsableText(result.content)) {
+        const message = `${providerId}: empty response`;
+        errors.push(message);
+        logProviderAttempt(
+          {
+            provider: providerId,
+            model: result.model,
+            success: false,
+            error: message,
+            fallbackTarget,
+          },
+          request.onProviderAttempt,
+        );
+        continue;
+      }
+
+      logProviderAttempt(
+        { provider: providerId, model: result.model, success: true },
+        request.onProviderAttempt,
+      );
+
       return {
         content: result.content,
         providerUsed: provider.id,
         modelUsed: result.model,
         tokenUsage: result.tokenUsage,
-        latencyMs: result.latencyMs,
+        latencyMs: Date.now() - started,
+        primary,
       };
     } catch (err) {
       const classified = classifyProviderError(err);
-      errors.push(`${providerId}: ${classified.message}`);
-      const hasAnotherProvider = chain.slice(i + 1).some((nextId) => getProvider(nextId)?.isAvailable());
-      if (!isFallbackEligible(err) || !hasAnotherProvider) {
-        throw classified;
-      }
+      const message = `${providerId}: ${classified.message}`;
+      errors.push(message);
+      logProviderAttempt(
+        {
+          provider: providerId,
+          success: false,
+          error: classified.message,
+          fallbackTarget,
+        },
+        request.onProviderAttempt,
+      );
     }
   }
 
-  throw new AiRouterError(errors.join("; ") || "No providers available", "unavailable", false);
+  throw new AiRouterError(
+    errors.join("; ") || "No LLM providers available",
+    "unavailable",
+    false,
+  );
 }
 
 export async function runTask(
@@ -87,20 +161,18 @@ export async function runTask(
   logger: AiRouterLogger = defaultLogger,
 ): Promise<AiTaskResponse> {
   const started = Date.now();
-  const config = loadAiConfig();
-  const primary = resolveTaskProviderChain(request.taskType, config)[0];
 
   try {
     const result = await invokeProviderTask(request);
     const response = buildNormalizedResponse({
       request,
-      answer: result.content || null,
+      answer: result.content,
       providerUsed: result.providerUsed,
       modelUsed: result.modelUsed,
-      fallbackUsed: primary !== undefined && result.providerUsed !== primary,
+      fallbackUsed: result.primary !== undefined && result.providerUsed !== result.primary,
       fallbackReason:
-        primary !== undefined && result.providerUsed !== primary
-          ? `Primary provider ${primary} failed; used ${result.providerUsed}`
+        result.primary !== undefined && result.providerUsed !== result.primary
+          ? `Primary provider ${result.primary} failed; used ${result.providerUsed}`
           : null,
       latencyMs: Date.now() - started,
       tokenUsage: result.tokenUsage,
@@ -120,7 +192,7 @@ export async function runTask(
     const classified = err instanceof AiRouterError ? err : classifyProviderError(err);
     logger({
       taskType: request.taskType,
-      providerUsed: primary ?? "local",
+      providerUsed: "local",
       modelUsed: "none",
       fallbackUsed: true,
       latencyMs: Date.now() - started,

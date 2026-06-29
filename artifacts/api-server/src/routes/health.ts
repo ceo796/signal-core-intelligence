@@ -1,8 +1,14 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
-import { loadAiConfig } from "../lib/ai";
-import { geminiAuthMode, geminiServiceAccountConfigured, listAvailableProviders } from "../lib/ai/providers";
+import { loadAiConfig, resolveTaskProviderChain } from "../lib/ai";
+import {
+  geminiAuthMode,
+  geminiServiceAccountConfigured,
+  getServiceAccountProjectId,
+  getVertexLocation,
+  listAvailableProviders,
+} from "../lib/ai/providers";
 import { getEmbeddingModelName } from "../lib/ai/embedding";
 import { getRuntimeStorageStatus } from "../lib/file-store";
 
@@ -66,7 +72,10 @@ router.get("/runtime-check", async (_req, res) => {
       routingEnabled: aiConfig.routingEnabled,
       primaryReasoningProvider: aiConfig.primaryReasoningProvider,
       primaryExtractionProvider: aiConfig.primaryExtractionProvider,
+      fallbackProviderOrder: aiConfig.fallbackProviderOrder,
       finalFallbackProvider: aiConfig.finalFallbackProvider,
+      reasoningProviderChain: resolveTaskProviderChain("document_chat", aiConfig),
+      providerTimeoutMs: aiConfig.providerTimeoutMs,
       evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
       qualityReviewProvider: aiConfig.qualityReviewProvider,
       embeddingProvider: aiConfig.embeddingProvider,
@@ -74,6 +83,8 @@ router.get("/runtime-check", async (_req, res) => {
       models: aiConfig.models,
       embeddingModel: getEmbeddingModelName(),
       geminiAuthMode: geminiAuthMode(),
+      geminiProjectId: getServiceAccountProjectId(),
+      geminiLocation: getVertexLocation(),
       credentials: {
         openai: process.env.OPENAI_API_KEY ? "set" : "missing",
         xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",

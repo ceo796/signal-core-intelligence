@@ -9,7 +9,7 @@ import { getCurrentUserId } from "../../lib/ownership";
 
 const ROUTE = "POST /api/agent/hybrid";
 const RETRIEVAL_TIMEOUT_MS = 10_000;
-const LLM_TIMEOUT_MS = 60_000;
+const LLM_TIMEOUT_MS = 90_000;
 const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
 const MODE_PROMPTS: Record<string, string> = {
@@ -84,7 +84,7 @@ function buildFallbackAnswer(query: string, citations: Array<{ citationNumber: n
 
   const intro = query.toLowerCase().includes("recent") || query.toLowerCase().includes("upload")
     ? "Here are the most recent indexed document uploads I could review:"
-    : "I found relevant document excerpts, but the GPT response took too long. Here is a grounded extractive answer:";
+    : "I found relevant document excerpts, but all configured LLM providers failed. Here is a grounded extractive answer:";
 
   const bullets = citations.slice(0, 8).map((c) => {
     const excerpt = c.excerpt.replace(/\s+/g, " ").trim();
@@ -271,6 +271,7 @@ ${sourceBlocks}`;
             { role: "system", content: systemPrompt },
             { role: "user", content: query },
           ],
+          onProviderAttempt: (attempt) => req.log.info(attempt, "AI provider attempt"),
         },
         (ctx) => req.log.info(ctx, "AI task completed"),
       ),
@@ -278,8 +279,10 @@ ${sourceBlocks}`;
       "Hybrid AI task",
     );
     answer = aiResult.answer || "No response generated.";
-    llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
-    llmModel = aiResult.modelUsed;
+    llmProvider = aiResult.providerUsed;
+    llmModel = aiResult.modelUsed.startsWith("google/")
+      ? aiResult.modelUsed.slice("google/".length)
+      : aiResult.modelUsed;
     if (aiResult.fallbackUsed) fallbackUsed = true;
   } catch (err) {
     req.log.error({ err }, "Hybrid agent AI task failed");

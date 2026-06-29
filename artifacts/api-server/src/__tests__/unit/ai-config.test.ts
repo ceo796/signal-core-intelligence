@@ -39,4 +39,14 @@ describe("ai config", () => {
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
     expect(chain).toEqual(["google", "openai", "xai"]);
   });
+
+  it("defaults fallback provider order to openai then xai", () => {
+    const config = loadAiConfig();
+    expect(config.fallbackProviderOrder).toEqual(["openai", "xai"]);
+  });
+
+  it("loads provider timeout from environment", () => {
+    process.env.AI_PROVIDER_TIMEOUT_MS = "15000";
+    expect(loadAiConfig().providerTimeoutMs).toBe(15000);
+  });
 });

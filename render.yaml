@@ -28,16 +28,22 @@ services:
         sync: false
       - key: GEMINI_SERVICE_ACCOUNT_JSON
         sync: false
+      - key: GEMINI_LOCATION
+        value: us-central1
       - key: GEMINI_VERTEX_LOCATION
         value: us-central1
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
       - key: AI_PROVIDER_ROUTING_ENABLED
         value: "true"
+      - key: AI_PROVIDER_TIMEOUT_MS
+        value: "12000"
       - key: AI_PRIMARY_REASONING_PROVIDER
         value: google
       - key: AI_FINAL_FALLBACK_PROVIDER
         value: xai
       - key: AI_FALLBACK_PROVIDER_ORDER
-        value: openai
+        value: openai,xai
       - key: AI_EMBEDDING_PROVIDER
         value: openai
       - key: CLERK_SECRET_KEY
