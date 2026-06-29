@@ -11,25 +11,29 @@ vi.mock("@clerk/shared/keys", () => ({
   publishableKeyFromHost: () => "pk_test_placeholder",
 }));
 
-vi.mock("../../lib/file-store.js", () => ({
-  isConfigured: vi.fn(() => true),
-  getStorageProviderName: vi.fn(() => "local"),
-  getMimeType: vi.fn((type: string) => {
-    const m: Record<string, string> = {
-      pdf: "application/pdf",
-      txt: "text/plain",
-      csv: "text/csv",
-      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      xls: "application/vnd.ms-excel",
-    };
-    return m[type.toLowerCase()] ?? "text/plain";
-  }),
-  uploadFile: vi.fn(async () => `/test-bucket/documents/${randomUUID()}`),
-  downloadFile: vi.fn(async (_key: string) => Buffer.from("test file content")),
-  deleteFile: vi.fn(async () => undefined),
-  logStorageStartupStatus: vi.fn(),
-}));
+vi.mock("../../lib/file-store.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/file-store.js")>();
+  return {
+    ...actual,
+    isConfigured: vi.fn(() => true),
+    getStorageProviderName: vi.fn(() => "local"),
+    getMimeType: vi.fn((type: string) => {
+      const m: Record<string, string> = {
+        pdf: "application/pdf",
+        txt: "text/plain",
+        csv: "text/csv",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        xls: "application/vnd.ms-excel",
+      };
+      return m[type.toLowerCase()] ?? "text/plain";
+    }),
+    uploadFile: vi.fn(async () => `local://documents/${randomUUID()}.txt`),
+    downloadFile: vi.fn(async (_key: string) => Buffer.from("test file content")),
+    deleteFile: vi.fn(async () => undefined),
+    logStorageStartupStatus: vi.fn(),
+  };
+});
 
 import app from "../../app.js";
 import { db, documentsTable, chunksTable } from "@workspace/db";
@@ -248,6 +252,28 @@ describe("Document CRUD integration (auth bypassed, file-store mocked)", () => {
 
   // ─── Re-index ─────────────────────────────────────────────────────────────
 
+  describe("GET /api/documents/:id/original", () => {
+    it("returns 404 when the stored file is missing from disk", async () => {
+      const { downloadFile, StorageFileNotFoundError } = await import("../../lib/file-store.js");
+      vi.mocked(downloadFile).mockRejectedValueOnce(
+        new StorageFileNotFoundError("local://documents/missing.pdf"),
+      );
+
+      const upload = await request(app)
+        .post("/api/documents/upload")
+        .attach("file", txtBuffer("stored but missing on disk"), {
+          filename: "missing-original.txt",
+          contentType: "text/plain",
+        });
+      createdDocIds.push(upload.body.id);
+      const docId = upload.body.id as number;
+
+      const res = await request(app).get(`/api/documents/${docId}/original`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toMatch(/missing from storage/i);
+    });
+  });
+
   describe("POST /api/documents/:id/reindex", () => {
     it("re-indexes a document and preserves ownership", async () => {
       const { downloadFile } = await import("../../lib/file-store.js");
@@ -278,6 +304,26 @@ describe("Document CRUD integration (auth bypassed, file-store mocked)", () => {
     it("returns 404 when re-indexing a non-existent document", async () => {
       const res = await request(app).post("/api/documents/999999999/reindex");
       expect(res.status).toBe(404);
+    });
+
+    it("returns 404 when the stored file is missing from disk", async () => {
+      const { downloadFile, StorageFileNotFoundError } = await import("../../lib/file-store.js");
+      vi.mocked(downloadFile).mockRejectedValueOnce(
+        new StorageFileNotFoundError("local://documents/missing.pdf"),
+      );
+
+      const upload = await request(app)
+        .post("/api/documents/upload")
+        .attach("file", txtBuffer("reindex missing original"), {
+          filename: "reindex-missing.txt",
+          contentType: "text/plain",
+        });
+      createdDocIds.push(upload.body.id);
+      const docId = upload.body.id as number;
+
+      const res = await request(app).post(`/api/documents/${docId}/reindex`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toMatch(/missing from storage/i);
     });
   });
 });

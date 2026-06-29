@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from "fs/promises";
+import os from "os";
+import path from "path";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 describe("file-store (pure functions)", () => {
@@ -128,6 +131,51 @@ describe("file-store (pure functions)", () => {
       expect(getMimeType("DOCX")).toBe(
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       );
+    });
+  });
+
+  describe("local upload/download", () => {
+    const origDir = process.env.FILE_STORAGE_DIR;
+    let tempDir = "";
+
+    beforeEach(async () => {
+      tempDir = await mkdtemp(path.join(os.tmpdir(), "signal87-file-store-"));
+      process.env.FILE_STORAGE_DIR = tempDir;
+    });
+
+    afterEach(async () => {
+      restoreEnv("FILE_STORAGE_DIR", origDir);
+      if (tempDir) {
+        await rm(tempDir, { recursive: true, force: true });
+        tempDir = "";
+      }
+    });
+
+    it("round-trips a stored file", async () => {
+      const { uploadFile, downloadFile } = await import("../../lib/file-store.js");
+      const payload = Buffer.from("hello durable storage");
+      const storageKey = await uploadFile(payload, "sample.txt", "text/plain");
+      const downloaded = await downloadFile(storageKey);
+      expect(downloaded.equals(payload)).toBe(true);
+    });
+
+    it("throws StorageFileNotFoundError when the file is missing on disk", async () => {
+      const {
+        StorageFileNotFoundError,
+        isStorageFileNotFoundError,
+        downloadFile,
+      } = await import("../../lib/file-store.js");
+      const missingKey = "local://documents/does-not-exist.pdf";
+
+      await expect(downloadFile(missingKey)).rejects.toBeInstanceOf(StorageFileNotFoundError);
+      try {
+        await downloadFile(missingKey);
+      } catch (err) {
+        expect(isStorageFileNotFoundError(err)).toBe(true);
+        if (isStorageFileNotFoundError(err)) {
+          expect(err.storageKey).toBe(missingKey);
+        }
+      }
     });
   });
 });

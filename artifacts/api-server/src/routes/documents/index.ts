@@ -41,6 +41,22 @@ function docToResponse(
   };
 }
 
+const STORAGE_FILE_MISSING_MESSAGE =
+  "Original file is missing from storage — re-upload the document or attach the file again.";
+
+function respondStorageFileMissing(
+  req: Request,
+  res: Response,
+  context: { documentId: number; storageKey: string },
+  logMessage: string,
+): void {
+  req.log.warn(
+    { documentId: context.documentId, storageKey: context.storageKey },
+    logMessage,
+  );
+  res.status(404).json({ error: STORAGE_FILE_MISSING_MESSAGE });
+}
+
 function isDatabaseConfigError(err: unknown): boolean {
   return err instanceof Error && err.message.includes("DATABASE_URL must be set");
 }
@@ -344,6 +360,10 @@ router.get("/documents/:id/original", async (req, res): Promise<void> => {
   try {
     buffer = await fileStore.downloadFile(doc.storageKey);
   } catch (err) {
+    if (fileStore.isStorageFileNotFoundError(err)) {
+      respondStorageFileMissing(req, res, { documentId: id, storageKey: doc.storageKey }, "Stored original file missing from disk");
+      return;
+    }
     req.log.error({ err }, "Failed to retrieve original file from storage");
     res.status(500).json({ error: "Failed to retrieve original file from storage" });
     return;
@@ -469,6 +489,10 @@ router.post("/documents/:id/reindex", async (req, res): Promise<void> => {
   try {
     fileBuffer = await fileStore.downloadFile(doc.storageKey);
   } catch (err) {
+    if (fileStore.isStorageFileNotFoundError(err)) {
+      respondStorageFileMissing(req, res, { documentId: id, storageKey: doc.storageKey }, "Stored original file missing from disk during re-index");
+      return;
+    }
     req.log.error({ err }, "Failed to download original file for re-indexing");
     res.status(500).json({ error: "Failed to retrieve original file from storage" });
     return;

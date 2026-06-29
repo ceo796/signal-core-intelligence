@@ -1,8 +1,35 @@
 import { randomUUID } from "crypto";
-import { mkdir, readFile, rm, writeFile } from "fs/promises";
+import { access, mkdir, readFile, rm, stat, writeFile } from "fs/promises";
 import path from "path";
 
 const LOCAL_STORAGE_PREFIX = "local://";
+
+export class StorageFileNotFoundError extends Error {
+  readonly code = "STORAGE_FILE_NOT_FOUND";
+  readonly storageKey: string;
+
+  constructor(storageKey: string, options?: { cause?: unknown }) {
+    super(`Stored file not found: ${storageKey}`);
+    this.name = "StorageFileNotFoundError";
+    this.storageKey = storageKey;
+    if (options?.cause !== undefined) {
+      this.cause = options.cause;
+    }
+  }
+}
+
+export function isStorageFileNotFoundError(err: unknown): err is StorageFileNotFoundError {
+  return err instanceof StorageFileNotFoundError;
+}
+
+function isErrnoCode(err: unknown, code: string): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as NodeJS.ErrnoException).code === code
+  );
+}
 
 type StorageProvider = "local" | "none";
 
@@ -42,6 +69,18 @@ async function uploadLocalFile(buffer: Buffer, originalName: string): Promise<st
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, buffer);
 
+  try {
+    const fileStat = await stat(absolutePath);
+    if (!fileStat.isFile() || fileStat.size !== buffer.length) {
+      throw new Error(
+        `Upload verification failed: expected ${buffer.length} bytes at ${relativePath}, got ${fileStat.size}`,
+      );
+    }
+    await access(absolutePath);
+  } catch (err) {
+    throw new Error(`Upload verification failed for ${relativePath}`, { cause: err });
+  }
+
   return `${LOCAL_STORAGE_PREFIX}${relativePath.replace(/\\/g, "/")}`;
 }
 
@@ -52,7 +91,14 @@ async function downloadLocalFile(storageKey: string): Promise<Buffer> {
 
   const relativePath = storageKey.slice(LOCAL_STORAGE_PREFIX.length);
   const absolutePath = path.join(getLocalStorageDir(), relativePath);
-  return readFile(absolutePath);
+  try {
+    return await readFile(absolutePath);
+  } catch (err) {
+    if (isErrnoCode(err, "ENOENT")) {
+      throw new StorageFileNotFoundError(storageKey, { cause: err });
+    }
+    throw err;
+  }
 }
 
 async function deleteLocalFile(storageKey: string): Promise<void> {
