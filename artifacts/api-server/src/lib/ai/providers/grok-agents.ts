@@ -13,6 +13,25 @@ export const GROK_DOCUMENT_READER_CORE = `GROK DOCUMENT READER CAPABILITIES (app
 - Flag missing information explicitly — never invent facts, parties, or figures not grounded in excerpts.
 - Treat each document type with equal rigor: legal, financial, operational, HR, and technical sources.`;
 
+/** AI Chat: citations only in a short Sources footer — never inline. */
+export const GROK_CHAT_FORMATTING_POLICY = `GROK AI CHAT OUTPUT FORMAT (mandatory):
+- Write investor-grade prose: precise, neutral, evidence-first. No marketing fluff.
+- Use clean markdown: short paragraphs and "- " bullets when helpful.
+- Do NOT place [Source N] or [Chunk N] anywhere in the answer body — no inline citations.
+- Ground every factual claim in the excerpts, but keep the prose citation-free.
+- After the full answer, add one blank line and a "Sources" section with 3–5 lines only.
+- List only the most relevant source markers you relied on (not every point).
+- Format each Sources line as: - [Source N]
+- The platform shows full citation cards separately; the answer body must read cleanly without markers.
+- General reasoning (not from documents) must be labeled and must not use [Source N] / [Chunk N].
+
+EXAMPLE SHAPE:
+Payment is due within 30 days of invoice date. Late fees apply at 1.5% per month after day 31.
+
+Sources
+- [Source 2]
+- [Source 5]`;
+
 /** Shared Grok output contract for document intelligence answers. */
 export const GROK_FORMATTING_POLICY = `GROK OUTPUT FORMAT (mandatory):
 - Write investor-grade prose: precise, neutral, evidence-first. No marketing fluff.
@@ -41,7 +60,7 @@ Your job: answer precisely from provided excerpts; surface the exact clause, fig
 Your job: compare and combine documents; state agreements, contradictions, and gaps with symmetric citations from each side.`,
 
   document_summary: `You are Grok Summarization Agent, Signal87's executive summary engine.
-Your job: produce theme-organized summaries covering parties, economics, dates, obligations, risks, and open questions — fully cited.`,
+Your job: distill the highest-signal takeaways from excerpts. Default to exactly 3–4 bullet points with one idea each — no section headings. Only expand beyond 4 bullets when the user explicitly asks for a detailed, comprehensive, long, in-depth, or thorough summary.`,
 
   document_compare: `You are Grok Comparison Agent, Signal87's document diff and alignment specialist.
 Your job: line up documents on key dimensions (terms, amounts, dates, parties); highlight conflicts and missing alignments.`,
@@ -74,8 +93,15 @@ export function getGrokAgentPrompt(taskType?: AiTaskType): string {
   return GROK_TASK_AGENTS[taskType] ?? GROK_DEFAULT_AGENT;
 }
 
+const CHAT_TASK_TYPES = new Set<AiTaskType>(["document_chat", "multi_document_chat"]);
+
+function getFormattingPolicy(taskType?: AiTaskType): string {
+  if (taskType && CHAT_TASK_TYPES.has(taskType)) return GROK_CHAT_FORMATTING_POLICY;
+  return GROK_FORMATTING_POLICY;
+}
+
 export function buildGrokSystemAugmentation(taskType?: AiTaskType): string {
-  return [getGrokAgentPrompt(taskType), GROK_DOCUMENT_READER_CORE, GROK_FORMATTING_POLICY].join("\n\n");
+  return [getGrokAgentPrompt(taskType), GROK_DOCUMENT_READER_CORE, getFormattingPolicy(taskType)].join("\n\n");
 }
 
 export function augmentMessagesForGrok(messages: ChatMessage[], taskType?: AiTaskType): ChatMessage[] {

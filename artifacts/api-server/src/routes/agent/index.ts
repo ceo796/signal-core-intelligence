@@ -3,6 +3,7 @@ import { db, documentsTable, chunksTable } from "@workspace/db";
 import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
 import { PostAgentHybridBody } from "@workspace/api-zod";
 import { aiRouter, loadAiConfig, type ProviderId } from "../../lib/ai";
+import { postProcessChatAnswer } from "../../lib/ai/providers/grok-postprocess";
 import { taskTypeForAgentMode } from "../../lib/ai/task-map";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 import { getCurrentUserId } from "../../lib/ownership";
@@ -13,11 +14,11 @@ const LLM_TIMEOUT_MS = 45_000;
 const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
 const MODE_PROMPTS: Record<string, string> = {
-  auto: `You are a precise document intelligence assistant. Answer the user's question using the provided source excerpts below as your primary evidence. Cite every claim drawn from a source with [Source N]. Be concise and accurate.`,
-  summarize: `You are a document summarization assistant. Summarize the key points from the provided source excerpts, organized by theme. Always cite each point with [Source N]. Be comprehensive but concise.`,
-  compare: `You are a multi-document comparison assistant. Compare and contrast information across the provided sources. Identify agreements, differences, and contradictions. Always cite each point with [Source N]. When documents agree, state the agreement and cite each source. When they differ, clearly identify the discrepancy.`,
-  extract: `You are a precise fact and data extraction assistant. Extract specific facts, data points, numbers, dates, names, and key information from the provided source excerpts. Present findings in a structured format. Always cite each extracted item with [Source N].`,
-  diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention. Always cite each finding with [Source N]. Be thorough and precise.`,
+  auto: `You are a precise document intelligence assistant. Answer the user's question using the provided source excerpts below as your primary evidence. Write clean prose without inline citation markers. Be concise and accurate.`,
+  summarize: `You are a document summarization assistant. Distill the highest-signal takeaways from the provided source excerpts. Do not use inline [Source N] markers in the body.`,
+  compare: `You are a multi-document comparison assistant. Compare and contrast information across the provided sources. Identify agreements, differences, and contradictions. Do not use inline [Source N] markers in the body.`,
+  extract: `You are a precise fact and data extraction assistant. Extract specific facts, data points, numbers, dates, names, and key information from the provided source excerpts. Present findings in a structured format without inline [Source N] markers.`,
+  diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention without inline [Source N] markers.`,
 };
 
 // Shared grounding + reasoning policy. Signal87 is provider-agnostic and currently
@@ -26,13 +27,36 @@ const MODE_PROMPTS: Record<string, string> = {
 // AI reasoning when the documents fall short — clearly labeled, and never implying any
 // web/external/real-time source (there is no web access here).
 const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
-- Treat the source excerpts below as your primary evidence. Any statement taken from a document MUST cite its [Source N].
+- Treat the source excerpts below as your primary evidence. Ground every factual claim in them, but do NOT put [Source N] markers in the answer body.
+- At the very end of your response, add a "Sources" section listing only the 3–5 most relevant [Source N] markers you relied on.
 - These excerpts are your only document context. You have NO web access, browsing, or real-time data — never state or imply that any part of your answer came from the internet, a search, or any external or live source.
 - If the documents do not fully cover the question, you MAY add helpful general knowledge or reasoning from your own training. Clearly label any such content as general AI reasoning — for example, begin that portion with "General AI reasoning (not grounded in your documents):" — and do NOT attach [Source N] citations to it.
 - If you have neither relevant documents nor confident general knowledge, say so plainly.
 - AGGREGATION: If the question asks for a total, sum, count, or average, and the chunks contain the raw numbers, calculate the result from the evidence and show your work. Do not say "not enough information" when the data is present.
 - NAME MATCHING: If the question asks about a person and only a first name or last name is given, match it to the full name if it appears in the chunks. E.g., "Worrell" should match "Shaquille Worrell" and vice versa.
 - DATE REASONING: If asked "how often," "how many times," or about frequency/pattern, count the occurrences, sort the dates, and describe the observed interval. Do not require the document to explicitly state "weekly" or "bi-weekly" — infer from the dates. If the pattern is irregular, state that clearly.`;
+
+const DEFAULT_SUMMARY_LENGTH_POLICY = `SUMMARY LENGTH (default):
+- Respond with exactly 3–4 bullet points ("- ") — no more unless the user explicitly asks for a longer summary.
+- One idea per bullet; highest-signal facts only. No section headings or preamble.
+- Expand only when the user clearly requests a detailed, comprehensive, long, in-depth, or thorough summary.`;
+
+const LONG_SUMMARY_LENGTH_POLICY = `SUMMARY LENGTH (user requested longer):
+- The user asked for a fuller summary — use additional bullets and short sections as needed.
+- Still avoid filler; stay grounded in the source excerpts.`;
+
+function wantsLongSummary(query: string): boolean {
+  const q = query.toLowerCase();
+  return (
+    /\b(detailed|comprehensive|long|full|in-depth|in depth|thorough|extended|elaborate)\b/.test(q) ||
+    /\b(more|extra)\s+(detail|points|bullets)\b/.test(q)
+  );
+}
+
+function summaryLengthPolicy(query: string, mode: string): string {
+  if (mode !== "summarize") return "";
+  return wantsLongSummary(query) ? LONG_SUMMARY_LENGTH_POLICY : DEFAULT_SUMMARY_LENGTH_POLICY;
+}
 
 const router: IRouter = Router();
 
@@ -87,13 +111,18 @@ function buildFallbackAnswer(query: string, citations: Array<{ citationNumber: n
     ? "Here are the most recent indexed document uploads I could review:"
     : "I found relevant document excerpts, but the AI model response took too long. Here is a grounded extractive answer:";
 
-  const bullets = citations.slice(0, 8).map((c) => {
+  const bullets = citations.slice(0, 5).map((c) => {
     const excerpt = c.excerpt.replace(/\s+/g, " ").trim();
     const preview = excerpt.length > 220 ? `${excerpt.slice(0, 217)}…` : excerpt;
-    return `- ${c.documentName}: ${preview} [Source ${c.citationNumber}]`;
+    return `- ${c.documentName}: ${preview}`;
   });
 
-  return `${intro}\n\n${bullets.join("\n")}`;
+  const sourceRefs = citations
+    .slice(0, 5)
+    .map((c) => `- [Source ${c.citationNumber}]`)
+    .join("\n");
+
+  return `${intro}\n\n${bullets.join("\n")}\n\nSources\n${sourceRefs}`;
 }
 
 router.post("/agent/hybrid", async (req, res): Promise<void> => {
@@ -244,11 +273,13 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
     .join("\n\n---\n\n");
 
   const documentList = documentsUsed.map((d) => `- "${d.name}"`).join("\n");
+  const summaryPolicy = summaryLengthPolicy(query, mode);
   const systemPrompt = `${MODE_PROMPTS[mode] ?? MODE_PROMPTS.auto}
+${summaryPolicy ? `\n\n${summaryPolicy}` : ""}
 
 ${GROUNDING_REASONING_POLICY}
 
-When a source excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) alongside its [Source N] citation.
+When a source excerpt begins with "Sheet:", it is spreadsheet data — reference the sheet name and row range (e.g. Sheet "Sales", rows 2–41) in the answer when relevant.
 
 Documents searched:
 ${documentList}
@@ -278,14 +309,14 @@ ${sourceBlocks}`;
       LLM_TIMEOUT_MS,
       "Hybrid AI task",
     );
-    answer = aiResult.answer || "No response generated.";
+    answer = postProcessChatAnswer(aiResult.answer || "No response generated.");
     llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
     llmModel = aiResult.modelUsed;
     if (aiResult.fallbackUsed) fallbackUsed = true;
   } catch (err) {
     req.log.error({ err }, "Hybrid agent AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
-    answer = buildFallbackAnswer(query, citations);
+    answer = postProcessChatAnswer(buildFallbackAnswer(query, citations));
     llmProvider = "local";
     llmModel = "extractive-fallback";
     fallbackUsed = true;

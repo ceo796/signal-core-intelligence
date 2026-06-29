@@ -3,6 +3,7 @@ import {
   augmentMessagesForGrok,
   buildGrokSystemAugmentation,
   getGrokAgentPrompt,
+  GROK_CHAT_FORMATTING_POLICY,
   GROK_FORMATTING_POLICY,
 } from "../../lib/ai/providers/grok-agents";
 
@@ -16,6 +17,7 @@ describe("grok-agents", () => {
 
   it("includes formatting policy in augmentation", () => {
     expect(buildGrokSystemAugmentation("document_summary")).toContain(GROK_FORMATTING_POLICY);
+    expect(buildGrokSystemAugmentation("document_chat")).toContain(GROK_CHAT_FORMATTING_POLICY);
     expect(buildGrokSystemAugmentation("fact_extraction")).toContain("DOCUMENT READER CAPABILITIES");
     expect(buildGrokSystemAugmentation("document_summary")).toContain("Sources");
   });
@@ -32,7 +34,7 @@ describe("grok-agents", () => {
     expect(messages).toHaveLength(2);
     expect(messages[0]?.content).toContain("Route prompt");
     expect(messages[0]?.content).toContain("Grok Document Analyst");
-    expect(messages[0]?.content).toContain("END of the sentence");
+    expect(messages[0]?.content).toContain("no inline citations");
   });
 
   it("creates a system message when none exists", () => {
