@@ -5,8 +5,9 @@ import { customFetch } from "@workspace/api-client-react";
 
 type BillingStatus = {
   billingConfigured: boolean;
+  trialDays: number;
   entitled: boolean;
-  accessSource: "approved_email" | "stripe_subscription" | "none";
+  accessSource: "admin_email" | "approved_email" | "stripe_subscription" | "none";
   subscription: {
     status: string;
     stripeCustomerId: string | null;
@@ -23,8 +24,12 @@ type CheckoutResponse = {
 
 function statusLabel(status: BillingStatus | null): string {
   if (!status) return "Checking account status";
+  if (status.accessSource === "admin_email") return "Admin access (full subscription)";
   if (status.accessSource === "approved_email") return "Approved internal access";
-  if (status.accessSource === "stripe_subscription") return `Subscription ${status.subscription?.status ?? "active"}`;
+  if (status.accessSource === "stripe_subscription") {
+    const subStatus = status.subscription?.status ?? "active";
+    return subStatus === "trialing" ? "Free trial active" : `Subscription ${subStatus}`;
+  }
   if (!status.billingConfigured) return "Billing setup required";
   return "No active subscription";
 }
@@ -100,6 +105,8 @@ export default function Pricing() {
   }
 
   const canOpenPortal = Boolean(status?.subscription?.stripeCustomerId);
+  const trialDays = status?.trialDays ?? 14;
+  const onTrial = status?.subscription?.status === "trialing";
 
   return (
     <main className="min-h-screen bg-[#111211] text-[#eeeee7]">
@@ -112,9 +119,15 @@ export default function Pricing() {
             Book a demo
           </Link>
           {isSignedIn ? (
-            <Link href="/documents" className="rounded-full bg-[#f4f2e8] px-4 py-2 text-[#111211]">
-              Open app
-            </Link>
+            status?.entitled ? (
+              <Link href="/documents" className="rounded-full bg-[#f4f2e8] px-4 py-2 text-[#111211]">
+                Open app
+              </Link>
+            ) : (
+              <Link href="/sign-in" className="rounded-full border border-white/15 px-4 py-2 hover:border-white/35">
+                Account
+              </Link>
+            )
           ) : (
             <Link href="/sign-in" className="rounded-full border border-white/15 px-4 py-2 hover:border-white/35">
               Sign in
@@ -127,11 +140,12 @@ export default function Pricing() {
         <div>
           <p className="mb-5 text-sm uppercase tracking-[0.22em] text-[#6fd2ad]">Plans</p>
           <h1 className="max-w-2xl text-5xl font-normal leading-[0.98] tracking-[-0.075em] md:text-7xl">
-            Start with verifiable document intelligence.
+            Start with a free trial.
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-8 text-[#b8bab2]">
-            Create an account, activate a subscription through Stripe, and unlock secure document upload,
-            grounded analysis, citations, and AI workflows.
+            Create an account, start your {trialDays}-day free trial through Stripe, and unlock secure document
+            upload, grounded analysis, citations, and AI workflows. Your subscription renews automatically after the
+            trial unless you cancel.
           </p>
 
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.035] p-5 text-sm text-[#b8bab2]">
@@ -143,7 +157,8 @@ export default function Pricing() {
             </div>
             {status?.subscription?.currentPeriodEnd && (
               <p className="mt-3">
-                Current period ends {new Date(status.subscription.currentPeriodEnd).toLocaleDateString()}.
+                {onTrial ? "Trial ends" : "Current period ends"}{" "}
+                {new Date(status.subscription.currentPeriodEnd).toLocaleDateString()}.
               </p>
             )}
           </div>
@@ -163,15 +178,15 @@ export default function Pricing() {
                 <p className="mt-2 text-sm text-[#59645e]">For operators, founders, funds, and teams.</p>
               </div>
               <div className="rounded-full bg-[#111211] px-3 py-1 text-xs uppercase tracking-[0.16em] text-white">
-                Stripe
+                {trialDays}-day trial
               </div>
             </div>
 
             <div className="mt-8 space-y-3 text-sm text-[#26342e]">
+              <div className="rounded-xl bg-white p-4">{trialDays}-day free trial, then recurring subscription via Stripe</div>
               <div className="rounded-xl bg-white p-4">Secure document upload and private workspace access</div>
               <div className="rounded-xl bg-white p-4">Grounded answers with citations and source traceability</div>
               <div className="rounded-xl bg-white p-4">Executive briefs, document chat, and multi-document analysis</div>
-              <div className="rounded-xl bg-white p-4">Subscription access synchronized by Stripe webhooks</div>
             </div>
 
             <button
@@ -180,7 +195,11 @@ export default function Pricing() {
               disabled={startingCheckout || status?.entitled}
               className="mt-8 w-full rounded-full bg-[#111211] px-5 py-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
             >
-              {status?.entitled ? "Access active" : startingCheckout ? "Opening Stripe Checkout…" : "Start subscription"}
+              {status?.entitled
+                ? "Access active"
+                : startingCheckout
+                  ? "Opening Stripe Checkout…"
+                  : `Start ${trialDays}-day free trial`}
             </button>
 
             {canOpenPortal && (
@@ -196,8 +215,8 @@ export default function Pricing() {
           </div>
 
           <p className="mt-5 text-sm leading-6 text-[#b8bab2]">
-            Access is granted only after the Stripe webhook updates the account subscription status. Manual
-            approved-email access remains available for internal users.
+            Cancel anytime from the Stripe billing portal before your trial ends to avoid being charged. Admin and
+            approved internal emails receive complimentary full access.
           </p>
         </div>
       </section>

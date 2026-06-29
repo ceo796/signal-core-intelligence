@@ -2,9 +2,17 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { userHasActiveSubscription } from "../lib/billing";
 
-const approvedEmails = new Set(
-  (process.env.APPROVED_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean),
-);
+function parseEmailList(raw: string | undefined): Set<string> {
+  return new Set(
+    (raw ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+const approvedEmails = parseEmailList(process.env.APPROVED_EMAILS);
+const adminEmails = parseEmailList(process.env.ADMIN_EMAILS);
 
 const bypassAuth = process.env.CLERK_BYPASS_AUTH === "true";
 
@@ -14,6 +22,15 @@ function clerkRuntimeConfigured(): boolean {
 
 export function isApprovedEmail(email: string | null | undefined): boolean {
   return Boolean(email && approvedEmails.has(email.toLowerCase()));
+}
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return Boolean(email && adminEmails.has(email.toLowerCase()));
+}
+
+/** Admin and legacy approved-email allowlists bypass Stripe billing. */
+export function hasComplimentaryAccess(email: string | null | undefined): boolean {
+  return isAdminEmail(email) || isApprovedEmail(email);
 }
 
 export async function resolveRequestEmail(req: Request): Promise<string | null> {
@@ -57,7 +74,7 @@ export async function requireApprovedEmail(
 
     const email = await resolveRequestEmail(req);
 
-    if (isApprovedEmail(email)) {
+    if (hasComplimentaryAccess(email)) {
       next();
       return;
     }

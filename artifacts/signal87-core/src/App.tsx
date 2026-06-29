@@ -25,7 +25,9 @@ import MichaelChavira from "@/pages/team-michael-chavira";
 import Admin from "@/pages/admin";
 import Settings from "@/pages/settings";
 import TrashPage from "@/pages/trash";
+import Pricing from "@/pages/pricing";
 import NotFound from "@/pages/not-found";
+import { EntitlementGuard } from "@/components/entitlement-guard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +43,19 @@ const queryClient = new QueryClient({
   },
 });
 
-const publicRoutes = ["/", "/about", "/privacy", "/terms", "/contact", "/team", "/team/michael-benezra", "/team/michael-chavira", "/sign-in", "/sign-up"];
+const publicRoutes = [
+  "/",
+  "/about",
+  "/privacy",
+  "/terms",
+  "/contact",
+  "/team",
+  "/team/michael-benezra",
+  "/team/michael-chavira",
+  "/sign-in",
+  "/sign-up",
+  "/pricing",
+];
 
 function isPublicRoute(path: string): boolean {
   return publicRoutes.some((route) => path === route || path.startsWith(route + "/"));
@@ -121,6 +135,7 @@ function Router() {
       <Route path="/team/michael-chavira" component={MichaelChavira} />
       <Route path="/admin" component={Admin} />
       <Route path="/settings" component={Settings} />
+      <Route path="/pricing" component={Pricing} />
       <Route path="/sign-in"><SignInPage /></Route>
       <Route path="/sign-up"><SignUpPage /></Route>
       <Route component={NotFound} />
@@ -138,7 +153,7 @@ function SignInPage() {
 
 function SignUpPage() {
   return (
-    <AuthShell eyebrow="Create workspace" title="Start your document intelligence workspace">
+    <AuthShell eyebrow="Create workspace" title="Start your free trial workspace">
       <SignUp routing="path" path="/sign-up" />
     </AuthShell>
   );
@@ -209,7 +224,9 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthGuard>
-            <Router />
+            <EntitlementGuard>
+              <Router />
+            </EntitlementGuard>
           </AuthGuard>
         </WouterRouter>
         <Toaster />

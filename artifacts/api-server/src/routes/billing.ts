@@ -6,8 +6,14 @@ import {
   getBillingRecordForUser,
   isBillingConfigured,
   isSubscriptionActive,
+  stripeTrialDays,
 } from "../lib/billing";
-import { isApprovedEmail, resolveRequestEmail } from "../middlewares/requireAuth";
+import {
+  hasComplimentaryAccess,
+  isAdminEmail,
+  isApprovedEmail,
+  resolveRequestEmail,
+} from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
@@ -35,14 +41,23 @@ router.get("/billing/status", requireSignedIn, async (req, res): Promise<void> =
     }
 
     const email = await resolveRequestEmail(req);
+    const admin = Boolean(email && isAdminEmail(email));
     const approved = Boolean(email && isApprovedEmail(email));
+    const complimentary = hasComplimentaryAccess(email);
     const record = await getBillingRecordForUser(userId);
     const subscriptionActive = isSubscriptionActive(record?.subscription_status);
 
     res.json({
       billingConfigured: isBillingConfigured(),
-      entitled: approved || subscriptionActive,
-      accessSource: approved ? "approved_email" : subscriptionActive ? "stripe_subscription" : "none",
+      trialDays: stripeTrialDays(),
+      entitled: complimentary || subscriptionActive,
+      accessSource: admin
+        ? "admin_email"
+        : approved
+          ? "approved_email"
+          : subscriptionActive
+            ? "stripe_subscription"
+            : "none",
       subscription: record
         ? {
             status: record.subscription_status,

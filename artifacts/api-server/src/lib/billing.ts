@@ -70,6 +70,14 @@ function stripePriceId(): string | null {
   return process.env.STRIPE_PRICE_ID?.trim() || null;
 }
 
+export function stripeTrialDays(): number {
+  const raw = process.env.STRIPE_TRIAL_DAYS?.trim();
+  if (!raw) return 14;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return Math.floor(parsed);
+}
+
 export function isBillingConfigured(): boolean {
   return Boolean(stripeSecretKey() && stripePriceId());
 }
@@ -302,6 +310,10 @@ export async function createCheckoutSession(req: Request, res: Response): Promis
     body.set("cancel_url", cancelUrl);
     body.set("metadata[clerk_user_id]", user.userId);
     body.set("subscription_data[metadata][clerk_user_id]", user.userId);
+    const trialDays = stripeTrialDays();
+    if (trialDays > 0) {
+      body.set("subscription_data[trial_period_days]", String(trialDays));
+    }
     if (user.email) body.set("customer_update[name]", "auto");
 
     const session = await stripeRequest<StripeCheckoutSession>("POST", "/checkout/sessions", body);
