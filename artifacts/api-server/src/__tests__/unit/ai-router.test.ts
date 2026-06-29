@@ -31,14 +31,17 @@ describe("aiRouter", () => {
     delete process.env.GROK_API_KEY;
     delete process.env.GEMINI_API_KEY;
     delete process.env.GOOGLE_API_KEY;
+    delete process.env.GEMINI_SERVICE_ACCOUNT_PATH;
+    delete process.env.GEMINI_SERVICE_ACCOUNT_JSON;
     delete process.env.AI_PRIMARY_REASONING_PROVIDER;
     delete process.env.AI_FINAL_FALLBACK_PROVIDER;
+    delete process.env.AI_FALLBACK_PROVIDER_ORDER;
   });
 
-  it("returns normalized response from primary provider", async () => {
-    process.env.OPENAI_API_KEY = "sk-openai";
-    mockOpenAiCreate.mockResolvedValue({
-      choices: [{ message: { content: "answer text" } }],
+  it("returns normalized response from Gemini when it is the primary provider", async () => {
+    process.env.GEMINI_API_KEY = "gemini-key";
+    mockGeminiCreate.mockResolvedValue({
+      choices: [{ message: { content: "gemini answer" } }],
       usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
     });
 
@@ -50,18 +53,39 @@ describe("aiRouter", () => {
 
     expect(result).toMatchObject({
       taskType: "document_chat",
-      answer: "answer text",
-      providerUsed: "openai",
+      answer: "gemini answer",
+      providerUsed: "google",
       fallbackUsed: false,
       confidence: "high",
       tokenUsage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
     });
+    expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
-  it("falls back when primary provider fails with eligible error", async () => {
+  it("falls back to GPT when Gemini fails with an eligible error", async () => {
+    process.env.GEMINI_API_KEY = "gemini-key";
+    process.env.OPENAI_API_KEY = "sk-openai";
+    mockGeminiCreate.mockRejectedValue(new Error("gemini timeout"));
+    mockOpenAiCreate.mockResolvedValue({
+      choices: [{ message: { content: "gpt answer" } }],
+    });
+
+    const { aiRouter } = await import("../../lib/ai/router.js");
+    const result = await aiRouter.runTask({
+      taskType: "multi_document_chat",
+      userPrompt: "compare",
+    });
+
+    expect(result.providerUsed).toBe("openai");
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.answer).toBe("gpt answer");
+  });
+
+  it("uses Grok as the last fallback when Gemini and GPT fail", async () => {
+    process.env.GEMINI_API_KEY = "gemini-key";
     process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
-    process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
+    mockGeminiCreate.mockRejectedValue(new Error("gemini timeout"));
     mockOpenAiCreate.mockRejectedValue(new Error("openai timeout"));
     mockGrokCreate.mockResolvedValue({
       choices: [{ message: { content: "grok answer" } }],
@@ -96,8 +120,8 @@ describe("aiRouter", () => {
   });
 
   it("parses structured output into structuredData", async () => {
-    process.env.OPENAI_API_KEY = "sk-openai";
-    mockOpenAiCreate.mockResolvedValue({
+    process.env.GEMINI_API_KEY = "gemini-key";
+    mockGeminiCreate.mockResolvedValue({
       choices: [{ message: { content: "{\"title\":\"Brief\",\"sections\":[]}" } }],
     });
 

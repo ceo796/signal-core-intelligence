@@ -48,7 +48,7 @@ export interface AiRuntimeConfig {
 export function loadAiConfig(): AiRuntimeConfig {
   return {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
-    primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "openai"),
+    primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
     primaryExtractionProvider: parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
     finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
@@ -86,16 +86,24 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
   }
 
   const chain: ProviderId[] = [primary];
-  if (config.routingEnabled) {
-    if (!chain.includes(config.finalFallbackProvider)) {
-      chain.push(config.finalFallbackProvider);
+  if (!config.routingEnabled) return chain;
+
+  const defaultOrder: ProviderId[] = ["openai", "google", "xai"];
+  const orderedFallbacks: ProviderId[] = [];
+  for (const provider of [...config.fallbackProviderOrder, ...defaultOrder]) {
+    if (!orderedFallbacks.includes(provider)) {
+      orderedFallbacks.push(provider);
     }
-    for (const provider of config.fallbackProviderOrder) {
-      if (!chain.includes(provider)) chain.push(provider);
+  }
+
+  for (const provider of orderedFallbacks) {
+    if (provider !== primary && provider !== config.finalFallbackProvider && !chain.includes(provider)) {
+      chain.push(provider);
     }
-    for (const provider of ["openai", "xai", "google"] as ProviderId[]) {
-      if (!chain.includes(provider)) chain.push(provider);
-    }
+  }
+
+  if (config.finalFallbackProvider !== primary && !chain.includes(config.finalFallbackProvider)) {
+    chain.push(config.finalFallbackProvider);
   }
 
   return chain;

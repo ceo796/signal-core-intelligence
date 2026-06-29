@@ -31,9 +31,11 @@ services:
       - key: AI_PROVIDER_ROUTING_ENABLED
         value: "true"
       - key: AI_PRIMARY_REASONING_PROVIDER
-        value: openai
+        value: google
       - key: AI_FINAL_FALLBACK_PROVIDER
         value: xai
+      - key: AI_FALLBACK_PROVIDER_ORDER
+        value: openai
       - key: AI_EMBEDDING_PROVIDER
         value: openai
       - key: CLERK_SECRET_KEY

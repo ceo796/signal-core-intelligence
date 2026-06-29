@@ -26,14 +26,17 @@ describe("ai config", () => {
     expect(config.models.google.chat).toBe("custom-gemini");
   });
 
-  it("changes provider order from config only", () => {
+  it("orders fallbacks as primary, configured middle providers, then final fallback", () => {
     process.env.AI_PRIMARY_REASONING_PROVIDER = "openai";
     process.env.AI_FINAL_FALLBACK_PROVIDER = "google";
     process.env.AI_FALLBACK_PROVIDER_ORDER = "xai";
 
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain[0]).toBe("openai");
-    expect(chain).toContain("google");
-    expect(chain).toContain("xai");
+    expect(chain).toEqual(["openai", "xai", "google"]);
+  });
+
+  it("defaults reasoning chain to Gemini, then GPT, then Grok", () => {
+    const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
+    expect(chain).toEqual(["google", "openai", "xai"]);
   });
 });
