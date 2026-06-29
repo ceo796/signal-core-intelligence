@@ -11,7 +11,12 @@ Set these on `signal87-api` before deploying:
 | Variable | Required value / notes |
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string. Keep this secret. |
-| `OPENAI_API_KEY` | OpenAI API key used by AI/chat/analyze features. |
+| `OPENAI_API_KEY` | OpenAI API key — GPT fallback for chat/analyze when Gemini is unavailable. |
+| `GEMINI_API_KEY` | Google AI Studio API key (`AIza...`) — **primary LLM** when `AI_PRIMARY_REASONING_PROVIDER=google`. Set in Render dashboard only; never commit. |
+| `XAI_API_KEY` | xAI/Grok API key — final LLM fallback. |
+| `AI_PRIMARY_REASONING_PROVIDER` | `google` (Gemini primary). |
+| `AI_FALLBACK_PROVIDER_ORDER` | `openai` (GPT first fallback). |
+| `AI_FINAL_FALLBACK_PROVIDER` | `xai` (Grok last fallback). |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |
 | `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. Use `pk_live_...` in production. |
 | `ADMIN_EMAILS` | Comma-separated admin emails with full complimentary access. Set to `ceo@signal87.ai,mbenezra@erezcapital.io`. |
