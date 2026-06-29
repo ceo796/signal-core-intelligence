@@ -240,7 +240,7 @@ function buildFallbackAnswer(skill: SkillDefinition, citations: Array<{ citation
     return `- ${citation.documentName}: ${preview} [Source ${citation.citationNumber}]`;
   });
 
-  return `The GPT response timed out, so here is a grounded extractive result for ${skill.name}:\n\n${bullets.join("\n")}`;
+  return `The primary LLM response timed out, so here is a grounded extractive result for ${skill.name}:\n\n${bullets.join("\n")}`;
 }
 
 router.get("/skills", (_req: Request, res: Response) => {

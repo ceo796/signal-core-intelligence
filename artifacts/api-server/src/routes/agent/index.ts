@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
 import { PostAgentHybridBody } from "@workspace/api-zod";
-import { aiRouter, loadAiConfig } from "../../lib/ai";
+import { aiRouter, loadAiConfig, type ProviderId } from "../../lib/ai";
 import { taskTypeForAgentMode } from "../../lib/ai/task-map";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 import { getCurrentUserId } from "../../lib/ownership";
@@ -260,7 +260,7 @@ ${sourceBlocks}`;
   const aiConfig = loadAiConfig();
   let answer: string;
   let llmError: string | null = null;
-  let llmProvider = aiConfig.primaryReasoningProvider;
+  let llmProvider: ProviderId | "local" = aiConfig.primaryReasoningProvider;
   let llmModel = aiConfig.models[aiConfig.primaryReasoningProvider].chat;
   try {
     const aiResult = await withTimeout(

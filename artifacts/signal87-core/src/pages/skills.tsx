@@ -186,7 +186,7 @@ export default function SkillsPage() {
               </p>
             </div>
             <Badge variant="outline" className="w-fit text-xs">
-              GPT-powered · Document-grounded
+              Gemini-powered · Document-grounded
             </Badge>
           </header>
 
