@@ -32,7 +32,7 @@ const REASONING_TASKS = new Set<AiTaskType>([
 
 const LOCAL_TASKS = new Set<AiTaskType>(["document_extraction", "table_extraction"]);
 
-const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["openai", "xai"];
+const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["xai", "openai"];
 
 export interface AiRuntimeConfig {
   routingEnabled: boolean;
@@ -54,7 +54,7 @@ export function loadAiConfig(): AiRuntimeConfig {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
     primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
     primaryExtractionProvider: parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
-    finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
+    finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "openai"),
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
     qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
     embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
@@ -94,7 +94,7 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
   const chain: ProviderId[] = [primary];
   if (!config.routingEnabled) return chain;
 
-  const defaultOrder: ProviderId[] = ["openai", "google", "xai"];
+  const defaultOrder: ProviderId[] = ["xai", "google", "openai"];
   const orderedFallbacks: ProviderId[] = [];
   for (const provider of [...config.fallbackProviderOrder, ...defaultOrder]) {
     if (!orderedFallbacks.includes(provider)) {

@@ -20,10 +20,10 @@ const MODE_PROMPTS: Record<string, string> = {
   diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention. Always cite each finding with [Source N]. Be thorough and precise.`,
 };
 
-// Shared grounding + reasoning policy. This assistant uses GPT first with Grok fallback: it grounds
-// answers in the user's documents (with [Source N] citations) and may supplement with the
-// GPT model's own general reasoning when the documents fall short — clearly labeled, and
-// never implying any web/external/real-time source (there is no web access here).
+// Shared grounding + reasoning policy. Reasoning uses Gemini first, Grok second, GPT last: it grounds
+// answers in the user's documents (with [Source N] citations) and may supplement with general AI
+// reasoning when the documents fall short — clearly labeled, and never implying any web/external/
+// real-time source (there is no web access here).
 const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
 - Treat the source excerpts below as your primary evidence. Any statement taken from a document MUST cite its [Source N].
 - These excerpts are your only document context. You have NO web access, browsing, or real-time data — never state or imply that any part of your answer came from the internet, a search, or any external or live source.

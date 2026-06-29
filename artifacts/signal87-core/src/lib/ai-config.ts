@@ -1,16 +1,16 @@
 export const AI_CONFIG = {
-  provider: "OpenAI",
-  model: "gpt-4o-mini",
+  primaryProvider: "Google Gemini",
+  fallbackProviders: "Grok, then OpenAI",
   embeddingModel: "text-embedding-3-small",
   webResearch: false,
   externalProviders: false,
 } as const;
 
 export const AI_CONFIG_LABELS = {
-  provider: "OpenAI",
-  model: AI_CONFIG.model,
+  provider: AI_CONFIG.primaryProvider,
+  model: "gemini-2.5-flash → grok-4.3 → gpt-4o-mini",
   embeddingModel: AI_CONFIG.embeddingModel,
   webResearch: "Off",
-  externalProviders: "Disabled",
-  status: "GPT-only",
+  externalProviders: "Grok + OpenAI (fallback only)",
+  status: "Multi-provider",
 } as const;

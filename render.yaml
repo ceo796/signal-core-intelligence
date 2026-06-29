@@ -41,9 +41,9 @@ services:
       - key: AI_PRIMARY_REASONING_PROVIDER
         value: google
       - key: AI_FINAL_FALLBACK_PROVIDER
-        value: xai
+        value: openai
       - key: AI_FALLBACK_PROVIDER_ORDER
-        value: openai,xai
+        value: xai
       - key: AI_EMBEDDING_PROVIDER
         value: openai
       - key: CLERK_SECRET_KEY

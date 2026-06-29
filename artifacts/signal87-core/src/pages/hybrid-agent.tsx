@@ -60,7 +60,7 @@ const modeLabel = (value: string) =>
 
 const SOURCE_LABELS = {
   document_context: "Document context",
-  gpt_reasoning: "GPT reasoning",
+  ai_reasoning: "AI reasoning",
   web_context_placeholder_disabled: "Web context",
 } as const;
 
@@ -261,7 +261,7 @@ function Composer({
         </div>
       </div>
       <p className="text-center text-[11px] text-muted-foreground mt-2 px-2">
-        Answers use your documents with citations and GPT reasoning — no web research.
+        Answers use your documents with citations and AI reasoning — no web research.
       </p>
     </form>
   );
@@ -460,7 +460,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
             </div>
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-white text-[#3d7a5e] border border-[#d8d5ce]">
               <Sparkles className="w-3 h-3 shrink-0" />
-              <span className="flex-1">{SOURCE_LABELS.gpt_reasoning}</span>
+              <span className="flex-1">{SOURCE_LABELS.ai_reasoning}</span>
             </div>
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-[#eceae4] text-[#6b7068]/70">
               <ShieldCheck className="w-3 h-3 shrink-0 opacity-50" />
@@ -729,7 +729,7 @@ export default function HybridAgent() {
                     Hybrid AI Chat
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Documents + GPT reasoning, no web research.
+                    Documents + AI reasoning (Gemini → Grok → GPT), no web research.
                   </p>
                 </div>
                 <Composer {...composerProps} autoFocus />

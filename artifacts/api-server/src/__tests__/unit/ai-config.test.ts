@@ -13,14 +13,14 @@ describe("ai config", () => {
 
   it("loads provider routing from environment", () => {
     process.env.AI_PRIMARY_REASONING_PROVIDER = "google";
-    process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "openai";
     process.env.OPENAI_MODEL = "custom-openai";
     process.env.GROK_MODEL = "custom-grok";
     process.env.GEMINI_MODEL = "custom-gemini";
 
     const config = loadAiConfig();
     expect(config.primaryReasoningProvider).toBe("google");
-    expect(config.finalFallbackProvider).toBe("xai");
+    expect(config.finalFallbackProvider).toBe("openai");
     expect(config.models.openai.chat).toBe("custom-openai");
     expect(config.models.xai.chat).toBe("custom-grok");
     expect(config.models.google.chat).toBe("custom-gemini");
@@ -35,14 +35,14 @@ describe("ai config", () => {
     expect(chain).toEqual(["openai", "xai", "google"]);
   });
 
-  it("defaults reasoning chain to Gemini, then GPT, then Grok", () => {
+  it("defaults reasoning chain to Gemini, then Grok, then GPT", () => {
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain).toEqual(["google", "openai", "xai"]);
+    expect(chain).toEqual(["google", "xai", "openai"]);
   });
 
-  it("defaults fallback provider order to openai then xai", () => {
+  it("defaults fallback provider order to xai then openai", () => {
     const config = loadAiConfig();
-    expect(config.fallbackProviderOrder).toEqual(["openai", "xai"]);
+    expect(config.fallbackProviderOrder).toEqual(["xai", "openai"]);
   });
 
   it("loads provider timeout from environment", () => {

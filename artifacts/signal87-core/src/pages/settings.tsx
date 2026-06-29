@@ -82,9 +82,8 @@ export default function Settings() {
               />
             </div>
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-              All answers are grounded in your documents using cosine retrieval over OpenAI embeddings, then
-              supplemented by the configured reasoning model. No web access, no external providers, no data sharing
-              beyond your OpenAI API calls.
+              Answers are grounded in your documents using cosine retrieval, then reasoned with Gemini first,
+              Grok second, and GPT last. No web access and no live external research.
             </p>
           </section>
         </div>

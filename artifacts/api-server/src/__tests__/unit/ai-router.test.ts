@@ -64,35 +64,10 @@ describe("aiRouter", () => {
     expect(mockGrokCreate).not.toHaveBeenCalled();
   });
 
-  it("falls back to GPT when Gemini fails with an eligible error", async () => {
+  it("falls back to Grok when Gemini fails with an eligible error", async () => {
     process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
-    process.env.OPENAI_API_KEY = "sk-openai";
-    mockGeminiCreate.mockRejectedValue(new Error("gemini timeout"));
-    mockOpenAiCreate.mockResolvedValue({
-      choices: [{ message: { content: "gpt answer" } }],
-    });
-
-    const attempts: string[] = [];
-    const { aiRouter } = await import("../../lib/ai/router.js");
-    const result = await aiRouter.runTask({
-      taskType: "multi_document_chat",
-      userPrompt: "compare",
-      onProviderAttempt: (attempt) => attempts.push(attempt.provider),
-    });
-
-    expect(result.providerUsed).toBe("openai");
-    expect(result.fallbackUsed).toBe(true);
-    expect(result.answer).toBe("gpt answer");
-    expect(attempts).toEqual(["google", "openai"]);
-    expect(mockGrokCreate).not.toHaveBeenCalled();
-  });
-
-  it("uses Grok as the last fallback when Gemini and GPT fail", async () => {
-    process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
-    process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
-    mockGeminiCreate.mockRejectedValue(new Error("gemini auth error 403"));
-    mockOpenAiCreate.mockRejectedValue(new Error("openai quota exceeded 429"));
+    mockGeminiCreate.mockRejectedValue(new Error("gemini timeout"));
     mockGrokCreate.mockResolvedValue({
       choices: [{ message: { content: "grok answer" } }],
     });
@@ -108,16 +83,41 @@ describe("aiRouter", () => {
     expect(result.providerUsed).toBe("xai");
     expect(result.fallbackUsed).toBe(true);
     expect(result.answer).toBe("grok answer");
-    expect(attempts).toEqual(["google", "openai", "xai"]);
+    expect(attempts).toEqual(["google", "xai"]);
+    expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
-  it("throws only after google, openai, and xai all fail", async () => {
+  it("uses GPT as the last fallback when Gemini and Grok fail", async () => {
+    process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
+    process.env.OPENAI_API_KEY = "sk-openai";
+    process.env.XAI_API_KEY = "xai-key";
+    mockGeminiCreate.mockRejectedValue(new Error("gemini auth error 403"));
+    mockGrokCreate.mockRejectedValue(new Error("xai quota exceeded 429"));
+    mockOpenAiCreate.mockResolvedValue({
+      choices: [{ message: { content: "gpt answer" } }],
+    });
+
+    const attempts: string[] = [];
+    const { aiRouter } = await import("../../lib/ai/router.js");
+    const result = await aiRouter.runTask({
+      taskType: "multi_document_chat",
+      userPrompt: "compare",
+      onProviderAttempt: (attempt) => attempts.push(attempt.provider),
+    });
+
+    expect(result.providerUsed).toBe("openai");
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.answer).toBe("gpt answer");
+    expect(attempts).toEqual(["google", "xai", "openai"]);
+  });
+
+  it("throws only after google, xai, and openai all fail", async () => {
     process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
     process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
     mockGeminiCreate.mockRejectedValue(new Error("gemini provider_error"));
-    mockOpenAiCreate.mockRejectedValue(new Error("openai provider_error"));
     mockGrokCreate.mockRejectedValue(new Error("xai provider_error"));
+    mockOpenAiCreate.mockRejectedValue(new Error("openai provider_error"));
 
     const attempts: string[] = [];
     const { aiRouter } = await import("../../lib/ai/router.js");
@@ -128,19 +128,19 @@ describe("aiRouter", () => {
         userPrompt: "hello",
         onProviderAttempt: (attempt) => attempts.push(attempt.provider),
       }),
-    ).rejects.toThrow(/google:.*openai:.*xai:/);
+    ).rejects.toThrow(/google:.*xai:.*openai:/);
 
-    expect(attempts).toEqual(["google", "openai", "xai"]);
+    expect(attempts).toEqual(["google", "xai", "openai"]);
   });
 
   it("falls back when Gemini returns empty text", async () => {
     process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
-    process.env.OPENAI_API_KEY = "sk-openai";
+    process.env.XAI_API_KEY = "xai-key";
     mockGeminiCreate.mockResolvedValue({
       choices: [{ message: { content: "   " } }],
     });
-    mockOpenAiCreate.mockResolvedValue({
-      choices: [{ message: { content: "gpt answer" } }],
+    mockGrokCreate.mockResolvedValue({
+      choices: [{ message: { content: "grok answer" } }],
     });
 
     const { aiRouter } = await import("../../lib/ai/router.js");
@@ -149,9 +149,9 @@ describe("aiRouter", () => {
       userPrompt: "hello",
     });
 
-    expect(result.providerUsed).toBe("openai");
-    expect(result.answer).toBe("gpt answer");
-    expect(mockOpenAiCreate).toHaveBeenCalled();
+    expect(result.providerUsed).toBe("xai");
+    expect(result.answer).toBe("grok answer");
+    expect(mockGrokCreate).toHaveBeenCalled();
   });
 
   it("works when openai is disabled and xai is primary", async () => {
