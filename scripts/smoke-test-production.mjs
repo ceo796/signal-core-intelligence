@@ -25,6 +25,37 @@ if (!webBaseUrl) {
 
 const sameOrigin = webBaseUrl === apiBaseUrl;
 
+const EXPECTED_PROVIDER_CHAIN = ['google', 'xai'];
+
+function validateAiRuntime(body) {
+  const errors = [];
+  const ai = body?.ai;
+  if (!ai) {
+    errors.push('runtime-check missing ai block');
+    return errors;
+  }
+
+  if (ai.openaiEnabled !== false) {
+    errors.push(`openaiEnabled expected false, got ${JSON.stringify(ai.openaiEnabled)}`);
+  }
+  if (ai.embeddingStatus !== 'local') {
+    errors.push(`embeddingStatus expected "local", got ${JSON.stringify(ai.embeddingStatus)}`);
+  }
+  for (const task of ['document_chat', 'multi_document_chat', 'executive_brief']) {
+    const chain = ai.resolvedProviderChain?.[task];
+    if (JSON.stringify(chain) !== JSON.stringify(EXPECTED_PROVIDER_CHAIN)) {
+      errors.push(
+        `resolvedProviderChain.${task} expected ${JSON.stringify(EXPECTED_PROVIDER_CHAIN)}, got ${JSON.stringify(chain)}`,
+      );
+    }
+  }
+  if (ai.availableProviders?.includes('openai')) {
+    errors.push('availableProviders must not include openai');
+  }
+
+  return errors;
+}
+
 const checks = [
   { service: 'web', baseUrl: webBaseUrl, path: '/', expected: 200 },
   { service: 'web', baseUrl: webBaseUrl, path: '/sign-in', expected: 200 },
@@ -39,7 +70,15 @@ const checks = [
     sameOriginNoCors: sameOrigin,
   },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/health', expected: [200, 503], json: true },
-  { service: 'api', baseUrl: apiBaseUrl, path: '/api/runtime-check', expected: 200, json: true, runtimeHealthy: true },
+  {
+    service: 'api',
+    baseUrl: apiBaseUrl,
+    path: '/api/runtime-check',
+    expected: 200,
+    json: true,
+    runtimeHealthy: true,
+    validateAiRuntime: true,
+  },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/documents', expected: 401, json: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/notes', expected: 401, json: true },
   { service: 'api', baseUrl: apiBaseUrl, path: '/api/trash', expected: 401, json: true },
@@ -58,11 +97,23 @@ for (const check of checks) {
     const statusOk = expectedStatuses.includes(response.status);
     let bodyOk = true;
     let runtimeOk = true;
+    let aiRuntimeOk = true;
     if (check.json) {
       const contentType = response.headers.get('content-type') || '';
       bodyOk = contentType.includes('application/json');
       if (bodyOk) {
         const body = await response.json();
+        if (check.validateAiRuntime) {
+          const aiErrors = validateAiRuntime(body);
+          if (aiErrors.length > 0) {
+            aiRuntimeOk = false;
+            for (const message of aiErrors) {
+              console.error(`AI runtime-check: ${message}`);
+            }
+          } else {
+            console.log('PASS ai runtime-check openai disabled; google→xai chains; local embeddings');
+          }
+        }
         if (check.runtimeHealthy) {
           runtimeOk = body?.status === 'ok';
           if (body?.storage?.configured !== true) {
@@ -94,14 +145,15 @@ for (const check of checks) {
       }
     }
 
-    if (statusOk && bodyOk && runtimeOk && corsOk) {
+    if (statusOk && bodyOk && runtimeOk && corsOk && aiRuntimeOk) {
       console.log(`PASS ${check.service} ${check.path} -> ${response.status}`);
     } else {
       failures += 1;
       console.error(
         `FAIL ${check.service} ${check.path} -> ${response.status}; expected ${expectedStatuses.join(' or ')}` +
           (check.json && !bodyOk ? '; expected JSON response' : '') +
-          (check.runtimeHealthy && !runtimeOk ? '; expected runtime status ok' : ''),
+          (check.runtimeHealthy && !runtimeOk ? '; expected runtime status ok' : '') +
+          (check.validateAiRuntime && !aiRuntimeOk ? '; expected Gemini→Grok AI runtime policy' : ''),
       );
     }
   } catch (error) {
