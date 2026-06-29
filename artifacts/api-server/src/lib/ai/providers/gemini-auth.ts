@@ -10,6 +10,7 @@ const GEMINI_SCOPES = [
 type ServiceAccountCredentials = {
   client_email: string;
   private_key: string;
+  project_id?: string;
   [key: string]: unknown;
 };
 
@@ -58,6 +59,17 @@ export function geminiAuthMode(): "api_key" | "service_account" | "missing" {
   }
   if (geminiServiceAccountConfigured()) return "service_account";
   return "missing";
+}
+
+export function getGeminiProjectId(): string | null {
+  return (
+    process.env.GEMINI_PROJECT_ID?.trim() ||
+    process.env.VERTEX_PROJECT_ID?.trim() ||
+    process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
+    process.env.GCP_PROJECT?.trim() ||
+    readServiceAccountCredentials()?.project_id?.trim() ||
+    null
+  );
 }
 
 export async function getGeminiAccessToken(): Promise<string> {
