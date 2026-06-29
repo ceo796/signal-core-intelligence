@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,18 +8,15 @@ import { MarkdownAnswer } from "@/components/markdown-answer";
 import { customFetch, useListDocuments } from "@workspace/api-client-react";
 import {
   AlertCircle,
+  BarChart2,
   CheckCircle2,
   Clock3,
   FileText,
-  GitCompare,
   Loader2,
   Quote,
-  Search,
-  ShieldAlert,
   Sparkles,
   Tags,
   Terminal,
-  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -66,17 +64,12 @@ type SkillRunResult = {
   };
 };
 
-type ListSkillsResponse = { skills: Skill[] };
+type ListSkillsResponse = { skills: Skill[]; guidance?: string };
 
 const SKILL_ICONS: Record<string, typeof Sparkles> = {
-  "summarize-document": FileText,
+  "quick-summary": FileText,
   "extract-key-terms": Tags,
-  "risk-review": ShieldAlert,
-  "compare-documents": GitCompare,
-  "executive-brief": ClipboardList,
-  "due-diligence-memo": CheckCircle2,
   "timeline-builder": Clock3,
-  "ask-across-documents": Search,
 };
 
 function formatUploadedAt(value: string | Date | undefined): string {
@@ -86,15 +79,12 @@ function formatUploadedAt(value: string | Date | undefined): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function requiresQuestion(skill: Skill | null): boolean {
-  return Boolean(skill?.requiredInputs.includes("instruction"));
-}
-
 export default function SkillsPage() {
   const { data: documentsData, isLoading: docsLoading } = useListDocuments({ limit: 100 });
   const documents = useMemo(() => documentsData?.items ?? [], [documentsData?.items]);
 
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [skillsGuidance, setSkillsGuidance] = useState<string | null>(null);
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
@@ -109,6 +99,7 @@ export default function SkillsPage() {
       .then((data) => {
         if (cancelled) return;
         setSkills(data.skills);
+        setSkillsGuidance(data.guidance ?? null);
         setActiveSkillId((current) => current ?? data.skills[0]?.skillId ?? null);
       })
       .catch(() => toast.error("Could not load Skills."))
@@ -127,7 +118,7 @@ export default function SkillsPage() {
 
   const selectedDocuments = documents.filter((doc) => selectedDocumentIds.includes(doc.id));
   const maxDocuments = activeSkill?.maxDocuments ?? 5;
-  const canRun = Boolean(activeSkill) && selectedDocumentIds.length > 0 && (!requiresQuestion(activeSkill) || instruction.trim().length > 0) && !running;
+  const canRun = Boolean(activeSkill) && selectedDocumentIds.length > 0 && !running;
 
   function toggleDocument(id: number) {
     setSelectedDocumentIds((current) => {
@@ -142,11 +133,6 @@ export default function SkillsPage() {
 
   async function runSkill() {
     if (!activeSkill || selectedDocumentIds.length === 0) return;
-    if (requiresQuestion(activeSkill) && !instruction.trim()) {
-      toast.error("Enter a question or instruction for this skill.");
-      return;
-    }
-
     setRunning(true);
     setResult(null);
     try {
@@ -182,22 +168,37 @@ export default function SkillsPage() {
                 Built-in document intelligence workflows
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Run structured, cited workflows across your documents without writing a perfect prompt.
+                One-click extraction and summary workflows. For briefs, risk review, comparison, and open Q&amp;A, use{" "}
+                <Link href="/analyze" className="text-primary hover:underline">
+                  Analyze
+                </Link>{" "}
+                or{" "}
+                <Link href="/agents/hybrid" className="text-primary hover:underline">
+                  AI Chat
+                </Link>
+                .
               </p>
             </div>
             <Badge variant="outline" className="w-fit text-xs">
-              Gemini-powered · Document-grounded
+              Grok-powered · Document-grounded
             </Badge>
           </header>
+
+          {skillsGuidance && (
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-card/60 px-4 py-3 text-xs leading-5 text-muted-foreground">
+              <BarChart2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p>{skillsGuidance}</p>
+            </div>
+          )}
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_390px]">
             <section className="space-y-4">
               {skillsLoading ? (
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+                <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
                 </div>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-3">
                   {skills.map((skill) => {
                     const Icon = SKILL_ICONS[skill.skillId] ?? Sparkles;
                     const selected = skill.skillId === activeSkillId;
@@ -286,17 +287,17 @@ export default function SkillsPage() {
                   <div>
                     <h2 className="text-sm font-semibold text-foreground">Instruction</h2>
                     <p className="text-xs text-muted-foreground">
-                      {requiresQuestion(activeSkill) ? "Required for Ask Across Documents." : "Optional. Add a focus area, audience, or question."}
+                      Optional. Narrow the skill — e.g. focus on financial terms, employment history, or notice periods.
                     </p>
                   </div>
-                  <Badge variant={requiresQuestion(activeSkill) ? "default" : "outline"} className="text-[10px]">
-                    {requiresQuestion(activeSkill) ? "Required" : "Optional"}
+                  <Badge variant="outline" className="text-[10px]">
+                    Optional
                   </Badge>
                 </div>
                 <textarea
                   value={instruction}
                   onChange={(e) => setInstruction(e.target.value)}
-                  placeholder={requiresQuestion(activeSkill) ? "Ask a question across the selected documents…" : "Example: focus on deadlines, financial exposure, investor-facing summary, or unusual terms…"}
+                  placeholder="Example: focus on employment dates, financial terms, notice periods, or defined terms only…"
                   className="mt-3 min-h-28 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
                 />
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
