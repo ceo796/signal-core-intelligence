@@ -26,7 +26,12 @@ function loadEnv() {
 
 async function clerkSignInUrl() {
   const secret = process.env.CLERK_SECRET_KEY;
-  const email = (process.env.SMOKE_USER_EMAIL ?? process.env.APPROVED_EMAILS?.split(",")[0] ?? "").trim();
+  const email = (
+    process.env.SMOKE_USER_EMAIL ??
+    process.env.ADMIN_EMAILS?.split(",")[0] ??
+    process.env.APPROVED_EMAILS?.split(",")[0] ??
+    ""
+  ).trim();
   if (!secret || !email) throw new Error("CLERK_SECRET_KEY and approved email required");
 
   const usersRes = await fetch(
@@ -79,6 +84,11 @@ async function clickRail(page, title) {
 }
 
 loadEnv();
+
+if (!process.env.CLERK_SECRET_KEY) {
+  console.error("CLERK_SECRET_KEY missing — source .env or set in environment.");
+  process.exit(1);
+}
 
 console.log(`=== UI audit @ ${base} ===\n`);
 
@@ -320,7 +330,12 @@ try {
 if (createdNoteId) {
   try {
     const secret = process.env.CLERK_SECRET_KEY;
-    const email = (process.env.APPROVED_EMAILS?.split(",")[0] ?? "").trim();
+    const email = (
+      process.env.SMOKE_USER_EMAIL ??
+      process.env.ADMIN_EMAILS?.split(",")[0] ??
+      process.env.APPROVED_EMAILS?.split(",")[0] ??
+      ""
+    ).trim();
     const users = await (await fetch(`https://api.clerk.com/v1/users?email_address=${encodeURIComponent(email)}&limit=1`, { headers: { Authorization: `Bearer ${secret}` } })).json();
     const sess = await (await fetch("https://api.clerk.com/v1/sessions", { method: "POST", headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }, body: JSON.stringify({ user_id: users[0].id }) })).json();
     const jwt = (await (await fetch(`https://api.clerk.com/v1/sessions/${sess.id}/tokens`, { method: "POST", headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }, body: "{}" })).json()).jwt;
