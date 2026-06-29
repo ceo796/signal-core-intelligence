@@ -9,7 +9,7 @@ import { getCurrentUserId } from "../../lib/ownership";
 
 const ROUTE = "POST /api/agent/hybrid";
 const RETRIEVAL_TIMEOUT_MS = 10_000;
-const LLM_TIMEOUT_MS = 22_000;
+const LLM_TIMEOUT_MS = 45_000;
 const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
 const MODE_PROMPTS: Record<string, string> = {
@@ -20,10 +20,11 @@ const MODE_PROMPTS: Record<string, string> = {
   diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention. Always cite each finding with [Source N]. Be thorough and precise.`,
 };
 
-// Shared grounding + reasoning policy. This assistant uses GPT first with Grok fallback: it grounds
-// answers in the user's documents (with [Source N] citations) and may supplement with the
-// GPT model's own general reasoning when the documents fall short — clearly labeled, and
-// never implying any web/external/real-time source (there is no web access here).
+// Shared grounding + reasoning policy. Signal87 is provider-agnostic and currently
+// routes reasoning through Gemini first, then configured fallbacks. Answers are grounded
+// in the user's documents (with [Source N] citations) and may supplement with general
+// AI reasoning when the documents fall short — clearly labeled, and never implying any
+// web/external/real-time source (there is no web access here).
 const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
 - Treat the source excerpts below as your primary evidence. Any statement taken from a document MUST cite its [Source N].
 - These excerpts are your only document context. You have NO web access, browsing, or real-time data — never state or imply that any part of your answer came from the internet, a search, or any external or live source.
@@ -84,7 +85,7 @@ function buildFallbackAnswer(query: string, citations: Array<{ citationNumber: n
 
   const intro = query.toLowerCase().includes("recent") || query.toLowerCase().includes("upload")
     ? "Here are the most recent indexed document uploads I could review:"
-    : "I found relevant document excerpts, but the GPT response took too long. Here is a grounded extractive answer:";
+    : "I found relevant document excerpts, but the AI model response took too long. Here is a grounded extractive answer:";
 
   const bullets = citations.slice(0, 8).map((c) => {
     const excerpt = c.excerpt.replace(/\s+/g, " ").trim();
@@ -285,6 +286,8 @@ ${sourceBlocks}`;
     req.log.error({ err }, "Hybrid agent AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     answer = buildFallbackAnswer(query, citations);
+    llmProvider = "local";
+    llmModel = "extractive-fallback";
     fallbackUsed = true;
   }
   const llmLatencyMs = Date.now() - llmStart;
@@ -300,6 +303,8 @@ ${sourceBlocks}`;
       chunksConsidered: citations.length,
       totalChunksSearched,
       totalLatencyMs,
+      retrievalLatencyMs,
+      llmLatencyMs,
       fallbackUsed,
       errors: retrievalError ?? llmError ?? null,
     },
