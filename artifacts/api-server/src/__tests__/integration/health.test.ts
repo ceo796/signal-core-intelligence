@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import request from "supertest";
 
 vi.mock("@clerk/express", () => ({
@@ -12,6 +12,12 @@ vi.mock("@clerk/shared/keys", () => ({
 }));
 
 import app from "../../app.js";
+
+beforeEach(() => {
+  process.env.AI_PRIMARY_REASONING_PROVIDER = "xai";
+  process.env.AI_FINAL_FALLBACK_PROVIDER = "google";
+  delete process.env.AI_FALLBACK_PROVIDER_ORDER;
+});
 
 describe("GET /api/healthz", () => {
   it("returns 200 with status ok", async () => {
@@ -43,11 +49,11 @@ describe("GET /api/health", () => {
           ready: expect.any(Boolean),
         },
         aiRouter: {
-          resolvedReasoningChain: ["google", "xai"],
+          resolvedReasoningChain: ["xai", "google"],
           resolvedProviderChain: {
-            document_chat: ["google", "xai"],
-            multi_document_chat: ["google", "xai"],
-            executive_brief: ["google", "xai"],
+            document_chat: ["xai", "google"],
+            multi_document_chat: ["xai", "google"],
+            executive_brief: ["xai", "google"],
             extraction: [],
           },
           openaiEnabled: false,
@@ -66,15 +72,15 @@ describe("GET /api/health", () => {
 });
 
 describe("GET /api/runtime-check", () => {
-  it("reports Gemini-first provider chains and disabled OpenAI", async () => {
+  it("reports Grok-first provider chains and disabled OpenAI", async () => {
     const res = await request(app).get("/api/runtime-check");
     expect(res.status).toBe(200);
     expect(res.body.ai).toMatchObject({
       openaiEnabled: false,
       resolvedProviderChain: {
-        document_chat: ["google", "xai"],
-        multi_document_chat: ["google", "xai"],
-        executive_brief: ["google", "xai"],
+        document_chat: ["xai", "google"],
+        multi_document_chat: ["xai", "google"],
+        executive_brief: ["xai", "google"],
         extraction: [],
       },
       embeddingProvider: "google",

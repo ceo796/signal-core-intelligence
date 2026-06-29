@@ -4,6 +4,7 @@ export type AiTaskType =
   | "document_summary"
   | "document_compare"
   | "diligence_memo"
+  | "fact_extraction"
   | "executive_brief"
   | "evidence_compilation"
   | "document_extraction"
@@ -98,6 +99,7 @@ export interface ProviderGenerateTextRequest {
   messages: ChatMessage[];
   maxTokens?: number;
   responseFormat?: "text" | "json_object";
+  taskType?: AiTaskType;
 }
 
 export interface ProviderGenerateTextResult {

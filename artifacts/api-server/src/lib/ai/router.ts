@@ -50,7 +50,12 @@ function logProviderAttempt(attempt: ProviderAttemptLog, onAttempt?: (attempt: P
   onAttempt?.(attempt);
 }
 
-function providerTimeoutMs(): number {
+function providerTimeoutMs(providerId: ProviderId): number {
+  if (providerId === "xai") {
+    const grokTimeout = Number(process.env.GROK_PROVIDER_TIMEOUT_MS ?? "45000");
+    if (Number.isFinite(grokTimeout) && grokTimeout > 0) return grokTimeout;
+  }
+
   const parsed = Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000");
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 12_000;
 }
@@ -93,7 +98,6 @@ async function invokeProviderTask(
   }
 
   const errors: string[] = [];
-  const timeoutMs = providerTimeoutMs();
   const started = Date.now();
 
   for (let i = 0; i < chain.length; i++) {
@@ -128,8 +132,9 @@ async function invokeProviderTask(
           messages,
           maxTokens: request.maxTokens ?? config.maxTokens,
           responseFormat: request.structuredOutput ? "json_object" : "text",
+          taskType: request.taskType,
         }),
-        timeoutMs,
+        providerTimeoutMs(providerId),
         providerId,
       );
 

@@ -64,6 +64,9 @@ const SOURCE_LABELS = {
   web_context_placeholder_disabled: "Web context",
 } as const;
 
+const PILL_ON_WHITE =
+  "text-[#111110]";
+
 const PILL_CLASS =
   "inline-flex items-center gap-1.5 h-8 rounded-md border border-border bg-card px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors select-none active:scale-[0.98] touch-manipulation";
 
@@ -283,7 +286,7 @@ function CitationCard({
         onClick={onToggle}
         className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-[#eceae4] transition-colors select-none active:scale-[0.98] touch-manipulation"
       >
-        <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-[10px] bg-white text-[#3d7a5e] border border-[#d8d5ce]">
+        <span className={`shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-[10px] bg-white border border-[#d8d5ce] ${PILL_ON_WHITE}`}>
           {citation.citationNumber}
         </span>
         <div className="flex-1 min-w-0">
@@ -415,7 +418,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
     (sourceFilter instanceof Set && sourceFilter.size === citationDocs.length);
 
   const PILL =
-    "inline-flex items-center gap-1.5 h-7 rounded-[20px] border border-white/12 bg-white/[0.08] px-2.5 text-xs font-medium text-[#f4f3ef]/70 hover:bg-white/[0.12] hover:text-[#f4f3ef] transition-colors cursor-pointer select-none active:scale-[0.94] touch-manipulation";
+    `inline-flex items-center gap-1.5 h-7 rounded-[20px] border border-[#d8d5ce] bg-white px-2.5 text-xs font-medium ${PILL_ON_WHITE} hover:bg-[#f4f3ef] transition-colors cursor-pointer select-none active:scale-[0.94] touch-manipulation`;
 
   return (
     <div className="space-y-4">
@@ -424,7 +427,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-[#3d7a5e] shrink-0" />
             <span className="text-sm font-medium text-[#3d7a5e]">AI Answer</span>
-            <span className="ml-auto rounded-[10px] border border-[#d8d5ce] bg-white px-2 py-0.5 text-[11px] text-[#6b7068]">
+            <span className={`ml-auto rounded-[10px] border border-[#d8d5ce] bg-white px-2 py-0.5 text-[11px] font-medium ${PILL_ON_WHITE}`}>
               {result.mode}
             </span>
           </div>
@@ -448,7 +451,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
             <div
               className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs ${
                 answerCitesDocuments
-                  ? "bg-white text-[#3d7a5e] border border-[#d8d5ce]"
+                  ? `bg-white border border-[#d8d5ce] ${PILL_ON_WHITE}`
                   : "bg-[#eceae4] text-[#6b7068]"
               }`}
             >
@@ -458,7 +461,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                 <span className="opacity-70 text-[10px]">· not used</span>
               )}
             </div>
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-white text-[#3d7a5e] border border-[#d8d5ce]">
+            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-white border border-[#d8d5ce] ${PILL_ON_WHITE}`}>
               <Sparkles className="w-3 h-3 shrink-0" />
               <span className="flex-1">{SOURCE_LABELS.llm_reasoning}</span>
             </div>
@@ -488,10 +491,10 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                 {result.documentsUsed.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] bg-white border border-[#d8d5ce] text-xs"
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] bg-white border border-[#d8d5ce] text-xs ${PILL_ON_WHITE}`}
                   >
-                    <FileText className="w-3 h-3 shrink-0 text-[#6b7068]" />
-                    <span className="truncate text-[#1f1f1f]" title={doc.name}>
+                    <FileText className="w-3 h-3 shrink-0 text-[#111110]/70" />
+                    <span className={`truncate ${PILL_ON_WHITE}`} title={doc.name}>
                       {doc.name}
                     </span>
                   </div>
@@ -687,7 +690,7 @@ export default function HybridAgent() {
               <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
-                    <div className="max-w-[90%] rounded-[20px] rounded-br-[8px] bg-[#3d7a5e] text-white px-4 py-2.5 text-[13px] whitespace-pre-wrap">
+                    <div className={`max-w-[90%] rounded-[20px] rounded-br-[8px] bg-primary px-4 py-2.5 text-[13px] font-medium whitespace-pre-wrap ${PILL_ON_WHITE}`}>
                       {submittedQuery}
                     </div>
                   </div>
