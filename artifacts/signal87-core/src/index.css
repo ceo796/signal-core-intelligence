@@ -596,6 +596,7 @@ html {
 
 .signal-app [class*="bg-[#3d7a5e]"] {
   background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 .signal-app [class*="hover:bg-[#5a9e7a]"]:hover {

@@ -687,7 +687,7 @@ export default function HybridAgent() {
               <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
-                    <div className="max-w-[90%] rounded-[20px] rounded-br-[8px] bg-[#3d7a5e] text-white px-4 py-2.5 text-[13px] whitespace-pre-wrap">
+                    <div className="max-w-[90%] rounded-[20px] rounded-br-[8px] bg-primary text-primary-foreground px-4 py-2.5 text-[13px] whitespace-pre-wrap">
                       {submittedQuery}
                     </div>
                   </div>
