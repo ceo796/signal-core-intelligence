@@ -47,6 +47,41 @@ describe("file-store (pure functions)", () => {
     });
   });
 
+  describe("getRuntimeStorageStatus", () => {
+    const origProvider = process.env.STORAGE_PROVIDER;
+    const origDir = process.env.FILE_STORAGE_DIR;
+
+    afterEach(() => {
+      restoreEnv("STORAGE_PROVIDER", origProvider);
+      restoreEnv("FILE_STORAGE_DIR", origDir);
+    });
+
+    it("reports uploads disabled when FILE_STORAGE_DIR is missing", async () => {
+      process.env.STORAGE_PROVIDER = "local";
+      delete process.env.FILE_STORAGE_DIR;
+      const { getRuntimeStorageStatus } = await import("../../lib/file-store.js");
+      expect(getRuntimeStorageStatus()).toMatchObject({
+        configured: false,
+        uploadsEnabled: false,
+        fileStorageDir: "missing",
+        productionSafe: false,
+      });
+    });
+
+    it("reports uploads enabled when durable storage is configured", async () => {
+      process.env.STORAGE_PROVIDER = "local";
+      process.env.FILE_STORAGE_DIR = "/tmp/signal87-test-uploads";
+      const { getRuntimeStorageStatus } = await import("../../lib/file-store.js");
+      expect(getRuntimeStorageStatus()).toMatchObject({
+        configured: true,
+        uploadsEnabled: true,
+        fileStorageDir: "set",
+        productionSafe: true,
+        storageProviderEnv: "local",
+      });
+    });
+  });
+
   describe("getMimeType", () => {
     it("maps pdf", async () => {
       const { getMimeType } = await import("../../lib/file-store.js");

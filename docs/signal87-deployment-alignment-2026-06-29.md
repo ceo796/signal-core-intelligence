@@ -40,6 +40,10 @@ Google/Gemini -> xAI/Grok -> local fallback
 
 OpenAI should not be required for runtime document analysis.
 
+## Deployment model
+
+Production uses **one Node service** (`production-server.mjs`) serving the React SPA and `/api/*` on the same domain. See [DEPLOYMENT.md](../DEPLOYMENT.md).
+
 ## Build-terminal prompt
 
 ```text
