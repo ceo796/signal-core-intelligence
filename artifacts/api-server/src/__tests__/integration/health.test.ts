@@ -43,9 +43,14 @@ describe("GET /api/health", () => {
           ready: expect.any(Boolean),
         },
         aiRouter: {
-          resolvedReasoningChain: ["google", "xai"],
-          embeddingMode: "local",
-          openaiRuntimeEnabled: false,
+          resolvedReasoningChain: ["google", "openai", "xai"],
+          taskProviderChains: {
+            document_chat: ["google", "openai", "xai"],
+            multi_document_chat: ["google", "openai", "xai"],
+            executive_brief: ["google", "openai", "xai"],
+            extraction: [],
+          },
+          openaiRuntimeEnabled: true,
           openaiCallsEnabled: false,
         },
       },

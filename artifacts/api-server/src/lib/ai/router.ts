@@ -1,5 +1,5 @@
 import { providerSupportsTask } from "./capabilities";
-import { RUNTIME_DISABLED_PROVIDERS, loadAiConfig, resolveTaskProviderChain } from "./config";
+import { loadAiConfig, resolveTaskProviderChain } from "./config";
 import { AiRouterError, classifyProviderError } from "./errors";
 import { buildMessages, buildNormalizedResponse } from "./normalize";
 import { getProvider } from "./providers";
@@ -33,6 +33,7 @@ function defaultLogger(context: AiRouterLogContext): void {
 
 function providerDisplayName(providerId: string): string {
   if (providerId === "google") return "Gemini";
+  if (providerId === "openai") return "OpenAI";
   if (providerId === "xai") return "Grok";
   return providerId;
 }
@@ -97,14 +98,6 @@ async function invokeProviderTask(
 
   for (let i = 0; i < chain.length; i++) {
     const providerId = chain[i];
-    if (RUNTIME_DISABLED_PROVIDERS.has(providerId)) {
-      console.warn("ai_router_provider_skipped", {
-        provider: providerId,
-        reason: "OpenAI is disabled in Signal87 runtime",
-      });
-      continue;
-    }
-
     const fallbackTarget = chain[i + 1];
     const provider = getProvider(providerId);
     if (!provider?.isAvailable()) {
@@ -187,7 +180,8 @@ async function invokeProviderTask(
 
   console.warn("ai_router_local_fallback_eligible", {
     taskType: request.taskType,
-    message: "Gemini and Grok failed; route may use local extractive fallback",
+    message: "Configured LLM chain exhausted; route may use local extractive fallback",
+    chain,
     errors,
   });
 

@@ -3,6 +3,7 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import {
   getResolvedReasoningChain,
+  getTaskProviderChains,
   isOpenAiCallsEnabled,
   isOpenAiRuntimeEnabled,
   loadAiConfig,
@@ -50,14 +51,18 @@ function buildAiRouterStatus() {
   const aiConfig = loadAiConfig();
   const availableProviders = listAvailableProviders();
   const resolvedReasoningChain = getResolvedReasoningChain("document_chat", aiConfig);
+  const taskProviderChains = getTaskProviderChains(aiConfig);
   const xaiConfigured = Boolean(process.env.XAI_API_KEY || process.env.GROK_API_KEY);
+  const openaiConfigured = Boolean(process.env.OPENAI_API_KEY);
   const googleSaConfigured = geminiServiceAccountConfigured();
   const geminiReady = availableProviders.includes("google");
   const xaiReady = availableProviders.includes("xai");
+  const openaiReady = availableProviders.includes("openai");
 
   return {
-    ready: geminiReady || xaiReady,
+    ready: geminiReady || xaiReady || openaiReady,
     resolvedReasoningChain,
+    taskProviderChains,
     embeddingMode: getEmbeddingMode(),
     openaiRuntimeEnabled: isOpenAiRuntimeEnabled(aiConfig),
     openaiCallsEnabled: isOpenAiCallsEnabled(aiConfig),
@@ -66,7 +71,7 @@ function buildAiRouterStatus() {
     credentials: {
       googleServiceAccount: googleSaConfigured ? "set" : "missing",
       xai: xaiConfigured ? "set" : "missing",
-      openai: "disabled",
+      openai: openaiConfigured ? "set" : "missing",
     },
     availableProviders,
     embeddingModel: getEmbeddingModelName(),
@@ -136,6 +141,7 @@ router.get("/runtime-check", async (_req, res) => {
       fallbackProviderOrder: aiConfig.fallbackProviderOrder,
       finalFallbackProvider: aiConfig.finalFallbackProvider,
       resolvedReasoningChain: aiRouter.resolvedReasoningChain,
+      taskProviderChains: aiRouter.taskProviderChains,
       reasoningProviderChain: resolveTaskProviderChain("document_chat", aiConfig),
       openaiRuntimeEnabled: aiRouter.openaiRuntimeEnabled,
       openaiCallsEnabled: aiRouter.openaiCallsEnabled,
@@ -143,12 +149,9 @@ router.get("/runtime-check", async (_req, res) => {
       evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
       qualityReviewProvider: aiConfig.qualityReviewProvider,
       embeddingMode: aiRouter.embeddingMode,
-      embeddingProvider: "local",
+      embeddingProvider: aiConfig.embeddingProvider,
       availableProviders: aiRouter.availableProviders,
-      models: {
-        google: aiConfig.models.google,
-        xai: aiConfig.models.xai,
-      },
+      models: aiConfig.models,
       embeddingModel: aiRouter.embeddingModel,
       geminiAuthMode: aiRouter.geminiAuthMode,
       geminiProjectId: aiRouter.geminiProjectId,
@@ -158,6 +161,7 @@ router.get("/runtime-check", async (_req, res) => {
     },
     requiredConfig: {
       DATABASE_URL: configStatus("DATABASE_URL"),
+      OPENAI_API_KEY: configStatus("OPENAI_API_KEY"),
       XAI_API_KEY: configStatus("XAI_API_KEY"),
       GEMINI_SERVICE_ACCOUNT_JSON: configStatus("GEMINI_SERVICE_ACCOUNT_JSON"),
       GEMINI_SERVICE_ACCOUNT_PATH: configStatus("GEMINI_SERVICE_ACCOUNT_PATH"),

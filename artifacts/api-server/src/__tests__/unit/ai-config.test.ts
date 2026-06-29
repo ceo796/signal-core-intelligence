@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   getResolvedReasoningChain,
+  getTaskProviderChains,
   isOpenAiCallsEnabled,
   isOpenAiRuntimeEnabled,
   loadAiConfig,
@@ -12,6 +13,8 @@ describe("ai config", () => {
     delete process.env.AI_PRIMARY_REASONING_PROVIDER;
     delete process.env.AI_FINAL_FALLBACK_PROVIDER;
     delete process.env.AI_FALLBACK_PROVIDER_ORDER;
+    delete process.env.AI_EMBEDDING_PROVIDER;
+    delete process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_MODEL;
     delete process.env.GROK_MODEL;
     delete process.env.GEMINI_MODEL;
@@ -30,32 +33,46 @@ describe("ai config", () => {
     expect(config.models.openai.chat).toBe("custom-openai");
     expect(config.models.xai.chat).toBe("custom-grok");
     expect(config.models.google.chat).toBe("custom-gemini");
+    expect(config.embeddingProvider).toBe("openai");
   });
 
-  it("orders fallbacks as Gemini then Grok with OpenAI excluded", () => {
+  it("orders fallbacks from explicit env as primary then fallback order then final fallback", () => {
     process.env.AI_PRIMARY_REASONING_PROVIDER = "google";
     process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
-    process.env.AI_FALLBACK_PROVIDER_ORDER = "xai";
+    process.env.AI_FALLBACK_PROVIDER_ORDER = "openai,xai";
 
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain).toEqual(["google", "xai"]);
+    expect(chain).toEqual(["google", "openai", "xai"]);
   });
 
-  it("defaults reasoning chain to Gemini then Grok with OpenAI disabled", () => {
+  it("defaults reasoning chain to Gemini then OpenAI then Grok", () => {
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain).toEqual(["google", "xai"]);
-    expect(isOpenAiRuntimeEnabled()).toBe(false);
+    expect(chain).toEqual(["google", "openai", "xai"]);
+    expect(isOpenAiRuntimeEnabled()).toBe(true);
     expect(isOpenAiCallsEnabled()).toBe(false);
-    expect(getResolvedReasoningChain()).toEqual(["google", "xai"]);
+    expect(getResolvedReasoningChain()).toEqual(["google", "openai", "xai"]);
   });
 
-  it("remaps OpenAI/GPT env values to Gemini in the provider chain", () => {
+  it("keeps OpenAI in the provider chain when configured", () => {
     process.env.AI_PRIMARY_REASONING_PROVIDER = "openai";
-    process.env.AI_FINAL_FALLBACK_PROVIDER = "gpt";
-    process.env.AI_FALLBACK_PROVIDER_ORDER = "openai,gpt,xai";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
+    process.env.AI_FALLBACK_PROVIDER_ORDER = "google,xai";
 
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain).toEqual(["google", "xai"]);
-    expect(loadAiConfig().primaryReasoningProvider).toBe("google");
+    expect(chain).toEqual(["openai", "google", "xai"]);
+    expect(loadAiConfig().primaryReasoningProvider).toBe("openai");
+  });
+
+  it("exposes per-task provider chains with local extraction empty", () => {
+    const chains = getTaskProviderChains(loadAiConfig());
+    expect(chains.document_chat).toEqual(["google", "openai", "xai"]);
+    expect(chains.multi_document_chat).toEqual(["google", "openai", "xai"]);
+    expect(chains.executive_brief).toEqual(["google", "openai", "xai"]);
+    expect(chains.extraction).toEqual([]);
+  });
+
+  it("enables OpenAI calls when API key is configured", () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    expect(isOpenAiCallsEnabled()).toBe(true);
   });
 });

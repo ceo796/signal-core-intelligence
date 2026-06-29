@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGrokCreate = vi.fn();
+const mockOpenAiCreate = vi.fn();
 const mockFetch = vi.fn();
 
 vi.mock("openai", () => ({
@@ -8,7 +9,7 @@ vi.mock("openai", () => ({
     if (opts.baseURL === "https://api.x.ai/v1") {
       return { chat: { completions: { create: mockGrokCreate } } };
     }
-    return { chat: { completions: { create: vi.fn() } } };
+    return { chat: { completions: { create: mockOpenAiCreate } } };
   }),
 }));
 
@@ -28,6 +29,7 @@ describe("aiRouter", () => {
   beforeEach(() => {
     vi.resetModules();
     mockGrokCreate.mockReset();
+    mockOpenAiCreate.mockReset();
     mockFetch.mockReset();
     vi.stubGlobal("fetch", mockFetch);
     delete process.env.XAI_API_KEY;
@@ -85,7 +87,7 @@ describe("aiRouter", () => {
     expect(result.answer).toBe("grok answer");
   });
 
-  it("throws after google and xai fail without calling OpenAI", async () => {
+  it("falls back to OpenAI when Gemini and Grok fail", async () => {
     process.env.GEMINI_API_KEY = "test-gemini-key";
     process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
@@ -95,14 +97,20 @@ describe("aiRouter", () => {
       text: async () => "gemini down",
     });
     mockGrokCreate.mockRejectedValue(new Error("grok down"));
+    mockOpenAiCreate.mockResolvedValue({
+      choices: [{ message: { content: "openai answer" } }],
+    });
 
     const { aiRouter } = await import("../../lib/ai/router.js");
-    await expect(
-      aiRouter.runTask({
-        taskType: "document_chat",
-        userPrompt: "hello",
-      }),
-    ).rejects.toThrow(/unavailable|failed/i);
+    const result = await aiRouter.runTask({
+      taskType: "document_chat",
+      userPrompt: "hello",
+    });
+
+    expect(result.providerUsed).toBe("openai");
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.answer).toBe("openai answer");
+    expect(mockOpenAiCreate).toHaveBeenCalled();
   });
 
   it("works when xai is primary", async () => {

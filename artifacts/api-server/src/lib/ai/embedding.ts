@@ -1,39 +1,59 @@
+import { loadAiConfig } from "./config";
+import { getProvider } from "./providers";
 import type { ProviderId } from "./types";
-
-const LOCAL_EMBEDDING_MODEL = "local-bm25";
 
 export async function generateEmbeddings(texts: string[]): Promise<{
   embeddings: number[][];
   providerUsed: string;
   modelUsed: string;
 }> {
-  if (texts.length === 0) {
-    return { embeddings: [], providerUsed: "local", modelUsed: LOCAL_EMBEDDING_MODEL };
+  if (texts.length === 0) return { embeddings: [], providerUsed: "local", modelUsed: "none" };
+
+  const config = loadAiConfig();
+  const chain = getEmbeddingProviderChain(config);
+
+  const errors: string[] = [];
+  for (const providerId of chain) {
+    const provider = getProvider(providerId);
+    if (!provider?.isAvailable() || !provider.generateEmbeddings) continue;
+    try {
+      const result = await provider.generateEmbeddings(texts);
+      return {
+        embeddings: result.embeddings,
+        providerUsed: provider.id,
+        modelUsed: result.model,
+      };
+    } catch (err) {
+      errors.push(`${provider.id}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
-  return {
-    embeddings: texts.map(() => []),
-    providerUsed: "local",
-    modelUsed: LOCAL_EMBEDDING_MODEL,
-  };
+  throw new Error(`Embedding generation failed: ${errors.join("; ") || "no embedding providers configured"}`);
 }
 
-export async function generateEmbedding(_text: string): Promise<number[]> {
-  return [];
+export async function generateEmbedding(text: string): Promise<number[]> {
+  const result = await generateEmbeddings([text]);
+  return result.embeddings[0] ?? [];
 }
 
 export function getEmbeddingModelName(): string {
-  return LOCAL_EMBEDDING_MODEL;
+  const config = loadAiConfig();
+  return config.models[config.embeddingProvider].embedding ?? config.models.openai.embedding ?? "text-embedding-3-small";
 }
 
-export function getEmbeddingMode(): "local" {
-  return "local";
+export function getEmbeddingProviderChain(config = loadAiConfig()): ProviderId[] {
+  return ([config.embeddingProvider, "openai", "google", "xai"] as ProviderId[]).filter(
+    (id, index, all) => all.indexOf(id) === index,
+  );
+}
+
+export function getEmbeddingMode(): "openai" | "local" {
+  const config = loadAiConfig();
+  if (config.embeddingProvider !== "openai") return "local";
+  const provider = getProvider("openai");
+  return provider?.isAvailable() ? "openai" : "local";
 }
 
 export function isRemoteEmbeddingEnabled(): boolean {
-  return false;
-}
-
-export function getEmbeddingProviderChain(): ProviderId[] {
-  return [];
+  return getEmbeddingMode() === "openai";
 }
