@@ -119,6 +119,30 @@ export function MarkdownAnswer({
         {children}
       </pre>
     ),
+    table: ({ children }: { children?: ReactNode }) => (
+      <div className="my-3 w-full overflow-x-auto rounded-lg border border-border bg-background/60">
+        <table className="w-full min-w-[520px] border-collapse text-left text-xs">{children}</table>
+      </div>
+    ),
+    thead: ({ children }: { children?: ReactNode }) => (
+      <thead className="border-b border-border bg-muted/50">{children}</thead>
+    ),
+    tbody: ({ children }: { children?: ReactNode }) => (
+      <tbody className="divide-y divide-border/70">{children}</tbody>
+    ),
+    tr: ({ children }: { children?: ReactNode }) => (
+      <tr className="transition-colors hover:bg-muted/30">{children}</tr>
+    ),
+    th: ({ children }: { children?: ReactNode }) => (
+      <th className="px-3 py-2.5 align-top text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+        {inject(children, "th")}
+      </th>
+    ),
+    td: ({ children }: { children?: ReactNode }) => (
+      <td className="px-3 py-2.5 align-top text-sm leading-5 text-foreground break-words">
+        {inject(children, "td")}
+      </td>
+    ),
   };
 
   return (

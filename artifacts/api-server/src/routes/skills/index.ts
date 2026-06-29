@@ -60,7 +60,7 @@ const SKILLS: SkillDefinition[] = [
       "You are a precise extraction assistant. Extract only terms and facts that appear in the source excerpts. Do not infer missing terms unless clearly labeled as general analysis.",
     requiredInputs: ["documentIds"],
     outputFormat:
-      "Return a structured table-style list with: Term or item, meaning/value, why it matters, source.",
+      "Return a markdown table with columns: Term or item | Meaning/value | Why it matters | Source. One row per extracted item.",
     citationPolicy: "Every extracted item must include a [Source N] citation.",
     maxDocuments: 5,
     maxChunks: 16,
@@ -135,7 +135,7 @@ const SKILLS: SkillDefinition[] = [
       "You are a timeline extraction assistant. Identify dates, deadlines, notice periods, payment dates, event sequences, and procedural steps. Sort chronologically when possible.",
     requiredInputs: ["documentIds"],
     outputFormat:
-      "Return a timeline with: Date/time period, event or obligation, responsible party if stated, source, and notes.",
+      "Return a markdown table with columns: Date/time period | Event or obligation | Responsible party | Notes | Source. Sort chronologically when possible.",
     citationPolicy: "Every timeline item must include a [Source N] citation.",
     maxDocuments: 5,
     maxChunks: 18,
@@ -159,6 +159,17 @@ const SKILLS: SkillDefinition[] = [
 ];
 
 const SKILL_BY_ID = new Map(SKILLS.map((skill) => [skill.skillId, skill]));
+
+const TABLE_OUTPUT_POLICY = `TABLE OUTPUT POLICY (when the skill calls for a table):
+- Use a GitHub-flavored markdown table, not bullets or pipe-separated plain text.
+- Include a short heading above the table (e.g. "## Extracted Key Terms").
+- Use a header row, then a separator row, then one data row per item.
+- Required format example:
+| Term or item | Meaning/value | Why it matters | Source |
+| --- | --- | --- | --- |
+| Example term | Definition or value | Brief rationale | [Source 1] |
+- Keep cell text concise. Put [Source N] only in the Source column.
+- Do not wrap the table in code fences.`;
 
 const GROUNDING_POLICY = `GROUNDING & CITATION POLICY:
 - Use the provided source excerpts as the primary evidence.
@@ -374,9 +385,11 @@ router.post("/skills/run", async (req: Request, res: Response): Promise<void> =>
     .map((citation) => `[Source ${citation.citationNumber}] (Document: "${citation.documentName}", chunk ${citation.chunkIndex}):\n${citation.fullContent}`)
     .join("\n\n---\n\n");
 
+  const tablePolicy = skill.mode === "extract" ? `\n\n${TABLE_OUTPUT_POLICY}` : "";
+
   const systemPrompt = `${skill.systemInstruction}
 
-${GROUNDING_POLICY}
+${GROUNDING_POLICY}${tablePolicy}
 
 SKILL CONFIGURATION:
 - Skill ID: ${skill.skillId}

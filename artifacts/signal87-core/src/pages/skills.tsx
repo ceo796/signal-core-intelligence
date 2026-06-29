@@ -325,17 +325,15 @@ export default function SkillsPage() {
                     Running {activeSkill?.name ?? "skill"}…
                   </div>
                 ) : result ? (
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <MarkdownAnswer
-                      content={result.answer}
-                      citationPattern={/\[\s*sources?\s+(\d+)\s*\]/gi}
-                      renderCitation={(n, key) => (
-                        <span key={key} className="mx-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded bg-primary/15 px-1 text-[11px] font-semibold text-primary align-text-top">
-                          {n}
-                        </span>
-                      )}
-                    />
-                  </div>
+                  <MarkdownAnswer
+                    content={result.answer}
+                    citationPattern={/\[\s*sources?\s+(\d+)\s*\]/gi}
+                    renderCitation={(n, key) => (
+                      <span key={key} className="mx-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded bg-primary/15 px-1 text-[11px] font-semibold text-primary align-text-top">
+                        {n}
+                      </span>
+                    )}
+                  />
                 ) : (
                   <div className="flex min-h-56 flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
                     <Sparkles className="h-8 w-8 opacity-30" />
