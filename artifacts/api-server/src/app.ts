@@ -1,5 +1,4 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
-import cors from "cors";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
@@ -11,6 +10,7 @@ import {
 import healthRouter from "./routes/health";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { applyCorsIfConfigured } from "./lib/cors-config";
 import { logStorageStartupStatus } from "./lib/file-store";
 import { handleStripeWebhook } from "./lib/billing";
 
@@ -53,7 +53,8 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), hand
 // Clerk proxy must be mounted BEFORE express.json()
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-app.use(cors({ credentials: true, origin: true }));
+// Same-origin production: no CORS middleware. Set CORS_ALLOWED_ORIGINS only for external API clients.
+applyCorsIfConfigured(app);
 
 // Runtime health/config checks must stay public so deployment failures can be
 // diagnosed even when Clerk auth is misconfigured.

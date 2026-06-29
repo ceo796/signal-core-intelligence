@@ -1,6 +1,16 @@
 # Signal87 Render Migration Notes
 
 > **Canonical guide:** see [DEPLOYMENT.md](../DEPLOYMENT.md).
+>
+> **Preferred: single-origin Node deployment.**
+>
+> **Avoid split static/API deployment unless there is a specific reason.**
+>
+> **If split deployment is used, `VITE_API_BASE_URL` must be set correctly.**
+
+## Deprecated: `signal87-web` static service
+
+The two-service Render layout (`signal87-web` + `signal87-api`) is retired. Static Render sites cannot proxy `/api/*` to the API service, which forced cross-origin wiring and brittle env configuration. Use one Node service (`signal87` in `render.yaml`) instead.
 
 ## Current target architecture
 

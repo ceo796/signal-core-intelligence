@@ -1,6 +1,12 @@
 # Signal87 Render Production Runbook
 
 > **Canonical guide:** see [DEPLOYMENT.md](../DEPLOYMENT.md) for architecture, environment variables, and same-origin deployment.
+>
+> **Preferred: single-origin Node deployment.**
+>
+> **Avoid split static/API deployment unless there is a specific reason.**
+>
+> **If split deployment is used, `VITE_API_BASE_URL` must be set correctly.**
 
 Signal87 production on Render uses **one Node web service** (`signal87` in `render.yaml`) that serves both the React SPA and `/api/*` via `production-server.mjs`.
 

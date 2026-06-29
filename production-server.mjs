@@ -1,3 +1,5 @@
+// Preferred production entry: serves React SPA + Express /api/* on one origin.
+// Avoid split static/API hosting — see DEPLOYMENT.md.
 import path from "node:path";
 import fs from "node:fs";
 

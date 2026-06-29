@@ -1,6 +1,14 @@
 # Signal87 Deployment
 
+> **Preferred: single-origin Node deployment.**
+>
+> **Avoid split static/API deployment unless there is a specific reason.**
+>
+> **If split deployment is used, `VITE_API_BASE_URL` must be set correctly** on the frontend build, and `CORS_ALLOWED_ORIGINS` must list the frontend origin on the API service.
+
 Signal87 is designed for **single-origin production**: one Node process serves the React frontend and all `/api/*` routes on the same domain.
+
+The legacy split Render setup (`signal87-web` static + `signal87-api` Node) is **deprecated**. Use the single `signal87` web service in `render.yaml` instead.
 
 ## Recommended architecture
 
@@ -49,6 +57,14 @@ Set `VITE_API_BASE_URL` only as an **optional escape hatch** for:
 - API-only deployments without the SPA.
 
 **Do not set `VITE_API_BASE_URL` in normal same-origin production.**
+
+### External / split-origin API mode (optional)
+
+Only when the SPA and API run on **different origins**:
+
+1. Set `VITE_API_BASE_URL` to the API origin on the frontend build.
+2. Set `CORS_ALLOWED_ORIGINS` on the API to a comma-separated list of allowed frontend origins (e.g. `https://www.example.com,https://example.com`).
+3. Do **not** set `CORS_ALLOWED_ORIGINS` on same-origin unified deployments — CORS is disabled by default.
 
 ## Required environment variables
 
