@@ -6,6 +6,9 @@ ENV NODE_ENV=production
 ENV STORAGE_PROVIDER=local
 ENV FILE_STORAGE_DIR=/data/uploads
 
+# Mount a host volume at /data/uploads (must match FILE_STORAGE_DIR) for durable originals.
+VOLUME ["/data/uploads"]
+
 RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./

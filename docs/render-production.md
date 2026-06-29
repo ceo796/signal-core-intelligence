@@ -8,7 +8,7 @@ Signal87 production on Render uses **one Node web service** (`signal87` in `rend
 
 1. Link the Render service to `Husky87/signal-core-intelligence` on branch `main`.
 2. Use the checked-in `render.yaml` (single `web` service) or mirror its build/start commands manually.
-3. Mount a persistent disk at `/var/data` and set `FILE_STORAGE_DIR=/var/data/uploads`, `STORAGE_PROVIDER=local`.
+3. Confirm the persistent disk is mounted at `/var/data` and that `render.yaml` sets `STORAGE_PROVIDER=local` and `FILE_STORAGE_DIR=/var/data/uploads` (uploads fail closed without both).
 4. Set required secrets in the Render dashboard — see `.env.example` and `DEPLOYMENT.md`.
 5. **Do not set `VITE_API_BASE_URL`** on the unified service; the SPA calls same-origin `/api/*`.
 

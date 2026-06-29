@@ -86,14 +86,40 @@ Runtime AI chain: **Google/Gemini → xAI/Grok → local extractive fallback**. 
 
 Platform health checks should target `/api/healthz` so transient dependency issues do not flap the service.
 
-## Persistent storage
+## Persistent storage (required for uploads)
 
-Mount a disk at `/var/data` (or your host's equivalent) and set:
+Signal87 **rejects uploads** when durable storage is not configured (`fileStore.isConfigured()` is false). This is intentional fail-closed behavior — non-durable uploads are not allowed in production.
 
-```text
-FILE_STORAGE_DIR=/var/data/uploads
-STORAGE_PROVIDER=local
+### Required variables
+
+| Deployment | `STORAGE_PROVIDER` | `FILE_STORAGE_DIR` | Volume mount |
+| --- | --- | --- | --- |
+| Render (checked-in `render.yaml`) | `local` | `/var/data/uploads` | Disk at `/var/data` |
+| Docker (`Dockerfile`) | `local` | `/data/uploads` | Volume at `/data/uploads` |
+| Local dev | `local` | `./.local/uploads` (example) | Any writable directory |
+
+`STORAGE_PROVIDER=render-disk` is accepted as an alias for local storage **only when** `FILE_STORAGE_DIR` is set.
+
+### Warnings
+
+- **If `FILE_STORAGE_DIR` is missing**, `storage.configured` is `false` and **all uploads fail** with a clear API error.
+- **If persistent storage is not mounted** at the path backing `FILE_STORAGE_DIR`, uploaded originals may be **lost on restart or redeploy**.
+- The mount path and `FILE_STORAGE_DIR` must align: e.g. disk at `/var/data` + `FILE_STORAGE_DIR=/var/data/uploads`.
+
+### Verify after deploy
+
+Call `/api/runtime-check` and confirm:
+
+```json
+"storage": {
+  "configured": true,
+  "uploadsEnabled": true,
+  "productionSafe": true,
+  "fileStorageDir": "set"
+}
 ```
+
+Startup logs emit `signal87_storage_ready` when uploads are enabled, or `signal87_storage_not_ready` when configuration is incomplete.
 
 ## Deploy flow
 

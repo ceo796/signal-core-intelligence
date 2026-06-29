@@ -53,6 +53,10 @@ for (const check of checks) {
         const body = await response.json();
         if (check.runtimeHealthy) {
           runtimeOk = body?.status === 'ok';
+          if (body?.storage?.configured !== true) {
+            runtimeOk = false;
+            console.error('Runtime check requires storage.configured=true for durable uploads.');
+          }
           if (!runtimeOk) {
             console.error(`Runtime check status is ${JSON.stringify(body?.status)}; expected "ok".`);
             if (body?.clerk?.testKeysDetected) {

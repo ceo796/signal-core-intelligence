@@ -108,12 +108,40 @@ export function getStorageProviderName(): StorageProvider {
 
 export function getRuntimeStorageStatus() {
   const provider = getProvider();
+  const configured = isConfigured();
   return {
     provider,
-    configured: isConfigured(),
+    configured,
+    uploadsEnabled: configured,
+    storageProviderEnv: process.env.STORAGE_PROVIDER?.trim() || "unset",
     fileStorageDir: process.env.FILE_STORAGE_DIR ? "set" : "missing",
     productionSafe: provider === "local",
   };
+}
+
+/** Log durable storage readiness at process startup (no secret paths). */
+export function logStorageStartupStatus(): void {
+  const status = getRuntimeStorageStatus();
+  const payload = {
+    storageProvider: status.provider,
+    storageProviderEnv: status.storageProviderEnv,
+    fileStorageDir: status.fileStorageDir,
+    uploadsEnabled: status.uploadsEnabled,
+    productionSafe: status.productionSafe,
+  };
+
+  if (status.uploadsEnabled) {
+    console.info("signal87_storage_ready", payload);
+  } else {
+    console.warn(
+      "signal87_storage_not_ready",
+      {
+        ...payload,
+        message:
+          "FILE_STORAGE_DIR is missing or STORAGE_PROVIDER is invalid — uploads will be rejected until durable storage is configured.",
+      },
+    );
+  }
 }
 
 export function getMimeType(fileType: string): string {

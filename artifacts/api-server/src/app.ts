@@ -11,6 +11,7 @@ import {
 import healthRouter from "./routes/health";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { logStorageStartupStatus } from "./lib/file-store";
 import { handleStripeWebhook } from "./lib/billing";
 
 const app: Express = express();
@@ -82,6 +83,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+logStorageStartupStatus();
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error({ err }, "Unhandled error");

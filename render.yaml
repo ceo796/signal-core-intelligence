@@ -15,6 +15,11 @@ services:
       && pnpm --filter @workspace/signal87-core run build
     startCommand: node --enable-source-maps production-server.mjs
     healthCheckPath: /api/healthz
+    envVars:
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: FILE_STORAGE_DIR
+        value: /var/data/uploads
     disk:
       name: signal87-uploads
       mountPath: /var/data
