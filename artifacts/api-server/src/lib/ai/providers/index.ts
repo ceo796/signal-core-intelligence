@@ -1,14 +1,14 @@
 import type { AiProviderAdapter, ProviderId } from "../types";
+import { RUNTIME_DISABLED_PROVIDERS } from "../config";
 import { createGeminiProvider } from "./geminiProvider";
 import { createGrokProvider } from "./grokProvider";
-import { createOpenAiProvider } from "./openaiProvider";
 
+/** Runtime registry — OpenAI is intentionally excluded. */
 let registry: Map<ProviderId, AiProviderAdapter> | null = null;
 
 export function getProviderRegistry(): Map<ProviderId, AiProviderAdapter> {
   if (!registry) {
     registry = new Map<ProviderId, AiProviderAdapter>([
-      ["openai", createOpenAiProvider()],
       ["xai", createGrokProvider()],
       ["google", createGeminiProvider()],
     ]);
@@ -17,6 +17,7 @@ export function getProviderRegistry(): Map<ProviderId, AiProviderAdapter> {
 }
 
 export function getProvider(id: ProviderId): AiProviderAdapter | undefined {
+  if (RUNTIME_DISABLED_PROVIDERS.has(id)) return undefined;
   return getProviderRegistry().get(id);
 }
 
@@ -26,4 +27,8 @@ export function listAvailableProviders(): ProviderId[] {
     .map(([id]) => id);
 }
 
-export { geminiAuthMode } from "./gemini-auth";
+export {
+  geminiAuthMode,
+  geminiServiceAccountConfigured,
+  getGeminiProjectId,
+} from "./gemini-auth";

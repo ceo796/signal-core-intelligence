@@ -8,10 +8,10 @@ export default defineConfig({
     hookTimeout: 20_000,
     env: {
       NODE_ENV: "test",
+      XAI_API_KEY: "test-xai-key",
       CLERK_BYPASS_AUTH: "true",
       DEV_USER_ID: "test-user-bypass",
       APPROVED_EMAILS: "test@signal87.test",
-      OPENAI_API_KEY: "sk-test-placeholder",
       PRIVATE_OBJECT_DIR: "",
       DEFAULT_OBJECT_STORAGE_BUCKET_ID: "",
     },

@@ -26,3 +26,36 @@ describe("GET /api/healthz", () => {
     expect(res.status).not.toBe(403);
   });
 });
+
+describe("GET /api/health", () => {
+  it("returns readiness checks without exposing secret values", async () => {
+    const res = await request(app).get("/api/health");
+    expect([200, 503]).toContain(res.status);
+    expect(res.body).toMatchObject({
+      service: "signal87-api",
+      checks: {
+        database: {
+          configured: expect.any(Boolean),
+          ready: expect.any(Boolean),
+        },
+        storage: {
+          configured: expect.any(Boolean),
+          ready: expect.any(Boolean),
+        },
+        aiRouter: {
+          resolvedReasoningChain: ["google", "xai"],
+          embeddingMode: "local",
+          openaiRuntimeEnabled: false,
+          openaiCallsEnabled: false,
+        },
+      },
+    });
+    expect(JSON.stringify(res.body)).not.toMatch(/sk_|whsec_|BEGIN PRIVATE KEY/);
+  });
+
+  it("does not require authentication", async () => {
+    const res = await request(app).get("/api/health");
+    expect(res.status).not.toBe(401);
+    expect(res.status).not.toBe(403);
+  });
+});

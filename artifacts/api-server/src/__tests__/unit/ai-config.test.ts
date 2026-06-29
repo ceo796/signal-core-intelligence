@@ -1,5 +1,11 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { loadAiConfig, resolveTaskProviderChain } from "../../lib/ai/config.js";
+import {
+  getResolvedReasoningChain,
+  isOpenAiCallsEnabled,
+  isOpenAiRuntimeEnabled,
+  loadAiConfig,
+  resolveTaskProviderChain,
+} from "../../lib/ai/config.js";
 
 describe("ai config", () => {
   beforeEach(() => {
@@ -26,14 +32,30 @@ describe("ai config", () => {
     expect(config.models.google.chat).toBe("custom-gemini");
   });
 
-  it("changes provider order from config only", () => {
-    process.env.AI_PRIMARY_REASONING_PROVIDER = "openai";
-    process.env.AI_FINAL_FALLBACK_PROVIDER = "google";
+  it("orders fallbacks as Gemini then Grok with OpenAI excluded", () => {
+    process.env.AI_PRIMARY_REASONING_PROVIDER = "google";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
     process.env.AI_FALLBACK_PROVIDER_ORDER = "xai";
 
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain[0]).toBe("openai");
-    expect(chain).toContain("google");
-    expect(chain).toContain("xai");
+    expect(chain).toEqual(["google", "xai"]);
+  });
+
+  it("defaults reasoning chain to Gemini then Grok with OpenAI disabled", () => {
+    const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
+    expect(chain).toEqual(["google", "xai"]);
+    expect(isOpenAiRuntimeEnabled()).toBe(false);
+    expect(isOpenAiCallsEnabled()).toBe(false);
+    expect(getResolvedReasoningChain()).toEqual(["google", "xai"]);
+  });
+
+  it("remaps OpenAI/GPT env values to Gemini in the provider chain", () => {
+    process.env.AI_PRIMARY_REASONING_PROVIDER = "openai";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "gpt";
+    process.env.AI_FALLBACK_PROVIDER_ORDER = "openai,gpt,xai";
+
+    const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
+    expect(chain).toEqual(["google", "xai"]);
+    expect(loadAiConfig().primaryReasoningProvider).toBe("google");
   });
 });

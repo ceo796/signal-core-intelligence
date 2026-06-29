@@ -1,9 +1,20 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
-import { loadAiConfig } from "../lib/ai";
-import { geminiAuthMode, listAvailableProviders } from "../lib/ai/providers";
-import { getEmbeddingModelName } from "../lib/ai/embedding";
+import {
+  getResolvedReasoningChain,
+  isOpenAiCallsEnabled,
+  isOpenAiRuntimeEnabled,
+  loadAiConfig,
+  resolveTaskProviderChain,
+} from "../lib/ai";
+import {
+  geminiAuthMode,
+  geminiServiceAccountConfigured,
+  getGeminiProjectId,
+  listAvailableProviders,
+} from "../lib/ai/providers";
+import { getEmbeddingMode, getEmbeddingModelName } from "../lib/ai/embedding";
 import { getRuntimeStorageStatus } from "../lib/file-store";
 
 const router: IRouter = Router();
@@ -35,11 +46,67 @@ async function checkDatabase() {
   }
 }
 
+function buildAiRouterStatus() {
+  const aiConfig = loadAiConfig();
+  const availableProviders = listAvailableProviders();
+  const resolvedReasoningChain = getResolvedReasoningChain("document_chat", aiConfig);
+  const xaiConfigured = Boolean(process.env.XAI_API_KEY || process.env.GROK_API_KEY);
+  const googleSaConfigured = geminiServiceAccountConfigured();
+  const geminiReady = availableProviders.includes("google");
+  const xaiReady = availableProviders.includes("xai");
+
+  return {
+    ready: geminiReady || xaiReady,
+    resolvedReasoningChain,
+    embeddingMode: getEmbeddingMode(),
+    openaiRuntimeEnabled: isOpenAiRuntimeEnabled(aiConfig),
+    openaiCallsEnabled: isOpenAiCallsEnabled(aiConfig),
+    geminiAuthMode: geminiAuthMode(),
+    geminiProjectId: getGeminiProjectId(),
+    credentials: {
+      googleServiceAccount: googleSaConfigured ? "set" : "missing",
+      xai: xaiConfigured ? "set" : "missing",
+      openai: "disabled",
+    },
+    availableProviders,
+    embeddingModel: getEmbeddingModelName(),
+  };
+}
+
+router.get("/health", async (_req, res) => {
+  const database = await checkDatabase();
+  const storage = getRuntimeStorageStatus();
+  const aiRouter = buildAiRouterStatus();
+
+  const checks = {
+    database: {
+      ready: database.connected,
+      configured: database.configured,
+    },
+    storage: {
+      ready: storage.configured && storage.productionSafe,
+      configured: storage.configured,
+      productionSafe: storage.productionSafe,
+    },
+    aiRouter,
+  };
+
+  const healthy = checks.database.ready && checks.storage.ready && checks.aiRouter.ready;
+
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? "ok" : "degraded",
+    service: "signal87-api",
+    host: process.env.RENDER ? "render" : "unknown",
+    nodeEnv: process.env.NODE_ENV ?? "unknown",
+    checks,
+  });
+});
+
 router.get("/runtime-check", async (_req, res) => {
   const storage = getRuntimeStorageStatus();
   const database = await checkDatabase();
   const aiConfig = loadAiConfig();
-  const availableProviders = listAvailableProviders();
+  const aiRouter = buildAiRouterStatus();
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
   const replitDependency = detectedReplitEnvVars.length > 0;
@@ -49,7 +116,7 @@ router.get("/runtime-check", async (_req, res) => {
     isTestClerkKey(process.env.CLERK_PUBLISHABLE_KEY);
   const clerkProductionSafe = !productionMode || !clerkUsesTestKeys;
   const healthy =
-    availableProviders.length > 0 &&
+    aiRouter.ready &&
     Boolean(process.env.CLERK_SECRET_KEY) &&
     Boolean(process.env.CLERK_PUBLISHABLE_KEY) &&
     clerkProductionSafe &&
@@ -66,27 +133,36 @@ router.get("/runtime-check", async (_req, res) => {
       routingEnabled: aiConfig.routingEnabled,
       primaryReasoningProvider: aiConfig.primaryReasoningProvider,
       primaryExtractionProvider: aiConfig.primaryExtractionProvider,
+      fallbackProviderOrder: aiConfig.fallbackProviderOrder,
       finalFallbackProvider: aiConfig.finalFallbackProvider,
+      resolvedReasoningChain: aiRouter.resolvedReasoningChain,
+      reasoningProviderChain: resolveTaskProviderChain("document_chat", aiConfig),
+      openaiRuntimeEnabled: aiRouter.openaiRuntimeEnabled,
+      openaiCallsEnabled: aiRouter.openaiCallsEnabled,
+      providerTimeoutMs: aiConfig.providerTimeoutMs,
       evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
       qualityReviewProvider: aiConfig.qualityReviewProvider,
-      embeddingProvider: aiConfig.embeddingProvider,
-      availableProviders,
-      models: aiConfig.models,
-      embeddingModel: getEmbeddingModelName(),
-      geminiAuthMode: geminiAuthMode(),
-      credentials: {
-        openai: process.env.OPENAI_API_KEY ? "set" : "missing",
-        xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",
-        googleApiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY ? "set" : "missing",
-        googleServiceAccount: process.env.GEMINI_SERVICE_ACCOUNT_PATH || process.env.GEMINI_SERVICE_ACCOUNT_JSON ? "set" : "missing",
+      embeddingMode: aiRouter.embeddingMode,
+      embeddingProvider: "local",
+      availableProviders: aiRouter.availableProviders,
+      models: {
+        google: aiConfig.models.google,
+        xai: aiConfig.models.xai,
       },
+      embeddingModel: aiRouter.embeddingModel,
+      geminiAuthMode: aiRouter.geminiAuthMode,
+      geminiProjectId: aiRouter.geminiProjectId,
+      xai: aiRouter.credentials.xai,
+      googleServiceAccount: aiRouter.credentials.googleServiceAccount,
+      credentials: aiRouter.credentials,
     },
     requiredConfig: {
       DATABASE_URL: configStatus("DATABASE_URL"),
-      OPENAI_API_KEY: configStatus("OPENAI_API_KEY"),
       XAI_API_KEY: configStatus("XAI_API_KEY"),
-      GEMINI_API_KEY: configStatus("GEMINI_API_KEY"),
+      GEMINI_SERVICE_ACCOUNT_JSON: configStatus("GEMINI_SERVICE_ACCOUNT_JSON"),
       GEMINI_SERVICE_ACCOUNT_PATH: configStatus("GEMINI_SERVICE_ACCOUNT_PATH"),
+      GEMINI_PROJECT_ID: configStatus("GEMINI_PROJECT_ID"),
+      GEMINI_LOCATION: configStatus("GEMINI_LOCATION"),
       CLERK_SECRET_KEY: configStatus("CLERK_SECRET_KEY"),
       CLERK_PUBLISHABLE_KEY: configStatus("CLERK_PUBLISHABLE_KEY"),
       FILE_STORAGE_DIR: configStatus("FILE_STORAGE_DIR"),
