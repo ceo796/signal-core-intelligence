@@ -54,7 +54,7 @@ export function loadAiConfig(): AiRuntimeConfig {
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
     qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "google"),
     embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
-    fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER, ["openai", "xai"]),
+    fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER, ["xai"]),
     models: {
       openai: {
         chat: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
@@ -93,7 +93,7 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
     if (!chain.includes(config.finalFallbackProvider)) {
       chain.push(config.finalFallbackProvider);
     }
-    for (const provider of ["google", "openai", "xai"] as ProviderId[]) {
+    for (const provider of ["google", "xai"] as ProviderId[]) {
       if (!chain.includes(provider)) chain.push(provider);
     }
   }
