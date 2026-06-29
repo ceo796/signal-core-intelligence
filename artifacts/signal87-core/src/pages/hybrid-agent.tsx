@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DocumentIntelligenceOrbit } from "@/components/document-intelligence-orbit";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -127,7 +128,7 @@ function Composer({
           disabled={isPending}
           autoFocus={autoFocus}
           rows={1}
-          className="resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-[15px] sm:text-[14px] placeholder:text-muted-foreground"
+          className="s87-ios-input resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-base sm:text-[14px] placeholder:text-muted-foreground"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -676,8 +677,8 @@ export default function HybridAgent() {
   return (
     <Layout>
       <div className="s87-page">
-        <header className="s87-page-header">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <header className={cn("s87-page-header", showConversation && "s87-page-header--compact")}>
+          <p className="s87-page-header-sub text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Signal87 workspace
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
@@ -686,8 +687,8 @@ export default function HybridAgent() {
         </header>
         {showConversation ? (
           <>
-            <ScrollArea className="flex-1">
-              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 md:pb-6">
+            <ScrollArea className="s87-ios-chat-scroll flex-1">
+              <div className="max-w-3xl mx-auto w-full px-4 py-4 sm:py-6 space-y-5 sm:space-y-6 md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
                     <div className={`max-w-[90%] rounded-[20px] rounded-br-[8px] bg-primary px-4 py-2.5 text-[13px] font-medium whitespace-pre-wrap ${PILL_ON_WHITE}`}>
@@ -711,33 +712,53 @@ export default function HybridAgent() {
               </div>
             </ScrollArea>
 
-            <div className="shrink-0 border-t border-border bg-card/95">
-              <div className="max-w-3xl mx-auto w-full px-4 py-3">
+            <div className="s87-ios-composer shrink-0 md:border-t md:border-border md:bg-card/95">
+              <div className="max-w-3xl mx-auto w-full md:px-4 md:py-3">
                 <Composer {...composerProps} />
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 overflow-y-auto md:pb-0">
-            <div className="min-h-full flex flex-col items-center justify-center px-4 py-10 md:pb-10">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:overflow-y-auto">
+            <div className="s87-ios-scroll flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-8 md:min-h-full md:py-10">
               <div className="grid w-full max-w-5xl gap-6 md:grid-cols-[minmax(0,1fr)_360px] md:items-center">
-              <div className="s87-card space-y-7 px-4 py-8 sm:px-6">
-                <div className="flex justify-center">
-                  <div className="inline-flex items-center justify-center rounded-lg border border-border bg-accent p-3">
-                    <Sparkles className="w-6 h-6 text-accent-foreground" />
+                <div className="w-full space-y-5 md:space-y-0">
+                  <div className="flex flex-col items-center gap-3 text-center md:hidden">
+                    <div className="inline-flex items-center justify-center rounded-2xl border border-border bg-accent p-3.5">
+                      <Sparkles className="h-7 w-7 text-accent-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                        Ask across your documents
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Grounded answers with citations — no web research.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="s87-card hidden space-y-7 px-4 py-8 sm:px-6 md:block">
+                    <div className="flex justify-center">
+                      <div className="inline-flex items-center justify-center rounded-lg border border-border bg-accent p-3">
+                        <Sparkles className="w-6 h-6 text-accent-foreground" />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                        Hybrid AI Chat
+                      </h1>
+                      <p className="text-sm text-muted-foreground">
+                        Documents + Gemini reasoning, no web research.
+                      </p>
+                    </div>
+                    <Composer {...composerProps} autoFocus />
                   </div>
                 </div>
-                <div className="text-center space-y-2">
-                  <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                    Hybrid AI Chat
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Documents + Gemini reasoning, no web research.
-                  </p>
-                </div>
-                <Composer {...composerProps} autoFocus />
+                <DocumentIntelligenceOrbit className="hidden md:block" />
               </div>
-              <DocumentIntelligenceOrbit className="hidden md:block" />
+            </div>
+            <div className="s87-ios-composer shrink-0 md:hidden">
+              <div className="max-w-3xl mx-auto w-full">
+                <Composer {...composerProps} autoFocus />
               </div>
             </div>
           </div>

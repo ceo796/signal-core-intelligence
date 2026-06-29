@@ -154,35 +154,100 @@ export default function SkillsPage() {
     }
   }
 
+  const citationsPanel = (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Quote className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold text-foreground">Citations</h2>
+      </div>
+      {result?.citations.length ? (
+        <div className="max-h-80 space-y-3 overflow-auto pr-1">
+          {result.citations.slice(0, 12).map((citation) => (
+            <div key={citation.citationNumber} className="rounded-lg border border-border bg-background p-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <Badge variant="secondary" className="text-[10px]">Source {citation.citationNumber}</Badge>
+                <span className="text-[10px] text-muted-foreground">Chunk {citation.chunkIndex}</span>
+              </div>
+              <p className="truncate text-xs font-medium text-foreground">{citation.documentName}</p>
+              <p className="mt-1 line-clamp-4 text-xs leading-5 text-muted-foreground">{citation.excerpt}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs leading-5 text-muted-foreground">Citations will appear after a skill runs.</p>
+      )}
+    </div>
+  );
+
+  const tracePanel = (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Terminal className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold text-foreground">Trace</h2>
+      </div>
+      {result ? (
+        <dl className="space-y-2 text-xs">
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Provider</dt><dd className="font-medium text-foreground">{result.trace.provider}</dd></div>
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Model</dt><dd className="truncate font-medium text-foreground">{result.trace.model}</dd></div>
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Documents</dt><dd className="font-medium text-foreground">{result.trace.documentsSearched}</dd></div>
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Chunks</dt><dd className="font-medium text-foreground">{result.trace.chunksConsidered}</dd></div>
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Latency</dt><dd className="font-medium text-foreground">{Math.round(result.trace.totalLatencyMs)}ms</dd></div>
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Fallback</dt><dd className="font-medium text-foreground">{result.trace.fallbackUsed ? "Yes" : "No"}</dd></div>
+          {result.trace.errors && (
+            <div className="mt-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-900">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <dd className="text-[11px] leading-4">{result.trace.errors}</dd>
+            </div>
+          )}
+        </dl>
+      ) : (
+        <p className="text-xs leading-5 text-muted-foreground">The trace shows provider, model, chunk count, latency, and fallback status.</p>
+      )}
+    </div>
+  );
+
+  const policyPanel = activeSkill ? (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <h2 className="text-sm font-semibold text-foreground">Skill policy</h2>
+      <div className="mt-3 space-y-2 text-xs leading-5 text-muted-foreground">
+        <p><strong className="text-foreground">Output:</strong> {activeSkill.outputFormat}</p>
+        <p><strong className="text-foreground">Citations:</strong> {activeSkill.citationPolicy}</p>
+        <p><strong className="text-foreground">General analysis:</strong> {activeSkill.allowGeneralReasoning ? "Allowed if labeled." : "Not allowed."}</p>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <Layout>
-      <div className="flex-1 min-h-0 overflow-auto bg-background">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 p-4 md:p-6">
-          <header className="flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-primary">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Signal87 Skills</span>
-              </div>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                Built-in document intelligence workflows
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                One-click extraction and summary workflows. For briefs, risk review, comparison, and open Q&amp;A, use{" "}
-                <Link href="/analyze" className="text-primary hover:underline">
-                  Analyze
-                </Link>{" "}
-                or{" "}
-                <Link href="/agents/hybrid" className="text-primary hover:underline">
-                  AI Chat
-                </Link>
-                .
-              </p>
+      <div className="s87-page">
+        <header className="s87-page-header s87-page-header--compact flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-[0.18em]">Signal87 Skills</span>
             </div>
-            <Badge variant="outline" className="w-fit text-xs">
-              Grok-powered · Document-grounded
-            </Badge>
-          </header>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+              Document workflows
+            </h1>
+            <p className="s87-page-header-sub mt-1 max-w-2xl text-sm text-muted-foreground">
+              One-click extraction and summary workflows. For briefs, risk review, comparison, and open Q&amp;A, use{" "}
+              <Link href="/analyze" className="text-primary hover:underline">
+                Analyze
+              </Link>{" "}
+              or{" "}
+              <Link href="/agents/hybrid" className="text-primary hover:underline">
+                AI Chat
+              </Link>
+              .
+            </p>
+          </div>
+          <Badge variant="outline" className="w-fit text-xs">
+            Grok-powered · Document-grounded
+          </Badge>
+        </header>
+
+        <div className="s87-ios-scroll flex-1 overflow-auto bg-background">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 p-4 md:p-6">
 
           {skillsGuidance && (
             <div className="flex items-start gap-3 rounded-xl border border-border bg-card/60 px-4 py-3 text-xs leading-5 text-muted-foreground">
@@ -211,7 +276,7 @@ export default function SkillsPage() {
                           setResult(null);
                           setSelectedDocumentIds((current) => current.slice(0, skill.maxDocuments));
                         }}
-                        className={`rounded-xl border p-4 text-left transition-all hover:bg-card ${
+                        className={`rounded-xl border p-4 text-left transition-all hover:bg-card active:scale-[0.98] touch-manipulation ${
                           selected ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card/60"
                         }`}
                       >
@@ -298,13 +363,13 @@ export default function SkillsPage() {
                   value={instruction}
                   onChange={(e) => setInstruction(e.target.value)}
                   placeholder="Example: focus on employment dates, financial terms, notice periods, or defined terms only…"
-                  className="mt-3 min-h-28 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                  className="s87-ios-input mt-3 min-h-28 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-base outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary sm:text-sm"
                 />
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-xs text-muted-foreground">
                     {selectedDocuments.length} selected · Material claims must cite sources.
                   </div>
-                  <Button disabled={!canRun} onClick={runSkill} className="gap-2">
+                  <Button disabled={!canRun} onClick={runSkill} className="h-11 w-full gap-2 sm:h-10 sm:w-auto">
                     {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                     Run Skill
                   </Button>
@@ -342,69 +407,41 @@ export default function SkillsPage() {
                   </div>
                 )}
               </div>
+
+              <div className="s87-skills-aside-mobile space-y-3 md:hidden">
+                <details>
+                  <summary>
+                    <Quote className="h-4 w-4 text-primary" />
+                    Citations
+                    {result?.citations.length ? (
+                      <Badge variant="secondary" className="ml-auto text-[10px]">{result.citations.length}</Badge>
+                    ) : null}
+                  </summary>
+                  <div className="s87-skills-aside-body">{citationsPanel}</div>
+                </details>
+                <details>
+                  <summary>
+                    <Terminal className="h-4 w-4 text-primary" />
+                    Trace
+                  </summary>
+                  <div className="s87-skills-aside-body">{tracePanel}</div>
+                </details>
+                {policyPanel && (
+                  <details>
+                    <summary>Skill policy</summary>
+                    <div className="s87-skills-aside-body">{policyPanel}</div>
+                  </details>
+                )}
+              </div>
             </section>
 
-            <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <Quote className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-foreground">Citations</h2>
-                </div>
-                {result?.citations.length ? (
-                  <div className="max-h-80 space-y-3 overflow-auto pr-1">
-                    {result.citations.slice(0, 12).map((citation) => (
-                      <div key={citation.citationNumber} className="rounded-lg border border-border bg-background p-3">
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <Badge variant="secondary" className="text-[10px]">Source {citation.citationNumber}</Badge>
-                          <span className="text-[10px] text-muted-foreground">Chunk {citation.chunkIndex}</span>
-                        </div>
-                        <p className="truncate text-xs font-medium text-foreground">{citation.documentName}</p>
-                        <p className="mt-1 line-clamp-4 text-xs leading-5 text-muted-foreground">{citation.excerpt}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs leading-5 text-muted-foreground">Citations will appear after a skill runs.</p>
-                )}
-              </div>
-
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <Terminal className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-foreground">Trace</h2>
-                </div>
-                {result ? (
-                  <dl className="space-y-2 text-xs">
-                    <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Provider</dt><dd className="font-medium text-foreground">{result.trace.provider}</dd></div>
-                    <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Model</dt><dd className="font-medium text-foreground truncate">{result.trace.model}</dd></div>
-                    <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Documents</dt><dd className="font-medium text-foreground">{result.trace.documentsSearched}</dd></div>
-                    <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Chunks</dt><dd className="font-medium text-foreground">{result.trace.chunksConsidered}</dd></div>
-                    <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Latency</dt><dd className="font-medium text-foreground">{Math.round(result.trace.totalLatencyMs)}ms</dd></div>
-                    <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Fallback</dt><dd className="font-medium text-foreground">{result.trace.fallbackUsed ? "Yes" : "No"}</dd></div>
-                    {result.trace.errors && (
-                      <div className="mt-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-900">
-                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <dd className="text-[11px] leading-4">{result.trace.errors}</dd>
-                      </div>
-                    )}
-                  </dl>
-                ) : (
-                  <p className="text-xs leading-5 text-muted-foreground">The trace shows provider, model, chunk count, latency, and fallback status.</p>
-                )}
-              </div>
-
-              {activeSkill && (
-                <div className="rounded-xl border border-border bg-card p-4">
-                  <h2 className="text-sm font-semibold text-foreground">Skill policy</h2>
-                  <div className="mt-3 space-y-2 text-xs leading-5 text-muted-foreground">
-                    <p><strong className="text-foreground">Output:</strong> {activeSkill.outputFormat}</p>
-                    <p><strong className="text-foreground">Citations:</strong> {activeSkill.citationPolicy}</p>
-                    <p><strong className="text-foreground">General analysis:</strong> {activeSkill.allowGeneralReasoning ? "Allowed if labeled." : "Not allowed."}</p>
-                  </div>
-                </div>
-              )}
+            <aside className="s87-ios-hide-mobile space-y-4 lg:sticky lg:top-4 lg:self-start">
+              {citationsPanel}
+              {tracePanel}
+              {policyPanel}
             </aside>
           </div>
+        </div>
         </div>
       </div>
     </Layout>

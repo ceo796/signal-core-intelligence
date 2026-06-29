@@ -561,23 +561,23 @@ export default function AnalyzePage() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
-        <header className="border-b border-border bg-card shrink-0 px-4 md:px-6 py-3">
-          <h1 className="text-[15px] font-medium tracking-tight text-foreground">Analyze</h1>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+      <div className="s87-page">
+        <header className="s87-page-header s87-page-header--compact shrink-0">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground md:text-[15px] md:font-medium">Analyze</h1>
+          <p className="s87-page-header-sub mt-0.5 text-[11px] text-muted-foreground">
             Select documents, choose a mode, and generate insights with grounded citations.
           </p>
-          <div className="flex items-center gap-1 mt-3 overflow-x-auto -mx-1 px-1">
+          <div className="s87-ios-scroll -mx-1 mt-3 flex items-center gap-1.5 overflow-x-auto px-1 pb-0.5">
             {MODES.map((m) => (
               <button
                 key={m.value}
                 type="button"
                 onClick={() => setMode(m.value)}
                 title={m.hint}
-                className={`shrink-0 px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ${
+                className={`s87-ios-mode-pill shrink-0 rounded-full text-[12px] font-medium whitespace-nowrap transition-colors ${
                   mode === m.value
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 {m.label}
@@ -586,8 +586,8 @@ export default function AnalyzePage() {
           </div>
         </header>
 
-        <ScrollArea className="flex-1 p-4 md:p-6">
-          <div className="max-w-3xl mx-auto space-y-6 md:pb-6">
+        <ScrollArea className="s87-ios-scroll flex-1 p-4 md:p-6">
+          <div className="mx-auto max-w-3xl space-y-5 md:space-y-6 md:pb-6">
             {/* Document selector */}
             <div className="bg-card border border-border rounded-lg p-4 sm:p-5">
               <div className="flex items-center justify-between mb-3">
@@ -694,7 +694,7 @@ export default function AnalyzePage() {
                   onChange={(e) => setInput(e.target.value)}
                   maxLength={isQaMode ? 2000 : 500}
                   placeholder={inputPlaceholder}
-                  className="bg-background border-border text-sm min-h-[80px] resize-none"
+                  className="s87-ios-input min-h-[80px] resize-none border-border bg-background text-base sm:text-sm"
                   disabled={isPending}
                 />
                 {!isQaMode && (
@@ -731,7 +731,7 @@ export default function AnalyzePage() {
                     ? "Will search all documents"
                     : "Ready"}
                 </span>
-                <Button type="submit" disabled={!canSubmit} className="text-xs gap-2 h-9 sm:h-9">
+                <Button type="submit" disabled={!canSubmit} className="h-11 w-full gap-2 text-xs sm:h-9 sm:w-auto">
                   <Sparkles className="w-3.5 h-3.5" />
                   {submitLabel}
                 </Button>
