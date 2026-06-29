@@ -1,7 +1,3 @@
-import { and, eq, inArray } from "drizzle-orm";
-import { db, chunkEmbeddingsTable } from "@workspace/db";
-import { generateEmbedding, generateEmbeddings, getEmbeddingModelName } from "./ai";
-
 export interface ScoredChunk {
   id: number;
   documentId: number;
@@ -12,106 +8,101 @@ export interface ScoredChunk {
 
 type RetrievalChunk = { id: number; documentId: number; chunkIndex: number; content: string };
 
-export async function getEmbedding(text: string): Promise<number[]> {
-  return generateEmbedding(text);
+const BM25_K1 = 1.5;
+const BM25_B = 0.75;
+
+const STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "be",
+  "been",
+  "by",
+  "did",
+  "do",
+  "for",
+  "from",
+  "has",
+  "have",
+  "how",
+  "in",
+  "is",
+  "it",
+  "many",
+  "much",
+  "of",
+  "on",
+  "or",
+  "that",
+  "the",
+  "their",
+  "there",
+  "these",
+  "this",
+  "to",
+  "was",
+  "what",
+  "when",
+  "where",
+  "which",
+  "who",
+  "why",
+  "with",
+]);
+
+function tokenize(text: string): string[] {
+  return (text.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+    (term) => !STOP_WORDS.has(term) && (term.length > 2 || /^\d+$/.test(term)),
+  );
 }
 
-async function getEmbeddings(texts: string[]): Promise<number[][]> {
-  if (texts.length === 0) return [];
-  const result = await generateEmbeddings(texts);
-  return result.embeddings;
-}
+function computeBm25Score(
+  queryTerms: string[],
+  docTerms: string[],
+  avgDocLength: number,
+  docFrequency: Map<string, number>,
+  corpusSize: number,
+): number {
+  if (queryTerms.length === 0 || docTerms.length === 0) return 0;
 
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-  const len = Math.min(a.length, b.length);
-  for (let i = 0; i < len; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-  const denom = Math.sqrt(normA) * Math.sqrt(normB);
-  return denom === 0 ? 0 : dot / denom;
-}
-
-function isMissingEmbeddingsTable(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  const message = err.message.toLowerCase();
-  return message.includes("chunk_embeddings") && (message.includes("does not exist") || message.includes("relation"));
-}
-
-async function readPersistedEmbeddings(chunkIds: number[]): Promise<Map<number, number[]>> {
-  if (chunkIds.length === 0) return new Map();
-
-  const rows = await db
-    .select({ chunkId: chunkEmbeddingsTable.chunkId, embedding: chunkEmbeddingsTable.embedding })
-    .from(chunkEmbeddingsTable)
-    .where(and(inArray(chunkEmbeddingsTable.chunkId, chunkIds), eq(chunkEmbeddingsTable.model, getEmbeddingModelName())));
-
-  return new Map(rows.map((row) => [row.chunkId, row.embedding]));
-}
-
-async function persistEmbeddings(chunks: RetrievalChunk[], embeddings: number[][]): Promise<void> {
-  if (chunks.length === 0) return;
-
-  const now = new Date();
-  const values = chunks.map((chunk, i) => ({
-    chunkId: chunk.id,
-    model: getEmbeddingModelName(),
-    dimensions: embeddings[i].length,
-    embedding: embeddings[i],
-    createdAt: now,
-    updatedAt: now,
-  }));
-
-  await db
-    .insert(chunkEmbeddingsTable)
-    .values(values)
-    .onConflictDoNothing({ target: [chunkEmbeddingsTable.chunkId, chunkEmbeddingsTable.model] });
-}
-
-async function getOrCreateChunkEmbeddings(chunks: RetrievalChunk[]): Promise<Map<number, number[]>> {
-  const nonEmpty = chunks.filter((c) => c.content.trim().length > 0);
-  if (nonEmpty.length === 0) return new Map();
-
-  const byId = new Map(nonEmpty.map((chunk) => [chunk.id, chunk]));
-  let existing = new Map<number, number[]>();
-
-  try {
-    existing = await readPersistedEmbeddings([...byId.keys()]);
-  } catch (err) {
-    if (!isMissingEmbeddingsTable(err)) throw err;
-    // Safe migration path: until the DB schema is pushed, fall back to live embeddings.
-    const embeddings = await getEmbeddings(nonEmpty.map((chunk) => chunk.content));
-    return new Map(nonEmpty.map((chunk, i) => [chunk.id, embeddings[i]]));
+  const termFrequency = new Map<string, number>();
+  for (const term of docTerms) {
+    termFrequency.set(term, (termFrequency.get(term) ?? 0) + 1);
   }
 
-  const missing = nonEmpty.filter((chunk) => !existing.has(chunk.id));
-  if (missing.length === 0) return existing;
+  const docLength = docTerms.length;
+  let score = 0;
 
-  const generated = await getEmbeddings(missing.map((chunk) => chunk.content));
-  const count = Math.min(generated.length, missing.length);
-  if (count !== missing.length) {
-    console.warn(
-      `Embedding count mismatch for chunk retrieval: expected ${missing.length}, got ${generated.length}`,
-    );
-  }
-  for (let i = 0; i < count; i++) {
-    existing.set(missing[i].id, generated[i]);
+  for (const term of queryTerms) {
+    const freq = termFrequency.get(term) ?? 0;
+    if (freq === 0) continue;
+
+    const df = docFrequency.get(term) ?? 0;
+    const idf = Math.log(1 + (corpusSize - df + 0.5) / (df + 0.5));
+    const numerator = freq * (BM25_K1 + 1);
+    const denominator = freq + BM25_K1 * (1 - BM25_B + BM25_B * (docLength / Math.max(1, avgDocLength)));
+    score += idf * (numerator / denominator);
   }
 
-  try {
-    await persistEmbeddings(missing.slice(0, count), generated.slice(0, count));
-  } catch (err) {
-    // Retrieval must not fail because cache persistence failed.
-    if (!isMissingEmbeddingsTable(err)) {
-      console.warn("Failed to persist chunk embeddings; continuing with live embeddings", err);
+  return score;
+}
+
+function buildBm25Context(chunks: RetrievalChunk[]) {
+  const docTerms = chunks.map((chunk) => tokenize(chunk.content));
+  const lengths = docTerms.map((terms) => terms.length);
+  const avgDocLength = lengths.reduce((sum, len) => sum + len, 0) / Math.max(1, lengths.length);
+  const docFrequency = new Map<string, number>();
+
+  for (const terms of docTerms) {
+    for (const term of new Set(terms)) {
+      docFrequency.set(term, (docFrequency.get(term) ?? 0) + 1);
     }
   }
 
-  return existing;
+  return { docTerms, avgDocLength, docFrequency, corpusSize: chunks.length };
 }
 
 /**
@@ -149,7 +140,29 @@ function extractKeywordFallbacks(question: string): Set<string> {
     }
   }
 
-  const stops = new Set(["how", "what", "when", "where", "who", "why", "much", "many", "often", "times", "was", "has", "been", "the", "a", "an", "is", "are", "to", "do", "did"]);
+  const stops = new Set([
+    "how",
+    "what",
+    "when",
+    "where",
+    "who",
+    "why",
+    "much",
+    "many",
+    "often",
+    "times",
+    "was",
+    "has",
+    "been",
+    "the",
+    "a",
+    "an",
+    "is",
+    "are",
+    "to",
+    "do",
+    "did",
+  ]);
   for (const word of [...fallbacks]) {
     if (stops.has(word)) {
       fallbacks.delete(word);
@@ -170,37 +183,51 @@ function keywordBoostScore(chunk: string, fallbacks: Set<string>): number {
   return score / Math.max(1, fallbacks.size);
 }
 
-function scoreChunks(questionEmbedding: number[], chunks: RetrievalChunk[], embeddingsByChunkId: Map<number, number[]>, fallbacks: Set<string>): ScoredChunk[] {
+function scoreChunksLocally(
+  question: string,
+  chunks: RetrievalChunk[],
+  bm25Context: ReturnType<typeof buildBm25Context>,
+  fallbacks: Set<string>,
+): ScoredChunk[] {
+  const queryTerms = [...new Set(tokenize(question))];
+
   return chunks
-    .map((chunk) => {
-      const embedding = embeddingsByChunkId.get(chunk.id);
-      if (!embedding) return null;
-      const semantic = cosineSimilarity(questionEmbedding, embedding);
+    .map((chunk, index) => {
+      const bm25 = computeBm25Score(
+        queryTerms,
+        bm25Context.docTerms[index],
+        bm25Context.avgDocLength,
+        bm25Context.docFrequency,
+        bm25Context.corpusSize,
+      );
       const keyword = fallbacks.size > 0 ? keywordBoostScore(chunk.content, fallbacks) : 0;
-      const blended = semantic * 0.75 + keyword * 0.25;
+      const maxBm25 = Math.max(1, bm25);
+      const blended = (bm25 / maxBm25) * 0.75 + keyword * 0.25;
       return { ...chunk, relevanceScore: blended } satisfies ScoredChunk;
     })
-    .filter((chunk): chunk is ScoredChunk => Boolean(chunk));
+    .filter((chunk) => chunk.relevanceScore > 0 || queryTerms.length === 0);
 }
 
 /**
- * Retrieve relevant chunks using semantic search, then boost chunks that contain
- * keyword matches from the query. Chunk embeddings are persisted in Postgres when
- * the chunk_embeddings table exists; until then retrieval falls back safely.
+ * Retrieve relevant chunks using local BM25-style keyword retrieval with optional
+ * name/payment keyword boosts. No external embedding providers are called.
  */
 export async function retrieveRelevantChunks(
   question: string,
   chunks: RetrievalChunk[],
-  topK = 5
+  topK = 5,
 ): Promise<ScoredChunk[]> {
   const nonEmpty = chunks.filter((c) => c.content.trim().length > 0);
   if (nonEmpty.length === 0) return [];
 
-  const questionEmbedding = await getEmbedding(question);
-  const embeddingsByChunkId = await getOrCreateChunkEmbeddings(nonEmpty);
   const fallbacks = extractKeywordFallbacks(question);
+  const bm25Context = buildBm25Context(nonEmpty);
+  const scored = scoreChunksLocally(question, nonEmpty, bm25Context, fallbacks);
 
-  const scored = scoreChunks(questionEmbedding, nonEmpty, embeddingsByChunkId, fallbacks);
+  if (scored.length === 0) {
+    return nonEmpty.slice(0, topK).map((chunk) => ({ ...chunk, relevanceScore: 0 }));
+  }
+
   scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
   return scored.slice(0, topK);
 }
@@ -218,22 +245,47 @@ export interface DocumentRetrieval {
   retrieved: ScoredChunk[];
 }
 
-// Multi-document retrieval: embeds the question once, then scores and selects the
-// top-K chunks PER document so every selected document is represented and we can
-// report a per-document breakdown. Document identity is preserved on every chunk.
+// Multi-document retrieval: scores the question once per corpus, then selects the
+// top-K chunks PER document so every selected document is represented.
 export async function retrieveAcrossDocuments(
   question: string,
   groups: DocumentGroup[],
-  perDocTopK = 3
+  perDocTopK = 3,
 ): Promise<DocumentRetrieval[]> {
-  const questionEmbedding = await getEmbedding(question);
-  const fallbacks = extractKeywordFallbacks(question);
   const allChunks = groups.flatMap((group) => group.chunks).filter((c) => c.content.trim().length > 0);
-  const embeddingsByChunkId = await getOrCreateChunkEmbeddings(allChunks);
+  const fallbacks = extractKeywordFallbacks(question);
+  const bm25Context = allChunks.length > 0 ? buildBm25Context(allChunks) : null;
+  const chunkOffsetById = new Map(allChunks.map((chunk, index) => [chunk.id, index]));
 
   return groups.map((group) => {
     const nonEmpty = group.chunks.filter((c) => c.content.trim().length > 0);
-    const scored = scoreChunks(questionEmbedding, nonEmpty, embeddingsByChunkId, fallbacks);
+    if (nonEmpty.length === 0 || !bm25Context) {
+      return {
+        documentId: group.documentId,
+        documentName: group.documentName,
+        chunksSearched: group.chunks.length,
+        retrieved: [],
+      };
+    }
+
+    const scored = nonEmpty
+      .map((chunk) => {
+        const index = chunkOffsetById.get(chunk.id);
+        if (index === undefined) return null;
+        const bm25 = computeBm25Score(
+          [...new Set(tokenize(question))],
+          bm25Context.docTerms[index],
+          bm25Context.avgDocLength,
+          bm25Context.docFrequency,
+          bm25Context.corpusSize,
+        );
+        const keyword = fallbacks.size > 0 ? keywordBoostScore(chunk.content, fallbacks) : 0;
+        const maxBm25 = Math.max(1, bm25);
+        const blended = (bm25 / maxBm25) * 0.75 + keyword * 0.25;
+        return { ...chunk, relevanceScore: blended } satisfies ScoredChunk;
+      })
+      .filter((chunk): chunk is ScoredChunk => Boolean(chunk));
+
     scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
     return {
@@ -244,3 +296,4 @@ export async function retrieveAcrossDocuments(
     };
   });
 }
+

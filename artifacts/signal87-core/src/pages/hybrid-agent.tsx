@@ -729,7 +729,7 @@ export default function HybridAgent() {
                     Hybrid AI Chat
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Documents + AI reasoning (Gemini → Grok → GPT), no web research.
+                    Documents + AI reasoning (Gemini → Grok), no web research.
                   </p>
                 </div>
                 <Composer {...composerProps} autoFocus />

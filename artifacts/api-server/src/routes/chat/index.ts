@@ -54,7 +54,7 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     .orderBy(chunksTable.chunkIndex);
 
   // Guard: a document with no indexed chunks (or a failed extraction) cannot
-  // ground an answer. Return a clear error instead of calling OpenAI with empty
+  // ground an answer. Return a clear error instead of calling an LLM with empty
   // or stale context (mirrors the multi-chat and brief routes, and matches the
   // frontend "not ready" gate).
   const extractionFailed = (doc.extractionStatus ?? "").toLowerCase() === "failed";

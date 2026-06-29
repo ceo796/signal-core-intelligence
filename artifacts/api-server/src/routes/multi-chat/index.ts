@@ -90,7 +90,7 @@ router.post("/documents/multi-chat", async (req, res): Promise<void> => {
   let retrievalError: string | null = null;
   // `fallbackUsed` means "a degraded path was taken" (retrieval OR LLM error).
   // There is no fallback PROVIDER — the only degraded paths are deterministic
-  // first-K retrieval (on embedding failure) and a static answer (on LLM failure).
+  // first-K retrieval (on local retrieval failure) and a static answer (on LLM failure).
   let fallbackUsed = false;
   try {
     perDocResults = await retrieveAcrossDocuments(question, groups, PER_DOC_TOP_K);

@@ -1,7 +1,12 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
-import { loadAiConfig, resolveTaskProviderChain } from "../lib/ai";
+import {
+  getResolvedReasoningChain,
+  isOpenAiReasoningEnabled,
+  loadAiConfig,
+  resolveTaskProviderChain,
+} from "../lib/ai";
 import {
   geminiAuthMode,
   geminiServiceAccountConfigured,
@@ -9,7 +14,7 @@ import {
   getVertexLocation,
   listAvailableProviders,
 } from "../lib/ai/providers";
-import { getEmbeddingModelName } from "../lib/ai/embedding";
+import { getEmbeddingMode, getEmbeddingModelName } from "../lib/ai/embedding";
 import { getRuntimeStorageStatus } from "../lib/file-store";
 
 const router: IRouter = Router();
@@ -45,7 +50,8 @@ router.get("/runtime-check", async (_req, res) => {
   const storage = getRuntimeStorageStatus();
   const database = await checkDatabase();
   const aiConfig = loadAiConfig();
-  const availableProviders = listAvailableProviders();
+  const availableProviders = listAvailableProviders().filter((id) => id !== "openai");
+  const resolvedReasoningChain = getResolvedReasoningChain("document_chat", aiConfig);
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
   const replitDependency = detectedReplitEnvVars.length > 0;
@@ -74,26 +80,31 @@ router.get("/runtime-check", async (_req, res) => {
       primaryExtractionProvider: aiConfig.primaryExtractionProvider,
       fallbackProviderOrder: aiConfig.fallbackProviderOrder,
       finalFallbackProvider: aiConfig.finalFallbackProvider,
+      resolvedReasoningChain,
       reasoningProviderChain: resolveTaskProviderChain("document_chat", aiConfig),
+      openaiReasoningEnabled: isOpenAiReasoningEnabled(aiConfig),
       providerTimeoutMs: aiConfig.providerTimeoutMs,
       evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
       qualityReviewProvider: aiConfig.qualityReviewProvider,
-      embeddingProvider: aiConfig.embeddingProvider,
+      embeddingMode: getEmbeddingMode(),
+      embeddingProvider: "local",
       availableProviders,
-      models: aiConfig.models,
+      models: {
+        google: aiConfig.models.google,
+        xai: aiConfig.models.xai,
+      },
       embeddingModel: getEmbeddingModelName(),
       geminiAuthMode: geminiAuthMode(),
       geminiProjectId: getServiceAccountProjectId(),
       geminiLocation: getVertexLocation(),
       credentials: {
-        openai: process.env.OPENAI_API_KEY ? "set" : "missing",
         xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",
         googleServiceAccount: geminiServiceAccountConfigured() ? "set" : "missing",
+        openai: "disabled",
       },
     },
     requiredConfig: {
       DATABASE_URL: configStatus("DATABASE_URL"),
-      OPENAI_API_KEY: configStatus("OPENAI_API_KEY"),
       XAI_API_KEY: configStatus("XAI_API_KEY"),
       GEMINI_SERVICE_ACCOUNT_JSON: configStatus("GEMINI_SERVICE_ACCOUNT_JSON"),
       GEMINI_SERVICE_ACCOUNT_PATH: configStatus("GEMINI_SERVICE_ACCOUNT_PATH"),

@@ -82,8 +82,8 @@ export default function Settings() {
               />
             </div>
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-              Answers are grounded in your documents using cosine retrieval, then reasoned with Gemini first,
-              Grok second, and GPT last. No web access and no live external research.
+              Answers are grounded in your documents using local BM25 retrieval, then reasoned with Gemini
+              first and Grok second. OpenAI is not used. No web access and no live external research.
             </p>
           </section>
         </div>

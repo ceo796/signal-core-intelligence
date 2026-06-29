@@ -17,7 +17,7 @@ function parseProviderOrder(value: string | undefined): ProviderId[] {
   if (!value?.trim()) return [];
   return value
     .split(",")
-    .map((part) => parseProviderId(part, "openai"))
+    .map((part) => parseProviderId(part, "xai"))
     .filter((id, index, all) => all.indexOf(id) === index);
 }
 
@@ -32,7 +32,10 @@ const REASONING_TASKS = new Set<AiTaskType>([
 
 const LOCAL_TASKS = new Set<AiTaskType>(["document_extraction", "table_extraction"]);
 
-const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["xai", "openai"];
+/** Providers excluded from all runtime reasoning/embedding chains. */
+export const RUNTIME_DISABLED_PROVIDERS = new Set<ProviderId>(["openai"]);
+
+const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["xai"];
 
 export interface AiRuntimeConfig {
   routingEnabled: boolean;
@@ -54,10 +57,10 @@ export function loadAiConfig(): AiRuntimeConfig {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
     primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
     primaryExtractionProvider: parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
-    finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "openai"),
+    finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
     qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
-    embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
+    embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "google"),
     fallbackProviderOrder:
       parsedFallbackOrder.length > 0 ? parsedFallbackOrder : DEFAULT_FALLBACK_ORDER,
     providerTimeoutMs: Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000"),
@@ -94,7 +97,7 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
   const chain: ProviderId[] = [primary];
   if (!config.routingEnabled) return chain;
 
-  const defaultOrder: ProviderId[] = ["xai", "google", "openai"];
+  const defaultOrder: ProviderId[] = ["xai", "google"];
   const orderedFallbacks: ProviderId[] = [];
   for (const provider of [...config.fallbackProviderOrder, ...defaultOrder]) {
     if (!orderedFallbacks.includes(provider)) {
@@ -112,11 +115,23 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
     chain.push(config.finalFallbackProvider);
   }
 
-  return chain;
+  return chain.filter((providerId) => !RUNTIME_DISABLED_PROVIDERS.has(providerId));
 }
 
-export function getEmbeddingModel(config: AiRuntimeConfig, providerId: ProviderId): string {
-  return config.models[providerId].embedding ?? config.models.openai.embedding ?? "text-embedding-3-small";
+export function isOpenAiReasoningEnabled(config: AiRuntimeConfig = loadAiConfig()): boolean {
+  const chain = resolveTaskProviderChain("document_chat", config);
+  return chain.includes("openai");
+}
+
+export function getResolvedReasoningChain(
+  taskType: AiTaskType = "document_chat",
+  config: AiRuntimeConfig = loadAiConfig(),
+): ProviderId[] {
+  return resolveTaskProviderChain(taskType, config);
+}
+
+export function getEmbeddingModel(_config: AiRuntimeConfig, _providerId: ProviderId): string {
+  return "local-bm25";
 }
 
 export function getChatModel(config: AiRuntimeConfig, providerId: ProviderId): string {

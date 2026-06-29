@@ -22,8 +22,6 @@ services:
         value: /var/data/uploads
       - key: DATABASE_URL
         sync: false
-      - key: OPENAI_API_KEY
-        sync: false
       - key: XAI_API_KEY
         sync: false
       - key: GEMINI_SERVICE_ACCOUNT_JSON
@@ -41,11 +39,9 @@ services:
       - key: AI_PRIMARY_REASONING_PROVIDER
         value: google
       - key: AI_FINAL_FALLBACK_PROVIDER
-        value: openai
+        value: xai
       - key: AI_FALLBACK_PROVIDER_ORDER
         value: xai
-      - key: AI_EMBEDDING_PROVIDER
-        value: openai
       - key: CLERK_SECRET_KEY
         sync: false
       - key: CLERK_PUBLISHABLE_KEY

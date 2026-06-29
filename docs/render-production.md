@@ -1,6 +1,6 @@
 # Signal87 Render Production Runbook
 
-Signal87 production runs outside Replit and Railway on Render, Clerk auth, OpenAI, and Postgres. The checked-in `render.yaml` uses two services: a Node API service and a static frontend service. Do not add Replit runtime dependencies, Railway entry points, or Replit object storage for new uploads.
+Signal87 production runs outside Replit and Railway on Render, Clerk auth, Gemini/Grok, and Postgres. The checked-in `render.yaml` uses two services: a Node API service and a static frontend service. Do not add Replit runtime dependencies, Railway entry points, or Replit object storage for new uploads.
 
 The root `Dockerfile` is a neutral production fallback for an existing Render Docker service. It is not a Railway deployment path.
 
@@ -11,14 +11,14 @@ Set these on `signal87-api` before deploying:
 | Variable | Required value / notes |
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string. Keep this secret. |
-| `OPENAI_API_KEY` | OpenAI API key — last-resort GPT fallback when Gemini and Grok are unavailable. |
 | `GEMINI_SERVICE_ACCOUNT_JSON` | **Required for Gemini.** Full Google Cloud service account JSON (one line) for **Vertex AI** — bills against linked GCP credits. Set in Render dashboard only; never commit. Do not use `GEMINI_API_KEY`. |
 | `GEMINI_SERVICE_ACCOUNT_PATH` | Local/dev only: path to service account JSON file (e.g. `./.local/gemini-service-account.json`). |
 | `GEMINI_VERTEX_LOCATION` | Vertex region for Gemini OpenAPI endpoint (default `us-central1`). |
-| `XAI_API_KEY` | xAI/Grok API key — second LLM fallback after Gemini. |
-| `AI_PRIMARY_REASONING_PROVIDER` | **Must be `google`** (Gemini via Vertex). If this is `openai` in the Render dashboard, chat will try GPT first and may fall back to extractive local answers when providers fail. |
+| `XAI_API_KEY` | xAI/Grok API key — LLM fallback after Gemini. |
+| `AI_PRIMARY_REASONING_PROVIDER` | **Must be `google`** (Gemini via Vertex). |
 | `AI_FALLBACK_PROVIDER_ORDER` | `xai` (Grok second). |
-| `AI_FINAL_FALLBACK_PROVIDER` | `openai` (GPT last fallback — use only when Gemini and Grok fail). |
+| `AI_FINAL_FALLBACK_PROVIDER` | `xai` (Grok last LLM before local extractive fallback). |
+| `AI_PROVIDER_TIMEOUT_MS` | `12000` (per-provider attempt timeout). |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |
 | `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. Use `pk_live_...` in production. |
 | `ADMIN_EMAILS` | Comma-separated admin emails with full complimentary access. Set to `ceo@signal87.ai,mbenezra@erezcapital.io`. |

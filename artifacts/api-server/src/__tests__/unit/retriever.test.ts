@@ -1,29 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-const { mockGenerateEmbedding, mockGenerateEmbeddings } = vi.hoisted(() => ({
-  mockGenerateEmbedding: vi.fn(),
-  mockGenerateEmbeddings: vi.fn(),
-}));
-
-vi.mock("../../lib/ai/index.js", () => ({
-  generateEmbedding: mockGenerateEmbedding,
-  generateEmbeddings: mockGenerateEmbeddings,
-  getEmbeddingModelName: vi.fn(() => "text-embedding-3-small"),
-}));
-
+import { describe, it, expect } from "vitest";
 import { retrieveRelevantChunks, retrieveAcrossDocuments } from "../../lib/retriever.js";
 
-/** Build a unit vector of the given dimension with `1.0` at position `hotIndex`. */
-function oneHotEmbedding(dimension: number, hotIndex: number): number[] {
-  const v = new Array(dimension).fill(0);
-  v[hotIndex] = 1;
-  return v;
-}
-
-/** High IDs avoid collisions with persisted chunk_embeddings rows in dev databases. */
 const CHUNK_ID_BASE = 9_000_000;
 
-/** Sample chunks for tests — each has a distinct "topic" via hot-index embedding. */
 function makeSampleChunks(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: CHUNK_ID_BASE + i + 1,
@@ -33,46 +12,19 @@ function makeSampleChunks(count: number) {
   }));
 }
 
-function mockChunkEmbeddings(dimension: number, texts: string[]) {
-  return {
-    embeddings: texts.map((text) => {
-      const match = text.match(/Chunk (\d+)/);
-      const hotIndex = match ? Number(match[1]) - 1 : 0;
-      return oneHotEmbedding(dimension, hotIndex);
-    }),
-    providerUsed: "openai",
-    modelUsed: "text-embedding-3-small",
-  };
-}
-
 describe("retrieveRelevantChunks", () => {
-  const DIM = 10;
-
-  beforeEach(() => {
-    mockGenerateEmbedding.mockReset();
-    mockGenerateEmbeddings.mockReset();
-    mockGenerateEmbeddings.mockImplementation(async (texts: string[]) =>
-      mockChunkEmbeddings(DIM, texts),
-    );
-  });
-
-  it("returns top-K chunks by cosine similarity", async () => {
+  it("returns top-K chunks by local BM25 relevance", async () => {
     const chunks = makeSampleChunks(5);
-    const queryEmbedding = oneHotEmbedding(DIM, 2);
-
-    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
-
-    const results = await retrieveRelevantChunks("test question", chunks, 3);
+    const results = await retrieveRelevantChunks("topic 3", chunks, 3);
 
     expect(results).toHaveLength(3);
     expect(results[0].chunkIndex).toBe(2);
-    expect(results[0].relevanceScore).toBeCloseTo(0.75, 5);
+    expect(results[0].relevanceScore).toBeGreaterThan(0);
   });
 
   it("returns empty array when no chunks are provided", async () => {
     const results = await retrieveRelevantChunks("test question", [], 5);
     expect(results).toHaveLength(0);
-    expect(mockGenerateEmbedding).not.toHaveBeenCalled();
   });
 
   it("returns empty array when all chunks have blank content", async () => {
@@ -82,41 +34,26 @@ describe("retrieveRelevantChunks", () => {
     ];
     const results = await retrieveRelevantChunks("test question", blankChunks, 5);
     expect(results).toHaveLength(0);
-    expect(mockGenerateEmbedding).not.toHaveBeenCalled();
   });
 
   it("returns all chunks when topK >= chunk count", async () => {
     const chunks = makeSampleChunks(3);
-    const queryEmbedding = oneHotEmbedding(DIM, 0);
-
-    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
-
-    const results = await retrieveRelevantChunks("question", chunks, 10);
+    const results = await retrieveRelevantChunks("topic 1", chunks, 10);
     expect(results).toHaveLength(3);
   });
 
   it("results are sorted by descending relevance score", async () => {
     const chunks = makeSampleChunks(4);
-    const queryEmbedding = oneHotEmbedding(DIM, 1);
-
-    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
-
-    const results = await retrieveRelevantChunks("question", chunks, 4);
+    const results = await retrieveRelevantChunks("topic 2", chunks, 4);
 
     for (let i = 0; i < results.length - 1; i++) {
-      expect(results[i].relevanceScore).toBeGreaterThanOrEqual(
-        results[i + 1].relevanceScore,
-      );
+      expect(results[i].relevanceScore).toBeGreaterThanOrEqual(results[i + 1].relevanceScore);
     }
   });
 
   it("includes chunkIndex and content on each result", async () => {
     const chunks = makeSampleChunks(2);
-    const queryEmbedding = oneHotEmbedding(DIM, 0);
-
-    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
-
-    const results = await retrieveRelevantChunks("question", chunks, 2);
+    const results = await retrieveRelevantChunks("topic 1", chunks, 2);
     for (const r of results) {
       expect(r).toHaveProperty("chunkIndex");
       expect(r).toHaveProperty("content");
@@ -127,35 +64,21 @@ describe("retrieveRelevantChunks", () => {
 });
 
 describe("retrieveAcrossDocuments", () => {
-  const DIM = 6;
-
-  beforeEach(() => {
-    mockGenerateEmbedding.mockReset();
-    mockGenerateEmbeddings.mockReset();
-    mockGenerateEmbeddings.mockImplementation(async (texts: string[]) => ({
-      embeddings: texts.map((_, i) => oneHotEmbedding(DIM, i)),
-      providerUsed: "openai",
-      modelUsed: "text-embedding-3-small",
-    }));
-  });
-
   it("returns one DocumentRetrieval per group", async () => {
     const groups = [
       {
         documentId: 1,
         documentName: "Doc A",
-        chunks: [{ id: CHUNK_ID_BASE + 101, documentId: 1, chunkIndex: 0, content: "Content A1" }],
+        chunks: [{ id: CHUNK_ID_BASE + 101, documentId: 1, chunkIndex: 0, content: "Content A1 about alpha" }],
       },
       {
         documentId: 2,
         documentName: "Doc B",
-        chunks: [{ id: CHUNK_ID_BASE + 102, documentId: 2, chunkIndex: 0, content: "Content B1" }],
+        chunks: [{ id: CHUNK_ID_BASE + 102, documentId: 2, chunkIndex: 0, content: "Content B1 about beta" }],
       },
     ];
 
-    mockGenerateEmbedding.mockResolvedValueOnce(oneHotEmbedding(DIM, 0));
-
-    const results = await retrieveAcrossDocuments("question", groups, 3);
+    const results = await retrieveAcrossDocuments("alpha", groups, 3);
     expect(results).toHaveLength(2);
     expect(results[0].documentId).toBe(1);
     expect(results[1].documentId).toBe(2);
@@ -169,7 +92,6 @@ describe("retrieveAcrossDocuments", () => {
         chunks: [],
       },
     ];
-    mockGenerateEmbedding.mockResolvedValueOnce(oneHotEmbedding(DIM, 0));
 
     const results = await retrieveAcrossDocuments("question", groups, 3);
     expect(results[0].retrieved).toHaveLength(0);
@@ -185,9 +107,7 @@ describe("retrieveAcrossDocuments", () => {
     }));
     const groups = [{ documentId: 1, documentName: "Doc A", chunks }];
 
-    mockGenerateEmbedding.mockResolvedValueOnce(oneHotEmbedding(DIM, 0));
-
-    const results = await retrieveAcrossDocuments("question", groups, 2);
+    const results = await retrieveAcrossDocuments("content 2", groups, 2);
     expect(results[0].chunksSearched).toBe(4);
     expect(results[0].retrieved).toHaveLength(2);
   });

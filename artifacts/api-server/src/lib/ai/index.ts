@@ -1,6 +1,17 @@
 export { aiRouter, runTask } from "./router";
-export { loadAiConfig, resolveTaskProviderChain } from "./config";
-export { generateEmbedding, generateEmbeddings, getEmbeddingModelName } from "./embedding";
+export {
+  getResolvedReasoningChain,
+  isOpenAiReasoningEnabled,
+  loadAiConfig,
+  resolveTaskProviderChain,
+} from "./config";
+export {
+  generateEmbedding,
+  generateEmbeddings,
+  getEmbeddingMode,
+  getEmbeddingModelName,
+  isRemoteEmbeddingEnabled,
+} from "./embedding";
 export { geminiAuthMode, getProviderRegistry, listAvailableProviders } from "./providers";
 export type {
   AiTaskType,

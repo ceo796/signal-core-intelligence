@@ -30,8 +30,21 @@ function defaultLogger(context: AiRouterLogContext): void {
   }
 }
 
+function providerDisplayName(providerId: ProviderId): string {
+  if (providerId === "google") return "Gemini";
+  if (providerId === "xai") return "Grok";
+  return providerId;
+}
+
 function logProviderAttempt(attempt: ProviderAttemptLog, onAttempt?: (attempt: ProviderAttemptLog) => void): void {
-  console.info("ai_router_provider_attempt", attempt);
+  const label = providerDisplayName(attempt.provider);
+  const event = attempt.success
+    ? `${label} succeeded`
+    : attempt.fallbackTarget
+      ? `${label} failed; trying ${providerDisplayName(attempt.fallbackTarget)} next`
+      : `${label} failed`;
+
+  console.info("ai_router_provider_attempt", { ...attempt, event });
   onAttempt?.(attempt);
 }
 
@@ -86,12 +99,24 @@ async function invokeProviderTask(
     if (!provider?.isAvailable()) {
       const message = `${providerId}: unavailable`;
       errors.push(message);
+      console.info("ai_router_provider_attempt", {
+        provider: providerId,
+        event: `${providerDisplayName(providerId)} attempted`,
+        success: false,
+        error: message,
+        fallbackTarget,
+      });
       logProviderAttempt(
         { provider: providerId, success: false, error: message, fallbackTarget },
         request.onProviderAttempt,
       );
       continue;
     }
+
+    console.info("ai_router_provider_attempt", {
+      provider: providerId,
+      event: `${providerDisplayName(providerId)} attempted`,
+    });
 
     try {
       const result = await withProviderTimeout(
@@ -148,6 +173,12 @@ async function invokeProviderTask(
       );
     }
   }
+
+  console.warn("ai_router_local_fallback_eligible", {
+    taskType: request.taskType,
+    message: "Gemini and Grok failed; route may use local extractive fallback",
+    errors,
+  });
 
   throw new AiRouterError(
     errors.join("; ") || "No LLM providers available",

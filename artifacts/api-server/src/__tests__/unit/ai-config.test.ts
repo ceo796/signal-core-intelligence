@@ -1,5 +1,10 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { loadAiConfig, resolveTaskProviderChain } from "../../lib/ai/config.js";
+import {
+  getResolvedReasoningChain,
+  isOpenAiReasoningEnabled,
+  loadAiConfig,
+  resolveTaskProviderChain,
+} from "../../lib/ai/config.js";
 
 describe("ai config", () => {
   beforeEach(() => {
@@ -13,36 +18,38 @@ describe("ai config", () => {
 
   it("loads provider routing from environment", () => {
     process.env.AI_PRIMARY_REASONING_PROVIDER = "google";
-    process.env.AI_FINAL_FALLBACK_PROVIDER = "openai";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
     process.env.OPENAI_MODEL = "custom-openai";
     process.env.GROK_MODEL = "custom-grok";
     process.env.GEMINI_MODEL = "custom-gemini";
 
     const config = loadAiConfig();
     expect(config.primaryReasoningProvider).toBe("google");
-    expect(config.finalFallbackProvider).toBe("openai");
+    expect(config.finalFallbackProvider).toBe("xai");
     expect(config.models.openai.chat).toBe("custom-openai");
     expect(config.models.xai.chat).toBe("custom-grok");
     expect(config.models.google.chat).toBe("custom-gemini");
   });
 
   it("orders fallbacks as primary, configured middle providers, then final fallback", () => {
-    process.env.AI_PRIMARY_REASONING_PROVIDER = "openai";
-    process.env.AI_FINAL_FALLBACK_PROVIDER = "google";
-    process.env.AI_FALLBACK_PROVIDER_ORDER = "xai";
+    process.env.AI_PRIMARY_REASONING_PROVIDER = "google";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "xai";
+    process.env.AI_FALLBACK_PROVIDER_ORDER = "google";
 
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain).toEqual(["openai", "xai", "google"]);
+    expect(chain).toEqual(["google", "xai"]);
   });
 
-  it("defaults reasoning chain to Gemini, then Grok, then GPT", () => {
+  it("defaults reasoning chain to Gemini then Grok with OpenAI excluded", () => {
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
-    expect(chain).toEqual(["google", "xai", "openai"]);
+    expect(chain).toEqual(["google", "xai"]);
+    expect(isOpenAiReasoningEnabled()).toBe(false);
+    expect(getResolvedReasoningChain()).toEqual(["google", "xai"]);
   });
 
-  it("defaults fallback provider order to xai then openai", () => {
+  it("defaults fallback provider order to xai only", () => {
     const config = loadAiConfig();
-    expect(config.fallbackProviderOrder).toEqual(["xai", "openai"]);
+    expect(config.fallbackProviderOrder).toEqual(["xai"]);
   });
 
   it("loads provider timeout from environment", () => {
