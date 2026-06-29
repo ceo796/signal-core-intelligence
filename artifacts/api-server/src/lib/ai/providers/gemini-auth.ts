@@ -62,7 +62,7 @@ export function getVertexLocation(): string {
   return (
     process.env.GEMINI_LOCATION?.trim() ||
     process.env.GEMINI_VERTEX_LOCATION?.trim() ||
-    "us-central1"
+    "global"
   );
 }
 

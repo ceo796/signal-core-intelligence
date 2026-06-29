@@ -1,14 +1,13 @@
 import type { AiProviderAdapter, ProviderId } from "../types";
 import { createGeminiProvider } from "./geminiProvider";
 import { createGrokProvider } from "./grokProvider";
-import { createOpenAiProvider } from "./openaiProvider";
 
+/** Runtime registry — OpenAI is intentionally excluded (no GPT credits). */
 let registry: Map<ProviderId, AiProviderAdapter> | null = null;
 
 export function getProviderRegistry(): Map<ProviderId, AiProviderAdapter> {
   if (!registry) {
     registry = new Map<ProviderId, AiProviderAdapter>([
-      ["openai", createOpenAiProvider()],
       ["xai", createGrokProvider()],
       ["google", createGeminiProvider()],
     ]);

@@ -118,9 +118,14 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
   return chain.filter((providerId) => !RUNTIME_DISABLED_PROVIDERS.has(providerId));
 }
 
+/** OpenAI/GPT is permanently disabled in the Signal87 runtime path. */
+export function isOpenAiRuntimeEnabled(_config: AiRuntimeConfig = loadAiConfig()): boolean {
+  return false;
+}
+
+/** @deprecated Use isOpenAiRuntimeEnabled */
 export function isOpenAiReasoningEnabled(config: AiRuntimeConfig = loadAiConfig()): boolean {
-  const chain = resolveTaskProviderChain("document_chat", config);
-  return chain.includes("openai");
+  return isOpenAiRuntimeEnabled(config);
 }
 
 export function getResolvedReasoningChain(

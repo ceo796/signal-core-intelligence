@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   getResolvedReasoningChain,
-  isOpenAiReasoningEnabled,
+  isOpenAiRuntimeEnabled,
   loadAiConfig,
   resolveTaskProviderChain,
 } from "../../lib/ai/config.js";
@@ -43,7 +43,7 @@ describe("ai config", () => {
   it("defaults reasoning chain to Gemini then Grok with OpenAI excluded", () => {
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
     expect(chain).toEqual(["google", "xai"]);
-    expect(isOpenAiReasoningEnabled()).toBe(false);
+    expect(isOpenAiRuntimeEnabled()).toBe(false);
     expect(getResolvedReasoningChain()).toEqual(["google", "xai"]);
   });
 

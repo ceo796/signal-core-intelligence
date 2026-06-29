@@ -3,7 +3,7 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import {
   getResolvedReasoningChain,
-  isOpenAiReasoningEnabled,
+  isOpenAiRuntimeEnabled,
   loadAiConfig,
   resolveTaskProviderChain,
 } from "../lib/ai";
@@ -50,8 +50,10 @@ router.get("/runtime-check", async (_req, res) => {
   const storage = getRuntimeStorageStatus();
   const database = await checkDatabase();
   const aiConfig = loadAiConfig();
-  const availableProviders = listAvailableProviders().filter((id) => id !== "openai");
+  const availableProviders = listAvailableProviders();
   const resolvedReasoningChain = getResolvedReasoningChain("document_chat", aiConfig);
+  const xaiConfigured = Boolean(process.env.XAI_API_KEY || process.env.GROK_API_KEY);
+  const googleSaConfigured = geminiServiceAccountConfigured();
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
   const replitDependency = detectedReplitEnvVars.length > 0;
@@ -82,7 +84,7 @@ router.get("/runtime-check", async (_req, res) => {
       finalFallbackProvider: aiConfig.finalFallbackProvider,
       resolvedReasoningChain,
       reasoningProviderChain: resolveTaskProviderChain("document_chat", aiConfig),
-      openaiReasoningEnabled: isOpenAiReasoningEnabled(aiConfig),
+      openaiRuntimeEnabled: isOpenAiRuntimeEnabled(aiConfig),
       providerTimeoutMs: aiConfig.providerTimeoutMs,
       evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
       qualityReviewProvider: aiConfig.qualityReviewProvider,
@@ -97,9 +99,11 @@ router.get("/runtime-check", async (_req, res) => {
       geminiAuthMode: geminiAuthMode(),
       geminiProjectId: getServiceAccountProjectId(),
       geminiLocation: getVertexLocation(),
+      xai: xaiConfigured ? "set" : "missing",
+      googleServiceAccount: googleSaConfigured ? "set" : "missing",
       credentials: {
-        xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",
-        googleServiceAccount: geminiServiceAccountConfigured() ? "set" : "missing",
+        xai: xaiConfigured ? "set" : "missing",
+        googleServiceAccount: googleSaConfigured ? "set" : "missing",
         openai: "disabled",
       },
     },
@@ -108,6 +112,8 @@ router.get("/runtime-check", async (_req, res) => {
       XAI_API_KEY: configStatus("XAI_API_KEY"),
       GEMINI_SERVICE_ACCOUNT_JSON: configStatus("GEMINI_SERVICE_ACCOUNT_JSON"),
       GEMINI_SERVICE_ACCOUNT_PATH: configStatus("GEMINI_SERVICE_ACCOUNT_PATH"),
+      GEMINI_PROJECT_ID: configStatus("GEMINI_PROJECT_ID"),
+      GEMINI_LOCATION: configStatus("GEMINI_LOCATION"),
       CLERK_SECRET_KEY: configStatus("CLERK_SECRET_KEY"),
       CLERK_PUBLISHABLE_KEY: configStatus("CLERK_PUBLISHABLE_KEY"),
       FILE_STORAGE_DIR: configStatus("FILE_STORAGE_DIR"),

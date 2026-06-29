@@ -13,7 +13,8 @@ Set these on `signal87-api` before deploying:
 | `DATABASE_URL` | Neon Postgres connection string. Keep this secret. |
 | `GEMINI_SERVICE_ACCOUNT_JSON` | **Required for Gemini.** Full Google Cloud service account JSON (one line) for **Vertex AI** — bills against linked GCP credits. Set in Render dashboard only; never commit. Do not use `GEMINI_API_KEY`. |
 | `GEMINI_SERVICE_ACCOUNT_PATH` | Local/dev only: path to service account JSON file (e.g. `./.local/gemini-service-account.json`). |
-| `GEMINI_VERTEX_LOCATION` | Vertex region for Gemini OpenAPI endpoint (default `us-central1`). |
+| `GEMINI_PROJECT_ID` | GCP project for Vertex Gemini (e.g. `gen-lang-client-0708590149`). |
+| `GEMINI_LOCATION` | Vertex region for Gemini OpenAPI endpoint (default `global`). |
 | `XAI_API_KEY` | xAI/Grok API key — LLM fallback after Gemini. |
 | `AI_PRIMARY_REASONING_PROVIDER` | **Must be `google`** (Gemini via Vertex). |
 | `AI_FALLBACK_PROVIDER_ORDER` | `xai` (Grok second). |

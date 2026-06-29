@@ -133,8 +133,9 @@ describe("Full API smoke (every route)", () => {
     expect(res.status).toBe(200);
     expect(res.body.ai).toMatchObject({
       resolvedReasoningChain: ["google", "xai"],
-      openaiReasoningEnabled: false,
+      openaiRuntimeEnabled: false,
       embeddingMode: "local",
+      geminiAuthMode: "service_account",
     });
   });
 
