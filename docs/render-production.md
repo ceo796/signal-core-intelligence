@@ -16,7 +16,7 @@ Set these on `signal87-api` before deploying:
 | `GEMINI_SERVICE_ACCOUNT_PATH` | Local/dev only: path to service account JSON file (e.g. `./.local/gemini-service-account.json`). |
 | `GEMINI_VERTEX_LOCATION` | Vertex region for Gemini OpenAPI endpoint (default `us-central1`). |
 | `XAI_API_KEY` | xAI/Grok API key — final LLM fallback. |
-| `AI_PRIMARY_REASONING_PROVIDER` | `google` (Gemini primary). |
+| `AI_PRIMARY_REASONING_PROVIDER` | **Must be `google`** (Gemini via Vertex). If this is `openai` in the Render dashboard, chat will try GPT first and may fall back to extractive local answers when providers fail. |
 | `AI_FALLBACK_PROVIDER_ORDER` | `openai` (GPT first fallback). |
 | `AI_FINAL_FALLBACK_PROVIDER` | `xai` (Grok last fallback). |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |

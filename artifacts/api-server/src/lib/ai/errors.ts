@@ -29,8 +29,16 @@ export function classifyProviderError(err: unknown): AiRouterError {
   if (lower.includes("timeout") || lower.includes("timed out") || lower.includes("abort")) {
     return new AiRouterError(message, "timeout", true);
   }
-  if (lower.includes("rate limit") || lower.includes("429")) {
+  if (lower.includes("rate limit") || lower.includes("429") || lower.includes("quota")) {
     return new AiRouterError(message, "rate_limit", true);
+  }
+  if (
+    lower.includes("permission_denied") ||
+    lower.includes("permission denied") ||
+    lower.includes(" 403") ||
+    lower.includes(" 401")
+  ) {
+    return new AiRouterError(message, "permission", true);
   }
   if (lower.includes("econnreset") || lower.includes("enotfound") || lower.includes("network")) {
     return new AiRouterError(message, "network", true);
@@ -39,7 +47,7 @@ export function classifyProviderError(err: unknown): AiRouterError {
     return new AiRouterError(message, "provider_5xx", true);
   }
 
-  return new AiRouterError(message, "provider_error", false);
+  return new AiRouterError(message, "provider_error", true);
 }
 
 export function isFallbackEligible(err: unknown): boolean {

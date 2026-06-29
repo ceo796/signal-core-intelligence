@@ -9,7 +9,7 @@ import { getCurrentUserId } from "../../lib/ownership";
 
 const ROUTE = "POST /api/agent/hybrid";
 const RETRIEVAL_TIMEOUT_MS = 10_000;
-const LLM_TIMEOUT_MS = 22_000;
+const LLM_TIMEOUT_MS = 60_000;
 const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
 const MODE_PROMPTS: Record<string, string> = {
@@ -285,6 +285,8 @@ ${sourceBlocks}`;
     req.log.error({ err }, "Hybrid agent AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     answer = buildFallbackAnswer(query, citations);
+    llmProvider = "local";
+    llmModel = "extractive-fallback";
     fallbackUsed = true;
   }
   const llmLatencyMs = Date.now() - llmStart;
@@ -318,6 +320,7 @@ ${sourceBlocks}`;
       chunksConsidered: citations.length,
       latencyMs: totalLatencyMs,
       fallbackUsed,
+      ...(llmError ? { errors: llmError } : {}),
     },
   });
 });
