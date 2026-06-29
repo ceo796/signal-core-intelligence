@@ -49,7 +49,7 @@ import {
 
 const MODES = [
   { value: "auto", label: "Auto", description: "General Q&A across all sources" },
-  { value: "summarize", label: "Summarize", description: "Key points from all sources" },
+  { value: "summarize", label: "Summarize", description: "3–4 key bullets (ask for longer if needed)" },
   { value: "compare", label: "Compare", description: "Agreements and differences" },
   { value: "extract", label: "Extract", description: "Facts, figures, and data" },
   { value: "diligence", label: "Diligence", description: "Risks, obligations, red flags" },

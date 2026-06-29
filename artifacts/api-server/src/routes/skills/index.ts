@@ -47,11 +47,11 @@ const SKILLS: SkillDefinition[] = [
     description: "Fast cited overview — key facts, parties, dates, and follow-ups in scannable sections.",
     mode: "summarize",
     systemInstruction:
-      "You are a senior document analyst. Produce a concise, business-meaning summary from the excerpts. Prioritize facts, parties, obligations, dates, amounts, and decisions. Do not pad with marketing language.",
+      "You are a senior document analyst. Produce a tight summary from the excerpts. Default to exactly 3–4 highest-signal bullet points unless the user instruction asks for a longer or detailed summary.",
     requiredInputs: ["documentIds"],
     outputFormat:
-      "Use markdown sections: ## Executive summary (2-4 sentences), ## Key points (bullets), ## Dates amounts and parties (bullets or short table), ## Follow-up items (bullets). End with a Sources section listing each [Source N] used.",
-    citationPolicy: "Every document-derived factual claim must include a [Source N] citation at the end of the sentence or bullet.",
+      "Default: exactly 3–4 bullet points of highest-signal takeaways, then a Sources section. Expand with sections only if the user instruction asks for a longer or detailed summary.",
+    citationPolicy: "List 3–5 [Source N] markers in the Sources section only — not inline in bullets.",
     maxDocuments: 5,
     maxChunks: 16,
     allowGeneralReasoning: false,
@@ -102,10 +102,10 @@ const TABLE_OUTPUT_POLICY = `TABLE OUTPUT POLICY:
 - Do not wrap the table in code fences.`;
 
 const SUMMARY_OUTPUT_POLICY = `SUMMARY OUTPUT POLICY:
-- Use clean markdown headings (##) and bullet lists (- ).
-- One blank line between sections.
-- Put [Source N] at the END of each cited sentence or bullet.
-- End with a "Sources" section listing every citation referenced.`;
+- Default length: exactly 3–4 bullet points ("- ") with one idea each. No headings unless the user asked for a longer summary.
+- One blank line before the Sources footer.
+- Put [Source N] only in the Sources section (not inline in bullets).
+- End with a "Sources" section listing the 3–5 markers you relied on.`;
 
 const GROUNDING_POLICY = `GROUNDING & CITATION POLICY:
 - Use the provided source excerpts as the primary evidence.

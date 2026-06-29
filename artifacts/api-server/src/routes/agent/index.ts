@@ -15,7 +15,7 @@ const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
 const MODE_PROMPTS: Record<string, string> = {
   auto: `You are a precise document intelligence assistant. Answer the user's question using the provided source excerpts below as your primary evidence. Write clean prose without inline citation markers. Be concise and accurate.`,
-  summarize: `You are a document summarization assistant. Summarize the key points from the provided source excerpts, organized by theme. Do not use inline [Source N] markers in the body. Be comprehensive but concise.`,
+  summarize: `You are a document summarization assistant. Distill the highest-signal takeaways from the provided source excerpts. Do not use inline [Source N] markers in the body.`,
   compare: `You are a multi-document comparison assistant. Compare and contrast information across the provided sources. Identify agreements, differences, and contradictions. Do not use inline [Source N] markers in the body.`,
   extract: `You are a precise fact and data extraction assistant. Extract specific facts, data points, numbers, dates, names, and key information from the provided source excerpts. Present findings in a structured format without inline [Source N] markers.`,
   diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention without inline [Source N] markers.`,
@@ -35,6 +35,28 @@ const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
 - AGGREGATION: If the question asks for a total, sum, count, or average, and the chunks contain the raw numbers, calculate the result from the evidence and show your work. Do not say "not enough information" when the data is present.
 - NAME MATCHING: If the question asks about a person and only a first name or last name is given, match it to the full name if it appears in the chunks. E.g., "Worrell" should match "Shaquille Worrell" and vice versa.
 - DATE REASONING: If asked "how often," "how many times," or about frequency/pattern, count the occurrences, sort the dates, and describe the observed interval. Do not require the document to explicitly state "weekly" or "bi-weekly" — infer from the dates. If the pattern is irregular, state that clearly.`;
+
+const DEFAULT_SUMMARY_LENGTH_POLICY = `SUMMARY LENGTH (default):
+- Respond with exactly 3–4 bullet points ("- ") — no more unless the user explicitly asks for a longer summary.
+- One idea per bullet; highest-signal facts only. No section headings or preamble.
+- Expand only when the user clearly requests a detailed, comprehensive, long, in-depth, or thorough summary.`;
+
+const LONG_SUMMARY_LENGTH_POLICY = `SUMMARY LENGTH (user requested longer):
+- The user asked for a fuller summary — use additional bullets and short sections as needed.
+- Still avoid filler; stay grounded in the source excerpts.`;
+
+function wantsLongSummary(query: string): boolean {
+  const q = query.toLowerCase();
+  return (
+    /\b(detailed|comprehensive|long|full|in-depth|in depth|thorough|extended|elaborate)\b/.test(q) ||
+    /\b(more|extra)\s+(detail|points|bullets)\b/.test(q)
+  );
+}
+
+function summaryLengthPolicy(query: string, mode: string): string {
+  if (mode !== "summarize") return "";
+  return wantsLongSummary(query) ? LONG_SUMMARY_LENGTH_POLICY : DEFAULT_SUMMARY_LENGTH_POLICY;
+}
 
 const router: IRouter = Router();
 
@@ -251,7 +273,9 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
     .join("\n\n---\n\n");
 
   const documentList = documentsUsed.map((d) => `- "${d.name}"`).join("\n");
+  const summaryPolicy = summaryLengthPolicy(query, mode);
   const systemPrompt = `${MODE_PROMPTS[mode] ?? MODE_PROMPTS.auto}
+${summaryPolicy ? `\n\n${summaryPolicy}` : ""}
 
 ${GROUNDING_REASONING_POLICY}
 
