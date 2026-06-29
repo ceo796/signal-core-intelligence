@@ -28,6 +28,7 @@ vi.mock("../../lib/file-store.js", () => ({
   uploadFile: vi.fn(async () => `/test-bucket/documents/${randomUUID()}`),
   downloadFile: vi.fn(async (_key: string) => Buffer.from("test file content")),
   deleteFile: vi.fn(async () => undefined),
+  logStorageStartupStatus: vi.fn(),
 }));
 
 import app from "../../app.js";

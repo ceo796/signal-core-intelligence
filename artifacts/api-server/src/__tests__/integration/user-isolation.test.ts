@@ -26,6 +26,7 @@ vi.mock("../../lib/file-store.js", () => ({
   uploadFile: vi.fn(async () => `/test-bucket/documents/${randomUUID()}`),
   downloadFile: vi.fn(async () => Buffer.from("content")),
   deleteFile: vi.fn(async () => undefined),
+  logStorageStartupStatus: vi.fn(),
 }));
 
 // Mock ownership so we can swap the active userId per-test

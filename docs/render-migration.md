@@ -1,109 +1,48 @@
-# Render migration notes
+# Signal87 Render Migration Notes
 
-This repository is prepared to run production outside Replit and Railway.
+> **Canonical guide:** see [DEPLOYMENT.md](../DEPLOYMENT.md).
+>
+> **Preferred: single-origin Node deployment.**
+>
+> **Avoid split static/API deployment unless there is a specific reason.**
+>
+> **If split deployment is used, `VITE_API_BASE_URL` must be set correctly.**
 
-## Services
+## Deprecated: `signal87-web` static service
 
-The `render.yaml` blueprint defines two services:
+The two-service Render layout (`signal87-web` + `signal87-api`) is retired. Static Render sites cannot proxy `/api/*` to the API service, which forced cross-origin wiring and brittle env configuration. Use one Node service (`signal87` in `render.yaml`) instead.
 
-1. `signal87-api` — Node/Express API service from `@workspace/api-server`
-2. `signal87-web` — static Vite frontend service from `@workspace/signal87-core`
+## Current target architecture
 
-The frontend is intentionally pointed at the real Signal87 app package, not the mockup sandbox.
+One Node service serves:
 
-The root `Dockerfile` remains available only as a Render-compatible production fallback for an existing single-service deployment. The Railway-specific server file and Railway config are retired.
+- React SPA from `artifacts/signal87-core/dist/public`
+- Express API at `/api/*` from `artifacts/api-server/dist/app.mjs`
 
-## Required Render environment variables
+Entry point: `production-server.mjs` (also used by the root `Dockerfile`).
 
-Set these on `signal87-api`:
+## Migrating from split static + API services
 
-```text
-NODE_ENV=production
-STORAGE_PROVIDER=local
-FILE_STORAGE_DIR=/var/data/uploads
-DATABASE_URL=<Render Postgres or direct Neon URL>
-OPENAI_API_KEY=<OpenAI API key>
-CLERK_SECRET_KEY=<Clerk secret key>
-CLERK_PUBLISHABLE_KEY=<Clerk publishable key>
-```
+If you previously ran separate `signal87-web` (static) and `signal87-api` (Node) services:
 
-Set these on `signal87-web`:
+1. **Consolidate to one Render web service** using `render.yaml`.
+2. **Remove `VITE_API_BASE_URL`** from production environment — it is no longer needed.
+3. **Point your custom domain** at the unified service (not the old static site).
+4. **Retire the static-only service** after the unified service passes smoke tests.
+5. Keep the persistent disk on the unified service for `FILE_STORAGE_DIR`.
 
-```text
-BASE_PATH=/
-PORT=3000
-VITE_API_BASE_URL=<deployed signal87-api service URL, e.g. https://signal87-api.onrender.com>
-VITE_CLERK_PUBLISHABLE_KEY=<Clerk publishable key>
-```
+## Why the split setup was fragile
 
-`VITE_API_BASE_URL` is required because Render static sites and Render API services run on separate domains. The frontend now reads this value and configures the generated API client at startup.
+The static Render service rewrote all routes to `/index.html` and did **not** proxy `/api/*` to the API service. That forced:
 
-## Domain mapping
+- Cross-origin API calls via `VITE_API_BASE_URL`
+- Extra CORS and Clerk cookie configuration
+- Two deploy pipelines and duplicated environment management
 
-Attach `signal87.ai` and `www.signal87.ai` to `signal87-web`. Attach only the API hostname, for example `api.signal87.ai` or the default `signal87-api.onrender.com` URL, to `signal87-api`.
+Same-origin deployment eliminates these issues.
 
-If a public page such as `/` or `/sign-in` returns Express headers or Clerk handshake redirects, the public web domain is attached to the API service or an old API deploy is still live.
-
-## Render build details
-
-API service:
-
-```text
-Build Command: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
-Start Command: pnpm --filter @workspace/api-server run start
-Health Check Path: /api/healthz
-```
-
-Frontend service:
-
-```text
-Build Command: corepack enable && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/signal87-core run build
-Publish Directory: artifacts/signal87-core/dist/public
-```
-
-## Storage
-
-Production uploads use local durable storage under `/var/data/uploads`, backed by a Render persistent disk attached to `signal87-api`. This removes the production runtime dependency on Replit Object Storage for new uploads.
-
-Existing documents whose `storageKey` points to Replit Object Storage will not be retrievable from Render until those files are migrated from Replit storage into the new Render disk or another external object store.
-
-## Extraction
-
-Local extraction is the durable baseline for PDFs, DOCX, TXT, CSV, XLSX, and XLS. The backend does not call an external OCR provider. Scanned or image-only PDFs may store successfully but return little or no searchable text until a separate OCR provider is intentionally added.
-
-## Runtime checks
-
-After deployment, verify:
-
-```text
-GET /api/healthz
-GET /api/runtime-check
-```
-
-Then verify both services together:
+## Verification
 
 ```bash
-pnpm smoke:production https://www.signal87.ai https://signal87-api.onrender.com
+pnpm smoke:production https://your-production-domain.example
 ```
-
-`/api/runtime-check` should show:
-
-```json
-{
-  "host": "render",
-  "ai": {
-    "provider": "openai",
-    "billing": "direct_openai_api_key"
-  },
-  "storage": {
-    "provider": "local",
-    "configured": true,
-    "productionSafe": true
-  },
-  "replitDependency": false
-}
-```
-
-## Important
-
-Gemini is the primary reasoning provider, with OpenAI retained for embeddings/fallback and xAI available as the final fallback when configured. Do not add Replit AI, Anthropic, OpenRouter, or managed gateway fallbacks without a separate architecture decision.

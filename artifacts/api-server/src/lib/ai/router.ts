@@ -3,7 +3,14 @@ import { loadAiConfig, resolveTaskProviderChain } from "./config";
 import { AiRouterError, classifyProviderError } from "./errors";
 import { buildMessages, buildNormalizedResponse } from "./normalize";
 import { getProvider } from "./providers";
-import type { AiRouterLogContext, AiTaskRequest, AiTaskResponse, ProviderGenerateTextResult } from "./types";
+import type {
+  AiRouterLogContext,
+  AiTaskRequest,
+  AiTaskResponse,
+  ProviderAttemptLog,
+  ProviderGenerateTextResult,
+  ProviderId,
+} from "./types";
 
 export type AiRouterLogger = (context: AiRouterLogContext) => void;
 
@@ -24,6 +31,25 @@ function defaultLogger(context: AiRouterLogContext): void {
   }
 }
 
+function providerDisplayName(providerId: string): string {
+  if (providerId === "google") return "Gemini";
+  if (providerId === "openai") return "OpenAI";
+  if (providerId === "xai") return "Grok";
+  return providerId;
+}
+
+function logProviderAttempt(attempt: ProviderAttemptLog, onAttempt?: (attempt: ProviderAttemptLog) => void): void {
+  const label = providerDisplayName(attempt.provider);
+  const event = attempt.success
+    ? `${label} succeeded`
+    : attempt.fallbackTarget
+      ? `${label} failed; trying ${providerDisplayName(attempt.fallbackTarget)} next`
+      : `${label} failed`;
+
+  console.info("ai_router_provider_attempt", { ...attempt, event });
+  onAttempt?.(attempt);
+}
+
 function providerTimeoutMs(): number {
   const parsed = Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000");
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 12_000;
@@ -37,6 +63,10 @@ function withProviderTimeout<T>(promise: Promise<T>, ms: number, providerId: str
   return Promise.race([promise, timer]).finally(() => clearTimeout(timeout!));
 }
 
+function hasUsableText(content: string | undefined | null): boolean {
+  return Boolean(content?.trim());
+}
+
 async function invokeProviderTask(
   request: AiTaskRequest,
 ): Promise<{
@@ -45,11 +75,13 @@ async function invokeProviderTask(
   modelUsed: string;
   tokenUsage: AiTaskResponse["tokenUsage"];
   latencyMs: number;
+  primary: ProviderId | undefined;
 }> {
   const config = loadAiConfig();
   const chain = resolveTaskProviderChain(request.taskType, config).filter((providerId) =>
     providerSupportsTask(providerId, request.taskType),
   );
+  const primary = chain[0];
 
   if (chain.length === 0) {
     throw new AiRouterError(`Task ${request.taskType} does not use an LLM provider`, "unsupported", false);
@@ -62,14 +94,33 @@ async function invokeProviderTask(
 
   const errors: string[] = [];
   const timeoutMs = providerTimeoutMs();
+  const started = Date.now();
 
   for (let i = 0; i < chain.length; i++) {
     const providerId = chain[i];
+    const fallbackTarget = chain[i + 1];
     const provider = getProvider(providerId);
     if (!provider?.isAvailable()) {
-      errors.push(`${providerId}: unavailable`);
+      const message = `${providerId}: unavailable`;
+      errors.push(message);
+      console.info("ai_router_provider_attempt", {
+        provider: providerId,
+        event: `${providerDisplayName(providerId)} attempted`,
+        success: false,
+        error: message,
+        fallbackTarget,
+      });
+      logProviderAttempt(
+        { provider: providerId, success: false, error: message, fallbackTarget },
+        request.onProviderAttempt,
+      );
       continue;
     }
+
+    console.info("ai_router_provider_attempt", {
+      provider: providerId,
+      event: `${providerDisplayName(providerId)} attempted`,
+    });
 
     try {
       const result = await withProviderTimeout<ProviderGenerateTextResult>(
@@ -81,29 +132,60 @@ async function invokeProviderTask(
         timeoutMs,
         providerId,
       );
+
+      if (!hasUsableText(result.content)) {
+        const message = `${providerId}: empty response`;
+        errors.push(message);
+        logProviderAttempt(
+          {
+            provider: providerId,
+            model: result.model,
+            success: false,
+            error: message,
+            fallbackTarget,
+          },
+          request.onProviderAttempt,
+        );
+        continue;
+      }
+
+      logProviderAttempt(
+        { provider: providerId, model: result.model, success: true },
+        request.onProviderAttempt,
+      );
+
       return {
         content: result.content,
         providerUsed: provider.id,
         modelUsed: result.model,
         tokenUsage: result.tokenUsage,
-        latencyMs: result.latencyMs,
+        latencyMs: Date.now() - started,
+        primary,
       };
     } catch (err) {
       const classified = classifyProviderError(err);
-      errors.push(`${providerId}: ${classified.message}`);
-      const hasAnotherProvider = chain.slice(i + 1).some((nextId) => getProvider(nextId)?.isAvailable());
-
-      // Do not drop to local extraction while another configured LLM is available.
-      // The chain must be Gemini -> OpenAI -> Grok before local extractive fallback.
-      if (hasAnotherProvider && classified.errorClass !== "validation" && classified.errorClass !== "unsupported") {
-        continue;
-      }
-
-      throw new AiRouterError(errors.join("; "), classified.errorClass, false);
+      const message = `${providerId}: ${classified.message}`;
+      errors.push(message);
+      logProviderAttempt(
+        {
+          provider: providerId,
+          success: false,
+          error: classified.message,
+          fallbackTarget,
+        },
+        request.onProviderAttempt,
+      );
     }
   }
 
-  throw new AiRouterError(errors.join("; ") || "No providers available", "unavailable", false);
+  console.warn("ai_router_local_fallback_eligible", {
+    taskType: request.taskType,
+    message: "Configured LLM chain exhausted; route may use local extractive fallback",
+    chain,
+    errors,
+  });
+
+  throw new AiRouterError(errors.join("; ") || "No LLM providers available", "unavailable", false);
 }
 
 export async function runTask(
@@ -111,20 +193,18 @@ export async function runTask(
   logger: AiRouterLogger = defaultLogger,
 ): Promise<AiTaskResponse> {
   const started = Date.now();
-  const config = loadAiConfig();
-  const primary = resolveTaskProviderChain(request.taskType, config)[0];
 
   try {
     const result = await invokeProviderTask(request);
     const response = buildNormalizedResponse({
       request,
-      answer: result.content || null,
+      answer: result.content,
       providerUsed: result.providerUsed,
       modelUsed: result.modelUsed,
-      fallbackUsed: primary !== undefined && result.providerUsed !== primary,
+      fallbackUsed: result.primary !== undefined && result.providerUsed !== result.primary,
       fallbackReason:
-        primary !== undefined && result.providerUsed !== primary
-          ? `Primary provider ${primary} failed; used ${result.providerUsed}`
+        result.primary !== undefined && result.providerUsed !== result.primary
+          ? `Primary provider ${result.primary} failed; used ${result.providerUsed}`
           : null,
       latencyMs: Date.now() - started,
       tokenUsage: result.tokenUsage,
@@ -144,7 +224,7 @@ export async function runTask(
     const classified = err instanceof AiRouterError ? err : classifyProviderError(err);
     logger({
       taskType: request.taskType,
-      providerUsed: primary ?? "local",
+      providerUsed: "local",
       modelUsed: "none",
       fallbackUsed: true,
       latencyMs: Date.now() - started,

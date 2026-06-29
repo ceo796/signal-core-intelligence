@@ -45,6 +45,14 @@ export interface TokenUsage {
   totalTokens?: number;
 }
 
+export interface ProviderAttemptLog {
+  provider: string;
+  model?: string;
+  success: boolean;
+  error?: string;
+  fallbackTarget?: string;
+}
+
 export interface AiTaskRequest {
   taskType: AiTaskType;
   systemPrompt?: string;
@@ -55,6 +63,7 @@ export interface AiTaskRequest {
   /** Signal87-owned citations — passed through, never sourced from the model. */
   citations?: Citation[];
   evidenceItems?: EvidenceItem[];
+  onProviderAttempt?: (attempt: ProviderAttemptLog) => void;
 }
 
 export interface AiTaskResponse {
