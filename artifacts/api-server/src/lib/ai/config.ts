@@ -13,11 +13,15 @@ function parseProviderId(value: string | undefined, fallback: ProviderId): Provi
   return fallback;
 }
 
+function reasoningProvider(provider: ProviderId): ProviderId {
+  return provider === "openai" ? "google" : provider;
+}
+
 function parseProviderOrder(value: string | undefined, fallback: ProviderId[] = []): ProviderId[] {
   if (!value?.trim()) return fallback;
   return value
     .split(",")
-    .map((part) => parseProviderId(part, "openai"))
+    .map((part) => reasoningProvider(parseProviderId(part, "xai")))
     .filter((id, index, all) => all.indexOf(id) === index);
 }
 
@@ -48,11 +52,11 @@ export interface AiRuntimeConfig {
 export function loadAiConfig(): AiRuntimeConfig {
   return {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
-    primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
+    primaryReasoningProvider: reasoningProvider(parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google")),
     primaryExtractionProvider: parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
-    finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
-    evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
-    qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "google"),
+    finalFallbackProvider: reasoningProvider(parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai")),
+    evidenceCompilerProvider: reasoningProvider(parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google")),
+    qualityReviewProvider: reasoningProvider(parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "google")),
     embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
     fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER, ["xai"]),
     models: {
@@ -85,20 +89,24 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
     primary = config.primaryReasoningProvider;
   }
 
+  primary = reasoningProvider(primary);
+
   const chain: ProviderId[] = [primary];
   if (config.routingEnabled) {
     for (const provider of config.fallbackProviderOrder) {
-      if (!chain.includes(provider)) chain.push(provider);
+      const candidate = reasoningProvider(provider);
+      if (!chain.includes(candidate)) chain.push(candidate);
     }
-    if (!chain.includes(config.finalFallbackProvider)) {
-      chain.push(config.finalFallbackProvider);
+    const finalFallback = reasoningProvider(config.finalFallbackProvider);
+    if (!chain.includes(finalFallback)) {
+      chain.push(finalFallback);
     }
     for (const provider of ["google", "xai"] as ProviderId[]) {
       if (!chain.includes(provider)) chain.push(provider);
     }
   }
 
-  return chain;
+  return chain.filter((provider) => provider !== "openai");
 }
 
 export function getEmbeddingModel(config: AiRuntimeConfig, providerId: ProviderId): string {
