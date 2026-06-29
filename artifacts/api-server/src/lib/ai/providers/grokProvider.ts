@@ -44,7 +44,7 @@ export function createGrokProvider(): AiProviderAdapter {
       const model = getChatModel(config, "xai");
       const tokenUsage = extractUsage(completion);
       const latencyMs = Date.now() - started;
-      const content = postProcessGrokAnswer(raw, { structuredOutput });
+      const content = postProcessGrokAnswer(raw, { structuredOutput, taskType: request.taskType });
 
       console.info("grok_provider_completed", {
         taskType: request.taskType ?? "unknown",
