@@ -40,6 +40,24 @@ services:
         sync: false
       - key: CLERK_PUBLISHABLE_KEY
         sync: false
+      - key: ADMIN_EMAILS
+        value: ceo@signal87.ai,mbenezra@erezcapital.io
+      - key: STRIPE_TRIAL_DAYS
+        value: "14"
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: APP_BASE_URL
+        value: https://signal87-api.onrender.com
+      - key: STRIPE_SUCCESS_URL
+        value: https://www.signal87.ai/documents?billing=success
+      - key: STRIPE_CANCEL_URL
+        value: https://www.signal87.ai/pricing?billing=cancelled
+      - key: STRIPE_PORTAL_RETURN_URL
+        value: https://www.signal87.ai/settings
 
   - type: web
     name: signal87-web

@@ -14,7 +14,16 @@ Set these on `signal87-api` before deploying:
 | `OPENAI_API_KEY` | OpenAI API key used by AI/chat/analyze features. |
 | `CLERK_SECRET_KEY` | Clerk backend secret key. Use `sk_live_...` in production, never `sk_test_...`. Keep this secret. |
 | `CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the backend Clerk middleware/runtime injection. Use `pk_live_...` in production. |
-| `APPROVED_EMAILS` | Comma-separated allowlist of approved user email addresses. |
+| `ADMIN_EMAILS` | Comma-separated admin emails with full complimentary access. Set to `ceo@signal87.ai,mbenezra@erezcapital.io`. |
+| `APPROVED_EMAILS` | Optional legacy allowlist (admins are preferred). |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_live_...` in production). Enables checkout + webhooks. |
+| `STRIPE_PRICE_ID` | Recurring Stripe Price ID (`price_...`) for Signal87 Pro. |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) for `POST /api/billing/webhook`. |
+| `STRIPE_TRIAL_DAYS` | Free trial length in days (default `14`). |
+| `APP_BASE_URL` | Public API base URL, e.g. `https://signal87-api.onrender.com`. |
+| `STRIPE_SUCCESS_URL` | Post-checkout redirect, e.g. `https://www.signal87.ai/documents?billing=success`. |
+| `STRIPE_CANCEL_URL` | Checkout cancel redirect, e.g. `https://www.signal87.ai/pricing?billing=cancelled`. |
+| `STRIPE_PORTAL_RETURN_URL` | Billing portal return URL, e.g. `https://www.signal87.ai/settings`. |
 | `FILE_STORAGE_DIR` | Persistent Render Disk path for uploaded originals, for example `/var/data/uploads`. |
 | `STORAGE_PROVIDER` | Use `local` on Render with a persistent disk mounted at `FILE_STORAGE_DIR`. |
 | `NODE_ENV` | `production`. |
@@ -75,6 +84,24 @@ The script verifies:
 - Unauthenticated `/api/documents` returns 401 from the API base URL.
 
 If a smoke check fails, do not consider the deploy healthy.
+
+## Stripe billing setup
+
+1. In [Stripe Dashboard](https://dashboard.stripe.com), create a **Product** (Signal87 Pro) with a **recurring monthly Price**.
+2. Copy the Price ID (`price_...`) into Render as `STRIPE_PRICE_ID`.
+3. Copy the Stripe **Secret key** into Render as `STRIPE_SECRET_KEY`.
+4. Add a webhook endpoint:
+   - URL: `https://signal87-api.onrender.com/api/billing/webhook`
+   - Events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
+5. Copy the webhook signing secret into Render as `STRIPE_WEBHOOK_SECRET`.
+6. Set `ADMIN_EMAILS=ceo@signal87.ai,mbenezra@erezcapital.io` on `signal87-api`.
+7. Redeploy `signal87-api`, then verify locally or on Render:
+
+```bash
+node scripts/verify-billing-setup.mjs https://signal87-api.onrender.com
+```
+
+New users sign up → `/pricing` → **Start 14-day free trial** → Stripe Checkout → webhook marks account `trialing` → full app access. Subscription renews after trial unless canceled in the billing portal.
 
 ## Rollback
 

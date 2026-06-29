@@ -13,6 +13,7 @@
     "smoke:audit": "bash scripts/audit-api.sh",
     "smoke:auth": "node scripts/smoke-auth-checklist.mjs",
     "smoke:ui": "node scripts/ui-audit.mjs",
+    "verify:billing": "node scripts/verify-billing-setup.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs"
   },
   "private": true,

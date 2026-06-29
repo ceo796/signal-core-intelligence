@@ -25,7 +25,12 @@ function loadEnv() {
 
 async function clerkToken() {
   const secret = process.env.CLERK_SECRET_KEY;
-  const email = (process.env.SMOKE_USER_EMAIL ?? process.env.APPROVED_EMAILS?.split(",")[0] ?? "").trim();
+  const email = (
+    process.env.SMOKE_USER_EMAIL ??
+    process.env.ADMIN_EMAILS?.split(",")[0] ??
+    process.env.APPROVED_EMAILS?.split(",")[0] ??
+    ""
+  ).trim();
   if (!secret || !email) throw new Error("CLERK_SECRET_KEY and approved email required");
 
   const usersRes = await fetch(
