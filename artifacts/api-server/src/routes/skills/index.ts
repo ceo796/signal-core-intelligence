@@ -9,11 +9,11 @@ import { getCurrentUserId } from "../../lib/ownership";
 const router: IRouter = Router();
 
 const ROUTE = "POST /api/skills/run";
-const RETRIEVAL_TIMEOUT_MS = 10_000;
-const LLM_TIMEOUT_MS = 24_000;
+const RETRIEVAL_TIMEOUT_MS = 12_000;
+const LLM_TIMEOUT_MS = 45_000;
 const MAX_CHUNKS_PER_DOC_FOR_EMBEDDING = 24;
 
-type SkillMode = "auto" | "summarize" | "compare" | "extract" | "diligence";
+type SkillMode = "summarize" | "extract";
 
 type SkillDefinition = {
   skillId: string;
@@ -27,6 +27,7 @@ type SkillDefinition = {
   maxDocuments: number;
   maxChunks: number;
   allowGeneralReasoning: boolean;
+  minDocuments?: number;
 };
 
 type SkillRunBody = {
@@ -35,148 +36,82 @@ type SkillRunBody = {
   instruction?: unknown;
 };
 
+/**
+ * Curated one-click workflows that are NOT duplicated on Analyze or AI Chat.
+ * Briefs, risk review, comparison, and open Q&A live on /analyze and /agents/hybrid.
+ */
 const SKILLS: SkillDefinition[] = [
   {
-    skillId: "summarize-document",
-    name: "Summarize Document",
-    description: "Create a concise, cited summary of the selected document or document set.",
+    skillId: "quick-summary",
+    name: "Quick Summary",
+    description: "Fast cited overview — key facts, parties, dates, and follow-ups in scannable sections.",
     mode: "summarize",
     systemInstruction:
-      "You are a senior document analyst. Summarize the selected document content by business meaning, not by repeating raw text. Prioritize the most important facts, parties, obligations, dates, amounts, and decisions.",
+      "You are a senior document analyst. Produce a concise, business-meaning summary from the excerpts. Prioritize facts, parties, obligations, dates, amounts, and decisions. Do not pad with marketing language.",
     requiredInputs: ["documentIds"],
     outputFormat:
-      "Return: 1) Executive summary, 2) Key points, 3) Important dates/amounts/parties, 4) Items needing follow-up.",
-    citationPolicy: "Every document-derived factual claim must include a [Source N] citation.",
+      "Use markdown sections: ## Executive summary (2-4 sentences), ## Key points (bullets), ## Dates amounts and parties (bullets or short table), ## Follow-up items (bullets). End with a Sources section listing each [Source N] used.",
+    citationPolicy: "Every document-derived factual claim must include a [Source N] citation at the end of the sentence or bullet.",
     maxDocuments: 5,
-    maxChunks: 14,
-    allowGeneralReasoning: true,
+    maxChunks: 16,
+    allowGeneralReasoning: false,
   },
   {
     skillId: "extract-key-terms",
     name: "Extract Key Terms",
-    description: "Pull out key terms, defined concepts, obligations, numbers, dates, and parties.",
+    description: "Pull defined terms, obligations, numbers, dates, parties, and material facts into a table.",
     mode: "extract",
     systemInstruction:
-      "You are a precise extraction assistant. Extract only terms and facts that appear in the source excerpts. Do not infer missing terms unless clearly labeled as general analysis.",
+      "You are a precise extraction assistant. Extract only terms and facts that appear in the source excerpts. Prefer atomic rows — one fact per row. Do not infer missing terms.",
     requiredInputs: ["documentIds"],
     outputFormat:
-      "Return a markdown table with columns: Term or item | Meaning/value | Why it matters | Source. One row per extracted item.",
-    citationPolicy: "Every extracted item must include a [Source N] citation.",
-    maxDocuments: 5,
-    maxChunks: 16,
-    allowGeneralReasoning: false,
-  },
-  {
-    skillId: "risk-review",
-    name: "Risk Review",
-    description: "Identify risks, red flags, missing protections, and ambiguous language.",
-    mode: "diligence",
-    systemInstruction:
-      "You are a risk review assistant for business and legal documents. Identify concrete risks, obligations, unusual terms, ambiguities, and missing information based on the selected sources.",
-    requiredInputs: ["documentIds"],
-    outputFormat:
-      "Return: 1) High-priority risks, 2) Medium-priority risks, 3) Missing information, 4) Suggested follow-up questions.",
-    citationPolicy: "Each risk tied to document text must include a [Source N] citation. General risk commentary must be labeled General analysis.",
+      "Return a markdown table with columns: Term or item | Meaning/value | Why it matters | Source. One row per extracted item. Limit to the 25 most material items.",
+    citationPolicy: "Every extracted item must include a [Source N] citation in the Source column only.",
     maxDocuments: 5,
     maxChunks: 18,
-    allowGeneralReasoning: true,
-  },
-  {
-    skillId: "compare-documents",
-    name: "Compare Documents",
-    description: "Compare selected documents for overlap, differences, contradictions, and gaps.",
-    mode: "compare",
-    systemInstruction:
-      "You are a multi-document comparison assistant. Compare documents directly. Identify similarities, differences, contradictions, missing items, and practical implications.",
-    requiredInputs: ["documentIds"],
-    outputFormat:
-      "Return: 1) Comparison summary, 2) Agreements/overlaps, 3) Differences, 4) Contradictions or gaps, 5) Recommended next step.",
-    citationPolicy: "When comparing documents, cite each side of the comparison with [Source N].",
-    maxDocuments: 8,
-    maxChunks: 20,
-    allowGeneralReasoning: true,
-  },
-  {
-    skillId: "executive-brief",
-    name: "Executive Brief",
-    description: "Create a decision-ready brief for leadership review.",
-    mode: "summarize",
-    systemInstruction:
-      "You are preparing a concise executive brief for a senior decision maker. Focus on what matters, what changed, what is at stake, and what decision or action is required.",
-    requiredInputs: ["documentIds"],
-    outputFormat:
-      "Return: 1) Headline, 2) Situation, 3) Key facts, 4) Risks, 5) Recommendation, 6) Open questions.",
-    citationPolicy: "Cite each document-derived key fact with [Source N].",
-    maxDocuments: 5,
-    maxChunks: 16,
-    allowGeneralReasoning: true,
-  },
-  {
-    skillId: "due-diligence-memo",
-    name: "Due Diligence Memo",
-    description: "Produce a diligence-style memo with findings, risks, and follow-ups.",
-    mode: "diligence",
-    systemInstruction:
-      "You are a diligence analyst. Review the selected materials for business, legal, financial, operational, and execution issues. Be concrete and evidence-based.",
-    requiredInputs: ["documentIds"],
-    outputFormat:
-      "Return: 1) Diligence conclusion, 2) Key findings, 3) Risk register, 4) Confirmatory diligence questions, 5) Recommended actions.",
-    citationPolicy: "Every finding from the documents must include a [Source N] citation.",
-    maxDocuments: 8,
-    maxChunks: 22,
-    allowGeneralReasoning: true,
+    allowGeneralReasoning: false,
   },
   {
     skillId: "timeline-builder",
     name: "Timeline Builder",
-    description: "Extract dates, deadlines, event sequences, and process milestones.",
+    description: "Extract dates, deadlines, notice periods, and event sequences into a chronological table.",
     mode: "extract",
     systemInstruction:
-      "You are a timeline extraction assistant. Identify dates, deadlines, notice periods, payment dates, event sequences, and procedural steps. Sort chronologically when possible.",
+      "You are a timeline extraction assistant. Identify dates, deadlines, notice periods, payment dates, event sequences, and procedural steps. Sort chronologically. Use the exact date text from sources when present.",
     requiredInputs: ["documentIds"],
     outputFormat:
-      "Return a markdown table with columns: Date/time period | Event or obligation | Responsible party | Notes | Source. Sort chronologically when possible.",
-    citationPolicy: "Every timeline item must include a [Source N] citation.",
+      "Return a markdown table with columns: Date/time period | Event or obligation | Responsible party | Notes | Source. Sort earliest to latest. One row per dated item.",
+    citationPolicy: "Every timeline item must include a [Source N] citation in the Source column only.",
     maxDocuments: 5,
-    maxChunks: 18,
-    allowGeneralReasoning: false,
-  },
-  {
-    skillId: "ask-across-documents",
-    name: "Ask Across Documents",
-    description: "Ask a focused question across the selected documents with grounded citations.",
-    mode: "auto",
-    systemInstruction:
-      "You are a precise document intelligence assistant. Answer the user's question across the selected documents using the source excerpts as primary evidence.",
-    requiredInputs: ["documentIds", "instruction"],
-    outputFormat:
-      "Answer directly first, then provide supporting evidence, caveats, and follow-up questions if useful.",
-    citationPolicy: "Every document-derived claim must include a [Source N] citation.",
-    maxDocuments: 10,
     maxChunks: 20,
-    allowGeneralReasoning: true,
+    allowGeneralReasoning: false,
   },
 ];
 
 const SKILL_BY_ID = new Map(SKILLS.map((skill) => [skill.skillId, skill]));
 
-const TABLE_OUTPUT_POLICY = `TABLE OUTPUT POLICY (when the skill calls for a table):
-- Use a GitHub-flavored markdown table, not bullets or pipe-separated plain text.
-- Include a short heading above the table (e.g. "## Extracted Key Terms").
-- Use a header row, then a separator row, then one data row per item.
-- Required format example:
+const TABLE_OUTPUT_POLICY = `TABLE OUTPUT POLICY:
+- Use a GitHub-flavored markdown table — never bullets or pipe-separated plain text for the main output.
+- Start with a short ## heading (e.g. "## Extracted Key Terms" or "## Timeline").
+- Header row, separator row (| --- |), then one data row per item.
+- Example:
 | Term or item | Meaning/value | Why it matters | Source |
 | --- | --- | --- | --- |
 | Example term | Definition or value | Brief rationale | [Source 1] |
-- Keep cell text concise. Put [Source N] only in the Source column.
+- Keep cells concise (under ~120 characters). Put [Source N] only in the Source column.
 - Do not wrap the table in code fences.`;
+
+const SUMMARY_OUTPUT_POLICY = `SUMMARY OUTPUT POLICY:
+- Use clean markdown headings (##) and bullet lists (- ).
+- One blank line between sections.
+- Put [Source N] at the END of each cited sentence or bullet.
+- End with a "Sources" section listing every citation referenced.`;
 
 const GROUNDING_POLICY = `GROUNDING & CITATION POLICY:
 - Use the provided source excerpts as the primary evidence.
 - Every material claim drawn from a document MUST include a [Source N] citation.
 - Do not cite general reasoning with [Source N].
 - You have no web access, browsing, or live external data in this workflow.
-- If you use general reasoning beyond the documents, put it under a section titled "General analysis".
 - If the sources do not support an answer, say so clearly and identify what is missing.
 - When a source excerpt begins with "Sheet:", it is spreadsheet data. Mention the sheet/row context when relevant.`;
 
@@ -193,6 +128,7 @@ function publicSkill(skill: SkillDefinition) {
     maxDocuments: skill.maxDocuments,
     maxChunks: skill.maxChunks,
     allowGeneralReasoning: skill.allowGeneralReasoning,
+    minDocuments: skill.minDocuments ?? 1,
   };
 }
 
@@ -235,9 +171,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 function buildSkillQuery(skill: SkillDefinition, instruction: string | null): string {
-  if (skill.skillId === "ask-across-documents" && instruction) return instruction;
   const base = `Run the Signal87 skill: ${skill.name}. ${skill.description}`;
   return instruction ? `${base}\n\nUser instruction: ${instruction}` : base;
+}
+
+function formatPolicyForSkill(skill: SkillDefinition): string {
+  if (skill.mode === "extract") return `\n\n${TABLE_OUTPUT_POLICY}`;
+  if (skill.mode === "summarize") return `\n\n${SUMMARY_OUTPUT_POLICY}`;
+  return "";
 }
 
 function buildFallbackAnswer(skill: SkillDefinition, citations: Array<{ citationNumber: number; documentName: string; excerpt: string }>): string {
@@ -251,11 +192,15 @@ function buildFallbackAnswer(skill: SkillDefinition, citations: Array<{ citation
     return `- ${citation.documentName}: ${preview} [Source ${citation.citationNumber}]`;
   });
 
-  return `The primary LLM response timed out, so here is a grounded extractive result for ${skill.name}:\n\n${bullets.join("\n")}`;
+  return `The primary model response timed out, so here is a grounded extractive result for ${skill.name}:\n\n${bullets.join("\n")}`;
 }
 
 router.get("/skills", (_req: Request, res: Response) => {
-  res.json({ skills: SKILLS.map(publicSkill) });
+  res.json({
+    skills: SKILLS.map(publicSkill),
+    guidance:
+      "For executive briefs, risk review, contract review, document comparison, and open Q&A, use Analyze or AI Chat.",
+  });
 });
 
 router.post("/skills/run", async (req: Request, res: Response): Promise<void> => {
@@ -277,6 +222,11 @@ router.post("/skills/run", async (req: Request, res: Response): Promise<void> =>
   const documentIds = parseDocumentIds(body.documentIds);
   if (!documentIds || documentIds.length === 0) {
     res.status(400).json({ error: "Select at least one document." });
+    return;
+  }
+  const minDocuments = skill.minDocuments ?? 1;
+  if (documentIds.length < minDocuments) {
+    res.status(400).json({ error: `${skill.name} requires at least ${minDocuments} document(s).` });
     return;
   }
   if (documentIds.length > skill.maxDocuments) {
@@ -385,11 +335,9 @@ router.post("/skills/run", async (req: Request, res: Response): Promise<void> =>
     .map((citation) => `[Source ${citation.citationNumber}] (Document: "${citation.documentName}", chunk ${citation.chunkIndex}):\n${citation.fullContent}`)
     .join("\n\n---\n\n");
 
-  const tablePolicy = skill.mode === "extract" ? `\n\n${TABLE_OUTPUT_POLICY}` : "";
-
   const systemPrompt = `${skill.systemInstruction}
 
-${GROUNDING_POLICY}${tablePolicy}
+${GROUNDING_POLICY}${formatPolicyForSkill(skill)}
 
 SKILL CONFIGURATION:
 - Skill ID: ${skill.skillId}
@@ -417,7 +365,7 @@ ${sourceBlocks}`;
       aiRouter.runTask(
         {
           taskType: taskTypeForSkillMode(skill.mode),
-          maxTokens: Math.min(aiConfig.maxTokens, 1400),
+          maxTokens: aiConfig.maxTokens,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: query },
