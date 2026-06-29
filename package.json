@@ -10,10 +10,14 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "test": "pnpm --filter @workspace/api-server run test",
     "smoke:api": "node scripts/smoke-test-api.mjs",
+    "smoke:audit": "bash scripts/audit-api.sh",
+    "smoke:auth": "node scripts/smoke-auth-checklist.mjs",
+    "smoke:ui": "node scripts/ui-audit.mjs",
     "smoke:production": "node scripts/smoke-test-production.mjs"
   },
   "private": true,
   "devDependencies": {
+    "playwright": "1.52.0",
     "prettier": "^3.8.3",
     "typescript": "~5.9.3"
   }
