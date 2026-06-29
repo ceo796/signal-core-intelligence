@@ -13,6 +13,7 @@ vi.mock("@clerk/shared/keys", () => ({
 
 vi.mock("../../lib/file-store.js", () => ({
   isConfigured: vi.fn(() => true),
+  getStorageProviderName: vi.fn(() => "local"),
   getMimeType: vi.fn((type: string) => {
     const m: Record<string, string> = {
       pdf: "application/pdf",
@@ -176,7 +177,7 @@ describe("Document CRUD integration (auth bypassed, file-store mocked)", () => {
   // ─── Delete ───────────────────────────────────────────────────────────────
 
   describe("DELETE /api/documents/:id", () => {
-    it("deletes a document and its chunks, returns 204", async () => {
+    it("soft-deletes a document (hidden from API, moved to trash), returns 204", async () => {
       const content = "Document to be deleted.";
       const upload = await request(app)
         .post("/api/documents/upload")
@@ -192,11 +193,11 @@ describe("Document CRUD integration (auth bypassed, file-store mocked)", () => {
       const check = await request(app).get(`/api/documents/${docId}`);
       expect(check.status).toBe(404);
 
-      const chunks = await db
-        .select()
-        .from(chunksTable)
-        .where(eq(chunksTable.documentId, docId));
-      expect(chunks).toHaveLength(0);
+      const [deleted] = await db
+        .select({ deletedAt: documentsTable.deletedAt })
+        .from(documentsTable)
+        .where(eq(documentsTable.id, docId));
+      expect(deleted?.deletedAt).toBeTruthy();
     });
 
     it("returns 404 when deleting a non-existent document", async () => {
