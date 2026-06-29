@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
-import { aiRouter, loadAiConfig } from "../../lib/ai";
+import { aiRouter, appendRagSourcesUiWrapperPolicy, loadAiConfig, RAG_SOURCES_UI_WRAPPER_POLICY } from "../../lib/ai";
 import { taskTypeForSkillMode } from "../../lib/ai/task-map";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 import { getCurrentUserId } from "../../lib/ownership";
@@ -103,9 +103,11 @@ const TABLE_OUTPUT_POLICY = `TABLE OUTPUT POLICY:
 
 const SUMMARY_OUTPUT_POLICY = `SUMMARY OUTPUT POLICY:
 - Default length: exactly 3–4 bullet points ("- ") with one idea each. No headings unless the user asked for a longer summary.
-- One blank line before the Sources footer.
-- Put [Source N] only in the Sources section (not inline in bullets).
-- End with a "Sources" section listing the 3–5 markers you relied on.`;
+- One blank line before the source marker list.
+- Put [Source N] only in the final source marker bullets (not inline in summary bullets).
+- End with 3–5 source marker bullets (e.g. - [Source 1]). Do not add a "Sources" or "Sources:" heading.
+
+${RAG_SOURCES_UI_WRAPPER_POLICY}`;
 
 const GROUNDING_POLICY = `GROUNDING & CITATION POLICY:
 - Use the provided source excerpts as the primary evidence.
@@ -335,7 +337,7 @@ router.post("/skills/run", async (req: Request, res: Response): Promise<void> =>
     .map((citation) => `[Source ${citation.citationNumber}] (Document: "${citation.documentName}", chunk ${citation.chunkIndex}):\n${citation.fullContent}`)
     .join("\n\n---\n\n");
 
-  const systemPrompt = `${skill.systemInstruction}
+  const systemPrompt = appendRagSourcesUiWrapperPolicy(`${skill.systemInstruction}
 
 ${GROUNDING_POLICY}${formatPolicyForSkill(skill)}
 
@@ -350,8 +352,8 @@ SKILL CONFIGURATION:
 Documents searched:
 ${documentsUsed.map((doc) => `- ${doc.name}`).join("\n")}
 
-Sources:
-${sourceBlocks}`;
+Source excerpts:
+${sourceBlocks}`);
 
   const llmStart = Date.now();
   const aiConfig = loadAiConfig();

@@ -1,5 +1,7 @@
 export { aiRouter, runTask } from "./router";
 export {
+  aiConfig,
+  getGeminiLocation,
   getResolvedProviderChain,
   getResolvedReasoningChain,
   getTaskProviderChains,
@@ -19,6 +21,10 @@ export {
   isRemoteEmbeddingEnabled,
 } from "./embedding";
 export { geminiAuthMode, getProviderRegistry, listAvailableProviders } from "./providers";
+export {
+  appendRagSourcesUiWrapperPolicy,
+  RAG_SOURCES_UI_WRAPPER_POLICY,
+} from "./rag-response-format";
 export type {
   AiTaskType,
   AiTaskRequest,

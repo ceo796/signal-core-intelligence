@@ -1,4 +1,5 @@
 import type { AiTaskType, ChatMessage } from "../types";
+import { RAG_SOURCES_UI_WRAPPER_POLICY } from "../rag-response-format";
 
 /** Core document literacy shared by every Grok task agent. */
 export const GROK_DOCUMENT_READER_CORE = `GROK DOCUMENT READER CAPABILITIES (apply on every task):
@@ -13,22 +14,20 @@ export const GROK_DOCUMENT_READER_CORE = `GROK DOCUMENT READER CAPABILITIES (app
 - Flag missing information explicitly — never invent facts, parties, or figures not grounded in excerpts.
 - Treat each document type with equal rigor: legal, financial, operational, HR, and technical sources.`;
 
-/** AI Chat: citations only in a short Sources footer — never inline. */
+/** AI Chat: citation markers as a bullet list footer — never inline; no Sources heading. */
 export const GROK_CHAT_FORMATTING_POLICY = `GROK AI CHAT OUTPUT FORMAT (mandatory):
 - Write investor-grade prose: precise, neutral, evidence-first. No marketing fluff.
 - Use clean markdown: short paragraphs and "- " bullets when helpful.
 - Do NOT place [Source N] or [Chunk N] anywhere in the answer body — no inline citations.
 - Ground every factual claim in the excerpts, but keep the prose citation-free.
-- After the full answer, add one blank line and a "Sources" section with 3–5 lines only.
-- List only the most relevant source markers you relied on (not every point).
-- Format each Sources line as: - [Source N]
+- After the full answer, add one blank line, then list only the 3–5 most relevant source markers you relied on (not every point).
+- Format each source line as: - [Source N]
 - The platform shows full citation cards separately; the answer body must read cleanly without markers.
 - General reasoning (not from documents) must be labeled and must not use [Source N] / [Chunk N].
 
 EXAMPLE SHAPE:
 Payment is due within 30 days of invoice date. Late fees apply at 1.5% per month after day 31.
 
-Sources
 - [Source 2]
 - [Source 5]`;
 
@@ -101,7 +100,12 @@ function getFormattingPolicy(taskType?: AiTaskType): string {
 }
 
 export function buildGrokSystemAugmentation(taskType?: AiTaskType): string {
-  return [getGrokAgentPrompt(taskType), GROK_DOCUMENT_READER_CORE, getFormattingPolicy(taskType)].join("\n\n");
+  return [
+    getGrokAgentPrompt(taskType),
+    GROK_DOCUMENT_READER_CORE,
+    getFormattingPolicy(taskType),
+    RAG_SOURCES_UI_WRAPPER_POLICY,
+  ].join("\n\n");
 }
 
 export function augmentMessagesForGrok(messages: ChatMessage[], taskType?: AiTaskType): ChatMessage[] {

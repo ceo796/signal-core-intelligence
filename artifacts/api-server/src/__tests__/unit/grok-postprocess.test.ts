@@ -5,7 +5,7 @@ describe("postProcessChatAnswer", () => {
   it("removes inline citations from the body", () => {
     const input = "Payment is due in 30 days. [Source 2] Late fees apply. [Source 2]";
     expect(postProcessChatAnswer(input)).toBe(
-      "Payment is due in 30 days. Late fees apply.\n\nSources\n- [Source 2]",
+      "Payment is due in 30 days. Late fees apply.\n\n- [Source 2]",
     );
   });
 
@@ -24,7 +24,7 @@ describe("postProcessGrokAnswer", () => {
   it("uses chat formatting for document_chat", () => {
     const input = "The term is 12 months. [Source 1]";
     expect(postProcessGrokAnswer(input, { taskType: "document_chat" })).toBe(
-      "The term is 12 months.\n\nSources\n- [Source 1]",
+      "The term is 12 months.\n\n- [Source 1]",
     );
   });
 

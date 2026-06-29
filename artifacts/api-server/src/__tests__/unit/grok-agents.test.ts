@@ -6,6 +6,7 @@ import {
   GROK_CHAT_FORMATTING_POLICY,
   GROK_FORMATTING_POLICY,
 } from "../../lib/ai/providers/grok-agents";
+import { RAG_SOURCES_UI_WRAPPER_POLICY } from "../../lib/ai/rag-response-format";
 
 describe("grok-agents", () => {
   it("returns task-specific agent personas", () => {
@@ -19,7 +20,7 @@ describe("grok-agents", () => {
     expect(buildGrokSystemAugmentation("document_summary")).toContain(GROK_FORMATTING_POLICY);
     expect(buildGrokSystemAugmentation("document_chat")).toContain(GROK_CHAT_FORMATTING_POLICY);
     expect(buildGrokSystemAugmentation("fact_extraction")).toContain("DOCUMENT READER CAPABILITIES");
-    expect(buildGrokSystemAugmentation("document_summary")).toContain("Sources");
+    expect(buildGrokSystemAugmentation("document_summary")).toContain(RAG_SOURCES_UI_WRAPPER_POLICY);
   });
 
   it("appends augmentation to an existing system message", () => {
