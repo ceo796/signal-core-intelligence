@@ -21,6 +21,7 @@ vi.mock("@clerk/shared/keys", () => ({
 }));
 vi.mock("../../lib/file-store.js", () => ({
   isConfigured: vi.fn(() => true),
+  getStorageProviderName: vi.fn(() => "local"),
   getMimeType: vi.fn(() => "text/plain"),
   uploadFile: vi.fn(async () => `/test-bucket/documents/${randomUUID()}`),
   downloadFile: vi.fn(async () => Buffer.from("content")),
