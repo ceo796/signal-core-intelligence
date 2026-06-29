@@ -65,21 +65,32 @@ const trialDays = process.env.STRIPE_TRIAL_DAYS?.trim() || "14 (default)";
 pass("Trial days", trialDays);
 
 const hasStripeSecret = Boolean(process.env.STRIPE_SECRET_KEY?.trim());
-const hasPrice = Boolean(process.env.STRIPE_PRICE_ID?.trim());
+const priceId = process.env.STRIPE_PRICE_ID_PRO?.trim() || process.env.STRIPE_PRICE_ID?.trim();
+const hasPrice = Boolean(priceId);
 const hasWebhook = Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim());
 
 if (hasStripeSecret) pass("STRIPE_SECRET_KEY present", mask(process.env.STRIPE_SECRET_KEY));
 else fail("STRIPE_SECRET_KEY present");
 
-if (hasPrice) pass("STRIPE_PRICE_ID present", process.env.STRIPE_PRICE_ID);
-else fail("STRIPE_PRICE_ID present");
+if (hasPrice) {
+  pass(
+    "Pro recurring price configured",
+    process.env.STRIPE_PRICE_ID_PRO ? `STRIPE_PRICE_ID_PRO=${priceId}` : `STRIPE_PRICE_ID=${priceId}`,
+  );
+} else {
+  fail("Pro recurring price configured", "set STRIPE_PRICE_ID_PRO (preferred) or STRIPE_PRICE_ID");
+}
+
+const frontendUrl = process.env.FRONTEND_URL?.trim() || process.env.APP_URL?.trim();
+if (frontendUrl) pass("Frontend URL configured", frontendUrl);
+else fail("Frontend URL configured", "set FRONTEND_URL or APP_URL for Checkout fallbacks");
 
 if (hasWebhook) pass("STRIPE_WEBHOOK_SECRET present", mask(process.env.STRIPE_WEBHOOK_SECRET));
 else fail("STRIPE_WEBHOOK_SECRET present", "required for production webhook sync");
 
 if (hasStripeSecret && hasPrice) {
   try {
-    const price = await stripeGet(`/prices/${encodeURIComponent(process.env.STRIPE_PRICE_ID.trim())}`);
+    const price = await stripeGet(`/prices/${encodeURIComponent(priceId)}`);
     const recurring = price.recurring;
     pass(
       "Stripe price valid",
@@ -94,7 +105,9 @@ if (hasStripeSecret && hasPrice) {
 
 console.log(`\nWebhook endpoint (configure in Stripe Dashboard):`);
 console.log(`  ${apiBase}/api/billing/webhook`);
-console.log("Events: checkout.session.completed, customer.subscription.created, customer.subscription.updated, customer.subscription.deleted");
+console.log(
+  "Events: checkout.session.completed, customer.subscription.created, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed",
+);
 
 try {
   const health = await fetch(`${apiBase}/api/healthz`);

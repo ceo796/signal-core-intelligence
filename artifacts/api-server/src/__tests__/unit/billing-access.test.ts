@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { stripeTrialDays } from "../../lib/billing.js";
+import { isSubscriptionActive, stripePriceId, stripeTrialDays } from "../../lib/billing.js";
 
 describe("stripeTrialDays", () => {
   const original = process.env.STRIPE_TRIAL_DAYS;
@@ -22,6 +22,36 @@ describe("stripeTrialDays", () => {
   it("returns 0 when trial is disabled", () => {
     process.env.STRIPE_TRIAL_DAYS = "0";
     expect(stripeTrialDays()).toBe(0);
+  });
+});
+
+describe("subscription access rules", () => {
+  it("grants access only for trialing and active", () => {
+    expect(isSubscriptionActive("trialing")).toBe(true);
+    expect(isSubscriptionActive("active")).toBe(true);
+    expect(isSubscriptionActive("canceled")).toBe(false);
+    expect(isSubscriptionActive("unpaid")).toBe(false);
+    expect(isSubscriptionActive("incomplete_expired")).toBe(false);
+    expect(isSubscriptionActive("past_due")).toBe(false);
+    expect(isSubscriptionActive("none")).toBe(false);
+  });
+});
+
+describe("stripePriceId", () => {
+  const originalPro = process.env.STRIPE_PRICE_ID_PRO;
+  const originalLegacy = process.env.STRIPE_PRICE_ID;
+
+  afterEach(() => {
+    if (originalPro === undefined) delete process.env.STRIPE_PRICE_ID_PRO;
+    else process.env.STRIPE_PRICE_ID_PRO = originalPro;
+    if (originalLegacy === undefined) delete process.env.STRIPE_PRICE_ID;
+    else process.env.STRIPE_PRICE_ID = originalLegacy;
+  });
+
+  it("prefers STRIPE_PRICE_ID_PRO over STRIPE_PRICE_ID", () => {
+    process.env.STRIPE_PRICE_ID_PRO = "price_pro";
+    process.env.STRIPE_PRICE_ID = "price_legacy";
+    expect(stripePriceId()).toBe("price_pro");
   });
 });
 

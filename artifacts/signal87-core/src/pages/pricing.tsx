@@ -76,7 +76,7 @@ export default function Pricing() {
     setStartingCheckout(true);
     setError(null);
     try {
-      const data = await customFetch<CheckoutResponse>("/api/billing/create-checkout-session", {
+      const data = await customFetch<CheckoutResponse>("/api/billing/checkout", {
         method: "POST",
         body: JSON.stringify({}),
         responseType: "json",
@@ -92,7 +92,7 @@ export default function Pricing() {
     setOpeningPortal(true);
     setError(null);
     try {
-      const data = await customFetch<CheckoutResponse>("/api/billing/create-portal-session", {
+      const data = await customFetch<CheckoutResponse>("/api/billing/portal", {
         method: "POST",
         body: JSON.stringify({}),
         responseType: "json",

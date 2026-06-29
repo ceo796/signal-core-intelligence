@@ -5,7 +5,9 @@ import { pool } from "@workspace/db";
 
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
 const WEBHOOK_TOLERANCE_SECONDS = 5 * 60;
-const ACTIVE_STATUSES = new Set(["active", "trialing"]);
+/** Subscription statuses that grant app access. All others are blocked. */
+export const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
+const ACTIVE_STATUSES = ACTIVE_SUBSCRIPTION_STATUSES;
 
 let billingTableReady: Promise<void> | null = null;
 
@@ -54,6 +56,12 @@ type StripeSubscription = {
   } | null;
 };
 
+type StripeInvoice = {
+  id?: string | null;
+  customer?: string | null;
+  subscription?: string | null;
+};
+
 type StripeEvent = {
   id: string;
   type: string;
@@ -66,8 +74,13 @@ function stripeSecretKey(): string | null {
   return process.env.STRIPE_SECRET_KEY?.trim() || null;
 }
 
-function stripePriceId(): string | null {
-  return process.env.STRIPE_PRICE_ID?.trim() || null;
+/** Pro recurring monthly price — prefer STRIPE_PRICE_ID_PRO, fall back to STRIPE_PRICE_ID. */
+export function stripePriceId(): string | null {
+  return (
+    process.env.STRIPE_PRICE_ID_PRO?.trim() ||
+    process.env.STRIPE_PRICE_ID?.trim() ||
+    null
+  );
 }
 
 export function stripeTrialDays(): number {
@@ -246,10 +259,21 @@ async function stripeRequest<T>(method: "GET" | "POST", path: string, body?: URL
 
 function getRequestOrigin(req: Request): string {
   return (
-    process.env.APP_BASE_URL?.trim() ||
     req.get("origin") ||
     `${req.protocol}://${req.get("host")}`
   ).replace(/\/+$/, "");
+}
+
+/** Public web app URL used for Checkout success/cancel and portal return fallbacks. */
+export function getFrontendUrl(req?: Request): string {
+  const configured =
+    process.env.FRONTEND_URL?.trim() ||
+    process.env.APP_URL?.trim() ||
+    process.env.APP_BASE_URL?.trim();
+
+  if (configured) return configured.replace(/\/+$/, "");
+  if (req) return getRequestOrigin(req);
+  return "";
 }
 
 async function resolveAuthenticatedUser(req: Request): Promise<{ userId: string; email: string | null } | null> {
@@ -296,9 +320,11 @@ export async function createCheckoutSession(req: Request, res: Response): Promis
     }
 
     const billing = await getOrCreateCustomer(user.userId, user.email);
-    const origin = getRequestOrigin(req);
-    const successUrl = process.env.STRIPE_SUCCESS_URL?.trim() || `${origin}/documents?billing=success`;
-    const cancelUrl = process.env.STRIPE_CANCEL_URL?.trim() || `${origin}/pricing?billing=cancelled`;
+    const frontendUrl = getFrontendUrl(req);
+    const successUrl =
+      process.env.STRIPE_SUCCESS_URL?.trim() || `${frontendUrl}/documents?billing=success`;
+    const cancelUrl =
+      process.env.STRIPE_CANCEL_URL?.trim() || `${frontendUrl}/pricing?billing=cancelled`;
 
     const body = new URLSearchParams();
     body.set("mode", "subscription");
@@ -308,13 +334,19 @@ export async function createCheckoutSession(req: Request, res: Response): Promis
     body.set("line_items[0][quantity]", "1");
     body.set("success_url", successUrl);
     body.set("cancel_url", cancelUrl);
+    body.set("payment_method_collection", "always");
     body.set("metadata[clerk_user_id]", user.userId);
+    body.set("metadata[clerkUserId]", user.userId);
     body.set("subscription_data[metadata][clerk_user_id]", user.userId);
+    body.set("subscription_data[metadata][clerkUserId]", user.userId);
     const trialDays = stripeTrialDays();
     if (trialDays > 0) {
       body.set("subscription_data[trial_period_days]", String(trialDays));
     }
-    if (user.email) body.set("customer_update[name]", "auto");
+    if (user.email) {
+      body.set("customer_update[name]", "auto");
+      body.set("customer_update[email]", "auto");
+    }
 
     const session = await stripeRequest<StripeCheckoutSession>("POST", "/checkout/sessions", body);
 
@@ -351,7 +383,10 @@ export async function createBillingPortalSession(req: Request, res: Response): P
 
     const body = new URLSearchParams();
     body.set("customer", billing.stripe_customer_id);
-    body.set("return_url", process.env.STRIPE_PORTAL_RETURN_URL?.trim() || `${getRequestOrigin(req)}/settings`);
+    body.set(
+      "return_url",
+      process.env.STRIPE_PORTAL_RETURN_URL?.trim() || `${getFrontendUrl(req)}/settings`,
+    );
 
     const session = await stripeRequest<StripeBillingPortalSession>("POST", "/billing_portal/sessions", body);
 
@@ -417,7 +452,8 @@ function subscriptionPeriodEnd(subscription: StripeSubscription): Date | null {
 
 async function syncSubscription(subscription: StripeSubscription): Promise<void> {
   const customerId = subscriptionCustomerId(subscription);
-  const userIdFromMetadata = subscription.metadata?.clerk_user_id ?? null;
+  const userIdFromMetadata =
+    subscription.metadata?.clerkUserId ?? subscription.metadata?.clerk_user_id ?? null;
   const existing = customerId ? await getBillingRecordByCustomer(customerId) : null;
   const userId = userIdFromMetadata || existing?.clerk_user_id || null;
 
@@ -441,7 +477,11 @@ async function fetchAndSyncSubscription(subscriptionId: string): Promise<void> {
 }
 
 async function handleCheckoutCompleted(session: StripeCheckoutSession): Promise<void> {
-  const userId = session.client_reference_id || session.metadata?.clerk_user_id || null;
+  const userId =
+    session.client_reference_id ||
+    session.metadata?.clerkUserId ||
+    session.metadata?.clerk_user_id ||
+    null;
   const customerId = stringField(session.customer);
   const subscriptionId = stringField(session.subscription);
 
@@ -487,6 +527,14 @@ export async function handleStripeWebhook(req: Request, res: Response): Promise<
       case "customer.subscription.deleted":
         await syncSubscription(event.data.object as StripeSubscription);
         break;
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as StripeInvoice;
+        const subscriptionId = stringField(invoice.subscription);
+        if (subscriptionId) {
+          await fetchAndSyncSubscription(subscriptionId);
+        }
+        break;
+      }
       default:
         break;
     }

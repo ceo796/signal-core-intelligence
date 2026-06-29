@@ -75,6 +75,8 @@ router.get("/billing/status", requireSignedIn, async (req, res): Promise<void> =
   }
 });
 
+router.post("/billing/checkout", requireSignedIn, createCheckoutSession);
+router.post("/billing/portal", requireSignedIn, createBillingPortalSession);
 router.post("/billing/create-checkout-session", requireSignedIn, createCheckoutSession);
 router.post("/billing/create-portal-session", requireSignedIn, createBillingPortalSession);
 

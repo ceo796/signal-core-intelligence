@@ -48,10 +48,14 @@ services:
         value: "14"
       - key: STRIPE_SECRET_KEY
         sync: false
+      - key: STRIPE_PRICE_ID_PRO
+        sync: false
       - key: STRIPE_PRICE_ID
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
+      - key: FRONTEND_URL
+        value: https://www.signal87.ai
       - key: APP_BASE_URL
         value: https://signal87-api.onrender.com
       - key: STRIPE_SUCCESS_URL
