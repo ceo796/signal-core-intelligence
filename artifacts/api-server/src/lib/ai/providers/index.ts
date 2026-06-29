@@ -1,4 +1,5 @@
 import type { AiProviderAdapter, ProviderId } from "../types";
+import { RUNTIME_DISABLED_PROVIDERS } from "../config";
 import { createGeminiProvider } from "./geminiProvider";
 import { createGrokProvider } from "./grokProvider";
 
@@ -16,6 +17,7 @@ export function getProviderRegistry(): Map<ProviderId, AiProviderAdapter> {
 }
 
 export function getProvider(id: ProviderId): AiProviderAdapter | undefined {
+  if (RUNTIME_DISABLED_PROVIDERS.has(id)) return undefined;
   return getProviderRegistry().get(id);
 }
 

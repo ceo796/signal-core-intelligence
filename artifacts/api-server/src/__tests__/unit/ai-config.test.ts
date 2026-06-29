@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   getResolvedReasoningChain,
+  isOpenAiCallsEnabled,
   isOpenAiRuntimeEnabled,
   loadAiConfig,
   resolveTaskProviderChain,
@@ -44,7 +45,18 @@ describe("ai config", () => {
     const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
     expect(chain).toEqual(["google", "xai"]);
     expect(isOpenAiRuntimeEnabled()).toBe(false);
+    expect(isOpenAiCallsEnabled()).toBe(false);
     expect(getResolvedReasoningChain()).toEqual(["google", "xai"]);
+  });
+
+  it("remaps OpenAI/GPT env values to Gemini in the provider chain", () => {
+    process.env.AI_PRIMARY_REASONING_PROVIDER = "openai";
+    process.env.AI_FINAL_FALLBACK_PROVIDER = "gpt";
+    process.env.AI_FALLBACK_PROVIDER_ORDER = "openai,gpt,xai";
+
+    const chain = resolveTaskProviderChain("document_chat", loadAiConfig());
+    expect(chain).toEqual(["google", "xai"]);
+    expect(loadAiConfig().primaryReasoningProvider).toBe("google");
   });
 
   it("defaults fallback provider order to xai only", () => {

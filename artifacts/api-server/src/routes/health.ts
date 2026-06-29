@@ -3,6 +3,7 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import {
   getResolvedReasoningChain,
+  isOpenAiCallsEnabled,
   isOpenAiRuntimeEnabled,
   loadAiConfig,
   resolveTaskProviderChain,
@@ -85,6 +86,7 @@ router.get("/runtime-check", async (_req, res) => {
       resolvedReasoningChain,
       reasoningProviderChain: resolveTaskProviderChain("document_chat", aiConfig),
       openaiRuntimeEnabled: isOpenAiRuntimeEnabled(aiConfig),
+      openaiCallsEnabled: isOpenAiCallsEnabled(aiConfig),
       providerTimeoutMs: aiConfig.providerTimeoutMs,
       evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
       qualityReviewProvider: aiConfig.qualityReviewProvider,

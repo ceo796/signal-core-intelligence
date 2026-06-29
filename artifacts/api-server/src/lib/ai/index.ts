@@ -1,6 +1,7 @@
 export { aiRouter, runTask } from "./router";
 export {
   getResolvedReasoningChain,
+  isOpenAiCallsEnabled,
   isOpenAiRuntimeEnabled,
   isOpenAiReasoningEnabled,
   loadAiConfig,

@@ -7,7 +7,8 @@ function parseBool(value: string | undefined, defaultValue: boolean): boolean {
 
 function parseProviderId(value: string | undefined, fallback: ProviderId): ProviderId {
   const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "openai" || normalized === "gpt") return "openai";
+  // OpenAI/GPT env values are ignored — remap to Gemini so no runtime path can select them.
+  if (normalized === "openai" || normalized === "gpt") return "google";
   if (normalized === "xai" || normalized === "grok") return "xai";
   if (normalized === "google" || normalized === "gemini") return "google";
   return fallback;
@@ -18,6 +19,7 @@ function parseProviderOrder(value: string | undefined): ProviderId[] {
   return value
     .split(",")
     .map((part) => parseProviderId(part, "xai"))
+    .filter((id) => !RUNTIME_DISABLED_PROVIDERS.has(id))
     .filter((id, index, all) => all.indexOf(id) === index);
 }
 
@@ -60,7 +62,7 @@ export function loadAiConfig(): AiRuntimeConfig {
     finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
     qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
-    embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "google"),
+    embeddingProvider: "google",
     fallbackProviderOrder:
       parsedFallbackOrder.length > 0 ? parsedFallbackOrder : DEFAULT_FALLBACK_ORDER,
     providerTimeoutMs: Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000"),
@@ -120,6 +122,11 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
 
 /** OpenAI/GPT is permanently disabled in the Signal87 runtime path. */
 export function isOpenAiRuntimeEnabled(_config: AiRuntimeConfig = loadAiConfig()): boolean {
+  return false;
+}
+
+/** No code path may invoke the OpenAI API at runtime. */
+export function isOpenAiCallsEnabled(_config: AiRuntimeConfig = loadAiConfig()): boolean {
   return false;
 }
 

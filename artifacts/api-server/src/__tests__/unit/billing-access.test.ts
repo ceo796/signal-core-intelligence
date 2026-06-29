@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { isSubscriptionActive, stripePriceId, stripeTrialDays } from "../../lib/billing.js";
 
 describe("stripeTrialDays", () => {
@@ -68,7 +68,8 @@ describe("admin access helpers", () => {
   });
 
   it("recognizes configured admin emails after module reload", async () => {
-    const mod = await import("../../middlewares/requireAuth.js?reload=1");
+    vi.resetModules();
+    const mod = await import("../../middlewares/requireAuth.js");
     expect(mod.isAdminEmail("ceo@signal87.ai")).toBe(true);
     expect(mod.isAdminEmail("mbenezra@erezcapital.io")).toBe(true);
     expect(mod.hasComplimentaryAccess("mbenezra@erezcapital.io")).toBe(true);
