@@ -54,10 +54,10 @@ export function geminiServiceAccountConfigured(): boolean {
 }
 
 export function geminiAuthMode(): "api_key" | "service_account" | "missing" {
+  if (geminiServiceAccountConfigured()) return "service_account";
   if (process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim()) {
     return "api_key";
   }
-  if (geminiServiceAccountConfigured()) return "service_account";
   return "missing";
 }
 
