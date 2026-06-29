@@ -32,6 +32,7 @@ describe("aiRouter", () => {
     mockOpenAiCreate.mockReset();
     mockFetch.mockReset();
     vi.stubGlobal("fetch", mockFetch);
+    delete process.env.ALLOW_OPENAI;
     delete process.env.XAI_API_KEY;
     delete process.env.GROK_API_KEY;
     delete process.env.OPENAI_API_KEY;
@@ -62,6 +63,7 @@ describe("aiRouter", () => {
       fallbackUsed: false,
     });
     expect(mockGrokCreate).not.toHaveBeenCalled();
+    expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
   it("falls back to Grok when Gemini fails", async () => {
@@ -85,9 +87,10 @@ describe("aiRouter", () => {
     expect(result.providerUsed).toBe("xai");
     expect(result.fallbackUsed).toBe(true);
     expect(result.answer).toBe("grok answer");
+    expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
-  it("falls back to OpenAI when Gemini and Grok fail", async () => {
+  it("throws after Gemini and Grok fail without calling OpenAI", async () => {
     process.env.GEMINI_API_KEY = "test-gemini-key";
     process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
@@ -97,20 +100,15 @@ describe("aiRouter", () => {
       text: async () => "gemini down",
     });
     mockGrokCreate.mockRejectedValue(new Error("grok down"));
-    mockOpenAiCreate.mockResolvedValue({
-      choices: [{ message: { content: "openai answer" } }],
-    });
 
     const { aiRouter } = await import("../../lib/ai/router.js");
-    const result = await aiRouter.runTask({
-      taskType: "document_chat",
-      userPrompt: "hello",
-    });
-
-    expect(result.providerUsed).toBe("openai");
-    expect(result.fallbackUsed).toBe(true);
-    expect(result.answer).toBe("openai answer");
-    expect(mockOpenAiCreate).toHaveBeenCalled();
+    await expect(
+      aiRouter.runTask({
+        taskType: "document_chat",
+        userPrompt: "hello",
+      }),
+    ).rejects.toThrow(/unavailable|failed/i);
+    expect(mockOpenAiCreate).not.toHaveBeenCalled();
   });
 
   it("works when xai is primary", async () => {

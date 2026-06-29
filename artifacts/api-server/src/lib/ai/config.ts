@@ -1,4 +1,5 @@
 import type { AiTaskType, ProviderId } from "./types";
+import { isOpenAiAllowed } from "./openai-policy";
 
 function parseBool(value: string | undefined, defaultValue: boolean): boolean {
   if (value === undefined || value.trim() === "") return defaultValue;
@@ -21,6 +22,20 @@ function parseProviderOrder(value: string | undefined, fallback: ProviderId[] = 
     .filter((id, index, all) => all.indexOf(id) === index);
 }
 
+function applyOpenAiPolicy(providerId: ProviderId): ProviderId | null {
+  if (providerId === "openai" && !isOpenAiAllowed()) return null;
+  return providerId;
+}
+
+function effectiveProviderId(providerId: ProviderId, fallback: ProviderId): ProviderId {
+  return applyOpenAiPolicy(providerId) ?? fallback;
+}
+
+function filterOpenAiFromChain(chain: ProviderId[]): ProviderId[] {
+  if (isOpenAiAllowed()) return chain;
+  return chain.filter((providerId) => providerId !== "openai");
+}
+
 const REASONING_TASKS = new Set<AiTaskType>([
   "document_chat",
   "multi_document_chat",
@@ -32,7 +47,8 @@ const REASONING_TASKS = new Set<AiTaskType>([
 
 const LOCAL_TASKS = new Set<AiTaskType>(["document_extraction", "table_extraction"]);
 
-const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["openai", "xai"];
+/** Default runtime chain: Gemini → Grok (OpenAI excluded unless ALLOW_OPENAI=true). */
+const DEFAULT_FALLBACK_ORDER: ProviderId[] = ["xai"];
 
 export interface AiRuntimeConfig {
   routingEnabled: boolean;
@@ -49,15 +65,33 @@ export interface AiRuntimeConfig {
 }
 
 export function loadAiConfig(): AiRuntimeConfig {
+  const rawEmbeddingProvider = parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "google");
   return {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
-    primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
-    primaryExtractionProvider: parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
-    finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
-    evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
-    qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
-    embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
-    fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER, DEFAULT_FALLBACK_ORDER),
+    primaryReasoningProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
+      "google",
+    ),
+    primaryExtractionProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
+      "google",
+    ),
+    finalFallbackProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
+      "xai",
+    ),
+    evidenceCompilerProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
+      "google",
+    ),
+    qualityReviewProvider: effectiveProviderId(
+      parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "google"),
+      "google",
+    ),
+    embeddingProvider: effectiveProviderId(rawEmbeddingProvider, "google"),
+    fallbackProviderOrder: filterOpenAiFromChain(
+      parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER, DEFAULT_FALLBACK_ORDER),
+    ),
     providerTimeoutMs: Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000"),
     models: {
       openai: {
@@ -69,6 +103,7 @@ export function loadAiConfig(): AiRuntimeConfig {
       },
       google: {
         chat: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash",
+        embedding: process.env.GEMINI_EMBEDDING_MODEL?.trim() || "text-embedding-004",
       },
     },
     maxTokens: Number(process.env.AI_MAX_TOKENS ?? "2048"),
@@ -91,7 +126,7 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
 
   const chain: ProviderId[] = [primary];
   if (!config.routingEnabled) {
-    return chain;
+    return filterOpenAiFromChain(chain);
   }
 
   for (const provider of config.fallbackProviderOrder) {
@@ -104,10 +139,10 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
     chain.push(config.finalFallbackProvider);
   }
 
-  return chain;
+  return filterOpenAiFromChain(chain);
 }
 
-export function getTaskProviderChains(
+export function getResolvedProviderChain(
   config: AiRuntimeConfig = loadAiConfig(),
 ): Record<"document_chat" | "multi_document_chat" | "executive_brief" | "extraction", ProviderId[]> {
   return {
@@ -118,13 +153,25 @@ export function getTaskProviderChains(
   };
 }
 
-export function isOpenAiRuntimeEnabled(config: AiRuntimeConfig = loadAiConfig()): boolean {
-  const reasoningChain = resolveTaskProviderChain("document_chat", config);
-  return reasoningChain.includes("openai") || config.embeddingProvider === "openai";
+/** @deprecated Use getResolvedProviderChain */
+export function getTaskProviderChains(
+  config: AiRuntimeConfig = loadAiConfig(),
+): Record<"document_chat" | "multi_document_chat" | "executive_brief" | "extraction", ProviderId[]> {
+  return getResolvedProviderChain(config);
 }
 
-export function isOpenAiCallsEnabled(config: AiRuntimeConfig = loadAiConfig()): boolean {
-  return Boolean(process.env.OPENAI_API_KEY?.trim()) && isOpenAiRuntimeEnabled(config);
+export function isOpenAiEnabled(): boolean {
+  return isOpenAiAllowed();
+}
+
+/** @deprecated Use isOpenAiEnabled */
+export function isOpenAiRuntimeEnabled(_config: AiRuntimeConfig = loadAiConfig()): boolean {
+  return isOpenAiEnabled();
+}
+
+/** @deprecated OpenAI calls are disabled unless ALLOW_OPENAI=true */
+export function isOpenAiCallsEnabled(_config: AiRuntimeConfig = loadAiConfig()): boolean {
+  return isOpenAiAllowed() && Boolean(process.env.OPENAI_API_KEY?.trim());
 }
 
 export function getResolvedReasoningChain(

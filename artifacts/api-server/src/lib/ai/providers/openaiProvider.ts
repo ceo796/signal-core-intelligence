@@ -7,6 +7,7 @@ import type {
 } from "../types";
 import { PROVIDER_CAPABILITIES } from "../capabilities";
 import { getChatModel, getEmbeddingModel, loadAiConfig } from "../config";
+import { assertOpenAiAllowed, isOpenAiAllowed } from "../openai-policy";
 
 function extractUsage(completion: OpenAI.Chat.Completions.ChatCompletion) {
   const usage = completion.usage;
@@ -18,17 +19,24 @@ function extractUsage(completion: OpenAI.Chat.Completions.ChatCompletion) {
   };
 }
 
+function createClient(): OpenAI {
+  assertOpenAiAllowed();
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+  return new OpenAI({ apiKey });
+}
+
+/** Opt-in adapter — inactive unless ALLOW_OPENAI=true. */
 export function createOpenAiProvider(): AiProviderAdapter {
   const config = loadAiConfig();
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  const client = new OpenAI({ apiKey: apiKey || "missing-openai-api-key" });
 
   return {
     id: "openai",
     capabilities: PROVIDER_CAPABILITIES.openai,
-    isAvailable: () => Boolean(apiKey),
+    isAvailable: () => isOpenAiAllowed() && Boolean(process.env.OPENAI_API_KEY?.trim()),
     async generateText(request: ProviderGenerateTextRequest): Promise<ProviderGenerateTextResult> {
       const started = Date.now();
+      const client = createClient();
       const completion = await client.chat.completions.create({
         model: getChatModel(config, "openai"),
         max_tokens: request.maxTokens ?? config.maxTokens,
@@ -46,6 +54,7 @@ export function createOpenAiProvider(): AiProviderAdapter {
     },
     async generateEmbeddings(texts: string[]): Promise<ProviderEmbeddingResult> {
       const started = Date.now();
+      const client = createClient();
       const response = await client.embeddings.create({
         model: getEmbeddingModel(config, "openai"),
         input: texts,

@@ -43,15 +43,15 @@ describe("GET /api/health", () => {
           ready: expect.any(Boolean),
         },
         aiRouter: {
-          resolvedReasoningChain: ["google", "openai", "xai"],
-          taskProviderChains: {
-            document_chat: ["google", "openai", "xai"],
-            multi_document_chat: ["google", "openai", "xai"],
-            executive_brief: ["google", "openai", "xai"],
+          resolvedReasoningChain: ["google", "xai"],
+          resolvedProviderChain: {
+            document_chat: ["google", "xai"],
+            multi_document_chat: ["google", "xai"],
+            executive_brief: ["google", "xai"],
             extraction: [],
           },
-          openaiRuntimeEnabled: true,
-          openaiCallsEnabled: false,
+          openaiEnabled: false,
+          embeddingStatus: "local",
         },
       },
     });
@@ -62,5 +62,23 @@ describe("GET /api/health", () => {
     const res = await request(app).get("/api/health");
     expect(res.status).not.toBe(401);
     expect(res.status).not.toBe(403);
+  });
+});
+
+describe("GET /api/runtime-check", () => {
+  it("reports Gemini-first provider chains and disabled OpenAI", async () => {
+    const res = await request(app).get("/api/runtime-check");
+    expect(res.status).toBe(200);
+    expect(res.body.ai).toMatchObject({
+      openaiEnabled: false,
+      resolvedProviderChain: {
+        document_chat: ["google", "xai"],
+        multi_document_chat: ["google", "xai"],
+        executive_brief: ["google", "xai"],
+        extraction: [],
+      },
+      embeddingProvider: "google",
+      embeddingStatus: "local",
+    });
   });
 });

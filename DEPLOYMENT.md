@@ -98,7 +98,7 @@ Minimum for production:
 
 Optional but common: Stripe billing keys, `ADMIN_EMAILS`, `FRONTEND_URL` for checkout redirects, `LOG_LEVEL`.
 
-Runtime AI chain: **Google/Gemini → xAI/Grok → local extractive fallback**. OpenAI is not required.
+Runtime AI chain: **Google/Gemini → xAI/Grok → local keyword retrieval fallback**. OpenAI is **disabled** unless you explicitly set `ALLOW_OPENAI=true` (not used in production today). Required LLM credentials: Gemini service account (or API key) and `XAI_API_KEY`.
 
 ## Health checks
 
