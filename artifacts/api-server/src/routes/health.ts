@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import { loadAiConfig } from "../lib/ai";
-import { geminiAuthMode, listAvailableProviders } from "../lib/ai/providers";
+import { geminiAuthMode, geminiServiceAccountConfigured, listAvailableProviders } from "../lib/ai/providers";
 import { getEmbeddingModelName } from "../lib/ai/embedding";
 import { getRuntimeStorageStatus } from "../lib/file-store";
 
@@ -77,10 +77,7 @@ router.get("/runtime-check", async (_req, res) => {
       credentials: {
         openai: process.env.OPENAI_API_KEY ? "set" : "missing",
         xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",
-        googleServiceAccount:
-          process.env.GEMINI_SERVICE_ACCOUNT_PATH || process.env.GEMINI_SERVICE_ACCOUNT_JSON
-            ? "set"
-            : "missing",
+        googleServiceAccount: geminiServiceAccountConfigured() ? "set" : "missing",
       },
     },
     requiredConfig: {

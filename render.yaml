@@ -28,6 +28,8 @@ services:
         sync: false
       - key: GEMINI_SERVICE_ACCOUNT_JSON
         sync: false
+      - key: GEMINI_VERTEX_LOCATION
+        value: us-central1
       - key: AI_PROVIDER_ROUTING_ENABLED
         value: "true"
       - key: AI_PRIMARY_REASONING_PROVIDER

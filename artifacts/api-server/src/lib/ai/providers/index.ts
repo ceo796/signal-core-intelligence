@@ -26,4 +26,4 @@ export function listAvailableProviders(): ProviderId[] {
     .map(([id]) => id);
 }
 
-export { geminiAuthMode } from "./gemini-auth";
+export { geminiAuthMode, geminiServiceAccountConfigured } from "./gemini-auth";

@@ -10,10 +10,7 @@ vi.mock("openai", () => ({
     if (opts.baseURL === "https://api.x.ai/v1") {
       return { chat: { completions: { create: mockGrokCreate } } };
     }
-    if (
-      opts.baseURL === "https://generativelanguage.googleapis.com/v1beta/openai/" ||
-      opts.baseURL?.includes("aiplatform.googleapis.com")
-    ) {
+    if (opts.baseURL?.includes("aiplatform.googleapis.com")) {
       return { chat: { completions: { create: mockGeminiCreate } } };
     }
     return {
@@ -32,8 +29,6 @@ describe("aiRouter", () => {
     mockOpenAiEmbeddings.mockReset();
     delete process.env.XAI_API_KEY;
     delete process.env.GROK_API_KEY;
-    delete process.env.GEMINI_API_KEY;
-    delete process.env.GOOGLE_API_KEY;
     delete process.env.GEMINI_SERVICE_ACCOUNT_PATH;
     delete process.env.GEMINI_SERVICE_ACCOUNT_JSON;
     delete process.env.AI_PRIMARY_REASONING_PROVIDER;

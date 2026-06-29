@@ -2,10 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { GoogleAuth } from "google-auth-library";
 
-const GEMINI_SCOPES = [
-  "https://www.googleapis.com/auth/generative-language",
-  "https://www.googleapis.com/auth/cloud-platform",
-];
+const VERTEX_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"];
 
 type ServiceAccountCredentials = {
   client_email: string;
@@ -67,13 +64,8 @@ export function getVertexOpenAiBaseUrl(projectId: string): string {
   return `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/endpoints/openapi`;
 }
 
-export function geminiAuthMode(): "api_key" | "service_account" | "missing" {
-  // Prefer service account — bills against linked Google Cloud credits.
-  if (geminiServiceAccountConfigured()) return "service_account";
-  if (process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim()) {
-    return "api_key";
-  }
-  return "missing";
+export function geminiAuthMode(): "service_account" | "missing" {
+  return geminiServiceAccountConfigured() ? "service_account" : "missing";
 }
 
 export async function getGeminiAccessToken(): Promise<string> {
@@ -85,7 +77,7 @@ export async function getGeminiAccessToken(): Promise<string> {
   if (!cachedAuth) {
     cachedAuth = new GoogleAuth({
       credentials,
-      scopes: GEMINI_SCOPES,
+      scopes: VERTEX_SCOPES,
     });
   }
 

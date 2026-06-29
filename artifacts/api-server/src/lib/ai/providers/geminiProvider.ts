@@ -3,15 +3,11 @@ import type { AiProviderAdapter, ProviderGenerateTextRequest, ProviderGenerateTe
 import { PROVIDER_CAPABILITIES } from "../capabilities";
 import { getChatModel, loadAiConfig } from "../config";
 import {
-  geminiAuthMode,
   geminiServiceAccountConfigured,
   getGeminiAccessToken,
   getServiceAccountProjectId,
   getVertexOpenAiBaseUrl,
 } from "./gemini-auth";
-
-/** AI Studio / API-key path (not used for service-account auth). */
-const GEMINI_API_KEY_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 
 function extractUsage(completion: OpenAI.Chat.Completions.ChatCompletion) {
   const usage = completion.usage;
@@ -27,45 +23,36 @@ function resolveVertexModel(model: string): string {
   return model.startsWith("google/") ? model : `google/${model}`;
 }
 
-function resolveApiKeyModel(model: string): string {
-  return model.startsWith("google/") ? model.slice("google/".length) : model;
-}
-
 async function createGeminiClient(): Promise<{ client: OpenAI; model: string }> {
   const config = loadAiConfig();
   const configuredModel = getChatModel(config, "google");
 
-  if (geminiServiceAccountConfigured()) {
-    const projectId = getServiceAccountProjectId();
-    if (!projectId) {
-      throw new Error("Gemini service account JSON is missing project_id");
-    }
-    const token = await getGeminiAccessToken();
-    return {
-      client: new OpenAI({
-        apiKey: token,
-        baseURL: getVertexOpenAiBaseUrl(projectId),
-      }),
-      model: resolveVertexModel(configuredModel),
-    };
+  if (!geminiServiceAccountConfigured()) {
+    throw new Error(
+      "Gemini Vertex service account is not configured. Set GEMINI_SERVICE_ACCOUNT_JSON or GEMINI_SERVICE_ACCOUNT_PATH.",
+    );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY?.trim() ?? process.env.GOOGLE_API_KEY?.trim();
-  if (apiKey) {
-    return {
-      client: new OpenAI({ apiKey, baseURL: GEMINI_API_KEY_BASE_URL }),
-      model: resolveApiKeyModel(configuredModel),
-    };
+  const projectId = getServiceAccountProjectId();
+  if (!projectId) {
+    throw new Error("Gemini service account JSON is missing project_id");
   }
 
-  throw new Error("Gemini credentials are not configured");
+  const token = await getGeminiAccessToken();
+  return {
+    client: new OpenAI({
+      apiKey: token,
+      baseURL: getVertexOpenAiBaseUrl(projectId),
+    }),
+    model: resolveVertexModel(configuredModel),
+  };
 }
 
 export function createGeminiProvider(): AiProviderAdapter {
   return {
     id: "google",
     capabilities: PROVIDER_CAPABILITIES.google,
-    isAvailable: () => geminiAuthMode() !== "missing",
+    isAvailable: () => geminiServiceAccountConfigured(),
     async generateText(request: ProviderGenerateTextRequest): Promise<ProviderGenerateTextResult> {
       const started = Date.now();
       const { client, model } = await createGeminiClient();

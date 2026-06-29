@@ -12,15 +12,14 @@ describe("geminiAuthMode", () => {
     else process.env.GEMINI_SERVICE_ACCOUNT_PATH = origPath;
   });
 
-  it("prefers service account over API key when both are set", () => {
-    process.env.GEMINI_API_KEY = "AIza-test-key";
+  it("uses service account when configured", () => {
     process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
     expect(geminiAuthMode()).toBe("service_account");
   });
 
-  it("uses api_key when only API key is configured", () => {
+  it("ignores API keys and reports missing when no service account is configured", () => {
     delete process.env.GEMINI_SERVICE_ACCOUNT_PATH;
     process.env.GEMINI_API_KEY = "AIza-test-key";
-    expect(geminiAuthMode()).toBe("api_key");
+    expect(geminiAuthMode()).toBe("missing");
   });
 });
