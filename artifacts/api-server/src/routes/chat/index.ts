@@ -9,7 +9,7 @@ import {
   ClearChatHistoryParams,
   GetChatHistoryResponse,
 } from "@workspace/api-zod";
-import { aiRouter, loadAiConfig } from "../../lib/ai";
+import { aiRouter, appendRagSourcesUiWrapperPolicy, loadAiConfig } from "../../lib/ai";
 import { retrieveRelevantChunks } from "../../lib/retriever";
 
 const router: IRouter = Router();
@@ -88,7 +88,7 @@ router.post("/documents/:id/chat", async (req, res): Promise<void> => {
     .map((c, i) => `[Chunk ${c.chunkIndex + 1}]:\n${c.content}`)
     .join("\n\n---\n\n");
 
-  const systemPrompt = `You are a precise document intelligence assistant. You answer questions based on the provided document excerpts.
+  const systemPrompt = appendRagSourcesUiWrapperPolicy(`You are a precise document intelligence assistant. You answer questions based on the provided document excerpts.
 
 Rules:
 1. Answer directly and concisely.
@@ -104,7 +104,7 @@ Rules:
 Document: "${doc.fileName}"
 
 Relevant excerpts:
-${contextBlocks}`;
+${contextBlocks}`);
 
   const llmStart = Date.now();
   const aiConfig = loadAiConfig();

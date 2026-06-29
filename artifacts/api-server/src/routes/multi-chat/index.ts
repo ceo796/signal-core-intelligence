@@ -3,7 +3,7 @@ import { db, documentsTable, chunksTable } from "@workspace/db";
 import { inArray, and, eq, isNull } from "drizzle-orm";
 import { MultiChatBody } from "@workspace/api-zod";
 import { getCurrentUserId } from "../../lib/ownership";
-import { aiRouter, loadAiConfig } from "../../lib/ai";
+import { aiRouter, appendRagSourcesUiWrapperPolicy, loadAiConfig } from "../../lib/ai";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 
 const ROUTE = "POST /api/documents/multi-chat";
@@ -137,7 +137,7 @@ router.post("/documents/multi-chat", async (req, res): Promise<void> => {
 
   const documentList = groups.map((g) => `- "${g.documentName}"`).join("\n");
 
-  const systemPrompt = `You are a precise multi-document comparison assistant. You answer the user's question using ONLY the provided excerpts from the selected documents below.
+  const systemPrompt = appendRagSourcesUiWrapperPolicy(`You are a precise multi-document comparison assistant. You answer the user's question using ONLY the provided excerpts from the selected documents below.
 
 Rules:
 1. Compare ONLY the selected documents listed below. Do not use any outside knowledge.
@@ -152,8 +152,8 @@ Rules:
 Selected documents:
 ${documentList}
 
-Sources:
-${sourceBlocks}`;
+Source excerpts:
+${sourceBlocks}`);
 
   const llmStart = Date.now();
   const aiConfig = loadAiConfig();

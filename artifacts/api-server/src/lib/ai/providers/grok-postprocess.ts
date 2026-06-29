@@ -33,7 +33,7 @@ export function postProcessChatAnswer(content: string, maxSources = DEFAULT_CHAT
   const cleanBody = stripInlineCitations(bodyWithoutFooter);
 
   if (refs.length === 0) return cleanBody;
-  return `${cleanBody}\n\nSources\n${refs.map((ref) => `- ${ref}`).join("\n")}`;
+  return `${cleanBody}\n\n${refs.map((ref) => `- ${ref}`).join("\n")}`;
 }
 
 function normalizeBulletCitations(line: string): string {

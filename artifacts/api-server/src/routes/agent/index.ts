@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
 import { PostAgentHybridBody } from "@workspace/api-zod";
-import { aiRouter, loadAiConfig, type ProviderId } from "../../lib/ai";
+import { aiRouter, appendRagSourcesUiWrapperPolicy, loadAiConfig, type ProviderId } from "../../lib/ai";
 import { postProcessChatAnswer } from "../../lib/ai/providers/grok-postprocess";
 import { taskTypeForAgentMode } from "../../lib/ai/task-map";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
@@ -28,7 +28,7 @@ const MODE_PROMPTS: Record<string, string> = {
 // web/external/real-time source (there is no web access here).
 const GROUNDING_REASONING_POLICY = `GROUNDING & REASONING POLICY:
 - Treat the source excerpts below as your primary evidence. Ground every factual claim in them, but do NOT put [Source N] markers in the answer body.
-- At the very end of your response, add a "Sources" section listing only the 3–5 most relevant [Source N] markers you relied on.
+- At the very end of your response, after one blank line, list only the 3–5 most relevant source markers as bullets (e.g. - [Source 2]). Do not add a "Sources" or "Sources:" heading — the UI renders that title.
 - These excerpts are your only document context. You have NO web access, browsing, or real-time data — never state or imply that any part of your answer came from the internet, a search, or any external or live source.
 - If the documents do not fully cover the question, you MAY add helpful general knowledge or reasoning from your own training. Clearly label any such content as general AI reasoning — for example, begin that portion with "General AI reasoning (not grounded in your documents):" — and do NOT attach [Source N] citations to it.
 - If you have neither relevant documents nor confident general knowledge, say so plainly.
@@ -122,7 +122,7 @@ function buildFallbackAnswer(query: string, citations: Array<{ citationNumber: n
     .map((c) => `- [Source ${c.citationNumber}]`)
     .join("\n");
 
-  return `${intro}\n\n${bullets.join("\n")}\n\nSources\n${sourceRefs}`;
+  return `${intro}\n\n${bullets.join("\n")}\n\n${sourceRefs}`;
 }
 
 router.post("/agent/hybrid", async (req, res): Promise<void> => {
@@ -274,7 +274,7 @@ router.post("/agent/hybrid", async (req, res): Promise<void> => {
 
   const documentList = documentsUsed.map((d) => `- "${d.name}"`).join("\n");
   const summaryPolicy = summaryLengthPolicy(query, mode);
-  const systemPrompt = `${MODE_PROMPTS[mode] ?? MODE_PROMPTS.auto}
+  const systemPrompt = appendRagSourcesUiWrapperPolicy(`${MODE_PROMPTS[mode] ?? MODE_PROMPTS.auto}
 ${summaryPolicy ? `\n\n${summaryPolicy}` : ""}
 
 ${GROUNDING_REASONING_POLICY}
@@ -284,8 +284,8 @@ When a source excerpt begins with "Sheet:", it is spreadsheet data — reference
 Documents searched:
 ${documentList}
 
-Sources:
-${sourceBlocks}`;
+Source excerpts:
+${sourceBlocks}`);
 
   const llmStart = Date.now();
   const aiConfig = loadAiConfig();
