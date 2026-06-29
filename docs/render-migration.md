@@ -106,4 +106,4 @@ pnpm smoke:production https://www.signal87.ai https://signal87-api.onrender.com
 
 ## Important
 
-OpenAI remains the only AI provider in the backend provider file. Do not add Replit AI, Gemini, Vertex, Anthropic, OpenRouter, or managed gateway fallbacks without a separate architecture decision.
+Gemini is the primary reasoning provider, with OpenAI retained for embeddings/fallback and xAI available as the final fallback when configured. Do not add Replit AI, Anthropic, OpenRouter, or managed gateway fallbacks without a separate architecture decision.

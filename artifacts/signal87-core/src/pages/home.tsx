@@ -1027,7 +1027,7 @@ export default function Home() {
             <h1>Extend your team with verifiable AI reasoning.</h1>
             <p className="hero-copy">
               Signal87 AI helps teams analyze, compare, and reason across private
-              documents using GPT-powered intelligence, grounded citations, and a
+              documents using Gemini-powered intelligence, grounded citations, and a
               clear verification trace.
             </p>
             <div className="hero-actions">
@@ -1152,7 +1152,7 @@ export default function Home() {
                 </div>
                 <div className="mock-content">
                   <div className="chat-bubble">
-                    Answer generated with GPT reasoning and source-grounded
+                    Answer generated with Gemini reasoning and source-grounded
                     evidence from selected files.
                     <div className="trace">
                       <span>Chunk 04</span>
@@ -1202,7 +1202,7 @@ export default function Home() {
 
         <div className="ticker">
           <div className="ticker-track">
-            GROUNDED ANSWERS · GPT REASONING · DOCUMENT COMPARISON · EXECUTIVE
+            GROUNDED ANSWERS · GEMINI REASONING · DOCUMENT COMPARISON · EXECUTIVE
             BRIEFS · VERIFICATION TRACE · PRIVATE WORKSPACES · SPREADSHEET
             SUPPORT ·
           </div>
@@ -1272,7 +1272,7 @@ export default function Home() {
 
             <div className="badge one">Citations</div>
             <div className="badge two">Verification Trace</div>
-            <div className="badge three">GPT Reasoning</div>
+            <div className="badge three">Gemini Reasoning</div>
           </div>
         </section>
 
@@ -1314,11 +1314,11 @@ export default function Home() {
                     differences.
                   </p>
                   <span className="flow-pill">
-                    Use GPT reasoning + selected documents
+                    Use Gemini reasoning + selected documents
                   </span>
                 </div>
               </div>
-              <h3>Use GPT reasoning on your documents</h3>
+              <h3>Use Gemini reasoning on your documents</h3>
               <p>
                 Ask richer questions, compare files, generate briefs, and
                 synthesize across multiple sources.
@@ -1361,7 +1361,7 @@ export default function Home() {
               <div className="block-card block-trace">
                 <div className="bc-head">verificationTrace</div>
                 <div className="bc-code">
-                  {`{ citations: true,\n  chunks: ["04", "11"],\n  model: "GPT" }`}
+                  {`{ citations: true,\n  chunks: ["04", "11"],\n  model: "Gemini" }`}
                 </div>
               </div>
               <div className="block-actions">
@@ -1398,7 +1398,7 @@ export default function Home() {
       </main>
 
       <footer className="footer" id="security">
-        <div>Signal87 AI — Private document intelligence powered by GPT reasoning.</div>
+        <div>Signal87 AI — Private document intelligence powered by Gemini reasoning.</div>
         <nav className="footer-links">
           <Link href="/about">About</Link>
           <Link href="/team">Team</Link>

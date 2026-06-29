@@ -17,7 +17,7 @@ The platform is priced at $99 per month for individual users and $499 per month 
 Technical Stack:
 - Backend: Express 5, TypeScript, PostgreSQL, Drizzle ORM
 - Frontend: React 18, Vite, Tailwind CSS
-- AI: OpenAI GPT-4o-mini and text-embedding-3-small
+- AI: Gemini primary reasoning and OpenAI text-embedding-3-small embeddings
 - Auth: Clerk
 - Storage: Replit Object Storage (GCS-backed)
 
