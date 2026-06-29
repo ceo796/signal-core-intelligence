@@ -1,7 +1,9 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
-import { PROVIDER_CONFIG } from "../lib/ai-provider";
+import { loadAiConfig } from "../lib/ai";
+import { geminiAuthMode, listAvailableProviders } from "../lib/ai/providers";
+import { getEmbeddingModelName } from "../lib/ai/embedding";
 import { getRuntimeStorageStatus } from "../lib/file-store";
 
 const router: IRouter = Router();
@@ -36,6 +38,8 @@ async function checkDatabase() {
 router.get("/runtime-check", async (_req, res) => {
   const storage = getRuntimeStorageStatus();
   const database = await checkDatabase();
+  const aiConfig = loadAiConfig();
+  const availableProviders = listAvailableProviders();
   const forbiddenReplitEnvVars = ["REPL_ID", "REPL_SLUG", "REPL_OWNER", "REPLIT_DEPLOYMENT", "REPLIT_DOMAINS"];
   const detectedReplitEnvVars = forbiddenReplitEnvVars.filter((key) => Boolean(process.env[key]));
   const replitDependency = detectedReplitEnvVars.length > 0;
@@ -45,7 +49,7 @@ router.get("/runtime-check", async (_req, res) => {
     isTestClerkKey(process.env.CLERK_PUBLISHABLE_KEY);
   const clerkProductionSafe = !productionMode || !clerkUsesTestKeys;
   const healthy =
-    Boolean(process.env.OPENAI_API_KEY) &&
+    availableProviders.length > 0 &&
     Boolean(process.env.CLERK_SECRET_KEY) &&
     Boolean(process.env.CLERK_PUBLISHABLE_KEY) &&
     clerkProductionSafe &&
@@ -59,14 +63,30 @@ router.get("/runtime-check", async (_req, res) => {
     host: process.env.RENDER ? "render" : "unknown",
     nodeEnv: process.env.NODE_ENV ?? "unknown",
     ai: {
-      provider: PROVIDER_CONFIG.provider,
-      billing: "direct_openai_api_key",
-      model: PROVIDER_CONFIG.model,
-      openaiApiKey: process.env.OPENAI_API_KEY ? "set" : "missing",
+      routingEnabled: aiConfig.routingEnabled,
+      primaryReasoningProvider: aiConfig.primaryReasoningProvider,
+      primaryExtractionProvider: aiConfig.primaryExtractionProvider,
+      finalFallbackProvider: aiConfig.finalFallbackProvider,
+      evidenceCompilerProvider: aiConfig.evidenceCompilerProvider,
+      qualityReviewProvider: aiConfig.qualityReviewProvider,
+      embeddingProvider: aiConfig.embeddingProvider,
+      availableProviders,
+      models: aiConfig.models,
+      embeddingModel: getEmbeddingModelName(),
+      geminiAuthMode: geminiAuthMode(),
+      credentials: {
+        openai: process.env.OPENAI_API_KEY ? "set" : "missing",
+        xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",
+        googleApiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY ? "set" : "missing",
+        googleServiceAccount: process.env.GEMINI_SERVICE_ACCOUNT_PATH || process.env.GEMINI_SERVICE_ACCOUNT_JSON ? "set" : "missing",
+      },
     },
     requiredConfig: {
       DATABASE_URL: configStatus("DATABASE_URL"),
       OPENAI_API_KEY: configStatus("OPENAI_API_KEY"),
+      XAI_API_KEY: configStatus("XAI_API_KEY"),
+      GEMINI_API_KEY: configStatus("GEMINI_API_KEY"),
+      GEMINI_SERVICE_ACCOUNT_PATH: configStatus("GEMINI_SERVICE_ACCOUNT_PATH"),
       CLERK_SECRET_KEY: configStatus("CLERK_SECRET_KEY"),
       CLERK_PUBLISHABLE_KEY: configStatus("CLERK_PUBLISHABLE_KEY"),
       FILE_STORAGE_DIR: configStatus("FILE_STORAGE_DIR"),

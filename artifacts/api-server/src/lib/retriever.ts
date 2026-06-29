@@ -1,6 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db, chunkEmbeddingsTable } from "@workspace/db";
-import { openai, PROVIDER_CONFIG } from "./ai-provider";
+import { generateEmbedding, generateEmbeddings, getEmbeddingModelName } from "./ai";
 
 export interface ScoredChunk {
   id: number;
@@ -13,20 +13,13 @@ export interface ScoredChunk {
 type RetrievalChunk = { id: number; documentId: number; chunkIndex: number; content: string };
 
 export async function getEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
-    model: PROVIDER_CONFIG.embeddingModel,
-    input: text,
-  });
-  return response.data[0].embedding;
+  return generateEmbedding(text);
 }
 
 async function getEmbeddings(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  const response = await openai.embeddings.create({
-    model: PROVIDER_CONFIG.embeddingModel,
-    input: texts,
-  });
-  return response.data.map((item) => item.embedding);
+  const result = await generateEmbeddings(texts);
+  return result.embeddings;
 }
 
 function cosineSimilarity(a: number[], b: number[]): number {
@@ -55,7 +48,7 @@ async function readPersistedEmbeddings(chunkIds: number[]): Promise<Map<number, 
   const rows = await db
     .select({ chunkId: chunkEmbeddingsTable.chunkId, embedding: chunkEmbeddingsTable.embedding })
     .from(chunkEmbeddingsTable)
-    .where(and(inArray(chunkEmbeddingsTable.chunkId, chunkIds), eq(chunkEmbeddingsTable.model, PROVIDER_CONFIG.embeddingModel)));
+    .where(and(inArray(chunkEmbeddingsTable.chunkId, chunkIds), eq(chunkEmbeddingsTable.model, getEmbeddingModelName())));
 
   return new Map(rows.map((row) => [row.chunkId, row.embedding]));
 }
@@ -66,7 +59,7 @@ async function persistEmbeddings(chunks: RetrievalChunk[], embeddings: number[][
   const now = new Date();
   const values = chunks.map((chunk, i) => ({
     chunkId: chunk.id,
-    model: PROVIDER_CONFIG.embeddingModel,
+    model: getEmbeddingModelName(),
     dimensions: embeddings[i].length,
     embedding: embeddings[i],
     createdAt: now,

@@ -9,7 +9,7 @@ import {
   ClearChatHistoryParams,
   GetChatHistoryResponse,
 } from "@workspace/api-zod";
-import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { aiRouter, loadAiConfig } from "../../lib/ai";
 import { retrieveRelevantChunks } from "../../lib/retriever";
 
 const router: IRouter = Router();
@@ -107,22 +107,34 @@ Relevant excerpts:
 ${contextBlocks}`;
 
   const llmStart = Date.now();
+  const aiConfig = loadAiConfig();
   let answer: string;
   let llmError: string | null = null;
   let fallbackUsed = false;
+  let llmProvider = aiConfig.primaryReasoningProvider;
+  let llmModel = aiConfig.models[aiConfig.primaryReasoningProvider].chat;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: PROVIDER_CONFIG.model,
-      max_tokens: PROVIDER_CONFIG.maxTokens,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: question },
-      ],
-    });
-    answer = completion.choices[0]?.message?.content ?? "No response generated.";
+    const aiResult = await aiRouter.runTask(
+      {
+        taskType: "document_chat",
+        maxTokens: aiConfig.maxTokens,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: question },
+        ],
+      },
+      (ctx) => req.log.info(ctx, "AI task completed"),
+    );
+    answer = aiResult.answer || "No response generated.";
+    llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
+    llmModel = aiResult.modelUsed;
+    fallbackUsed = aiResult.fallbackUsed;
+    if (aiResult.fallbackUsed && aiResult.fallbackReason) {
+      req.log.warn({ fallbackReason: aiResult.fallbackReason }, "AI fallback used for document chat");
+    }
   } catch (err) {
-    req.log.error({ err }, "LLM call failed");
+    req.log.error({ err }, "AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     answer = "I was unable to generate a response. Please try again.";
     fallbackUsed = true;
@@ -133,8 +145,8 @@ ${contextBlocks}`;
 
   const debug = {
     route: `POST /api/documents/${id}/chat`,
-    provider: PROVIDER_CONFIG.provider,
-    model: PROVIDER_CONFIG.model,
+    provider: llmProvider,
+    model: llmModel,
     fallbackUsed,
     documentId: id,
     chunksSearched: allChunks.length,
@@ -164,8 +176,8 @@ ${contextBlocks}`;
   // Structured Q&A outcome log (no question/answer content — may be sensitive).
   const qaLog = {
     documentId: id,
-    provider: PROVIDER_CONFIG.provider,
-    model: PROVIDER_CONFIG.model,
+    provider: llmProvider,
+    model: llmModel,
     chunksSearched: allChunks.length,
     chunksRetrieved: retrievedChunks.length,
     totalLatencyMs,

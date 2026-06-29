@@ -3,7 +3,7 @@ import { db, documentsTable, chunksTable } from "@workspace/db";
 import { inArray, and, eq, isNull } from "drizzle-orm";
 import { MultiChatBody } from "@workspace/api-zod";
 import { getCurrentUserId } from "../../lib/ownership";
-import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { aiRouter, loadAiConfig } from "../../lib/ai";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 
 const ROUTE = "POST /api/documents/multi-chat";
@@ -156,20 +156,29 @@ Sources:
 ${sourceBlocks}`;
 
   const llmStart = Date.now();
+  const aiConfig = loadAiConfig();
   let answer: string;
   let llmError: string | null = null;
+  let llmProvider = aiConfig.primaryReasoningProvider;
+  let llmModel = aiConfig.models[aiConfig.primaryReasoningProvider].chat;
   try {
-    const completion = await openai.chat.completions.create({
-      model: PROVIDER_CONFIG.model,
-      max_tokens: PROVIDER_CONFIG.maxTokens,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: question },
-      ],
-    });
-    answer = completion.choices[0]?.message?.content ?? "No response generated.";
+    const aiResult = await aiRouter.runTask(
+      {
+        taskType: "multi_document_chat",
+        maxTokens: aiConfig.maxTokens,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: question },
+        ],
+      },
+      (ctx) => req.log.info(ctx, "AI task completed"),
+    );
+    answer = aiResult.answer || "No response generated.";
+    llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
+    llmModel = aiResult.modelUsed;
+    if (aiResult.fallbackUsed) fallbackUsed = true;
   } catch (err) {
-    req.log.error({ err }, "Multi-document LLM call failed");
+    req.log.error({ err }, "Multi-document AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     answer = "I was unable to generate a response. Please try again.";
     fallbackUsed = true;
@@ -189,8 +198,8 @@ ${sourceBlocks}`;
 
   const debug = {
     route: ROUTE,
-    provider: PROVIDER_CONFIG.provider,
-    model: PROVIDER_CONFIG.model,
+    provider: llmProvider,
+    model: llmModel,
     fallbackUsed,
     documentIds: uniqueIds,
     documentNames: groups.map((g) => g.documentName),

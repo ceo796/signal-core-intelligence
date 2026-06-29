@@ -2,7 +2,8 @@ import { Router, type IRouter } from "express";
 import { db, documentsTable, chunksTable } from "@workspace/db";
 import { and, desc, eq, inArray, sql, isNull } from "drizzle-orm";
 import { PostAgentHybridBody } from "@workspace/api-zod";
-import { openai, PROVIDER_CONFIG } from "../../lib/ai-provider";
+import { aiRouter, loadAiConfig } from "../../lib/ai";
+import { taskTypeForAgentMode } from "../../lib/ai/task-map";
 import { retrieveAcrossDocuments, type DocumentGroup } from "../../lib/retriever";
 import { getCurrentUserId } from "../../lib/ownership";
 
@@ -19,7 +20,7 @@ const MODE_PROMPTS: Record<string, string> = {
   diligence: `You are a due diligence and risk analysis assistant. Analyze the provided source excerpts for risks, obligations, red flags, and important terms. Identify areas requiring attention. Always cite each finding with [Source N]. Be thorough and precise.`,
 };
 
-// Shared grounding + reasoning policy. This assistant is OpenAI/GPT-only: it grounds
+// Shared grounding + reasoning policy. This assistant uses GPT first with Grok fallback: it grounds
 // answers in the user's documents (with [Source N] citations) and may supplement with the
 // GPT model's own general reasoning when the documents fall short — clearly labeled, and
 // never implying any web/external/real-time source (there is no web access here).
@@ -255,24 +256,33 @@ Sources:
 ${sourceBlocks}`;
 
   const llmStart = Date.now();
+  const aiConfig = loadAiConfig();
   let answer: string;
   let llmError: string | null = null;
+  let llmProvider = aiConfig.primaryReasoningProvider;
+  let llmModel = aiConfig.models[aiConfig.primaryReasoningProvider].chat;
   try {
-    const completion = await withTimeout(
-      openai.chat.completions.create({
-        model: PROVIDER_CONFIG.model,
-        max_tokens: Math.min(PROVIDER_CONFIG.maxTokens, 1200),
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: query },
-        ],
-      }),
+    const aiResult = await withTimeout(
+      aiRouter.runTask(
+        {
+          taskType: taskTypeForAgentMode(mode),
+          maxTokens: Math.min(aiConfig.maxTokens, 1200),
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: query },
+          ],
+        },
+        (ctx) => req.log.info(ctx, "AI task completed"),
+      ),
       LLM_TIMEOUT_MS,
-      "Hybrid LLM call",
+      "Hybrid AI task",
     );
-    answer = completion.choices[0]?.message?.content ?? "No response generated.";
+    answer = aiResult.answer || "No response generated.";
+    llmProvider = aiResult.providerUsed === "local" ? aiConfig.primaryReasoningProvider : aiResult.providerUsed;
+    llmModel = aiResult.modelUsed;
+    if (aiResult.fallbackUsed) fallbackUsed = true;
   } catch (err) {
-    req.log.error({ err }, "Hybrid agent LLM call failed");
+    req.log.error({ err }, "Hybrid agent AI task failed");
     llmError = err instanceof Error ? err.message : String(err);
     answer = buildFallbackAnswer(query, citations);
     fallbackUsed = true;
@@ -302,8 +312,8 @@ ${sourceBlocks}`;
     documentsUsed,
     citations: citations.map(({ fullContent, ...c }) => c),
     trace: {
-      provider: PROVIDER_CONFIG.provider,
-      model: PROVIDER_CONFIG.model,
+      provider: llmProvider,
+      model: llmModel,
       documentsConsidered: eligibleDocs.length,
       chunksConsidered: citations.length,
       latencyMs: totalLatencyMs,

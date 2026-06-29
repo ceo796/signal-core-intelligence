@@ -1,23 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../../lib/ai-provider.js", () => ({
-  openai: {
-    embeddings: {
-      create: vi.fn(),
-    },
-  },
-  PROVIDER_CONFIG: {
-    provider: "openai",
-    model: "gpt-4o-mini",
-    embeddingModel: "text-embedding-3-small",
-    maxTokens: 2048,
-  },
+const { mockGenerateEmbedding, mockGenerateEmbeddings } = vi.hoisted(() => ({
+  mockGenerateEmbedding: vi.fn(),
+  mockGenerateEmbeddings: vi.fn(),
+}));
+
+vi.mock("../../lib/ai/embedding.js", () => ({
+  generateEmbedding: mockGenerateEmbedding,
+  generateEmbeddings: mockGenerateEmbeddings,
+  getEmbeddingModelName: vi.fn(() => "text-embedding-3-small"),
 }));
 
 import { retrieveRelevantChunks, retrieveAcrossDocuments } from "../../lib/retriever.js";
-import { openai } from "../../lib/ai-provider.js";
-
-const mockCreate = vi.mocked(openai.embeddings.create);
 
 /** Build a unit vector of the given dimension with `1.0` at position `hotIndex`. */
 function oneHotEmbedding(dimension: number, hotIndex: number): number[] {
@@ -40,36 +34,32 @@ describe("retrieveRelevantChunks", () => {
   const DIM = 10;
 
   beforeEach(() => {
-    mockCreate.mockReset();
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
   });
 
   it("returns top-K chunks by cosine similarity", async () => {
     const chunks = makeSampleChunks(5);
-
-    // Query embedding aligns with chunk index 2 (0-based)
     const queryEmbedding = oneHotEmbedding(DIM, 2);
 
-    mockCreate
-      .mockResolvedValueOnce({
-        data: [{ embedding: queryEmbedding }],
-      } as never)
-      .mockResolvedValueOnce({
-        data: chunks.map((_, i) => ({ embedding: oneHotEmbedding(DIM, i) })),
-      } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
+    mockGenerateEmbeddings.mockResolvedValueOnce({
+      embeddings: chunks.map((_, i) => oneHotEmbedding(DIM, i)),
+      providerUsed: "openai",
+      modelUsed: "text-embedding-3-small",
+    });
 
     const results = await retrieveRelevantChunks("test question", chunks, 3);
 
     expect(results).toHaveLength(3);
-    // The top result should be chunk index 2 (perfect cosine alignment)
     expect(results[0].chunkIndex).toBe(2);
-    // Blended score: 0.75 semantic + 0.25 keyword. No keyword match here, so 0.75.
     expect(results[0].relevanceScore).toBeCloseTo(0.75, 5);
   });
 
   it("returns empty array when no chunks are provided", async () => {
     const results = await retrieveRelevantChunks("test question", [], 5);
     expect(results).toHaveLength(0);
-    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockGenerateEmbedding).not.toHaveBeenCalled();
   });
 
   it("returns empty array when all chunks have blank content", async () => {
@@ -79,18 +69,19 @@ describe("retrieveRelevantChunks", () => {
     ];
     const results = await retrieveRelevantChunks("test question", blankChunks, 5);
     expect(results).toHaveLength(0);
-    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockGenerateEmbedding).not.toHaveBeenCalled();
   });
 
   it("returns all chunks when topK >= chunk count", async () => {
     const chunks = makeSampleChunks(3);
     const queryEmbedding = oneHotEmbedding(DIM, 0);
 
-    mockCreate
-      .mockResolvedValueOnce({ data: [{ embedding: queryEmbedding }] } as never)
-      .mockResolvedValueOnce({
-        data: chunks.map((_, i) => ({ embedding: oneHotEmbedding(DIM, i) })),
-      } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
+    mockGenerateEmbeddings.mockResolvedValueOnce({
+      embeddings: chunks.map((_, i) => oneHotEmbedding(DIM, i)),
+      providerUsed: "openai",
+      modelUsed: "text-embedding-3-small",
+    });
 
     const results = await retrieveRelevantChunks("question", chunks, 10);
     expect(results).toHaveLength(3);
@@ -98,20 +89,20 @@ describe("retrieveRelevantChunks", () => {
 
   it("results are sorted by descending relevance score", async () => {
     const chunks = makeSampleChunks(4);
-    // Query aligns with chunk index 1
     const queryEmbedding = oneHotEmbedding(DIM, 1);
 
-    mockCreate
-      .mockResolvedValueOnce({ data: [{ embedding: queryEmbedding }] } as never)
-      .mockResolvedValueOnce({
-        data: chunks.map((_, i) => ({ embedding: oneHotEmbedding(DIM, i) })),
-      } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
+    mockGenerateEmbeddings.mockResolvedValueOnce({
+      embeddings: chunks.map((_, i) => oneHotEmbedding(DIM, i)),
+      providerUsed: "openai",
+      modelUsed: "text-embedding-3-small",
+    });
 
     const results = await retrieveRelevantChunks("question", chunks, 4);
 
     for (let i = 0; i < results.length - 1; i++) {
       expect(results[i].relevanceScore).toBeGreaterThanOrEqual(
-        results[i + 1].relevanceScore
+        results[i + 1].relevanceScore,
       );
     }
   });
@@ -120,11 +111,12 @@ describe("retrieveRelevantChunks", () => {
     const chunks = makeSampleChunks(2);
     const queryEmbedding = oneHotEmbedding(DIM, 0);
 
-    mockCreate
-      .mockResolvedValueOnce({ data: [{ embedding: queryEmbedding }] } as never)
-      .mockResolvedValueOnce({
-        data: chunks.map((_, i) => ({ embedding: oneHotEmbedding(DIM, i) })),
-      } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(queryEmbedding);
+    mockGenerateEmbeddings.mockResolvedValueOnce({
+      embeddings: chunks.map((_, i) => oneHotEmbedding(DIM, i)),
+      providerUsed: "openai",
+      modelUsed: "text-embedding-3-small",
+    });
 
     const results = await retrieveRelevantChunks("question", chunks, 2);
     for (const r of results) {
@@ -140,7 +132,8 @@ describe("retrieveAcrossDocuments", () => {
   const DIM = 6;
 
   beforeEach(() => {
-    mockCreate.mockReset();
+    mockGenerateEmbedding.mockReset();
+    mockGenerateEmbeddings.mockReset();
   });
 
   it("returns one DocumentRetrieval per group", async () => {
@@ -157,11 +150,12 @@ describe("retrieveAcrossDocuments", () => {
       },
     ];
 
-    // Query embedding call + one embed-chunks call per document
-    mockCreate
-      .mockResolvedValueOnce({ data: [{ embedding: oneHotEmbedding(DIM, 0) }] } as never)
-      .mockResolvedValueOnce({ data: [{ embedding: oneHotEmbedding(DIM, 0) }] } as never)
-      .mockResolvedValueOnce({ data: [{ embedding: oneHotEmbedding(DIM, 1) }] } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(oneHotEmbedding(DIM, 0));
+    mockGenerateEmbeddings.mockResolvedValueOnce({
+      embeddings: [oneHotEmbedding(DIM, 0), oneHotEmbedding(DIM, 1)],
+      providerUsed: "openai",
+      modelUsed: "text-embedding-3-small",
+    });
 
     const results = await retrieveAcrossDocuments("question", groups, 3);
     expect(results).toHaveLength(2);
@@ -177,9 +171,7 @@ describe("retrieveAcrossDocuments", () => {
         chunks: [],
       },
     ];
-    mockCreate.mockResolvedValueOnce({
-      data: [{ embedding: oneHotEmbedding(DIM, 0) }],
-    } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(oneHotEmbedding(DIM, 0));
 
     const results = await retrieveAcrossDocuments("question", groups, 3);
     expect(results[0].retrieved).toHaveLength(0);
@@ -195,11 +187,12 @@ describe("retrieveAcrossDocuments", () => {
     }));
     const groups = [{ documentId: 1, documentName: "Doc A", chunks }];
 
-    mockCreate
-      .mockResolvedValueOnce({ data: [{ embedding: oneHotEmbedding(DIM, 0) }] } as never)
-      .mockResolvedValueOnce({
-        data: chunks.map((_, i) => ({ embedding: oneHotEmbedding(DIM, i) })),
-      } as never);
+    mockGenerateEmbedding.mockResolvedValueOnce(oneHotEmbedding(DIM, 0));
+    mockGenerateEmbeddings.mockResolvedValueOnce({
+      embeddings: chunks.map((_, i) => oneHotEmbedding(DIM, i)),
+      providerUsed: "openai",
+      modelUsed: "text-embedding-3-small",
+    });
 
     const results = await retrieveAcrossDocuments("question", groups, 2);
     expect(results[0].chunksSearched).toBe(4);

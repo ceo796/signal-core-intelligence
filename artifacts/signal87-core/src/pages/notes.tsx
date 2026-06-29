@@ -82,11 +82,11 @@ async function listNotes(mode: NotesMode, search: string): Promise<NotesListResp
   if (mode === "archived") params.set("archived", "true");
   if (search.trim()) params.set("search", search.trim());
   const suffix = params.toString() ? `?${params.toString()}` : "";
-  return customFetch<NotesListResponse>(`/notes${suffix}`, { responseType: "json" });
+  return customFetch<NotesListResponse>(`/api/notes${suffix}`, { responseType: "json" });
 }
 
 async function createNote(): Promise<Note> {
-  return customFetch<Note>("/notes", {
+  return customFetch<Note>("/api/notes", {
     method: "POST",
     body: JSON.stringify({}),
     responseType: "json",
@@ -103,7 +103,7 @@ function noteErrorMessage(error: unknown, fallback: string): string {
 }
 
 async function updateNote(id: number, patch: Partial<DraftState> & { isPinned?: boolean; archived?: boolean }): Promise<Note> {
-  return customFetch<Note>(`/notes/${id}`, {
+  return customFetch<Note>(`/api/notes/${id}`, {
     method: "PATCH",
     body: JSON.stringify(patch),
     responseType: "json",
@@ -111,7 +111,7 @@ async function updateNote(id: number, patch: Partial<DraftState> & { isPinned?: 
 }
 
 async function deleteNote(id: number): Promise<void> {
-  await customFetch(`/notes/${id}`, { method: "DELETE" });
+  await customFetch(`/api/notes/${id}`, { method: "DELETE" });
 }
 
 function excerpt(content: string): string {
