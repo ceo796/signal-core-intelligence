@@ -25,8 +25,8 @@ function defaultLogger(context: AiRouterLogContext): void {
 }
 
 function providerTimeoutMs(): number {
-  const parsed = Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "18000");
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 18_000;
+  const parsed = Number(process.env.AI_PROVIDER_TIMEOUT_MS ?? "12000");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 12_000;
 }
 
 function withProviderTimeout<T>(promise: Promise<T>, ms: number, providerId: string): Promise<T> {
@@ -93,9 +93,8 @@ async function invokeProviderTask(
       errors.push(`${providerId}: ${classified.message}`);
       const hasAnotherProvider = chain.slice(i + 1).some((nextId) => getProvider(nextId)?.isAvailable());
 
-      // Do not drop to the local extractive fallback while another configured LLM is available.
-      // Provider auth, quota, timeout, model, network, and permission failures should all advance
-      // to the next provider in the chain: Gemini -> OpenAI -> Grok. Local extraction is last resort.
+      // Do not drop to local extraction while another configured LLM is available.
+      // The chain must be Gemini -> OpenAI -> Grok before local extractive fallback.
       if (hasAnotherProvider && classified.errorClass !== "validation" && classified.errorClass !== "unsupported") {
         continue;
       }
