@@ -13,8 +13,8 @@ function parseProviderId(value: string | undefined, fallback: ProviderId): Provi
   return fallback;
 }
 
-function parseProviderOrder(value: string | undefined): ProviderId[] {
-  if (!value?.trim()) return [];
+function parseProviderOrder(value: string | undefined, fallback: ProviderId[] = []): ProviderId[] {
+  if (!value?.trim()) return fallback;
   return value
     .split(",")
     .map((part) => parseProviderId(part, "openai"))
@@ -48,13 +48,13 @@ export interface AiRuntimeConfig {
 export function loadAiConfig(): AiRuntimeConfig {
   return {
     routingEnabled: parseBool(process.env.AI_PROVIDER_ROUTING_ENABLED, true),
-    primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "openai"),
+    primaryReasoningProvider: parseProviderId(process.env.AI_PRIMARY_REASONING_PROVIDER, "google"),
     primaryExtractionProvider: parseProviderId(process.env.AI_PRIMARY_EXTRACTION_PROVIDER, "google"),
     finalFallbackProvider: parseProviderId(process.env.AI_FINAL_FALLBACK_PROVIDER, "xai"),
     evidenceCompilerProvider: parseProviderId(process.env.AI_EVIDENCE_COMPILER_PROVIDER, "google"),
-    qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "xai"),
+    qualityReviewProvider: parseProviderId(process.env.AI_QUALITY_REVIEW_PROVIDER, "google"),
     embeddingProvider: parseProviderId(process.env.AI_EMBEDDING_PROVIDER, "openai"),
-    fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER),
+    fallbackProviderOrder: parseProviderOrder(process.env.AI_FALLBACK_PROVIDER_ORDER, ["openai", "xai"]),
     models: {
       openai: {
         chat: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
@@ -87,13 +87,13 @@ export function resolveTaskProviderChain(taskType: AiTaskType, config: AiRuntime
 
   const chain: ProviderId[] = [primary];
   if (config.routingEnabled) {
-    if (!chain.includes(config.finalFallbackProvider)) {
-      chain.push(config.finalFallbackProvider);
-    }
     for (const provider of config.fallbackProviderOrder) {
       if (!chain.includes(provider)) chain.push(provider);
     }
-    for (const provider of ["openai", "xai", "google"] as ProviderId[]) {
+    if (!chain.includes(config.finalFallbackProvider)) {
+      chain.push(config.finalFallbackProvider);
+    }
+    for (const provider of ["google", "openai", "xai"] as ProviderId[]) {
       if (!chain.includes(provider)) chain.push(provider);
     }
   }
