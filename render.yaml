@@ -26,7 +26,7 @@ services:
         sync: false
       - key: XAI_API_KEY
         sync: false
-      - key: GEMINI_API_KEY
+      - key: GEMINI_SERVICE_ACCOUNT_JSON
         sync: false
       - key: AI_PROVIDER_ROUTING_ENABLED
         value: "true"

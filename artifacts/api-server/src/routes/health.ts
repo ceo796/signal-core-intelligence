@@ -77,15 +77,17 @@ router.get("/runtime-check", async (_req, res) => {
       credentials: {
         openai: process.env.OPENAI_API_KEY ? "set" : "missing",
         xai: process.env.XAI_API_KEY || process.env.GROK_API_KEY ? "set" : "missing",
-        googleApiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY ? "set" : "missing",
-        googleServiceAccount: process.env.GEMINI_SERVICE_ACCOUNT_PATH || process.env.GEMINI_SERVICE_ACCOUNT_JSON ? "set" : "missing",
+        googleServiceAccount:
+          process.env.GEMINI_SERVICE_ACCOUNT_PATH || process.env.GEMINI_SERVICE_ACCOUNT_JSON
+            ? "set"
+            : "missing",
       },
     },
     requiredConfig: {
       DATABASE_URL: configStatus("DATABASE_URL"),
       OPENAI_API_KEY: configStatus("OPENAI_API_KEY"),
       XAI_API_KEY: configStatus("XAI_API_KEY"),
-      GEMINI_API_KEY: configStatus("GEMINI_API_KEY"),
+      GEMINI_SERVICE_ACCOUNT_JSON: configStatus("GEMINI_SERVICE_ACCOUNT_JSON"),
       GEMINI_SERVICE_ACCOUNT_PATH: configStatus("GEMINI_SERVICE_ACCOUNT_PATH"),
       CLERK_SECRET_KEY: configStatus("CLERK_SECRET_KEY"),
       CLERK_PUBLISHABLE_KEY: configStatus("CLERK_PUBLISHABLE_KEY"),

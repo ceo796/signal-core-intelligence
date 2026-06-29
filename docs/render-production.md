@@ -12,7 +12,9 @@ Set these on `signal87-api` before deploying:
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string. Keep this secret. |
 | `OPENAI_API_KEY` | OpenAI API key — GPT fallback for chat/analyze when Gemini is unavailable. |
-| `GEMINI_API_KEY` | Google AI Studio API key (`AIza...`) — **primary LLM** when `AI_PRIMARY_REASONING_PROVIDER=google`. Set in Render dashboard only; never commit. |
+| `GEMINI_SERVICE_ACCOUNT_JSON` | Full Google Cloud service account JSON (one line) for Gemini via **Vertex AI** — bills against linked GCP credits. Set in Render dashboard only; never commit. |
+| `GEMINI_SERVICE_ACCOUNT_PATH` | Local/dev only: path to service account JSON file (e.g. `./.local/gemini-service-account.json`). |
+| `GEMINI_VERTEX_LOCATION` | Vertex region for Gemini OpenAPI endpoint (default `us-central1`). |
 | `XAI_API_KEY` | xAI/Grok API key — final LLM fallback. |
 | `AI_PRIMARY_REASONING_PROVIDER` | `google` (Gemini primary). |
 | `AI_FALLBACK_PROVIDER_ORDER` | `openai` (GPT first fallback). |

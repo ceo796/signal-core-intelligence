@@ -52,11 +52,27 @@ export function geminiServiceAccountConfigured(): boolean {
   return readServiceAccountCredentials() !== null;
 }
 
+export function getServiceAccountProjectId(): string | null {
+  const credentials = readServiceAccountCredentials();
+  const projectId = credentials?.project_id;
+  return typeof projectId === "string" && projectId.trim() ? projectId.trim() : null;
+}
+
+export function getVertexLocation(): string {
+  return process.env.GEMINI_VERTEX_LOCATION?.trim() || "us-central1";
+}
+
+export function getVertexOpenAiBaseUrl(projectId: string): string {
+  const location = getVertexLocation();
+  return `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/endpoints/openapi`;
+}
+
 export function geminiAuthMode(): "api_key" | "service_account" | "missing" {
+  // Prefer service account — bills against linked Google Cloud credits.
+  if (geminiServiceAccountConfigured()) return "service_account";
   if (process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim()) {
     return "api_key";
   }
-  if (geminiServiceAccountConfigured()) return "service_account";
   return "missing";
 }
 

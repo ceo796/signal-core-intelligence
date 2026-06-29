@@ -10,7 +10,10 @@ vi.mock("openai", () => ({
     if (opts.baseURL === "https://api.x.ai/v1") {
       return { chat: { completions: { create: mockGrokCreate } } };
     }
-    if (opts.baseURL === "https://generativelanguage.googleapis.com/v1beta/openai/") {
+    if (
+      opts.baseURL === "https://generativelanguage.googleapis.com/v1beta/openai/" ||
+      opts.baseURL?.includes("aiplatform.googleapis.com")
+    ) {
       return { chat: { completions: { create: mockGeminiCreate } } };
     }
     return {
@@ -39,7 +42,7 @@ describe("aiRouter", () => {
   });
 
   it("returns normalized response from Gemini when it is the primary provider", async () => {
-    process.env.GEMINI_API_KEY = "gemini-key";
+    process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
     mockGeminiCreate.mockResolvedValue({
       choices: [{ message: { content: "gemini answer" } }],
       usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
@@ -63,7 +66,7 @@ describe("aiRouter", () => {
   });
 
   it("falls back to GPT when Gemini fails with an eligible error", async () => {
-    process.env.GEMINI_API_KEY = "gemini-key";
+    process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
     process.env.OPENAI_API_KEY = "sk-openai";
     mockGeminiCreate.mockRejectedValue(new Error("gemini timeout"));
     mockOpenAiCreate.mockResolvedValue({
@@ -82,7 +85,7 @@ describe("aiRouter", () => {
   });
 
   it("uses Grok as the last fallback when Gemini and GPT fail", async () => {
-    process.env.GEMINI_API_KEY = "gemini-key";
+    process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
     process.env.OPENAI_API_KEY = "sk-openai";
     process.env.XAI_API_KEY = "xai-key";
     mockGeminiCreate.mockRejectedValue(new Error("gemini timeout"));
@@ -120,7 +123,7 @@ describe("aiRouter", () => {
   });
 
   it("parses structured output into structuredData", async () => {
-    process.env.GEMINI_API_KEY = "gemini-key";
+    process.env.GEMINI_SERVICE_ACCOUNT_PATH = "./.local/gemini-service-account.json";
     mockGeminiCreate.mockResolvedValue({
       choices: [{ message: { content: "{\"title\":\"Brief\",\"sections\":[]}" } }],
     });
