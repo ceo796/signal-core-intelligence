@@ -516,6 +516,124 @@ html {
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
   }
+
+  /* iOS Safari: stabilize full-height shell above home indicator */
+  .signal-app.s87-mobile-shell {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* ChatGPT-style prompt dock — sits above tab bar inside page chrome */
+  .signal-app.s87-mobile-shell .s87-ios-composer {
+    flex-shrink: 0;
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    background: rgba(27, 27, 26, 0.92);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    padding: 0.625rem 1rem 0.75rem;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-composer form > p:last-child {
+    display: none;
+  }
+
+  /* Prevent iOS auto-zoom on focus (requires ≥16px) */
+  .signal-app.s87-mobile-shell .s87-ios-input,
+  .signal-app.s87-mobile-shell textarea,
+  .signal-app.s87-mobile-shell input[type="text"],
+  .signal-app.s87-mobile-shell input[type="search"] {
+    font-size: 16px !important;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .signal-app.s87-mobile-shell .s87-page-header--compact {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .signal-app.s87-mobile-shell .s87-page-header--compact h1 {
+    font-size: 1.25rem;
+  }
+
+  .signal-app.s87-mobile-shell .s87-page-header--compact .s87-page-header-sub {
+    display: none;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-chat-scroll [data-radix-scroll-area-viewport] > div {
+    padding-bottom: 0.5rem;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-mode-pill {
+    min-height: 40px;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-mode-pill:active {
+    transform: scale(0.97);
+    opacity: 0.88;
+  }
+
+  .signal-app.s87-mobile-shell .s87-ios-hide-mobile {
+    display: none !important;
+  }
+
+  .signal-app.s87-mobile-shell .s87-home-ask-bar {
+    border-radius: 1rem;
+    min-height: 52px;
+  }
+
+  .signal-app.s87-mobile-shell .s87-docs-main > header h1 {
+    font-size: 1.625rem;
+    line-height: 1.2;
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile details {
+    border-radius: 1rem;
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+    background: rgba(36, 36, 35, 0.6);
+    overflow: hidden;
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    touch-action: manipulation;
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile details[open] summary {
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile .s87-skills-aside-body {
+    padding: 0.75rem 1rem 1rem;
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile .s87-skills-aside-body > div {
+    border: none;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .signal-app.s87-mobile-shell .s87-skills-aside-mobile .s87-skills-aside-body > div > div:first-child {
+    display: none;
+  }
 }
 
 @keyframes s87-orbit-float {

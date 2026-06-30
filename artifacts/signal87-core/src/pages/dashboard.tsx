@@ -186,8 +186,8 @@ export default function Dashboard() {
         </div>
 
         {/* ── Scrollable content ─────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto bg-background">
-          <div className="w-full px-4 md:px-8 py-6 space-y-4 md:pb-6">
+        <div className="s87-ios-scroll flex-1 overflow-y-auto bg-background">
+          <div className="w-full space-y-4 px-4 py-5 md:px-8 md:py-6 md:pb-6">
 
             {/* Welcome */}
             <div>
@@ -201,10 +201,10 @@ export default function Dashboard() {
 
             {/* Ask bar — compact, rounded-lg, like the mockup */}
             <Link href="/agents/hybrid">
-              <div className="flex items-center gap-3 pl-4 pr-3 py-3 rounded-lg border border-border bg-card hover:border-primary/40 hover:bg-card transition-all duration-200 cursor-pointer group shadow-sm select-none active:scale-[0.97]">
-                <Sparkles className="w-5 h-5 text-primary shrink-0" />
-                <span className="flex-1 text-[13px] text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">
-                  Ask Signal about your documents…
+              <div className="s87-home-ask-bar group flex cursor-pointer select-none items-center gap-3 rounded-lg border border-border bg-card py-3 pl-4 pr-3 shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card active:scale-[0.97] touch-manipulation">
+                <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+                <span className="flex-1 select-none text-[15px] text-muted-foreground transition-colors group-hover:text-foreground/70">
+                  Ask Signal87 anything across your documents…
                 </span>
                 <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-primary transition-all duration-200 group-hover:scale-105">
                   <ArrowRight className="w-3.5 h-3.5 text-primary-foreground" />
@@ -241,10 +241,10 @@ export default function Dashboard() {
               </div>
 
               {/* Column headers — compact, subtle */}
-              <div className="grid grid-cols-[1fr_80px_80px] gap-2 px-4 py-2 border-b border-border">
-                <span className="text-[11px] text-muted-foreground font-medium">Name</span>
-                <span className="text-[11px] text-muted-foreground font-medium">Type</span>
-                <span className="text-[11px] text-muted-foreground font-medium text-right">Updated</span>
+              <div className="grid grid-cols-[1fr_80px_80px] gap-2 border-b border-border px-4 py-2 max-md:grid-cols-1">
+                <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+                <span className="text-[11px] font-medium text-muted-foreground max-md:hidden">Type</span>
+                <span className="text-right text-[11px] font-medium text-muted-foreground max-md:hidden">Updated</span>
               </div>
 
               <div className="flex-1 px-1 py-0.5">
@@ -273,24 +273,29 @@ export default function Dashboard() {
                       <Link
                         key={doc.id}
                         href={`/documents/${doc.id}`}
-                        className="grid grid-cols-[1fr_80px_80px] gap-2 items-center px-3 py-2 rounded-md hover:bg-muted/40 transition-colors group"
+                        className="group grid grid-cols-[1fr_80px_80px] items-center gap-2 rounded-xl px-3 py-3 transition-colors hover:bg-muted/40 active:bg-muted/50 max-md:grid-cols-1 touch-manipulation"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex min-w-0 items-center gap-2.5">
                           <div
-                            className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                             style={{ backgroundColor: bg, color: fg }}
                           >
                             <FileTypeIcon fileType={doc.fileType} />
                           </div>
-                          <span
-                            className="text-[13px] text-foreground/80 truncate group-hover:text-foreground"
-                            title={doc.fileName}
-                          >
-                            {doc.fileName}
-                          </span>
+                          <div className="min-w-0">
+                            <span
+                              className="block truncate text-[14px] text-foreground/80 group-hover:text-foreground"
+                              title={doc.fileName}
+                            >
+                              {doc.fileName}
+                            </span>
+                            <span className="mt-0.5 block text-[11px] text-muted-foreground md:hidden">
+                              {doc.fileType.toUpperCase()} · {formatUploadDate(doc.uploadedAt)}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-[11px] text-muted-foreground truncate">{doc.fileType.toUpperCase()}</span>
-                        <span className="text-[11px] text-muted-foreground text-right tabular-nums">
+                        <span className="truncate text-[11px] text-muted-foreground max-md:hidden">{doc.fileType.toUpperCase()}</span>
+                        <span className="text-right text-[11px] tabular-nums text-muted-foreground max-md:hidden">
                           {formatUploadDate(doc.uploadedAt)}
                         </span>
                       </Link>

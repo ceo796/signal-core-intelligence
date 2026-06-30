@@ -143,7 +143,7 @@ function Composer({
           className={
             isHero
               ? "h-24 min-h-0 resize-none border-0 bg-transparent p-0 text-base text-foreground shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0"
-              : "resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-[15px] sm:text-[14px] placeholder:text-muted-foreground"
+              : "s87-ios-input resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-base sm:text-[14px] placeholder:text-muted-foreground"
           }
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -729,8 +729,8 @@ export default function HybridAgent() {
     <Layout>
       <div className="s87-page">
         {showConversation && (
-          <header className="s87-page-header">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <header className="s87-page-header s87-page-header--compact">
+            <p className="s87-page-header-sub text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Signal87 workspace
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
@@ -740,8 +740,8 @@ export default function HybridAgent() {
         )}
         {showConversation ? (
           <>
-            <ScrollArea className="flex-1">
-              <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 md:pb-6">
+            <ScrollArea className="s87-ios-chat-scroll flex-1">
+              <div className="max-w-3xl mx-auto w-full px-4 py-4 sm:py-6 space-y-5 sm:space-y-6 md:pb-6">
                 {submittedQuery && (
                   <div className="flex justify-end">
                     <div className={`max-w-[90%] rounded-[20px] rounded-br-[8px] bg-primary px-4 py-2.5 text-[13px] font-medium whitespace-pre-wrap ${PILL_ON_WHITE}`}>
@@ -765,29 +765,51 @@ export default function HybridAgent() {
               </div>
             </ScrollArea>
 
-            <div className="shrink-0 border-t border-border bg-card/95">
-              <div className="max-w-3xl mx-auto w-full px-4 py-3">
+            <div className="s87-ios-composer shrink-0 md:border-t md:border-border md:bg-card/95">
+              <div className="max-w-3xl mx-auto w-full md:px-4 md:py-3">
                 <Composer {...composerProps} />
               </div>
             </div>
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto p-6 sm:p-8">
-            <div className="flex w-full max-w-5xl flex-col items-center justify-between gap-10 md:flex-row md:gap-12">
-              <div className="flex w-full flex-1 flex-col items-center text-center md:items-start md:text-left">
-                <div className="mb-2 inline-block rounded-xl bg-muted p-3">
-                  <Sparkles className="h-6 w-6 text-violet-400" aria-hidden="true" />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:overflow-y-auto">
+            <div className="s87-ios-scroll flex flex-1 flex-col items-center justify-center overflow-y-auto p-6 sm:p-8 md:min-h-full">
+              <div className="flex w-full max-w-5xl flex-col items-center justify-between gap-10 md:flex-row md:gap-12">
+                <div className="flex w-full flex-1 flex-col items-center text-center md:items-start md:text-left">
+                  <div className="mb-6 flex flex-col items-center gap-3 text-center md:hidden">
+                    <div className="inline-block rounded-xl bg-muted p-3.5">
+                      <Sparkles className="h-7 w-7 text-violet-400" aria-hidden="true" />
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                        Ask across your documents
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Grounded answers with citations — no web research.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden w-full md:block">
+                    <div className="mb-2 inline-block rounded-xl bg-muted p-3">
+                      <Sparkles className="h-6 w-6 text-violet-400" aria-hidden="true" />
+                    </div>
+                    <h2 className="mb-1 text-2xl font-semibold text-foreground">Hybrid AI Chat</h2>
+                    <p className="mb-6 text-sm text-muted-foreground">
+                      Documents + Gemini reasoning, no web research.
+                    </p>
+                    <Composer {...composerProps} autoFocus layout="hero" />
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Answers use your documents with citations and Gemini reasoning — no web research.
+                    </p>
+                  </div>
                 </div>
-                <h2 className="mb-1 text-2xl font-semibold text-foreground">Hybrid AI Chat</h2>
-                <p className="mb-6 text-sm text-muted-foreground">
-                  Documents + Gemini reasoning, no web research.
-                </p>
-                <Composer {...composerProps} autoFocus layout="hero" />
-                <p className="mt-3 self-center text-xs text-muted-foreground md:self-start">
-                  Answers use your documents with citations and Gemini reasoning — no web research.
-                </p>
+                <DocumentIntelligenceOrbit className="hidden h-[340px] w-[340px] shrink-0 rounded-2xl md:block" />
               </div>
-              <DocumentIntelligenceOrbit className="hidden h-[340px] w-[340px] shrink-0 rounded-2xl md:block" />
+            </div>
+            <div className="s87-ios-composer shrink-0 md:hidden">
+              <div className="max-w-3xl mx-auto w-full">
+                <Composer {...composerProps} autoFocus />
+              </div>
             </div>
           </div>
         )}
