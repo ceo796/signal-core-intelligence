@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import {
@@ -332,38 +332,42 @@ function CitationCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="border border-[#d8d5ce] rounded-[16px] bg-[#f4f3ef] text-[#1f1f1f] overflow-hidden shadow-none">
+    <div
+      className={`overflow-hidden rounded-xl border bg-card text-card-foreground shadow-none transition-colors ${
+        expanded ? "border-violet-400/40" : "border-border"
+      }`}
+    >
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-[#eceae4] transition-colors select-none active:scale-[0.98] touch-manipulation"
+        className="flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors select-none hover:bg-muted/40 active:scale-[0.98] touch-manipulation"
       >
-        <span className={`shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-[10px] bg-white border border-[#d8d5ce] ${PILL_ON_WHITE}`}>
+        <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border bg-background text-[10px] font-bold text-violet-400">
           {citation.citationNumber}
         </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <FileText className="w-3 h-3 text-[#6b7068] shrink-0" />
-            <span className="text-xs font-medium text-[#6b7068] truncate">
+        <div className="min-w-0 flex-1">
+          <div className="mb-0.5 flex items-center gap-1.5">
+            <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+            <span className="truncate text-xs font-medium text-muted-foreground">
               {citation.documentName}
             </span>
-            <span className="ml-auto shrink-0 font-mono text-[10px] text-[#6b7068] tabular-nums">
+            <span className="ml-auto shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
               {(citation.relevanceScore * 100).toFixed(0)}%
             </span>
           </div>
-          <p className="text-xs text-[#1f1f1f]/80 line-clamp-2">{citation.excerpt}</p>
+          <p className="line-clamp-2 text-xs text-foreground/80">{citation.excerpt}</p>
         </div>
-        <span className="shrink-0 mt-0.5 text-[#6b7068]">
+        <span className="mt-0.5 shrink-0 text-muted-foreground">
           {expanded ? (
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronDown className="h-3.5 w-3.5" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="h-3.5 w-3.5" />
           )}
         </span>
       </button>
       {expanded && (
-        <div className="px-3 pb-3 pt-1 border-t border-[#d8d5ce] bg-white">
-          <p className="text-xs text-[#1f1f1f]/75 whitespace-pre-wrap leading-relaxed">
+        <div className="border-t border-border bg-muted/30 px-3 pb-3 pt-1">
+          <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground/75">
             {citation.excerpt}
           </p>
         </div>
@@ -382,7 +386,7 @@ function TracePanel({ trace, open, onOpenChange }: {
       <CollapsibleTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-2 text-xs text-[#f4f3ef]/55 hover:text-[#f4f3ef] transition-colors select-none active:scale-[0.97] touch-manipulation"
+          className="flex items-center gap-2 text-xs text-muted-foreground transition-colors select-none hover:text-foreground active:scale-[0.97] touch-manipulation"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>Verification Trace</span>
@@ -390,30 +394,30 @@ function TracePanel({ trace, open, onOpenChange }: {
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-2 rounded-[16px] border border-[#d8d5ce] bg-[#f4f3ef] p-3 font-mono text-[11px] space-y-1 text-[#6b7068] shadow-none">
+        <div className="mt-2 space-y-1 rounded-xl border border-border bg-card p-3 font-mono text-[11px] text-muted-foreground shadow-none">
           <div className="flex gap-2">
-            <span className="text-[#1f1f1f]/50 w-36 shrink-0">provider</span>
-            <span>{trace.provider}</span>
+            <span className="w-36 shrink-0 text-muted-foreground/60">provider</span>
+            <span className="text-foreground">{trace.provider}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-[#1f1f1f]/50 w-36 shrink-0">model</span>
-            <span>{trace.model}</span>
+            <span className="w-36 shrink-0 text-muted-foreground/60">model</span>
+            <span className="text-foreground">{trace.model}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-[#1f1f1f]/50 w-36 shrink-0">documents considered</span>
-            <span>{trace.documentsConsidered}</span>
+            <span className="w-36 shrink-0 text-muted-foreground/60">documents considered</span>
+            <span className="text-foreground">{trace.documentsConsidered}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-[#1f1f1f]/50 w-36 shrink-0">chunks considered</span>
-            <span>{trace.chunksConsidered}</span>
+            <span className="w-36 shrink-0 text-muted-foreground/60">chunks considered</span>
+            <span className="text-foreground">{trace.chunksConsidered}</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-[#1f1f1f]/50 w-36 shrink-0">latency</span>
-            <span>{trace.latencyMs.toFixed(0)} ms</span>
+            <span className="w-36 shrink-0 text-muted-foreground/60">latency</span>
+            <span className="text-foreground">{trace.latencyMs.toFixed(0)} ms</span>
           </div>
           <div className="flex gap-2">
-            <span className="text-[#1f1f1f]/50 w-36 shrink-0">fallback used</span>
-            <span className={trace.fallbackUsed ? "text-yellow-700" : "text-[#3d7a5e]"}>
+            <span className="w-36 shrink-0 text-muted-foreground/60">fallback used</span>
+            <span className={trace.fallbackUsed ? "text-yellow-500" : "text-primary"}>
               {trace.fallbackUsed ? "yes" : "no"}
             </span>
           </div>
@@ -469,56 +473,95 @@ function ResultView({ result }: { result: HybridAgentResult }) {
     sourceFilter === "all" ||
     (sourceFilter instanceof Set && sourceFilter.size === citationDocs.length);
 
-  const PILL =
-    `inline-flex items-center gap-1.5 h-7 rounded-[20px] border border-[#d8d5ce] bg-white px-2.5 text-xs font-medium ${PILL_ON_WHITE} hover:bg-[#f4f3ef] transition-colors cursor-pointer select-none active:scale-[0.94] touch-manipulation`;
+  const sourcePills = useMemo(() => {
+    const byDocument = new Map<string, number>();
+    for (const citation of result.citations) {
+      if (!byDocument.has(citation.documentName)) {
+        byDocument.set(citation.documentName, citation.citationNumber);
+      }
+    }
+    return [...byDocument.entries()]
+      .map(([documentName, citationNumber]) => ({ documentName, citationNumber }))
+      .sort((a, b) => a.citationNumber - b.citationNumber);
+  }, [result.citations]);
+
+  const handleSourcePillClick = (citationNumber: number, documentName: string) => {
+    setSourceFilter(new Set([documentName]));
+    toggleCitation(citationNumber);
+  };
 
   return (
     <div className="space-y-4">
-      <Card className="rounded-[18px] border-[#d8d5ce] bg-[#f4f3ef] text-[#1f1f1f] shadow-none">
+      <Card className="rounded-xl border-border bg-card text-card-foreground shadow-none">
         <CardContent className="p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-[#3d7a5e] shrink-0" />
-            <span className="text-sm font-medium text-[#3d7a5e]">AI Answer</span>
-            <span className={`ml-auto rounded-[10px] border border-[#d8d5ce] bg-white px-2 py-0.5 text-[11px] font-medium ${PILL_ON_WHITE}`}>
+          <div className="mb-3 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 shrink-0 text-violet-400" />
+            <span className="text-sm font-medium text-foreground">AI Answer</span>
+            <span className="ml-auto rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
               {result.mode}
             </span>
           </div>
           <MarkdownAnswer content={result.answer} />
+          {sourcePills.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
+              <span className="font-medium text-muted-foreground/80">Sources:</span>
+              {sourcePills.map((pill) => {
+                const active =
+                  expandedCitation === pill.citationNumber &&
+                  sourceFilter instanceof Set &&
+                  sourceFilter.has(pill.documentName);
+                return (
+                  <button
+                    key={pill.documentName}
+                    type="button"
+                    onClick={() => handleSourcePillClick(pill.citationNumber, pill.documentName)}
+                    className={`flex items-center gap-1.5 rounded border bg-card px-2 py-1 text-foreground transition-colors hover:border-muted-foreground/40 ${
+                      active ? "border-violet-400/50" : "border-border"
+                    }`}
+                    title={pill.documentName}
+                  >
+                    <span className="font-semibold text-violet-400">[{pill.citationNumber}]</span>
+                    <span className="max-w-[180px] truncate">{pill.documentName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap items-center gap-2">
         <Popover>
           <PopoverTrigger asChild>
-            <button type="button" className={PILL}>
+            <button type="button" className={PILL_CLASS}>
               <FileText className="w-3 h-3 shrink-0" />
               Answer sources
               <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className={`w-60 p-3 space-y-1.5 ${POPOVER_CLASS}`}>
-            <p className="text-[11px] font-medium text-[#6b7068] mb-2">
+          <PopoverContent align="start" className={`w-60 space-y-1.5 p-3 ${POPOVER_CLASS}`}>
+            <p className="mb-2 text-[11px] font-medium text-muted-foreground">
               Sources used
             </p>
             <div
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs ${
+              className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs ${
                 answerCitesDocuments
-                  ? `bg-white border border-[#d8d5ce] ${PILL_ON_WHITE}`
-                  : "bg-[#eceae4] text-[#6b7068]"
+                  ? "border border-border bg-background text-foreground"
+                  : "bg-muted text-muted-foreground"
               }`}
             >
-              <FileText className="w-3 h-3 shrink-0" />
+              <FileText className="h-3 w-3 shrink-0" />
               <span className="flex-1">{SOURCE_LABELS.document_context}</span>
               {!answerCitesDocuments && (
-                <span className="opacity-70 text-[10px]">· not used</span>
+                <span className="text-[10px] opacity-70">· not used</span>
               )}
             </div>
-            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-white border border-[#d8d5ce] ${PILL_ON_WHITE}`}>
-              <Sparkles className="w-3 h-3 shrink-0" />
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground">
+              <Sparkles className="h-3 w-3 shrink-0" />
               <span className="flex-1">{SOURCE_LABELS.llm_reasoning}</span>
             </div>
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] text-xs bg-[#eceae4] text-[#6b7068]/70">
-              <ShieldCheck className="w-3 h-3 shrink-0 opacity-50" />
+            <div className="flex items-center gap-2 rounded-lg bg-muted px-2.5 py-1.5 text-xs text-muted-foreground/70">
+              <ShieldCheck className="h-3 w-3 shrink-0 opacity-50" />
               <span className="flex-1">{SOURCE_LABELS.web_context_placeholder_disabled}</span>
               <span className="text-[10px] opacity-60">Coming soon</span>
             </div>
@@ -528,7 +571,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
         {result.documentsUsed.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className={PILL}>
+              <button type="button" className={PILL_CLASS}>
                 <FileText className="w-3 h-3 shrink-0" />
                 Searched
                 <span className="opacity-60">({result.documentsUsed.length})</span>
@@ -536,17 +579,17 @@ function ResultView({ result }: { result: HybridAgentResult }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className={`w-72 p-3 ${POPOVER_CLASS}`}>
-              <p className="text-[11px] font-medium text-[#6b7068] mb-2">
+              <p className="mb-2 text-[11px] font-medium text-muted-foreground">
                 Documents searched
               </p>
               <div className="space-y-1">
                 {result.documentsUsed.map((doc) => (
                   <div
                     key={doc.id}
-                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[12px] bg-white border border-[#d8d5ce] text-xs ${PILL_ON_WHITE}`}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground"
                   >
-                    <FileText className="w-3 h-3 shrink-0 text-[#111110]/70" />
-                    <span className={`truncate ${PILL_ON_WHITE}`} title={doc.name}>
+                    <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate" title={doc.name}>
                       {doc.name}
                     </span>
                   </div>
@@ -559,32 +602,32 @@ function ResultView({ result }: { result: HybridAgentResult }) {
         {result.citations.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className={PILL}>
+              <button type="button" className={PILL_CLASS}>
                 <ShieldCheck className="w-3 h-3 shrink-0" />
-                Sources
+                Filter
                 <span className="opacity-60">({result.citations.length})</span>
                 {sourceFilter !== null && (
-                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-[#3d7a5e] shrink-0" />
+                  <span className="ml-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
                 )}
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className={`w-64 p-3 ${POPOVER_CLASS}`}>
-              <p className="text-[11px] font-medium text-[#6b7068] mb-2">
+              <p className="mb-2 text-[11px] font-medium text-muted-foreground">
                 Filter by document
               </p>
               <div className="space-y-0.5">
-                <label className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-[#eceae4] rounded-[10px] cursor-pointer">
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 hover:bg-muted">
                   <Checkbox
                     checked={allDocsChecked}
                     onCheckedChange={(v) => setSourceFilter(v ? "all" : null)}
                   />
-                  <span className="text-xs text-[#1f1f1f]">All documents</span>
+                  <span className="text-xs text-foreground">All documents</span>
                 </label>
                 {citationDocs.map((name) => (
                   <label
                     key={name}
-                    className="flex items-center gap-2.5 px-1.5 py-1.5 hover:bg-[#eceae4] rounded-[10px] cursor-pointer"
+                    className="flex cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 hover:bg-muted"
                   >
                     <Checkbox
                       checked={
@@ -593,7 +636,7 @@ function ResultView({ result }: { result: HybridAgentResult }) {
                       }
                       onCheckedChange={() => toggleDocFilter(name)}
                     />
-                    <span className="text-xs truncate text-[#1f1f1f]" title={name}>
+                    <span className="truncate text-xs text-foreground" title={name}>
                       {name}
                     </span>
                   </label>
@@ -602,8 +645,11 @@ function ResultView({ result }: { result: HybridAgentResult }) {
               {sourceFilter !== null && (
                 <button
                   type="button"
-                  onClick={() => setSourceFilter(null)}
-                  className="mt-2 w-full py-1 text-[11px] text-[#6b7068] hover:text-[#1f1f1f] hover:underline transition-colors text-center"
+                  onClick={() => {
+                    setSourceFilter(null);
+                    setExpandedCitation(null);
+                  }}
+                  className="mt-2 w-full py-1 text-center text-[11px] text-muted-foreground transition-colors hover:text-foreground hover:underline"
                 >
                   Hide citations
                 </button>
@@ -615,8 +661,8 @@ function ResultView({ result }: { result: HybridAgentResult }) {
 
       {filteredCitations.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-[#f4f3ef]">
-            <ShieldCheck className="w-4 h-4 text-[#3d7a5e] shrink-0" />
+          <div className="flex items-center gap-2 text-foreground">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-violet-400" />
             <span className="text-sm font-medium">
               {sourceFilter === "all"
                 ? `All sources · ${result.citations.length} chunk${result.citations.length !== 1 ? "s" : ""}`
