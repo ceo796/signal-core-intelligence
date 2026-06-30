@@ -40,7 +40,7 @@ try {
 const baseUrl = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 
 // Build the full origin for redirect URLs (handles base path)
-const redirectUrl = window.location.origin + baseUrl + "/pricing";
+const redirectUrl = window.location.origin + baseUrl + "/sign-up";
 
 const clerkOptions = {
   publishableKey,

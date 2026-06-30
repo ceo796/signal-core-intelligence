@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        background: #0a0a0a;
+        color: #f5f5f2;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        height: 100%;
+        padding: 48px 56px;
+        gap: 40px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 36px;
+      }
+      .mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #bdf58a, #6fd2ad);
+      }
+      .kicker {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #8a8d86;
+        margin-bottom: 16px;
+      }
+      h1 {
+        font-size: 52px;
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+        font-weight: 700;
+        max-width: 560px;
+      }
+      .copy {
+        margin-top: 20px;
+        font-size: 17px;
+        line-height: 1.55;
+        color: #b8bab2;
+        max-width: 520px;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 22px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .primary { background: #f4f2e8; color: #111211; }
+      .secondary { background: transparent; color: #f5f5f2; border: 1px solid rgba(255,255,255,0.18); }
+      .visual {
+        position: relative;
+        height: 100%;
+      }
+      .card {
+        position: absolute;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(244, 243, 239, 0.96);
+        color: #1f1f1f;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+        padding: 16px 18px;
+      }
+      .card h4 { font-size: 11px; color: #6b7068; margin-bottom: 10px; }
+      .metrics { display: flex; gap: 10px; }
+      .metric {
+        flex: 1;
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 11px;
+      }
+      .metric strong { display: block; font-size: 22px; margin-top: 4px; }
+      .a { top: 18px; left: 0; width: 320px; }
+      .b { top: 120px; right: 0; width: 250px; }
+      .c { bottom: 70px; left: 40px; width: 280px; }
+      .bar { height: 8px; border-radius: 99px; background: #e8e6df; margin-top: 8px; overflow: hidden; }
+      .fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #6fd2ad, #bdf58a); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div>
+        <div class="brand"><span class="mark"></span> Signal87 AI</div>
+        <div class="kicker">Document intelligence</div>
+        <h1>Extend your team with verifiable AI reasoning.</h1>
+        <p class="copy">
+          Analyze private documents with Gemini-powered intelligence, grounded citations, and a clear verification trace.
+        </p>
+        <div class="actions">
+          <span class="pill primary">Sign up</span>
+          <span class="pill secondary">Book a demo</span>
+        </div>
+      </div>
+      <div class="visual">
+        <div class="card a">
+          <h4>signal87.ai / diligence-overview</h4>
+          <div class="metrics">
+            <div class="metric"><span>Documents</span><strong>148</strong></div>
+            <div class="metric"><span>Citations</span><strong>2,971</strong></div>
+            <div class="metric"><span>Risks</span><strong>37</strong></div>
+          </div>
+        </div>
+        <div class="card b">
+          <h4>executive brief</h4>
+          <div class="metric" style="background:#fff;border-radius:12px;padding:12px;">
+            <span>Confidence</span><strong>91%</strong>
+          </div>
+        </div>
+        <div class="card c">
+          <h4>comparison brief</h4>
+          <div style="font-size:12px;margin-top:6px;">Revenue covenant alignment</div>
+          <div class="bar"><div class="fill" style="width:88%"></div></div>
+          <div style="font-size:12px;margin-top:10px;">Change-of-control exposure</div>
+          <div class="bar"><div class="fill" style="width:62%"></div></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
