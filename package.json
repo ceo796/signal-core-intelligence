@@ -10,12 +10,16 @@
     "start": "node --enable-source-maps ./production-server.mjs",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "db:push": "pnpm --filter @workspace/db run push",
     "test": "pnpm --filter @workspace/api-server run test",
     "smoke:api": "node scripts/smoke-test-api.mjs",
     "smoke:audit": "bash scripts/audit-api.sh",
     "smoke:auth": "node scripts/smoke-auth-checklist.mjs",
     "smoke:ui": "node scripts/ui-audit.mjs",
-    "smoke:production": "node scripts/smoke-test-production.mjs"
+    "smoke:production": "node scripts/smoke-test-production.mjs",
+    "test:billing": "node scripts/test-stripe-billing.mjs",
+    "test:signup-stripe": "node scripts/test-signup-stripe-e2e.mjs",
+    "generate:opengraph": "node scripts/generate-opengraph.mjs"
   },
   "private": true,
   "devDependencies": {

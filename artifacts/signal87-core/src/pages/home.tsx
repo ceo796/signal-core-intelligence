@@ -1005,14 +1005,11 @@ export default function Home() {
               </>
             ) : (
               <>
-                <Link href="/sign-in" className="signin">
-                  Sign in
-                </Link>
                 <Link href="/contact" className="pill outline-green">
                   Book a demo
                 </Link>
                 <Link href="/sign-up" className="pill primary">
-                  Start for free
+                  Sign up
                 </Link>
               </>
             )}
@@ -1036,13 +1033,15 @@ export default function Home() {
                   Open App
                 </Link>
               ) : (
-                <Link href="/sign-up" className="pill primary">
-                  Start for free
-                </Link>
+                <>
+                  <Link href="/sign-up" className="pill primary">
+                    Sign up
+                  </Link>
+                  <Link href="/contact" className="pill">
+                    Book a demo
+                  </Link>
+                </>
               )}
-              <Link href="/contact" className="pill">
-                Book a demo
-              </Link>
             </div>
           </div>
 

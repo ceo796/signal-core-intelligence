@@ -3,7 +3,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth, RedirectToSignIn, SignIn, SignUp } from "@clerk/react";
+import { useAuth, RedirectToSignIn, SignIn } from "@clerk/react";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 
 import Home from "@/pages/home";
@@ -25,6 +25,7 @@ import MichaelChavira from "@/pages/team-michael-chavira";
 import Admin from "@/pages/admin";
 import Settings from "@/pages/settings";
 import TrashPage from "@/pages/trash";
+import PricingRedirect, { SignUpWorkspace } from "@/pages/pricing";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -41,7 +42,19 @@ const queryClient = new QueryClient({
   },
 });
 
-const publicRoutes = ["/", "/about", "/privacy", "/terms", "/contact", "/team", "/team/michael-benezra", "/team/michael-chavira", "/sign-in", "/sign-up"];
+const publicRoutes = [
+  "/",
+  "/about",
+  "/privacy",
+  "/terms",
+  "/contact",
+  "/team",
+  "/team/michael-benezra",
+  "/team/michael-chavira",
+  "/sign-in",
+  "/sign-up",
+  "/pricing",
+];
 
 function isPublicRoute(path: string): boolean {
   return publicRoutes.some((route) => path === route || path.startsWith(route + "/"));
@@ -123,7 +136,8 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/settings" component={Settings} />
       <Route path="/sign-in"><SignInPage /></Route>
-      <Route path="/sign-up"><SignUpPage /></Route>
+      <Route path="/sign-up" component={SignUpWorkspace} />
+      <Route path="/pricing" component={PricingRedirect} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -133,14 +147,6 @@ function SignInPage() {
   return (
     <AuthShell eyebrow="Welcome back" title="Sign in to Signal87">
       <SignIn routing="path" path="/sign-in" />
-    </AuthShell>
-  );
-}
-
-function SignUpPage() {
-  return (
-    <AuthShell eyebrow="Create workspace" title="Start your document intelligence workspace">
-      <SignUp routing="path" path="/sign-up" />
     </AuthShell>
   );
 }
