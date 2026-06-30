@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DocumentIntelligenceOrbit } from "@/components/document-intelligence-orbit";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -93,6 +92,7 @@ interface ComposerProps {
   onSubmit: (e: React.FormEvent) => void;
   onBrowse: () => void;
   autoFocus?: boolean;
+  layout?: "hero" | "compact";
 }
 
 function Composer({
@@ -109,7 +109,9 @@ function Composer({
   onSubmit,
   onBrowse,
   autoFocus,
+  layout = "compact",
 }: ComposerProps) {
+  const isHero = layout === "hero";
   const docsLabel = docsLoading
     ? "Documents"
     : readyDocs.length === 0
@@ -118,17 +120,31 @@ function Composer({
     ? "All documents"
     : `${selectedDocIds.size} selected`;
 
+  const pillClass = isHero
+    ? "inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors select-none active:scale-[0.98] touch-manipulation"
+    : PILL_CLASS;
+
   return (
     <form onSubmit={onSubmit} className="w-full">
-      <div className="rounded-lg border border-border bg-card text-card-foreground transition-colors focus-within:border-primary">
+      <div
+        className={
+          isHero
+            ? "flex w-full min-h-[160px] flex-col justify-between rounded-xl border border-border bg-card p-4 text-card-foreground transition-colors focus-within:border-muted-foreground/30"
+            : "rounded-lg border border-border bg-card text-card-foreground transition-colors focus-within:border-primary"
+        }
+      >
         <Textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask anything about your documents…"
           disabled={isPending}
           autoFocus={autoFocus}
-          rows={1}
-          className="s87-ios-input resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-base sm:text-[14px] placeholder:text-muted-foreground"
+          rows={isHero ? 4 : 1}
+          className={
+            isHero
+              ? "h-24 min-h-0 resize-none border-0 bg-transparent p-0 text-base text-foreground shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0"
+              : "s87-ios-input resize-none border-0 bg-transparent text-foreground shadow-none focus-visible:ring-0 min-h-[56px] sm:min-h-[52px] max-h-[220px] px-4 pt-4 pb-1 text-base sm:text-[14px] placeholder:text-muted-foreground"
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -136,13 +152,26 @@ function Composer({
             }
           }}
         />
-        <div className="flex items-center gap-2 px-3 pb-3 pt-1 flex-wrap">
+        <div
+          className={
+            isHero
+              ? "flex items-center justify-between gap-2 border-t border-border/50 pt-2"
+              : "flex items-center gap-2 px-3 pb-3 pt-1 flex-wrap"
+          }
+        >
+          <div className={isHero ? "flex items-center gap-2 flex-wrap" : "contents"}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className={PILL_CLASS} aria-label="Answer mode">
-                <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden sm:inline">{modeLabel(mode)}</span>
-                <span className="sm:hidden">{modeLabel(mode).slice(0,3)}</span>
+              <button type="button" className={pillClass} aria-label="Answer mode">
+                {!isHero && <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />}
+                {isHero ? (
+                  <span>{`⌥ ${modeLabel(mode)}`}</span>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">{modeLabel(mode)}</span>
+                    <span className="sm:hidden">{modeLabel(mode).slice(0, 3)}</span>
+                  </>
+                )}
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
               </button>
             </DropdownMenuTrigger>
@@ -167,7 +196,7 @@ function Composer({
 
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className={PILL_CLASS} aria-label="Documents to search">
+              <button type="button" className={pillClass} aria-label="Documents to search">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
                 <span className="max-w-[120px] sm:max-w-[160px] truncate">{docsLabel}</span>
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
@@ -241,32 +270,54 @@ function Composer({
           </Popover>
 
           <span
-            className="hidden sm:inline-flex items-center gap-1.5 h-8 rounded-md border border-border bg-muted px-3 text-xs font-medium text-muted-foreground cursor-not-allowed select-none"
+            className={
+              isHero
+                ? "inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground cursor-not-allowed select-none"
+                : "hidden sm:inline-flex items-center gap-1.5 h-8 rounded-md border border-border bg-muted px-3 text-xs font-medium text-muted-foreground cursor-not-allowed select-none"
+            }
             title="Web context coming soon"
             aria-disabled="true"
           >
             <ShieldCheck className="w-3.5 h-3.5 shrink-0 opacity-50" />
             <span>Web · Soon</span>
           </span>
+          </div>
 
-          <Button
-            type="submit"
-            size="icon"
-            disabled={isPending || !query.trim()}
-            className="ml-auto rounded-md h-10 w-10 sm:h-9 sm:w-9 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-            aria-label="Send"
-          >
-            {isPending ? (
-              <div className="w-4 h-4 sm:w-3.5 sm:h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <ArrowUp className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            )}
-          </Button>
+          {isHero ? (
+            <button
+              type="submit"
+              disabled={isPending || !query.trim()}
+              className="rounded-lg bg-muted p-2 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground disabled:opacity-40"
+              aria-label="Send"
+            >
+              {isPending ? (
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ArrowUp className="h-4 w-4" />
+              )}
+            </button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon"
+              disabled={isPending || !query.trim()}
+              className="ml-auto rounded-md h-10 w-10 sm:h-9 sm:w-9 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+              aria-label="Send"
+            >
+              {isPending ? (
+                <div className="w-4 h-4 sm:w-3.5 sm:h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ArrowUp className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
-      <p className="text-center text-[11px] text-muted-foreground mt-2 px-2">
-        Answers use your documents with citations and Gemini reasoning — no web research.
-      </p>
+      {!isHero && (
+        <p className="text-center text-[11px] text-muted-foreground mt-2 px-2">
+          Answers use your documents with citations and Gemini reasoning — no web research.
+        </p>
+      )}
     </form>
   );
 }
@@ -677,14 +728,16 @@ export default function HybridAgent() {
   return (
     <Layout>
       <div className="s87-page">
-        <header className={cn("s87-page-header", showConversation && "s87-page-header--compact")}>
-          <p className="s87-page-header-sub text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Signal87 workspace
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-            AI Chat
-          </h1>
-        </header>
+        {showConversation && (
+          <header className="s87-page-header s87-page-header--compact">
+            <p className="s87-page-header-sub text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Signal87 workspace
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+              AI Chat
+            </h1>
+          </header>
+        )}
         {showConversation ? (
           <>
             <ScrollArea className="s87-ios-chat-scroll flex-1">
@@ -720,12 +773,12 @@ export default function HybridAgent() {
           </>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:overflow-y-auto">
-            <div className="s87-ios-scroll flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-8 md:min-h-full md:py-10">
-              <div className="grid w-full max-w-5xl gap-6 md:grid-cols-[minmax(0,1fr)_360px] md:items-center">
-                <div className="w-full space-y-5 md:space-y-0">
-                  <div className="flex flex-col items-center gap-3 text-center md:hidden">
-                    <div className="inline-flex items-center justify-center rounded-2xl border border-border bg-accent p-3.5">
-                      <Sparkles className="h-7 w-7 text-accent-foreground" />
+            <div className="s87-ios-scroll flex flex-1 flex-col items-center justify-center overflow-y-auto p-6 sm:p-8 md:min-h-full">
+              <div className="flex w-full max-w-5xl flex-col items-center justify-between gap-10 md:flex-row md:gap-12">
+                <div className="flex w-full flex-1 flex-col items-center text-center md:items-start md:text-left">
+                  <div className="mb-6 flex flex-col items-center gap-3 text-center md:hidden">
+                    <div className="inline-block rounded-xl bg-muted p-3.5">
+                      <Sparkles className="h-7 w-7 text-violet-400" aria-hidden="true" />
                     </div>
                     <div className="space-y-1">
                       <h2 className="text-lg font-semibold tracking-tight text-foreground">
@@ -736,24 +789,21 @@ export default function HybridAgent() {
                       </p>
                     </div>
                   </div>
-                  <div className="s87-card hidden space-y-7 px-4 py-8 sm:px-6 md:block">
-                    <div className="flex justify-center">
-                      <div className="inline-flex items-center justify-center rounded-lg border border-border bg-accent p-3">
-                        <Sparkles className="w-6 h-6 text-accent-foreground" />
-                      </div>
+                  <div className="hidden w-full md:block">
+                    <div className="mb-2 inline-block rounded-xl bg-muted p-3">
+                      <Sparkles className="h-6 w-6 text-violet-400" aria-hidden="true" />
                     </div>
-                    <div className="text-center space-y-2">
-                      <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                        Hybrid AI Chat
-                      </h1>
-                      <p className="text-sm text-muted-foreground">
-                        Documents + Gemini reasoning, no web research.
-                      </p>
-                    </div>
-                    <Composer {...composerProps} autoFocus />
+                    <h2 className="mb-1 text-2xl font-semibold text-foreground">Hybrid AI Chat</h2>
+                    <p className="mb-6 text-sm text-muted-foreground">
+                      Documents + Gemini reasoning, no web research.
+                    </p>
+                    <Composer {...composerProps} autoFocus layout="hero" />
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Answers use your documents with citations and Gemini reasoning — no web research.
+                    </p>
                   </div>
                 </div>
-                <DocumentIntelligenceOrbit className="hidden md:block" />
+                <DocumentIntelligenceOrbit className="hidden h-[340px] w-[340px] shrink-0 rounded-2xl md:block" />
               </div>
             </div>
             <div className="s87-ios-composer shrink-0 md:hidden">
